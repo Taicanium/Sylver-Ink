@@ -1,0 +1,20 @@
+﻿<Window x:Class="SylverInk.Replace"
+		xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+		xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+		xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+		xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+		xmlns:local="clr-namespace:SylverInk"
+		mc:Ignorable="d"
+		d:DataContext="{d:DesignInstance Type=local:ContextSettings}"
+		Title="Sylver Ink: Replace" Height="300" Width="525" MinHeight="300" MinWidth="325" Background="Beige" ResizeMode="CanResize">
+	<Grid>
+		<StackPanel HorizontalAlignment="Stretch">
+			<Label Foreground="Gray" Margin="0,20,40,0" HorizontalAlignment="Right" FontStyle="Italic" Content="Text to replace"/>
+			<TextBox Margin="20,0" x:Name="OldText" TextChanged="ReplaceTextChanged"/>
+			<Label Foreground="Gray" Margin="0,40,40,0" HorizontalAlignment="Right" FontStyle="Italic" Content="New text"/>
+			<TextBox Margin="20,0" x:Name="NewText"/>
+			<Button Content="Replace" Margin="0,40,0,0" IsEnabled="{Binding ReadyToReplace}" Click="Replace_Click"/>
+			<Label Foreground="Blue" Margin="0,20,0,0" HorizontalAlignment="Center" FontStyle="Italic" Content="{Binding NumReplacements}"/>
+		</StackPanel>
+	</Grid>
+</Window>

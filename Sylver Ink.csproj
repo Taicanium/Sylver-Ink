@@ -1,0 +1,43 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+	<OutputType>WinExe</OutputType>
+	<TargetFramework>net8.0-windows10.0.26100.0</TargetFramework>
+	<RootNamespace>SylverInk</RootNamespace>
+	<Nullable>enable</Nullable>
+	<UseWPF>true</UseWPF>
+	<SupportedOSPlatformVersion>7.0</SupportedOSPlatformVersion>
+  </PropertyGroup>
+  
+  <PropertyGroup>
+	<SourceRevisionId>build$([System.DateTime]::UtcNow.ToString("yyyyMMdd"))</SourceRevisionId>
+	<SupportedOSPlatformVersion>7.0</SupportedOSPlatformVersion>
+	<NeutralLanguage>en-US</NeutralLanguage>
+	<Version>1.0.0.5</Version>
+	<UseWindowsForms>False</UseWindowsForms>
+	<Title>Sylver Ink</Title>
+	<Authors>Taica</Authors>
+	<PackageIcon>glasses.png</PackageIcon>
+	<ApplicationIcon>glasses.ico</ApplicationIcon>
+  </PropertyGroup>
+  
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+	<DebugType>embedded</DebugType>
+  </PropertyGroup>
+  
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+	<DebugType>embedded</DebugType>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <Content Include="glasses.ico" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <None Update="glasses.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+
+</Project>
