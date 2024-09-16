@@ -35,6 +35,7 @@ bin/*
 obj/*
 Properties/*
 .vs/*
+publish/*
 AssemblyInfo.cs
 *.sln
 *.user

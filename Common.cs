@@ -18,6 +18,7 @@ namespace SylverInk
 		public static bool CloseOnce { get; set; } = false;
 		public static bool DatabaseChanged { get; set; } = false;
 		public static string DatabaseFile => "sylver_ink";
+		public static byte DatabaseFormat { get; set; } = 1;
 		public static double PPD { get; set; } = 1.0;
 		public static bool ForceClose { get; set; } = false;
 		public static Import? Import { get => _import; set { _import?.Close(); _import = value; _import?.Show(); } }
@@ -29,6 +30,7 @@ namespace SylverInk
 		public static Replace? Replace { get => _replace; set { _replace?.Close(); _replace = value; _replace?.Show(); } }
 		public static Search? Search { get => _search; set { _search?.Close(); _search = value; _search?.Show(); } }
 		public static ContextSettings Settings = new();
+		public static string SettingsFile => "user_settings.txt";
 		public static double TextHeight { get; set; } = 0.0;
 		public static double WindowHeight { get; set; }
 		public static double WindowWidth { get; set; }
