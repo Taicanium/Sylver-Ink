@@ -105,7 +105,6 @@ namespace SylverInk
 				}
 
 				NoteController.SerializeRecords();
-
 				Serializer.Close();
 			}
 
