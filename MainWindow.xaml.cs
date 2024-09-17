@@ -95,6 +95,8 @@ namespace SylverInk
 			if (Common.DatabaseChanged)
 			{
 				Common.MakeBackups();
+				if (Serializer.DatabaseFormat == 2 && !NoteController.TestCanCompress())
+					Serializer.DatabaseFormat = 1;
 
 				if (!Serializer.OpenWrite($"{Common.DatabaseFile}.sidb"))
 				{

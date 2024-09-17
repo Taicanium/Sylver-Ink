@@ -172,6 +172,36 @@ namespace SylverInk
 			}
 		}
 
+		public static bool TestCanCompress()
+		{
+			try
+			{
+				Serializer.BeginCompressionTest();
+
+				Serializer.WriteInt32(_records.Count);
+				for (int i = 0; i < _records.Count; i++)
+					_records[i].Serialize();
+
+				Serializer.EndCompressionTest();
+
+				int recordCount = 0;
+				Serializer.ReadInt32(ref recordCount);
+				for (int i = 0; i < recordCount; i++)
+				{
+					NoteRecord record = new();
+					record.Deserialize();
+				}
+			}
+			catch (ApplicationException)
+			{
+				Serializer.ClearCompressionTest();
+				return false;
+			}
+
+			Serializer.ClearCompressionTest();
+			return true;
+		}
+
 		public static void UpdateWordPercentages()
 		{
 			uint total = 0U;

@@ -9,10 +9,11 @@ namespace SylverInk
 	static class Serializer
 	{
 		private static byte[] _buffer = [];
-		private static FileStream? _fileStream;
+		private static Stream? _fileStream;
 		private static bool _isOpen = false;
 		private static bool _lzw = false;
 		private static List<byte> _outgoing = [];
+		private static byte[] _testBuffer = [];
 		private static bool _writing = false;
 
 		/// <summary>
@@ -26,6 +27,7 @@ namespace SylverInk
 		/// * 
 		/// * The dictionary is not reset when its width limit is reached. This results in a theoretical limit on the size of the entire database.
 		/// * This limit depends on the database's exact contents at any given time, but the lower bound is ~5,700 characters.
+		/// * This lower bound is by far a worst-case scenario. Operationally, the user may not expect to cross the limit until well into the hundreds of thousands of characters.
 		/// 
 		/// Format 3: LZW Unrestricted.
 		/// * Not yet implemented.
@@ -34,7 +36,30 @@ namespace SylverInk
 		/// </summary>
 		public static byte DatabaseFormat { get; set; } = 2;
 
-		public static void Close()
+		/// <summary>
+		/// Begin testing if the current database can be compressed in format 2.
+		/// </summary>
+		public static void BeginCompressionTest()
+		{
+			Close();
+
+			_fileStream = new MemoryStream();
+			_isOpen = true;
+			_writing = true;
+
+			WriteHeader(2);
+		}
+
+		public static void ClearCompressionTest()
+		{
+			Close();
+
+			_fileStream = null;
+			_outgoing = [];
+			_testBuffer = [];
+		}
+
+		public static void Close(bool testing = false)
 		{
 			if (_isOpen)
 			{
@@ -46,10 +71,24 @@ namespace SylverInk
 					_fileStream?.Write([.. _outgoing], 0, _outgoing.Count);
 					_fileStream?.Flush();
 				}
-				_fileStream?.Dispose();
+
+				if (!testing)
+					_fileStream?.Dispose();
 			}
 
 			_isOpen = false;
+		}
+
+		public static void EndCompressionTest()
+		{
+			Close(true);
+
+			_testBuffer = (_fileStream as MemoryStream).ToArray();
+			_fileStream = new MemoryStream(_testBuffer, false);
+			_isOpen = true;
+			_writing = false;
+
+			ReadHeader();
 		}
 
 		public static bool OpenRead(string path)
@@ -58,7 +97,7 @@ namespace SylverInk
 
 			try
 			{
-				_fileStream = new(path, FileMode.Open);
+				_fileStream = new FileStream(path, FileMode.Open);
 				_isOpen = true;
 				_writing = false;
 
@@ -66,7 +105,6 @@ namespace SylverInk
 			}
 			catch (Exception e)
 			{
-				MessageBox.Show($"WARNING: Failed to access {path} - {e.Message}", "Sylver Ink: Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
 				return false;
 			}
 
@@ -82,7 +120,7 @@ namespace SylverInk
 				if (File.Exists(path))
 					File.Delete(path);
 
-				_fileStream = new(path, FileMode.Create);
+				_fileStream = new FileStream(path, FileMode.Create);
 				_isOpen = true;
 				_writing = true;
 
@@ -162,7 +200,6 @@ namespace SylverInk
 			}
 			catch (Exception ex)
 			{
-				MessageBox.Show(ex.Message, "Sylver Ink: Error", MessageBoxButton.OK);
 				return item;
 			}
 		}
@@ -184,7 +221,6 @@ namespace SylverInk
 			}
 			catch (Exception ex)
 			{
-				MessageBox.Show(ex.Message, "Sylver Ink: Error", MessageBoxButton.OK);
 				return item;
 			}
 		}
@@ -206,28 +242,17 @@ namespace SylverInk
 			}
 			catch (Exception ex)
 			{
-				MessageBox.Show(ex.Message, "Sylver Ink: Error", MessageBoxButton.OK);
 				return item;
 			}
 		}
 
 		private static uint ReadUInt32()
 		{
-			if (_lzw)
-			{
-				return ReadByte() * 16777216U
-				+ ReadByte() * 65536U
-				+ ReadByte() * 256U
-				+ ReadByte();
-			}
-
-			return (uint?)(_fileStream?.ReadByte() * 16777216U
-				+ _fileStream?.ReadByte() * 65536U
-				+ _fileStream?.ReadByte() * 256U
-				+ _fileStream?.ReadByte()) ?? 0U;
+			return ReadByte() * 16777216U
+			+ ReadByte() * 65536U
+			+ ReadByte() * 256U
+			+ ReadByte();
 		}
-
-		private static void WriteByte(byte data) => WriteBytes([data]);
 
 		private static void WriteBytes(byte[] data)
 		{

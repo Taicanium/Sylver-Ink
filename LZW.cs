@@ -168,8 +168,15 @@ namespace SylverInk
 		private static void UpdateRange(uint lastCode)
 		{
 			for (int i = _lzwRange; i <= _lzwMaxRange; i++)
+			{
 				if (lastCode >= (uint)Math.Pow(2, i))
 					_lzwRange = i + 1;
+				else
+					break;
+			}
+
+			if (lastCode >= (uint)Math.Pow(2, _lzwMaxRange + 1))
+				throw new ApplicationException("Serialized database has exceeded the maximum capacity for restricted LZW compression.", new IndexOutOfRangeException());
 		}
 
 		private static void WriteCode(uint code)
