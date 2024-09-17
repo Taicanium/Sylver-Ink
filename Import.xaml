@@ -25,7 +25,15 @@
 				<Button HorizontalAlignment="Right" Width="20" Height="20" Margin="5,5,5,5" Content="..." Click="Open_Click"/>
 				<TextBox Grid.Column="1" Margin="5,5,5,5" Text="{Binding ImportTarget}" IsReadOnly="True" TextChanged="Target_TextChanged"/>
 			</Grid>
-			<Button Margin="0,25,0,0" Content="Finalize" IsEnabled="{Binding ReadyToFinalize}" Click="Finalize_Click"/>
+			<Grid Margin="0,25,0,0">
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="*"/>
+					<ColumnDefinition Width="*"/>
+				</Grid.ColumnDefinitions>
+
+				<Button Content="Import" IsEnabled="{Binding ReadyToFinalize}" Click="Finalize_Click"/>
+				<Button Grid.Column="1" Content="Close" Click="CloseClick"/>
+			</Grid>
 		</StackPanel>
 		<Border Grid.Row="1" Margin="20,5,20,20" BorderBrush="DarkGray" BorderThickness="1">
 			<TextBlock Background="White" TextWrapping="WrapWithOverflow" Text="{Binding ImportData}"/>

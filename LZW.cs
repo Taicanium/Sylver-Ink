@@ -9,7 +9,7 @@ namespace SylverInk
 		private static string _lzwC = string.Empty;
 		private readonly static List<byte> _lzwBitStream = [];
 		private readonly static Dictionary<string, uint> _lzwCodes = [];
-		private static int _lzwMaxRange = 24;
+		private readonly static int _lzwMaxRange = 24;
 		private static uint _lzwNextCode = 258U;
 		private static bool _lzwOpen = false;
 		private readonly static Dictionary<uint, string> _lzwPackets = [];
@@ -68,14 +68,12 @@ namespace SylverInk
 			{
 				_lzwC = FromByte(data[i]);
 				string wc = _lzwW + _lzwC;
-				if (_lzwCodes.ContainsKey(wc))
+				if (!_lzwCodes.TryAdd(wc, _lzwNextCode))
 					_lzwW = wc;
 				else
 				{
 					var entry = _lzwCodes[_lzwW];
 					WriteCode(entry);
-
-					_lzwCodes.Add(wc, _lzwNextCode);
 					_lzwNextCode++;
 					_lzwW = _lzwC;
 

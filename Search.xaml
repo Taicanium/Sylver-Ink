@@ -16,7 +16,14 @@
 		<StackPanel>
 			<Label Foreground="Gray" Margin="0,20,40,0" HorizontalAlignment="Right" FontStyle="Italic" Content="Search text"/>
 			<TextBox x:Name="SearchText" Margin="20,0"/>
-			<Button Content="Query" Margin="0,50,0,0" Click="Query_Click"/>
+			<Grid Margin="0,50,0,0">
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="*"/>
+					<ColumnDefinition Width="*"/>
+				</Grid.ColumnDefinitions>
+				<Button Content="Query" Click="Query_Click"/>
+				<Button Grid.Column="1" Content="Close" Click="CloseClick"/>
+			</Grid>
 		</StackPanel>
 		<ListBox Grid.Row="1" Margin="20,0,20,20" x:Name="Results" ItemsSource="{Binding SearchResults}" AlternationCount="2">
 			<ListBox.ItemTemplate>

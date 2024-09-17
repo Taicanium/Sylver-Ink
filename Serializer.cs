@@ -83,7 +83,8 @@ namespace SylverInk
 		{
 			Close(true);
 
-			_testBuffer = (_fileStream as MemoryStream).ToArray();
+			var _memoryStream = _fileStream as MemoryStream;
+			_testBuffer = _memoryStream?.ToArray() ?? [];
 			_fileStream = new MemoryStream(_testBuffer, false);
 			_isOpen = true;
 			_writing = false;
@@ -105,6 +106,7 @@ namespace SylverInk
 			}
 			catch (Exception e)
 			{
+				MessageBox.Show($"WARNING: Failed to access {path} - {e.Message}", "Sylver Ink: Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
 				return false;
 			}
 
@@ -128,7 +130,7 @@ namespace SylverInk
 			}
 			catch (Exception e)
 			{
-				var result = MessageBox.Show($"WARNING: Failed to access {path} - {e.Message}.\nProceed with exiting?", "Sylver Ink: Error", MessageBoxButton.YesNo, MessageBoxImage.Error);
+				var result = MessageBox.Show($"WARNING: Failed to access {path} - {e.Message}\n\nProceed with exiting?", "Sylver Ink: Error", MessageBoxButton.YesNo, MessageBoxImage.Error);
 				Common.ForceClose = result == MessageBoxResult.Yes;
 				return false;
 			}
@@ -168,7 +170,6 @@ namespace SylverInk
 			_fileStream?.Read(_buffer, 0, 5);
 
 			string header = Encoding.UTF8.GetString(_buffer);
-			string magic = header[..4];
 			DatabaseFormat = (byte)header[^1];
 
 			switch (DatabaseFormat)
@@ -198,7 +199,7 @@ namespace SylverInk
 				item = int.Parse(Encoding.UTF8.GetString(_buffer));
 				return item;
 			}
-			catch (Exception ex)
+			catch (Exception)
 			{
 				return item;
 			}
@@ -219,7 +220,7 @@ namespace SylverInk
 				item = long.Parse(Encoding.UTF8.GetString(_buffer));
 				return item;
 			}
-			catch (Exception ex)
+			catch (Exception)
 			{
 				return item;
 			}
@@ -240,7 +241,7 @@ namespace SylverInk
 				item = Encoding.UTF8.GetString(_buffer);
 				return item;
 			}
-			catch (Exception ex)
+			catch (Exception)
 			{
 				return item;
 			}

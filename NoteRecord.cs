@@ -51,8 +51,8 @@ namespace SylverInk
 			_created = DateTime.UnixEpoch.ToBinary();
 			_index = -1;
 			_initial = string.Empty;
-			_tagsDirty = true;
 			_lastChange = DateTime.UnixEpoch.ToBinary();
+			_tagsDirty = true;
 		}
 
 		public NoteRecord(int _index, string _initial, long _created = -1)
@@ -60,8 +60,8 @@ namespace SylverInk
 			this._created = _created == -1 ? DateTime.UtcNow.ToBinary() : _created;
 			this._index = _index;
 			this._initial = _initial;
-			_tagsDirty = true;
 			_lastChange = DateTime.UtcNow.ToBinary();
+			_tagsDirty = true;
 		}
 
 		public void Add(NoteRevision _revision)
@@ -77,6 +77,15 @@ namespace SylverInk
 
 			if (revisionTime.CompareTo(noteTime) > 0)
 				_lastChange = _revision._created;
+		}
+
+		public void Delete()
+		{
+			_index = 0;
+			_initial = string.Empty;
+			_lastChange = DateTime.UtcNow.ToBinary();
+			_revisions.Clear();
+			_tagsDirty = true;
 		}
 
 		public NoteRecord Deserialize()

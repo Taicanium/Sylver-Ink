@@ -13,6 +13,8 @@ namespace SylverInk
 			DataContext = Common.Settings;
 		}
 
+		private void CloseClick(object sender, RoutedEventArgs e) => Close();
+
 		private void Query_Click(object sender, RoutedEventArgs e)
 		{
 			string query = SearchText.Text ?? string.Empty;

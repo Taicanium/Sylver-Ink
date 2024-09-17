@@ -16,6 +16,8 @@ namespace SylverInk
 			DataContext = Common.Settings;
 		}
 
+		private void CloseClick(object sender, RoutedEventArgs e) => Close();
+
 		private static string DialogFileSelect()
 		{
 			OpenFileDialog dialog = new()
@@ -35,7 +37,10 @@ namespace SylverInk
 
 			if (target.EndsWith(".sidb") || target.EndsWith(".sibk"))
 			{
-				var result = MessageBox.Show("You have selected an existing Sylver Ink database. Its contents will be merged with your current database.\nDo you want to overwrite your current database instead?", "Sylver Ink: Warning", MessageBoxButton.YesNoCancel, MessageBoxImage.Warning);
+				if (!Serializer.OpenRead(target))
+					return;
+
+				var result = MessageBox.Show("You have selected an existing Sylver Ink database. Its contents will be merged with your current database.\n\nDo you want to overwrite your current database instead?", "Sylver Ink: Warning", MessageBoxButton.YesNoCancel, MessageBoxImage.Warning);
 
 				if (result == MessageBoxResult.Cancel)
 					return;
@@ -43,18 +48,16 @@ namespace SylverInk
 				if (result == MessageBoxResult.Yes)
 				{
 					Common.MakeBackups();
-					File.Copy(target, $"{Common.DatabaseFile}.sidb", true);
-					target = $"{Common.DatabaseFile}.sidb";
+					NoteController.EraseDatabase();
 				}
-
-				if (!Serializer.OpenRead(target))
-					return;
 
 				NoteController.InitializeRecords(false, false);
 				Serializer.Close();
 
 				imported = NoteController.RecordCount;
 				Common.Settings.ImportData = $"Notes imported: {imported:N0}";
+
+				Common.UpdateRecentNotes();
 
 				return;
 			}

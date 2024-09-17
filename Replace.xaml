@@ -13,7 +13,14 @@
 			<TextBox Margin="20,0" x:Name="OldText" TextChanged="ReplaceTextChanged"/>
 			<Label Foreground="Gray" Margin="0,40,40,0" HorizontalAlignment="Right" FontStyle="Italic" Content="New text"/>
 			<TextBox Margin="20,0" x:Name="NewText"/>
-			<Button Content="Replace" Margin="0,40,0,0" IsEnabled="{Binding ReadyToReplace}" Click="Replace_Click"/>
+			<Grid Margin="0,40,0,0">
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="*"/>
+					<ColumnDefinition Width="*"/>
+				</Grid.ColumnDefinitions>
+				<Button Content="Replace" IsEnabled="{Binding ReadyToReplace}" Click="Replace_Click"/>
+				<Button Grid.Column="1" Content="Close" Click="CloseClick"/>
+			</Grid>
 			<Label Foreground="Blue" Margin="0,20,0,0" HorizontalAlignment="Center" FontStyle="Italic" Content="{Binding NumReplacements}"/>
 		</StackPanel>
 	</Grid>
