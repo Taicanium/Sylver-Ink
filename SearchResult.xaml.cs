@@ -42,7 +42,7 @@ namespace SylverInk
 
 			TabItem newTab = new()
 			{
-				Header = abbrev,
+				Header = abbrev.Replace("\t", " ").Replace("\r", string.Empty).Replace("\n", " "),
 				Tag = ResultRecord
 			};
 
@@ -98,12 +98,14 @@ namespace SylverInk
 			Button deleteButton = new()
 			{
 				Content = "Delete",
+				Margin = new(0, 0, 20, 0),
 				Tag = tabPanel.SelectedIndex
 			};
 
 			Button returnButton = new()
 			{
-				Content = "Return",
+				Content = "Close",
+				Margin = new(20, 0, 0, 0),
 				Tag = tabPanel.SelectedIndex
 			};
 
@@ -137,7 +139,7 @@ namespace SylverInk
 
 				noteBox.Tag = (tag.Item1, tag.Item2);
 				noteBox.Text = record.Reconstruct(tag.Item1);
-				noteBox.IsEnabled = tag.Item1 == 0;
+				noteBox.IsReadOnly = tag.Item1 == 0;
 				senderObject.IsEnabled = tag.Item1 > 0;
 				previousButton.IsEnabled = tag.Item1 < record.GetNumRevisions();
 				revisionLabel.Content = (tag.Item1 == 0U ? "Entry last modified: " : $"Revision {record.GetNumRevisions() - tag.Item1} from ") + revisionTime;
@@ -161,7 +163,7 @@ namespace SylverInk
 
 				noteBox.Tag = (tag.Item1, tag.Item2);
 				noteBox.Text = record.Reconstruct(tag.Item1);
-				noteBox.IsEnabled = false;
+				noteBox.IsReadOnly = true;
 				senderObject.IsEnabled = tag.Item1 + 1 <= record.GetNumRevisions();
 				revisionLabel.Content = (tag.Item1 == record.GetNumRevisions() ? "Entry created " : $"Revision {record.GetNumRevisions() - tag.Item1} from ") + revisionTime;
 				nextButton.IsEnabled = tag.Item1 > 0;

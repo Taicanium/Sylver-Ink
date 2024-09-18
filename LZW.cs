@@ -4,9 +4,9 @@ using System.IO;
 
 namespace SylverInk
 {
-    static class LZW
+	static class LZW
     {
-		private static string _lzwC = string.Empty;
+		private static string? _lzwC = string.Empty;
 		private readonly static List<byte> _lzwBitStream = [];
 		private readonly static Dictionary<string, uint> _lzwCodes = [];
 		private readonly static int _lzwMaxRange = 24;
@@ -87,31 +87,32 @@ namespace SylverInk
 			if (_lzwW.Equals(string.Empty))
 			{
 				var k = ReadCode();
-				_lzwW = _lzwPackets[k];
-				_lzwC = _lzwW[0].ToString();
-				for (int i = 0; i < _lzwW.Length; i++)
-					Incoming.Add((byte)_lzwW[i]);
+				if (k != 257U)
+				{
+					_lzwW = _lzwPackets[k];
+					for (int i = 0; i < _lzwW.Length; i++)
+						Incoming.Add((byte)_lzwW[i]);
+				}
 			}
 
 			while (Incoming.Count == 0 || Incoming.Count < byteCount)
 			{
 				var k = ReadCode();
-				if (k == 257U)
+				if (k == 256U)
+					Init();
+				else if (k == 257U)
 					break;
 				else
 				{
-					if (!_lzwPackets.TryGetValue(k, out string? entry))
-					{
-						entry = _lzwW + _lzwC;
-					}
+					if (!_lzwPackets.TryGetValue(k, out _lzwC))
+						_lzwC = $"{_lzwW}{_lzwW[0]}";
 
-					for (int i = 0; i < entry.Length; i++)
-						Incoming.Add((byte)entry[i]);
+					for (int i = 0; i < _lzwC.Length; i++)
+						Incoming.Add((byte)_lzwC[i]);
 
-					_lzwC = entry[0].ToString();
-					_lzwPackets[_lzwNextCode] = $"{_lzwW}{_lzwC}";
+					_lzwPackets.Add(_lzwNextCode, $"{_lzwW}{_lzwC[0]}");
+					_lzwW = _lzwC;
 					_lzwNextCode++;
-					_lzwW = entry;
 
 					UpdateRange(_lzwNextCode + 1);
 				}
@@ -123,9 +124,9 @@ namespace SylverInk
 			return [.. range];
 		}
 
-		public static void Init(Stream? _fileStream, bool _writing = false)
+		public static void Init(Stream? _fileStream = null, bool _writing = false)
 		{
-			FileStream = _fileStream;
+			FileStream = _fileStream ?? FileStream;
 			Writing = _writing;
 			_lzwCodes.Clear();
 			_lzwNextCode = 258U;

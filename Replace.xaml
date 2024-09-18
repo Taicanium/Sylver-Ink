@@ -18,7 +18,7 @@
 					<ColumnDefinition Width="*"/>
 					<ColumnDefinition Width="*"/>
 				</Grid.ColumnDefinitions>
-				<Button Content="Replace" IsEnabled="{Binding ReadyToReplace}" Click="Replace_Click"/>
+				<Button x:Name="DoReplace" Content="Replace" IsEnabled="{Binding ReadyToReplace}" Click="Replace_Click"/>
 				<Button Grid.Column="1" Content="Close" Click="CloseClick"/>
 			</Grid>
 			<Label Foreground="Blue" Margin="0,20,0,0" HorizontalAlignment="Center" FontStyle="Italic" Content="{Binding NumReplacements}"/>

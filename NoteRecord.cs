@@ -14,11 +14,14 @@ namespace SylverInk
 	public partial class NoteRecord
 	{
 		private long _created = -1;
+		private bool _dirty = true;
 		private int _index = -1;
 		private string? _initial = string.Empty;
 		private long _lastChange = -1;
-		private string? _latest = string.Empty;
-		private double _previewWidth = 375.0;
+		private DateTime _lastChangeObject = DateTime.UtcNow;
+		private string _latest = string.Empty;
+		private string _previewText = string.Empty;
+		private int _previewWidth = 375;
 		private readonly List<NoteRevision> _revisions = [];
 		private readonly List<string> _tags = [];
 		private bool _tagsDirty = true;
@@ -27,22 +30,42 @@ namespace SylverInk
 
 		public string Preview
 		{
-			get
-			{
-				var recordText = ToString().Replace("\r", "").Replace("\n", " ").Replace("\t", " ");
-				var previewText = recordText[..Math.Min(recordText.Length, 150)];
+			get => _previewText;
 
-				while (Common.MeasureTextSize(previewText) > _previewWidth)
-					previewText = previewText[..^1];
-
-				if (!previewText.Equals(recordText))
-					previewText += "...";
-
-				return previewText;
-			}
 			set
 			{
+				_dirty = false;
+				_previewText = ToString().Replace("\r", string.Empty).Replace("\n", " ").Replace("\t", " ");
+				if (_previewText.Length > 150)
+					_previewText = _previewText[..150];
+
 				_previewWidth = int.Parse(value);
+
+				while (Common.MeasureTextSize(_previewText) > _previewWidth)
+				{
+					_previewText = _previewText[..^4];
+					_dirty = true;
+				}
+
+				if (_dirty)
+					_previewText += "...";
+			}
+		}
+
+		public string ShortChange
+		{
+			get
+			{
+				var now = DateTime.UtcNow;
+				var diff = now - _lastChangeObject;
+
+				if (diff.TotalHours < 24.0)
+					return _lastChangeObject.ToLocalTime().ToShortTimeString();
+
+				if (diff.TotalHours < 168.0)
+					return $"{diff.Days} day{(diff.Days > 1 ? "s" : string.Empty)} ago";
+
+				return _lastChangeObject.ToLocalTime().ToShortDateString();
 			}
 		}
 
@@ -76,7 +99,10 @@ namespace SylverInk
 				));
 
 			if (revisionTime.CompareTo(noteTime) > 0)
+			{
 				_lastChange = _revision._created;
+				_lastChangeObject = DateTime.FromBinary(_lastChange);
+			}
 		}
 
 		public void Delete()
@@ -179,14 +205,14 @@ namespace SylverInk
 
 		public string Reconstruct(uint backsteps = 0U)
 		{
-			_latest = _initial;
+			_latest = _initial ?? string.Empty;
 			if (_revisions.Count == 0)
-				return _latest ?? string.Empty;
+				return _latest;
 
 			for (int i = 0; i < _revisions.Count - Math.Min(backsteps, _revisions.Count); i++)
 			{
 				if (_revisions[i]._startIndex < _latest?.Length)
-					_latest = _latest?.Remove(_revisions[i]._startIndex);
+					_latest = _latest.Remove(_revisions[i]._startIndex);
 				_latest += _revisions[i]._substring;
 			}
 

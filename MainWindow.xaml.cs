@@ -12,6 +12,8 @@ namespace SylverInk
 	/// </summary>
 	public partial class MainWindow : Window
 	{
+		private bool _firstSize = true;
+
 		public MainWindow()
 		{
 			InitializeComponent();
@@ -42,6 +44,18 @@ namespace SylverInk
 					Close();
 					break;
 			}
+		}
+
+		private void ExitComplete(object? sender, RunWorkerCompletedEventArgs e)
+		{
+			Common.CloseOnce = false;
+			Common.DatabaseChanged = false;
+			ExitButton.Content = "Exit";
+			ExitButton.FontWeight = FontWeights.Normal;
+			MainGrid.IsEnabled = true;
+
+			if (Common.ForceClose)
+				Application.Current.Shutdown();
 		}
 
 		private static string FindBackup()
@@ -88,26 +102,26 @@ namespace SylverInk
 
 		private void MainWindow_Closing(object sender, CancelEventArgs e)
 		{
-			if (Common.CloseOnce)
+			if (Common.CloseOnce && !Common.ForceClose)
 				return;
+
 			Common.CloseOnce = true;
 
 			if (Common.DatabaseChanged)
 			{
-				Common.MakeBackups();
-				if (Serializer.DatabaseFormat == 2 && !NoteController.TestCanCompress())
-					Serializer.DatabaseFormat = 1;
+				e.Cancel = true;
 
-				if (!Serializer.OpenWrite($"{Common.DatabaseFile}.sidb"))
-				{
-					File.Copy($"{Common.DatabaseFile}1.sibk", $"{Common.DatabaseFile}.sidb", true);
-					e.Cancel = Common.ForceClose;
-					Common.CloseOnce = false;
-					return;
-				}
+				ExitButton.FontWeight = FontWeights.Bold;
+				ExitButton.Content = "Saving...";
 
-				NoteController.SerializeRecords();
-				Serializer.Close();
+				MainGrid.IsEnabled = false;
+
+				BackgroundWorker exitTask = new();
+				exitTask.DoWork += SaveDatabase;
+				exitTask.RunWorkerCompleted += ExitComplete;
+				exitTask.RunWorkerAsync();
+
+				return;
 			}
 
 			Application.Current.Shutdown();
@@ -115,22 +129,18 @@ namespace SylverInk
 
 		private void MainWindow_Loaded(object sender, RoutedEventArgs e)
 		{
+			FindDatabase();
+
 			Common.PPD = VisualTreeHelper.GetDpi(RecentNotes).PixelsPerDip;
 			Common.Settings.SearchTabHeight = Height - 300.0;
-			Common.WindowHeight = RecentNotes.ActualHeight;
-			Common.WindowWidth = RecentNotes.ActualWidth;
-
-			FindDatabase();
-			Common.UpdateRecentNotes();
+			UpdateRecentNotes();
 		}
 
 		private void MainWindow_SizeChanged(object sender, SizeChangedEventArgs e)
 		{
 			Common.Settings.SearchTabHeight = e.NewSize.Height - 300.0;
-			Common.WindowHeight = RecentNotes.ActualHeight;
-			Common.WindowWidth = RecentNotes.ActualWidth;
-			Common.UpdateRecentNotes();
-			RecentNotes.Items.Refresh();
+			if (!_firstSize)
+				UpdateRecentNotes();
 		}
 
 		private void NewNote(object sender, KeyEventArgs e)
@@ -141,6 +151,37 @@ namespace SylverInk
 				Common.UpdateRecentNotes();
 				NewNoteBox.Text = string.Empty;
 			}
+		}
+
+		private void SaveDatabase(object? sender, DoWorkEventArgs e)
+		{
+			Common.MakeBackups();
+
+			if (Serializer.DatabaseFormat == 2 && !NoteController.TestCanCompress())
+				Serializer.DatabaseFormat = 1;
+
+			if (!Serializer.OpenWrite($"{Common.DatabaseFile}.sidb"))
+			{
+				Common.CloseOnce = false;
+				return;
+			}
+
+			NoteController.SerializeRecords();
+			Serializer.Close();
+
+			Common.ForceClose = true;
+		}
+
+		private void UpdateRecentNotes()
+		{
+			if (!_firstSize)
+			{
+				Common.WindowHeight = RecentNotes.ActualHeight;
+				Common.WindowWidth = RecentNotes.ActualWidth;
+			}
+			_firstSize = false;
+			Common.UpdateRecentNotes();
+			RecentNotes.Items.Refresh();
 		}
 	}
 }

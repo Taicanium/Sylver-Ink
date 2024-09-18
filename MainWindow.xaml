@@ -25,13 +25,28 @@
 							<RowDefinition Height="*"/>
 						</Grid.RowDefinitions>
 						<Label Foreground="Gray" HorizontalAlignment="Right" VerticalAlignment="Bottom" FontStyle="Italic" Content="Recent notes"/>
-						<ListBox Grid.Row="1" x:Name="RecentNotes" ItemsSource="{Binding RecentNotes}" AlternationCount="2">
-							<ListBox.ItemTemplate>
-								<DataTemplate>
-									<TextBlock Text="{Binding Path=Preview}"/>
-								</DataTemplate>
-							</ListBox.ItemTemplate>
-						</ListBox>
+						<Border Grid.Row="1" BorderBrush="DarkGray" BorderThickness="1">
+							<Grid Background="Gray">
+								<Grid.ColumnDefinitions>
+									<ColumnDefinition Width="Auto"/>
+									<ColumnDefinition Width="*"/>
+								</Grid.ColumnDefinitions>
+								<ListBox HorizontalContentAlignment="Right" BorderThickness="0" Margin="0,0,1,0" x:Name="ShortChanges" ItemsSource="{Binding RecentNotes}" AlternationCount="2">
+									<ListBox.ItemTemplate>
+										<DataTemplate>
+											<TextBlock HorizontalAlignment="Right" Text="{Binding Path=ShortChange}"/>
+										</DataTemplate>
+									</ListBox.ItemTemplate>
+								</ListBox>
+								<ListBox BorderThickness="0" Margin="1,0,0,0" Grid.Column="1" x:Name="RecentNotes" ItemsSource="{Binding RecentNotes}" AlternationCount="2">
+									<ListBox.ItemTemplate>
+										<DataTemplate>
+											<TextBlock Text="{Binding Path=Preview}"/>
+										</DataTemplate>
+									</ListBox.ItemTemplate>
+								</ListBox>
+							</Grid>
+						</Border>
 					</Grid>
 					<StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom">
 						<Label Foreground="Gray" FontStyle="Italic" Content="New note"/>
@@ -48,7 +63,7 @@
 						<Button Content="Search" Click="Button_Click"/>
 						<Button Grid.Column="1" Content="Replace" Click="Button_Click"/>
 						<Button Grid.Column="2" Content="Import" Click="Button_Click"/>
-						<Button Grid.Column="3" Content="Exit" Background="Khaki" Click="Button_Click"/>
+						<Button x:Name="ExitButton" Grid.Column="3" Content="Exit" Background="Khaki" Click="Button_Click"/>
 					</Grid>
 				</Grid>
 			</TabItem>

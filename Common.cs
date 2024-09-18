@@ -31,8 +31,8 @@ namespace SylverInk
 		public static ContextSettings Settings = new();
 		public static string SettingsFile => "user_settings.txt";
 		public static double TextHeight { get; set; } = 0.0;
-		public static double WindowHeight { get; set; }
-		public static double WindowWidth { get; set; }
+		public static double WindowHeight { get; set; } = 289.0;
+		public static double WindowWidth { get; set; } = 350.0;
 
 		public static void MakeBackups()
 		{
@@ -119,7 +119,7 @@ namespace SylverInk
 			while (RecentEntries < NoteController.RecordCount && TextHeight < WindowHeight - 25.0)
 			{
 				var record = NoteController.GetRecord(RecentEntries);
-				record.Preview = $"{WindowWidth - 50.0}";
+				record.Preview = $"{Math.Floor(WindowWidth - 50.0)}";
 
 				Settings.RecentNotes.Add(record);
 				RecentEntries++;

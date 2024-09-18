@@ -21,7 +21,7 @@
 					<ColumnDefinition Width="*"/>
 					<ColumnDefinition Width="*"/>
 				</Grid.ColumnDefinitions>
-				<Button Content="Query" Click="Query_Click"/>
+				<Button x:Name="DoQuery" Content="Query" Click="Query_Click"/>
 				<Button Grid.Column="1" Content="Close" Click="CloseClick"/>
 			</Grid>
 		</StackPanel>
