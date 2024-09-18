@@ -118,6 +118,15 @@ namespace SylverInk
 			_tagsDirty = true;
 		}
 
+		public void DeleteRevision(int index)
+		{
+			if (index >= GetNumRevisions())
+				return;
+
+			_revisions.RemoveAt(index);
+			Common.DatabaseChanged = true;
+		}
+
 		public NoteRecord Deserialize()
 		{
 			Serializer.ReadLong(ref _created);

@@ -332,7 +332,7 @@ namespace SylverInk
 		{
 			AddTabToRibbon();
 
-			Common.Search?.Close();
+			Common.SearchWindow?.Close();
 			Close();
 		}
 	}

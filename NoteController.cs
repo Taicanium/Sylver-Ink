@@ -74,6 +74,7 @@ namespace SylverInk
 			_records[index].Delete();
 			_records.RemoveAt(index);
 			PropagateIndices();
+			Common.DatabaseChanged = true;
 		}
 
 		private static void DeserializeRecords()
@@ -93,6 +94,8 @@ namespace SylverInk
 		{
 			while (RecordCount > 0)
 				DeleteRecord(0);
+
+			Common.UpdateRecentNotes();
 		}
 
 		public static NoteRecord GetRecord(int RecordIndex) => _records[RecordIndex];
@@ -148,6 +151,31 @@ namespace SylverInk
 			Common.DatabaseChanged = Common.DatabaseChanged || ReplaceCount > 0;
 			PropagateIndices();
 			return (ReplaceCount, NoteCount);
+		}
+
+		public static void Revert(DateTime targetDate)
+		{
+			for (int i = RecordCount - 1; i > -1; i--)
+			{
+				var RecordDate = _records[i].GetCreatedObject().ToLocalTime();
+				var comparison = RecordDate.CompareTo(targetDate);
+				if (comparison > 0)
+				{
+					DeleteRecord(i);
+					continue;
+				}
+
+				for (int j = _records[i].GetNumRevisions(); j > 0; j--)
+				{
+					var RevisionDate = DateTime.FromBinary(_records[i].GetRevision((uint)j - 1U)._created).ToLocalTime();
+					comparison = RevisionDate.CompareTo(targetDate);
+					if (comparison > 0)
+						_records[i].DeleteRevision(j - 1);
+				}
+			}
+
+			PropagateIndices();
+			Common.UpdateRecentNotes();
 		}
 
 		public static void SerializeRecords()

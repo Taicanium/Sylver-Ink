@@ -30,15 +30,18 @@ namespace SylverInk
 					Common.Settings.ImportTarget = string.Empty;
 					Common.Settings.ReadyToFinalize = false;
 
-					Common.Import = new();
+					Common.ImportWindow = new();
 					break;
 				case "Replace":
 					Common.Settings.NumReplacements = string.Empty;
 
-					Common.Replace = new();
+					Common.ReplaceWindow = new();
 					break;
 				case "Search":
-					Common.Search = new();
+					Common.SearchWindow = new();
+					break;
+				case "Settings":
+					Common.SettingsWindow = new();
 					break;
 				case "Exit":
 					Close();

@@ -31,7 +31,7 @@
 									<ColumnDefinition Width="Auto"/>
 									<ColumnDefinition Width="*"/>
 								</Grid.ColumnDefinitions>
-								<ListBox HorizontalContentAlignment="Right" BorderThickness="0" Margin="0,0,1,0" x:Name="ShortChanges" ItemsSource="{Binding RecentNotes}" AlternationCount="2">
+								<ListBox HorizontalContentAlignment="Right" BorderThickness="0" Margin="0,0,1,0" MinWidth="60" x:Name="ShortChanges" ItemsSource="{Binding RecentNotes}" AlternationCount="2">
 									<ListBox.ItemTemplate>
 										<DataTemplate>
 											<TextBlock HorizontalAlignment="Right" Text="{Binding Path=ShortChange}"/>
@@ -53,17 +53,33 @@
 						<Label Foreground="Blue" Content="(?)" ToolTip="Write a line of text and press Enter to create a new entry."/>
 					</StackPanel>
 					<TextBox Grid.Row="2" x:Name="NewNoteBox" Margin="5" KeyDown="NewNote" VerticalAlignment="Top"/>
-					<Grid Grid.Row="4" Margin="0,40,0,80">
-						<Grid.ColumnDefinitions>
-							<ColumnDefinition Width="*"/>
-							<ColumnDefinition Width="*"/>
-							<ColumnDefinition Width="*"/>
-							<ColumnDefinition Width="*"/>
-						</Grid.ColumnDefinitions>
-						<Button Content="Search" Click="Button_Click"/>
-						<Button Grid.Column="1" Content="Replace" Click="Button_Click"/>
-						<Button Grid.Column="2" Content="Import" Click="Button_Click"/>
-						<Button x:Name="ExitButton" Grid.Column="3" Content="Exit" Background="Khaki" Click="Button_Click"/>
+					<Grid Grid.Row="4" Margin="0,20,0,80">
+						<Grid.RowDefinitions>
+							<RowDefinition Height="*"/>
+							<RowDefinition Height="*"/>
+						</Grid.RowDefinitions>
+						<Grid Margin="0,10,0,10">
+							<Grid.ColumnDefinitions>
+								<ColumnDefinition Width="*"/>
+								<ColumnDefinition Width="*"/>
+								<ColumnDefinition Width="*"/>
+								<ColumnDefinition Width="*"/>
+								<ColumnDefinition Width="*"/>
+							</Grid.ColumnDefinitions>
+							<Button Grid.Column="1" Content="Search" Click="Button_Click"/>
+							<Button Grid.Column="2" Content="Replace" Click="Button_Click"/>
+							<Button Grid.Column="3" Content="Import" Click="Button_Click"/>
+						</Grid>
+						<Grid Grid.Row="1" Margin="0,10,0,-10">
+							<Grid.ColumnDefinitions>
+								<ColumnDefinition Width="*"/>
+								<ColumnDefinition Width="*"/>
+								<ColumnDefinition Width="*"/>
+								<ColumnDefinition Width="*"/>
+							</Grid.ColumnDefinitions>
+							<Button Grid.Column="1" Content="Settings" Click="Button_Click"/>
+							<Button x:Name="ExitButton" Grid.Column="2" Content="Exit" Background="Khaki" Click="Button_Click"/>
+						</Grid>
 					</Grid>
 				</Grid>
 			</TabItem>

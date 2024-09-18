@@ -12,13 +12,20 @@
 			<Setter Property="Height" Value="20"/>
 			<Setter Property="Width" Value="75"/>
 		</Style>
+		<Style TargetType="{x:Type DatePicker}">
+			<Setter Property="Background" Value="White"/>
+			<Setter Property="BorderBrush" Value="#FF333333"/>
+		</Style>
+		<Style TargetType="{x:Type DatePickerTextBox}">
+			<Setter Property="Background" Value="Transparent"/>
+		</Style>
 		<Style TargetType="{x:Type ListBox}">
 			<EventSetter Event="SelectionChanged" Handler="SearchResultFocus"/>
 		</Style>
 		<Style TargetType="{x:Type ListBoxItem}">
+			<Setter Property="Background" Value="White"/>
 			<Setter Property="FontFamily" Value="Arial"/>
 			<Setter Property="FontSize" Value="11"/>
-			<Setter Property="Background" Value="White"/>
 			<Style.Triggers>
 				<Trigger Property="ListBox.AlternationIndex" Value="1">
 					<Setter Property="Background" Value="Beige"/>

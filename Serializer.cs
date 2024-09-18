@@ -17,18 +17,22 @@ namespace SylverInk
 		private static bool _writing = false;
 
 		/// <summary>
+		/// <para>
 		/// Format 1: Uncompressed.
 		/// Data is serialized to plaintext.
 		/// Four bytes are written indicating the object's length in string format, followed by that formatted string.
-		/// 
+		/// </para>
+		/// <para>
 		/// Format 2: LZW Restricted.
 		/// Data is compressed using the Lempel–Ziv–Welch (LZW) algorithm.
 		/// The LZW bit stream is formatted with a code dictionary at most 25 bits wide, yielding a length at most 2^25, or ~33.5 million.
 		/// The dictionary is not reset when its width limit is reached. This results in exponential resource usage with increasing database size, eventually becoming prohibitive.
-		/// 
+		/// </para>
+		/// <para>
 		/// Format 3: LZW Unrestricted.
 		/// Not yet implemented.
-		/// When implemented, this format will compress data with an LZW dictionary that resets once its width limit is reached, leaving no hard limit on the efficiency of the database.
+		/// When implemented, this format will compress data with an LZW dictionary that resets once its width limit is reached, preventing runaway resource usage and allowing for much larger databases.
+		/// </para>
 		/// </summary>
 		public static byte DatabaseFormat { get; set; } = 2;
 
