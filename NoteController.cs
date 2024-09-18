@@ -36,10 +36,10 @@ namespace SylverInk
 			return record.GetIndex();
 		}
 
-		public static int CreateRecord(string entry)
+		public static int CreateRecord(string entry, bool dummy = false)
 		{
 			int Index = NextIndex;
-			_records.Add(new(Index, entry));
+			_records.Add(new(Index, entry, dummy ? DateTime.UtcNow.AddMinutes(new Random().NextDouble() * 43200.0 - 43200.0).ToBinary() : -1));
 			Common.DatabaseChanged = true;
 			return Index;
 		}
@@ -109,11 +109,11 @@ namespace SylverInk
 
 			if (dummyData)
 			{
-				var newCount = new Random().Next(15, 100);
+				var newCount = new Random().Next(40, 160);
 				for (int i = 0; i < newCount; i++)
 				{
 					var newText = Common.MakeDummySearchResult();
-					CreateRecord(newText);
+					CreateRecord(newText, true);
 				}
 			}
 

@@ -206,10 +206,9 @@ namespace SylverInk
 					return;
 
 				NoteController.DeleteRecord(tag.Item2);
-				Common.UpdateRecentNotes();
-
 				tabPanel.SelectedIndex = 0;
 				tabPanel.Items.RemoveAt(tabIndex);
+				Common.UpdateRecentNotes();
 			};
 
 			saveButton.Click += (sender, e) =>

@@ -37,7 +37,10 @@ namespace SylverInk
 				_dirty = false;
 				_previewText = ToString().Replace("\r", string.Empty).Replace("\n", " ").Replace("\t", " ");
 				if (_previewText.Length > 150)
+				{
 					_previewText = _previewText[..150];
+					_dirty = true;
+				}
 
 				_previewWidth = int.Parse(value);
 
@@ -56,6 +59,7 @@ namespace SylverInk
 		{
 			get
 			{
+				_lastChangeObject = DateTime.FromBinary(_lastChange);
 				var now = DateTime.UtcNow;
 				var diff = now - _lastChangeObject;
 
@@ -74,7 +78,7 @@ namespace SylverInk
 			_created = DateTime.UnixEpoch.ToBinary();
 			_index = -1;
 			_initial = string.Empty;
-			_lastChange = DateTime.UnixEpoch.ToBinary();
+			_lastChange = _created;
 			_tagsDirty = true;
 		}
 
@@ -83,7 +87,7 @@ namespace SylverInk
 			this._created = _created == -1 ? DateTime.UtcNow.ToBinary() : _created;
 			this._index = _index;
 			this._initial = _initial;
-			_lastChange = DateTime.UtcNow.ToBinary();
+			_lastChange = this._created;
 			_tagsDirty = true;
 		}
 
