@@ -1,17 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 
 namespace SylverInk
 {
@@ -26,6 +17,7 @@ namespace SylverInk
 		public Settings()
 		{
 			InitializeComponent();
+			DataContext = Common.Settings;
 		}
 
 		private void ApplyTime()
@@ -57,6 +49,13 @@ namespace SylverInk
 		{
 			hourSelected = true;
 			ApplyTime();
+		}
+
+		private void MenuFontChanged(object sender, SelectionChangedEventArgs e)
+		{
+			var item = (ComboBoxItem)MenuFont.SelectedItem;
+			Common.Settings.MainFontFamily = item.FontFamily;
+			Common.UpdateRecentNotes();
 		}
 
 		private void Minute_Selected(object sender, RoutedEventArgs e)
@@ -118,6 +117,35 @@ namespace SylverInk
 				};
 				Minute.Items.Add(item);
 			}
+
+			var fonts = Fonts.SystemFontFamilies;
+			List<FontFamily> availableFonts = [];
+
+			foreach (var font in fonts)
+				availableFonts.Add(font);
+
+			availableFonts.Sort(new Comparison<FontFamily>((f1, f2) => f1.Source.CompareTo(f2.Source)));
+			var arialIndex = 0;
+
+			for (int i = 0; i < availableFonts.Count; i++)
+			{
+				var font = availableFonts[i];
+				ComboBoxItem item = new()
+				{
+					Content = font.Source,
+					FontFamily = font
+				};
+				MenuFont.Items.Add(item);
+
+				if (font.Source.Equals(Common.Settings.MainFontFamily?.Source))
+					MenuFont.SelectedItem = item;
+
+				if (font.Source.Equals("Arial"))
+					arialIndex = i;
+			}
+
+			if (MenuFont.SelectedItem is null)
+				MenuFont.SelectedIndex = arialIndex;
 
 			Hour.SelectedIndex = 0;
 			Minute.SelectedIndex = 0;

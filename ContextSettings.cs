@@ -4,13 +4,24 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Windows;
+using System.Windows.Media;
 
 namespace SylverInk
 {
 	public class ContextSettings : INotifyPropertyChanged
 	{
+		private Brush? _accentBackgound = Brushes.Khaki;
+		private Brush? _accentForegound = Brushes.Blue;
 		private string _importData = string.Empty;
 		private string _importTarget = string.Empty;
+		private Brush? _listBackgound = Brushes.White;
+		private Brush? _listForegound = Brushes.Black;
+		private FontFamily? _mainFontFamily = new("Arial");
+		private double _mainFontSize = 11.0;
+		private Typeface? _mainTypeFace;
+		private Brush? _menuBackgound = Brushes.Beige;
+		private Brush? _menuForegound = Brushes.Gray;
 		private string _numReplacements = string.Empty;
 		public event PropertyChangedEventHandler? PropertyChanged;
 		private bool _readyToFinalize = false;
@@ -20,8 +31,17 @@ namespace SylverInk
 		private double _searchTabHeight = 0.0;
 		private readonly string _versionString = "Sylver Ink — Version " + Assembly.GetExecutingAssembly().GetName().Version + " © Taica, " + GetBuildYear(Assembly.GetExecutingAssembly());
 
+		public Brush? AccentBackground { get => _accentBackgound; set { _accentBackgound = value; OnPropertyChanged(); } }
+		public Brush? AccentForeground { get => _accentForegound; set { _accentForegound = value; OnPropertyChanged(); } }
 		public string ImportData { get => _importData; set { _importData = value; OnPropertyChanged(); } }
 		public string ImportTarget { get => _importTarget; set { _importTarget = value; OnPropertyChanged(); } }
+		public Brush? ListBackground { get => _listBackgound; set { _listBackgound = value; OnPropertyChanged(); } }
+		public Brush? ListForeground { get => _listForegound; set { _listForegound = value; OnPropertyChanged(); } }
+		public FontFamily? MainFontFamily { get => _mainFontFamily; set { _mainFontFamily = value; MainTypeFace = new(value, FontStyles.Normal, FontWeights.Normal, FontStretches.Normal); OnPropertyChanged(); } }
+		public double MainFontSize { get => _mainFontSize; set { _mainFontSize =value; OnPropertyChanged(); } }
+		public Typeface? MainTypeFace { get => _mainTypeFace; set { _mainTypeFace = value; OnPropertyChanged(); } }
+		public Brush? MenuBackground { get => _menuBackgound; set { _menuBackgound = value; OnPropertyChanged(); } }
+		public Brush? MenuForeground { get => _menuForegound; set { _menuForegound = value; OnPropertyChanged(); } }
 		public string NumReplacements { get => _numReplacements; set { _numReplacements = value; OnPropertyChanged(); } }
 		public bool ReadyToFinalize { get => _readyToFinalize; set { _readyToFinalize = value; OnPropertyChanged(); } }
 		public bool ReadyToReplace { get => _readyToReplace; set { _readyToReplace = value; OnPropertyChanged(); } }

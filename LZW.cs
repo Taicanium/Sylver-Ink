@@ -27,17 +27,17 @@ namespace SylverInk
 
 		public static void Close()
 		{
-			_lzwW = string.Empty;
-			_lzwC = string.Empty;
-
 			if (!_lzwOpen || !Writing)
 			{
+				_lzwW = string.Empty;
+				_lzwC = string.Empty;
+
 				_lzwBitStream.Clear();
 				return;
 			}
 
-			if (!_lzwW.Equals(string.Empty))
-				WriteCode(_lzwCodes[_lzwW]);
+			if (!_lzwW.Equals(string.Empty)) // If there's still one or two more letters to write...
+				WriteCode(_lzwCodes[_lzwW]); // Write them.
 
 			WriteCode(257U);
 			WriteCode(0U);
@@ -59,7 +59,9 @@ namespace SylverInk
 			}
 
 			_lzwBitStream.Clear();
+			_lzwC = string.Empty;
 			_lzwOpen = false;
+			_lzwW = string.Empty;
 		}
 
 		public static void Compress(byte[] data)

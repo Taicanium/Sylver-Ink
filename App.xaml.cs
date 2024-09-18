@@ -20,8 +20,9 @@ namespace SylverInk
 
 			var record = (NoteRecord)box.SelectedItem;
 			var index = record.GetIndex();
-			if (Common.OpenQueries.Contains(index))
-				return;
+			foreach (SearchResult result in Common.OpenQueries)
+				if (result.ResultRecord == index)
+					return;
 
 			SearchResult resultWindow = new()
 			{
@@ -29,8 +30,16 @@ namespace SylverInk
 				ResultRecord = index
 			};
 			resultWindow.Show();
+			resultWindow.NoteSettings.AccentBackground = Common.Settings.AccentBackground;
+			resultWindow.NoteSettings.AccentForeground = Common.Settings.AccentForeground;
+			resultWindow.NoteSettings.ListBackground = Common.Settings.ListBackground;
+			resultWindow.NoteSettings.ListForeground = Common.Settings.ListForeground;
+			resultWindow.NoteSettings.MainFontFamily = Common.Settings.MainFontFamily;
+			resultWindow.NoteSettings.MainFontSize = Common.Settings.MainFontSize;
+			resultWindow.NoteSettings.MenuBackground = Common.Settings.MenuBackground;
+			resultWindow.NoteSettings.MenuForeground = Common.Settings.MenuForeground;
 
-			Common.OpenQueries.Add(index);
+			Common.OpenQueries.Add(resultWindow);
 			box.SelectedItem = null;
 		}
 	}

@@ -22,10 +22,7 @@ namespace SylverInk
 		public static double PPD { get; set; } = 1.0;
 		public static bool ForceClose { get; set; } = false;
 		public static Import? ImportWindow { get => _import; set { _import?.Close(); _import = value; _import?.Show(); } }
-		public static FontFamily MainFontFamily = new("Arial");
-		public static Typeface? MainTypeFace = new(MainFontFamily, FontStyles.Normal, FontWeights.Normal, FontStretches.Normal);
-		public static double MainFontSize => 11;
-		public static List<int> OpenQueries = [];
+		public static List<SearchResult> OpenQueries = [];
 		public static int RecentEntries { get; set; } = 10;
 		public static Replace? ReplaceWindow { get => _replace; set { _replace?.Close(); _replace = value; _replace?.Show(); } }
 		public static Search? SearchWindow { get => _search; set { _search?.Close(); _search = value; _search?.Show(); } }
@@ -101,18 +98,21 @@ namespace SylverInk
 
 		public static double MeasureTextSize(string text)
 		{
-			FormattedText ft = new(text, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, MainTypeFace, MainFontSize, Brushes.Black, PPD);
+			FormattedText ft = new(text, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, Settings.MainTypeFace, Settings.MainFontSize, Brushes.Black, PPD);
 			return ft.Width;
 		}
 
 		public static double MeasureTextHeight(string text)
 		{
-			FormattedText ft = new(text, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, MainTypeFace, MainFontSize, Brushes.Black, PPD);
+			FormattedText ft = new(text, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, Settings.MainTypeFace, Settings.MainFontSize, Brushes.Black, PPD);
 			return ft.Height;
 		}
 
 		public static void UpdateRecentNotes()
 		{
+			Application.Current.Resources["MainFontFamily"] = Settings.MainFontFamily;
+			Application.Current.Resources["MainFontSize"] = Settings.MainFontSize;
+
 			Settings.RecentNotes.Clear();
 			RecentEntries = 0;
 			TextHeight = 0.0;

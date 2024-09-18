@@ -35,7 +35,7 @@ namespace SylverInk
 			return dialog.ShowDialog() is true ? dialog.FileName : string.Empty;
 		}
 
-		private void FinishImport(object? sender, RunWorkerCompletedEventArgs e)
+		private void FinishImport(object? sender, RunWorkerCompletedEventArgs? e)
 		{
 			Common.Settings.ImportData = $"Notes imported: {_imported:N0}";
 			var button = (Button)FindName("DoImport");
@@ -75,9 +75,7 @@ namespace SylverInk
 				Serializer.Close();
 
 				_imported = NoteController.RecordCount;
-				Common.Settings.ImportData = $"Notes imported: {_imported:N0}";
-
-				Common.UpdateRecentNotes();
+				FinishImport(sender, null);
 
 				return;
 			}

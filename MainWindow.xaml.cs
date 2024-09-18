@@ -58,7 +58,10 @@ namespace SylverInk
 			MainGrid.IsEnabled = true;
 
 			if (Common.ForceClose)
+			{
+				SaveUserSettings();
 				Application.Current.Shutdown();
+			}
 		}
 
 		private static string FindBackup()
@@ -103,6 +106,26 @@ namespace SylverInk
 			Serializer.Close();
 		}
 
+		private static void LoadUserSettings()
+		{
+			if (!File.Exists("settings.sis"))
+				return;
+
+			string[] settings = File.ReadAllLines("settings.sis");
+
+			for (int i = 0; i < settings.Length; i++)
+			{
+				var setting = settings[i].Trim();
+				var keyValue = setting.Split(':');
+				switch (keyValue[0])
+				{
+					case "FontFamily":
+						Common.Settings.MainFontFamily = new(keyValue[1]);
+						break;
+				}
+			}
+		}
+
 		private void MainWindow_Closing(object sender, CancelEventArgs e)
 		{
 			if (!Common.ForceClose)
@@ -143,13 +166,17 @@ namespace SylverInk
 				return;
 			}
 
+			SaveUserSettings();
 			Application.Current.Shutdown();
 		}
 
 		private void MainWindow_Loaded(object sender, RoutedEventArgs e)
 		{
+			LoadUserSettings();
+
 			FindDatabase();
 
+			Common.Settings.MainTypeFace = new(Common.Settings.MainFontFamily, FontStyles.Normal, FontWeights.Normal, FontStretches.Normal);
 			Common.PPD = VisualTreeHelper.GetDpi(RecentNotes).PixelsPerDip;
 			Common.Settings.SearchTabHeight = Height - 300.0;
 			UpdateRecentNotes();
@@ -189,6 +216,15 @@ namespace SylverInk
 			Serializer.Close();
 
 			Common.ForceClose = true;
+		}
+
+		private static void SaveUserSettings()
+		{
+			string[] settings = [
+				$"FontFamily:{Common.Settings.MainFontFamily?.Source}"
+			];
+
+			File.WriteAllLines("settings.sis", settings);
 		}
 
 		private void UpdateRecentNotes()

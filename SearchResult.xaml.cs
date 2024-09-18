@@ -17,10 +17,12 @@ namespace SylverInk
 
 		private readonly NoteSettings _noteSettings = new();
 
+		public NoteSettings NoteSettings { get { return _noteSettings; } }
+
 		public SearchResult()
 		{
 			InitializeComponent();
-			DataContext = _noteSettings;
+			DataContext = NoteSettings;
 		}
 
 		private void AddTabToRibbon()
@@ -139,7 +141,7 @@ namespace SylverInk
 
 				noteBox.Tag = (tag.Item1, tag.Item2);
 				noteBox.Text = record.Reconstruct(tag.Item1);
-				noteBox.IsReadOnly = tag.Item1 == 0;
+				noteBox.IsReadOnly = tag.Item1 != 0;
 				senderObject.IsEnabled = tag.Item1 > 0;
 				previousButton.IsEnabled = tag.Item1 < record.GetNumRevisions();
 				revisionLabel.Content = (tag.Item1 == 0U ? "Entry last modified: " : $"Revision {record.GetNumRevisions() - tag.Item1} from ") + revisionTime;
@@ -164,7 +166,7 @@ namespace SylverInk
 
 				noteBox.Tag = (tag.Item1, tag.Item2);
 				noteBox.Text = record.Reconstruct(tag.Item1);
-				noteBox.IsReadOnly = true;
+				noteBox.IsReadOnly = tag.Item1 != 0;
 				senderObject.IsEnabled = tag.Item1 + 1 <= record.GetNumRevisions();
 				revisionLabel.Content = (tag.Item1 == record.GetNumRevisions() ? "Entry created " : $"Revision {record.GetNumRevisions() - tag.Item1} from ") + revisionTime;
 				nextButton.IsEnabled = tag.Item1 > 0;
@@ -270,7 +272,7 @@ namespace SylverInk
 
 		private void CloseClick(object sender, RoutedEventArgs e)
 		{
-			if (_noteSettings.Edited)
+			if (NoteSettings.Edited)
 			{
 				var result = MessageBox.Show("You have unsaved changes. Save before closing this note?", "Sylver Ink: Notification", MessageBoxButton.YesNoCancel, MessageBoxImage.Question);
 
@@ -286,15 +288,22 @@ namespace SylverInk
 
 		private void Result_Closed(object sender, EventArgs e)
 		{
-			Common.OpenQueries.Remove(ResultRecord);
+			foreach (SearchResult result in Common.OpenQueries)
+			{
+				if (result.ResultRecord == ResultRecord)
+				{
+					Common.OpenQueries.Remove(result);
+					return;
+				}
+			}
 		}
 
 		private void Result_Loaded(object sender, RoutedEventArgs e)
 		{
 			ResultText = NoteController.GetRecord(ResultRecord).ToString();
 			ResultBlock.Text = ResultText;
-			_noteSettings.LastChanged = "Entry last modified: " + NoteController.GetRecord(ResultRecord).GetLastChange();
-			_noteSettings.Edited = false;
+			NoteSettings.LastChanged = "Entry last modified: " + NoteController.GetRecord(ResultRecord).GetLastChange();
+			NoteSettings.Edited = false;
 
 			var tabPanel = (TabControl)Application.Current.MainWindow.FindName("MainTabPanel");
 			for (int i = tabPanel.Items.Count - 1; i > 0; i--)
@@ -308,7 +317,7 @@ namespace SylverInk
 
 		private void ResultBlock_TextChanged(object sender, TextChangedEventArgs e)
 		{
-			_noteSettings.Edited = true;
+			NoteSettings.Edited = true;
 			var senderObject = sender as TextBox;
 			ResultText = senderObject?.Text ?? string.Empty;
 		}
@@ -324,8 +333,8 @@ namespace SylverInk
 		private void SaveRecord()
 		{
 			NoteController.CreateRevision(ResultRecord, ResultText);
-			_noteSettings.LastChanged = "Entry last modified: " + NoteController.GetRecord(ResultRecord).GetLastChange();
-			_noteSettings.Edited = false;
+			NoteSettings.LastChanged = "Entry last modified: " + NoteController.GetRecord(ResultRecord).GetLastChange();
+			NoteSettings.Edited = false;
 		}
 
 		private void ViewClick(object sender, RoutedEventArgs e)

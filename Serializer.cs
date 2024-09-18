@@ -273,6 +273,8 @@ namespace SylverInk
 				LZW.Init(_fileStream, true);
 				_lzw = true;
 			}
+			else
+				_lzw = false;
 		}
 
 		public static void WriteInt32(int value)

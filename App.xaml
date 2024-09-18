@@ -5,43 +5,61 @@
 			 StartupUri="MainWindow.xaml"
 			 ShutdownMode="OnExplicitShutdown">
 	<Application.Resources>
-		<Style TargetType="{x:Type Button}">
-			<Setter Property="Background" Value="White"/>
-			<Setter Property="Foreground" Value="Black"/>
-			<Setter Property="FontStyle" Value="Italic"/>
-			<Setter Property="Height" Value="20"/>
-			<Setter Property="Width" Value="75"/>
-		</Style>
-		<Style TargetType="{x:Type DatePicker}">
-			<Setter Property="Background" Value="White"/>
-			<Setter Property="BorderBrush" Value="#FF333333"/>
-		</Style>
-		<Style TargetType="{x:Type DatePickerTextBox}">
-			<Setter Property="Background" Value="Transparent"/>
-		</Style>
-		<Style TargetType="{x:Type ListBox}">
-			<EventSetter Event="SelectionChanged" Handler="SearchResultFocus"/>
-		</Style>
-		<Style TargetType="{x:Type ListBoxItem}">
-			<Setter Property="Background" Value="White"/>
-			<Setter Property="FontFamily" Value="Arial"/>
-			<Setter Property="FontSize" Value="11"/>
-			<Style.Triggers>
-				<Trigger Property="ListBox.AlternationIndex" Value="1">
-					<Setter Property="Background" Value="Beige"/>
-				</Trigger>
-			</Style.Triggers>
-		</Style>
-		<Style TargetType="{x:Type TabItem}">
-			<Setter Property="Background" Value="LemonChiffon"/>
-			<Style.Triggers>
-				<Trigger Property="IsSelected" Value="True">
-					<Setter Property="Background" Value="White"/>
-				</Trigger>
-			</Style.Triggers>
-		</Style>
-		<Style TargetType="{x:Type TextBox}">
-			<Setter Property="Height" Value="20"/>
-		</Style>
+		<ResourceDictionary>
+			<Style TargetType="{x:Type Button}">
+				<Setter Property="Background" Value="{Binding ListBackground}"/>
+				<Setter Property="FontFamily" Value="{Binding MainFontFamily}"/>
+				<Setter Property="FontSize" Value="{Binding MainFontSize}"/>
+				<Setter Property="FontStyle" Value="Italic"/>
+				<Setter Property="Foreground" Value="{Binding ListForeground}"/>
+				<Setter Property="Height" Value="20"/>
+				<Setter Property="Width" Value="75"/>
+			</Style>
+			<Style TargetType="{x:Type DatePicker}">
+				<Setter Property="Background" Value="{Binding ListBackground}"/>
+				<Setter Property="BorderBrush" Value="#FF333333"/>
+				<Setter Property="FontFamily" Value="{Binding MainFontFamily}"/>
+				<Setter Property="FontSize" Value="{Binding MainFontSize}"/>
+				<Setter Property="Foreground" Value="{Binding ListForeground}"/>
+			</Style>
+			<Style TargetType="{x:Type DatePickerTextBox}">
+				<Setter Property="Background" Value="Transparent"/>
+			</Style>
+			<Style TargetType="{x:Type Label}">
+				<Setter Property="FontFamily" Value="{Binding MainFontFamily}"/>
+				<Setter Property="FontSize" Value="{Binding MainFontSize}"/>
+				<Setter Property="Foreground" Value="{Binding MenuForeground}"/>
+			</Style>
+			<Style TargetType="{x:Type ListBox}">
+				<Setter Property="Background" Value="{Binding ListBackground}"/>
+				<Setter Property="FontFamily" Value="{Binding MainFontFamily}"/>
+				<Setter Property="FontSize" Value="{Binding MainFontSize}"/>
+				<Setter Property="Foreground" Value="{Binding ListForeground}"/>
+				<EventSetter Event="SelectionChanged" Handler="SearchResultFocus"/>
+			</Style>
+			<Style TargetType="{x:Type ListBoxItem}">
+				<Style.Triggers>
+					<Trigger Property="ListBox.AlternationIndex" Value="1">
+						<Setter Property="Background" Value="Beige"/>
+					</Trigger>
+				</Style.Triggers>
+			</Style>
+			<Style TargetType="{x:Type TabItem}">
+				<Setter Property="Background" Value="LemonChiffon"/>
+				<Style.Triggers>
+					<Trigger Property="IsSelected" Value="True">
+						<Setter Property="Background" Value="{Binding MenuBackground}"/>
+						<Setter Property="Foreground" Value="{Binding MenuForeground}"/>
+					</Trigger>
+				</Style.Triggers>
+			</Style>
+			<Style TargetType="{x:Type TextBox}">
+				<Setter Property="Background" Value="{Binding ListBackground}"/>
+				<Setter Property="FontFamily" Value="{Binding MainFontFamily}"/>
+				<Setter Property="FontSize" Value="{Binding MainFontSize}"/>
+				<Setter Property="Foreground" Value="{Binding ListForeground}"/>
+				<Setter Property="Height" Value="20"/>
+			</Style>
+		</ResourceDictionary>
 	</Application.Resources>
 </Application>
