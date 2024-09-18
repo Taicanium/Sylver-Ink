@@ -144,7 +144,8 @@ namespace SylverInk
 				previousButton.IsEnabled = tag.Item1 < record.GetNumRevisions();
 				revisionLabel.Content = (tag.Item1 == 0U ? "Entry last modified: " : $"Revision {record.GetNumRevisions() - tag.Item1} from ") + revisionTime;
 				saveButton.Content = tag.Item1 == 0 ? "Save" : "Restore";
-				saveButton.IsEnabled = !record.ToString().Equals(noteBox.Text);
+				var latestText = record.ToString();
+				saveButton.IsEnabled = !latestText.Equals(noteBox.Text);
 			};
 
 			previousButton.Click += (sender, e) =>
@@ -168,7 +169,8 @@ namespace SylverInk
 				revisionLabel.Content = (tag.Item1 == record.GetNumRevisions() ? "Entry created " : $"Revision {record.GetNumRevisions() - tag.Item1} from ") + revisionTime;
 				nextButton.IsEnabled = tag.Item1 > 0;
 				saveButton.Content = "Restore";
-				saveButton.IsEnabled = true;
+				var latestText = record.ToString();
+				saveButton.IsEnabled = !latestText.Equals(noteBox.Text);
 			};
 
 			returnButton.Click += (sender, e) =>

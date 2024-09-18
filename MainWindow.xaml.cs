@@ -79,14 +79,14 @@ namespace SylverInk
 				string backup;
 				if ((backup = FindBackup()).Equals(string.Empty))
 				{
-					var result = MessageBox.Show($"Unable to load database file: {Common.DatabaseFile}.sidb\n\nCreate placeholder data for your new database?", "Sylver Ink: Warning", MessageBoxButton.YesNo);
+					var result = MessageBox.Show($"Unable to load database file: {Common.DatabaseFile}.sidb\n\nCreate placeholder data for your new database?", "Sylver Ink: Warning", MessageBoxButton.YesNo, MessageBoxImage.Question);
 					NoteController.InitializeRecords(dummyData: result == MessageBoxResult.Yes);
 					Serializer.Close();
 					return;
 				}
 				else
 				{
-					var result = MessageBox.Show($"Unable to load database file: {Common.DatabaseFile}.sidb\n\nLoad your most recent backup?", "Sylver Ink: Warning", MessageBoxButton.YesNo);
+					var result = MessageBox.Show($"Unable to load database file: {Common.DatabaseFile}.sidb\n\nLoad your most recent backup?", "Sylver Ink: Warning", MessageBoxButton.YesNo, MessageBoxImage.Question);
 					if (result == MessageBoxResult.Yes)
 					{
 						NoteController.InitializeRecords(!Serializer.OpenRead(backup));
@@ -102,8 +102,24 @@ namespace SylverInk
 
 		private void MainWindow_Closing(object sender, CancelEventArgs e)
 		{
-			if (Common.CloseOnce && !Common.ForceClose)
-				return;
+			if (!Common.ForceClose)
+			{
+				if (Common.CloseOnce)
+					return;
+
+				if (Common.DatabaseChanged)
+				{
+					switch (MessageBox.Show("Do you want to save your work before exiting?", "Sylver Ink: Notification", MessageBoxButton.YesNoCancel, MessageBoxImage.Question))
+					{
+						case MessageBoxResult.Cancel:
+							e.Cancel = true;
+							return;
+						case MessageBoxResult.No:
+							Common.DatabaseChanged = false;
+							break;
+					}
+				}
+			}
 
 			Common.CloseOnce = true;
 

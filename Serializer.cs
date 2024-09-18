@@ -18,21 +18,17 @@ namespace SylverInk
 
 		/// <summary>
 		/// Format 1: Uncompressed.
-		/// * Data is serialized to plaintext.
-		/// * Four bytes are written indicating the object's length in string format, followed by that formatted string.
+		/// Data is serialized to plaintext.
+		/// Four bytes are written indicating the object's length in string format, followed by that formatted string.
 		/// 
 		/// Format 2: LZW Restricted.
-		/// * Data is compressed using the Lempel–Ziv–Welch (LZW) algorithm.
-		/// * The LZW bit stream is formatted with a code dictionary at most 25 bits wide, yielding a length at most 2^25, or ~33.5 million.
-		/// * 
-		/// * The dictionary is not reset when its width limit is reached. This results in a theoretical limit on the size of the entire database.
-		/// * This limit depends on the database's exact contents at any given time, but the lower bound is ~5,700 characters.
-		/// * This lower bound is by far a worst-case scenario. Operationally, the user may not expect to cross the limit until well into the hundreds of thousands of characters.
+		/// Data is compressed using the Lempel–Ziv–Welch (LZW) algorithm.
+		/// The LZW bit stream is formatted with a code dictionary at most 25 bits wide, yielding a length at most 2^25, or ~33.5 million.
+		/// The dictionary is not reset when its width limit is reached. This results in exponential resource usage with increasing database size, eventually becoming prohibitive.
 		/// 
 		/// Format 3: LZW Unrestricted.
-		/// * Not yet implemented.
-		/// *
-		/// * When implemented, this format will compress data with an LZW dictionary that resets once its width limit is reached, leaving no hard limit on the size of the database.
+		/// Not yet implemented.
+		/// When implemented, this format will compress data with an LZW dictionary that resets once its width limit is reached, leaving no hard limit on the efficiency of the database.
 		/// </summary>
 		public static byte DatabaseFormat { get; set; } = 2;
 
