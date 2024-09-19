@@ -30,14 +30,14 @@
   </PropertyGroup>
   
   <ItemGroup>
-    <Content Include="glasses.ico" />
+	<Content Include="glasses.ico" />
   </ItemGroup>
   
   <ItemGroup>
-    <None Update="glasses.png">
-      <Pack>True</Pack>
-      <PackagePath>\</PackagePath>
-    </None>
+	<None Update="glasses.png">
+	  <Pack>True</Pack>
+	  <PackagePath>\</PackagePath>
+	</None>
   </ItemGroup>
 
 </Project>

@@ -11,13 +11,12 @@ namespace SylverInk
 	/// </summary>
 	public partial class SearchResult : Window
 	{
-		public string Query { get; set; } = string.Empty;
-		public int ResultRecord { get; set; } = -1;
-		public string ResultText { get; set; } = string.Empty;
-
 		private readonly NoteSettings _noteSettings = new();
 
 		public NoteSettings NoteSettings { get { return _noteSettings; } }
+		public string Query { get; set; } = string.Empty;
+		public int ResultRecord { get; set; } = -1;
+		public string ResultText { get; set; } = string.Empty;
 
 		public SearchResult()
 		{
@@ -66,8 +65,6 @@ namespace SylverInk
 				Content = "Entry last modified: " + NoteController.GetRecord(ResultRecord).GetLastChange()
 			};
 
-			Grid.SetRow(grid.Children[grid.Children.Add(revisionLabel)], 0);
-
 			TextBox noteBox = new()
 			{
 				TextWrapping = TextWrapping.WrapWithOverflow,
@@ -79,9 +76,6 @@ namespace SylverInk
 				Text = ResultText,
 				Tag = (0U, ResultRecord)
 			};
-
-			int noteBoxIndex = grid.Children.Add(noteBox);
-			Grid.SetRow(grid.Children[noteBoxIndex], 1);
 
 			Button nextButton = new()
 			{
@@ -240,7 +234,6 @@ namespace SylverInk
 			buttonGrid.RowDefinitions.Add(new() { Height = GridLength.Auto, });
 			buttonGrid.RowDefinitions.Add(new() { Height = new(30.0), });
 			buttonGrid.RowDefinitions.Add(new() { Height = GridLength.Auto, });
-
 			buttonGrid.ColumnDefinitions.Add(new() { Width = new(1.0, GridUnitType.Star), });
 			buttonGrid.ColumnDefinitions.Add(new() { Width = new(1.0, GridUnitType.Star), });
 			buttonGrid.ColumnDefinitions.Add(new() { Width = new(1.0, GridUnitType.Star), });
@@ -251,15 +244,21 @@ namespace SylverInk
 			buttonGrid.Children.Add(saveButton);
 			buttonGrid.Children.Add(returnButton);
 
-			Grid.SetColumn(nextButton, 2);
+			grid.Children.Add(revisionLabel);
+			grid.Children.Add(noteBox);
+			grid.Children.Add(buttonGrid);
+
 			Grid.SetColumn(saveButton, 1);
+			Grid.SetColumn(nextButton, 2);
 			Grid.SetColumn(returnButton, 2);
 
 			Grid.SetRow(deleteButton, 2);
-			Grid.SetRow(saveButton, 2);
 			Grid.SetRow(returnButton, 2);
+			Grid.SetRow(saveButton, 2);
 
-			Grid.SetRow(grid.Children[grid.Children.Add(buttonGrid)], 2);
+			Grid.SetRow(revisionLabel, 0);
+			Grid.SetRow(noteBox, 1);
+			Grid.SetRow(buttonGrid, 2);
 
 			newTab.Content = grid;
 

@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using System.IO;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -12,8 +13,6 @@ namespace SylverInk
 	/// </summary>
 	public partial class MainWindow : Window
 	{
-		private bool _firstSize = true;
-
 		public MainWindow()
 		{
 			InitializeComponent();
@@ -47,6 +46,19 @@ namespace SylverInk
 					Close();
 					break;
 			}
+		}
+
+		private void DeferUpdateRecentNotes()
+		{
+			BackgroundWorker updateTask = new();
+			updateTask.DoWork += (_, _) => SpinWait.SpinUntil(() => RecentNotes.IsMeasureValid, 1000);
+			updateTask.RunWorkerCompleted += (_, _) =>
+			{
+				Common.WindowHeight = RecentNotes.ActualHeight;
+				Common.WindowWidth = RecentNotes.ActualWidth;
+				Common.UpdateRecentNotes();
+			};
+			updateTask.RunWorkerAsync();
 		}
 
 		private void ExitComplete(object? sender, RunWorkerCompletedEventArgs e)
@@ -179,14 +191,13 @@ namespace SylverInk
 			Common.Settings.MainTypeFace = new(Common.Settings.MainFontFamily, FontStyles.Normal, FontWeights.Normal, FontStretches.Normal);
 			Common.PPD = VisualTreeHelper.GetDpi(RecentNotes).PixelsPerDip;
 			Common.Settings.SearchTabHeight = Height - 300.0;
-			UpdateRecentNotes();
+			DeferUpdateRecentNotes();
 		}
 
 		private void MainWindow_SizeChanged(object sender, SizeChangedEventArgs e)
 		{
 			Common.Settings.SearchTabHeight = e.NewSize.Height - 300.0;
-			if (!_firstSize)
-				UpdateRecentNotes();
+			DeferUpdateRecentNotes();
 		}
 
 		private void NewNote(object sender, KeyEventArgs e)
@@ -227,16 +238,11 @@ namespace SylverInk
 			File.WriteAllLines("settings.sis", settings);
 		}
 
-		private void UpdateRecentNotes()
+		private void TabChanged(object sender, SelectionChangedEventArgs e)
 		{
-			if (!_firstSize)
-			{
-				Common.WindowHeight = RecentNotes.ActualHeight;
-				Common.WindowWidth = RecentNotes.ActualWidth;
-			}
-			_firstSize = false;
-			Common.UpdateRecentNotes();
-			RecentNotes.Items.Refresh();
+			var control = (TabControl)sender;
+			if (control.SelectedIndex == 0)
+				DeferUpdateRecentNotes();
 		}
 	}
 }

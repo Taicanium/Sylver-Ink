@@ -53,5 +53,5 @@ namespace SylverInk
 			replaceTask.RunWorkerCompleted += FinishReplace;
 			replaceTask.RunWorkerAsync();
 		}
-    }
+	}
 }

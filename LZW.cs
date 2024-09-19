@@ -5,7 +5,7 @@ using System.IO;
 namespace SylverInk
 {
 	static class LZW
-    {
+	{
 		private static string? _lzwC = string.Empty;
 		private readonly static List<byte> _lzwBitStream = [];
 		private readonly static Dictionary<string, uint> _lzwCodes = [];

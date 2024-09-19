@@ -16,7 +16,7 @@
 			<RowDefinition Height="*"/>
 		</Grid.RowDefinitions>
 		<StackPanel>
-			<Label Foreground="Gray" Margin="0,20,30,0" HorizontalAlignment="Right" FontStyle="Italic" Content="File to import"/>
+			<Label Margin="0,20,30,0" HorizontalAlignment="Right" FontStyle="Italic" Content="File to import"/>
 			<Grid Margin="15,0">
 				<Grid.ColumnDefinitions>
 					<ColumnDefinition Width="Auto"/>
@@ -36,7 +36,7 @@
 			</Grid>
 		</StackPanel>
 		<Border Grid.Row="1" Margin="20,5,20,20" BorderBrush="DarkGray" BorderThickness="1">
-			<TextBlock Background="White" TextWrapping="WrapWithOverflow" Text="{Binding ImportData}"/>
+			<TextBlock FontFamily="{Binding MainFontFamily}" FontSize="{Binding MainFontSize}" Background="White" TextWrapping="WrapWithOverflow" Text="{Binding ImportData}"/>
 		</Border>
 	</Grid>
 </Window>

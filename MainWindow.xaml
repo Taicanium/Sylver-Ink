@@ -10,7 +10,7 @@
 		Title="Sylver Ink" Height="600" Width="450" MinWidth="400" MinHeight="425" ResizeMode="CanResize"
 		Background="{Binding AccentBackground}">
 	<Grid x:Name="MainGrid">
-		<TabControl x:Name="MainTabPanel" Background="{Binding MenuBackground}" Foreground="{Binding MenuForeground}">
+		<TabControl x:Name="MainTabPanel" Background="{Binding MenuBackground}" Foreground="{Binding MenuForeground}" SelectionChanged="TabChanged">
 			<TabItem x:Name="PlusTab" Header="+">
 				<Grid Background="{Binding MenuBackground}">
 					<Grid.RowDefinitions>
