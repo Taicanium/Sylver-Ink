@@ -31,14 +31,16 @@
 									<ColumnDefinition Width="Auto"/>
 									<ColumnDefinition Width="*"/>
 								</Grid.ColumnDefinitions>
-								<ListBox HorizontalContentAlignment="Right" BorderThickness="0" Margin="0,0,1,0" MinWidth="60" x:Name="ShortChanges" ItemsSource="{Binding RecentNotes}" AlternationCount="2">
+								<ListBox x:Name="ShortChanges" HorizontalContentAlignment="Right" BorderThickness="0" Margin="0,0,1,0" MinWidth="60" ItemsSource="{Binding RecentNotes}" AlternationCount="2"
+										 ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled">
 									<ListBox.ItemTemplate>
 										<DataTemplate>
 											<TextBlock HorizontalAlignment="Right" Text="{Binding Path=ShortChange}"/>
 										</DataTemplate>
 									</ListBox.ItemTemplate>
 								</ListBox>
-								<ListBox BorderThickness="0" Margin="1,0,0,0" Grid.Column="1" x:Name="RecentNotes" ItemsSource="{Binding RecentNotes}" AlternationCount="2">
+								<ListBox x:Name="RecentNotes" BorderThickness="0" Margin="1,0,0,0" Grid.Column="1" ItemsSource="{Binding RecentNotes}" AlternationCount="2"
+										 ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled">
 									<ListBox.ItemTemplate>
 										<DataTemplate>
 											<TextBlock Text="{Binding Path=Preview}"/>

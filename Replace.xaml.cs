@@ -24,7 +24,7 @@ namespace SylverInk
 		private void FinishReplace(object? sender, RunWorkerCompletedEventArgs e)
 		{
 			Common.Settings.NumReplacements = $"Replaced {_counts.Item1:N0} occurrences in {_counts.Item2:N0} notes.";
-			Common.UpdateRecentNotes();
+			Common.DeferUpdateRecentNotes();
 
 			var button = (Button)FindName("DoReplace");
 			button.Content = "Replace";

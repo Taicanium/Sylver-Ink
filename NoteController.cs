@@ -95,7 +95,7 @@ namespace SylverInk
 			while (RecordCount > 0)
 				DeleteRecord(0);
 
-			Common.UpdateRecentNotes();
+			Common.DeferUpdateRecentNotes();
 		}
 
 		public static NoteRecord GetRecord(int RecordIndex) => _records[RecordIndex];
@@ -175,7 +175,7 @@ namespace SylverInk
 			}
 
 			PropagateIndices();
-			Common.UpdateRecentNotes();
+			Common.DeferUpdateRecentNotes();
 		}
 
 		public static void SerializeRecords()

@@ -184,7 +184,7 @@ namespace SylverInk
 							return;
 						case MessageBoxResult.Yes:
 							NoteController.CreateRevision(tag.Item2, noteBox.Text);
-							Common.UpdateRecentNotes();
+							Common.DeferUpdateRecentNotes();
 							break;
 					}
 				}
@@ -206,7 +206,7 @@ namespace SylverInk
 				NoteController.DeleteRecord(tag.Item2);
 				tabPanel.SelectedIndex = 0;
 				tabPanel.Items.RemoveAt(tabIndex);
-				Common.UpdateRecentNotes();
+				Common.DeferUpdateRecentNotes();
 			};
 
 			saveButton.Click += (sender, e) =>
@@ -215,7 +215,7 @@ namespace SylverInk
 				var tag = ((uint, int))noteBox.Tag;
 
 				NoteController.CreateRevision(tag.Item2, noteBox.Text);
-				Common.UpdateRecentNotes();
+				Common.DeferUpdateRecentNotes();
 
 				noteBox.Tag = (0U, tag.Item2);
 				noteBox.IsEnabled = true;
@@ -325,7 +325,7 @@ namespace SylverInk
 		{
 			SaveRecord();
 
-			Common.UpdateRecentNotes();
+			Common.DeferUpdateRecentNotes();
 			Close();
 		}
 

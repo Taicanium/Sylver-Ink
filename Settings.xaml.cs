@@ -55,7 +55,7 @@ namespace SylverInk
 		{
 			var item = (ComboBoxItem)MenuFont.SelectedItem;
 			Common.Settings.MainFontFamily = item.FontFamily;
-			Common.UpdateRecentNotes();
+			Common.DeferUpdateRecentNotes();
 		}
 
 		private void Minute_Selected(object sender, RoutedEventArgs e)

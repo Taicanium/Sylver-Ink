@@ -44,7 +44,7 @@ namespace SylverInk
 
 			Common.Settings.ImportTarget = string.Empty;
 			Common.Settings.ReadyToFinalize = false;
-			Common.UpdateRecentNotes();
+			Common.DeferUpdateRecentNotes();
 		}
 
 		private void Finalize_Click(object sender, RoutedEventArgs e)

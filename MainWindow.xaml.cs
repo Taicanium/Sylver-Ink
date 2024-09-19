@@ -48,19 +48,6 @@ namespace SylverInk
 			}
 		}
 
-		private void DeferUpdateRecentNotes()
-		{
-			BackgroundWorker updateTask = new();
-			updateTask.DoWork += (_, _) => SpinWait.SpinUntil(() => RecentNotes.IsMeasureValid, 1000);
-			updateTask.RunWorkerCompleted += (_, _) =>
-			{
-				Common.WindowHeight = RecentNotes.ActualHeight;
-				Common.WindowWidth = RecentNotes.ActualWidth;
-				Common.UpdateRecentNotes();
-			};
-			updateTask.RunWorkerAsync();
-		}
-
 		private void ExitComplete(object? sender, RunWorkerCompletedEventArgs e)
 		{
 			Common.CloseOnce = false;
@@ -191,13 +178,36 @@ namespace SylverInk
 			Common.Settings.MainTypeFace = new(Common.Settings.MainFontFamily, FontStyles.Normal, FontWeights.Normal, FontStretches.Normal);
 			Common.PPD = VisualTreeHelper.GetDpi(RecentNotes).PixelsPerDip;
 			Common.Settings.SearchTabHeight = Height - 300.0;
-			DeferUpdateRecentNotes();
+
+			Common.UpdateTask = new();
+			Common.UpdateTask.DoWork += (_, _) => Common.UpdateRecentNotes();
+			Common.UpdateTask.RunWorkerCompleted += (_, _) =>
+			{
+				NoteController.Sort(NoteController.SortType.ByChange);
+				Common.Settings.RecentNotes.Clear();
+				for (int i = 0; i < Common.RecentEntries; i++)
+					Common.Settings.RecentNotes.Add(NoteController.GetRecord(i));
+				NoteController.Sort();
+				RecentNotes.Items.Refresh();
+			};
+
+			Common.MeasureTask = new();
+			Common.MeasureTask.DoWork += (_, _) => SpinWait.SpinUntil(() => RecentNotes.IsMeasureValid, 1000);
+			Common.MeasureTask.RunWorkerCompleted += (_, _) =>
+			{
+				Common.WindowHeight = RecentNotes.ActualHeight;
+				Common.WindowWidth = RecentNotes.ActualWidth;
+
+				Common.UpdateTask?.RunWorkerAsync();
+			};
+
+			Common.DeferUpdateRecentNotes();
 		}
 
 		private void MainWindow_SizeChanged(object sender, SizeChangedEventArgs e)
 		{
 			Common.Settings.SearchTabHeight = e.NewSize.Height - 300.0;
-			DeferUpdateRecentNotes();
+			Common.DeferUpdateRecentNotes();
 		}
 
 		private void NewNote(object sender, KeyEventArgs e)
@@ -205,7 +215,7 @@ namespace SylverInk
 			if (e.Key == Key.Enter)
 			{
 				NoteController.CreateRecord(NewNoteBox.Text);
-				Common.UpdateRecentNotes();
+				Common.DeferUpdateRecentNotes();
 				NewNoteBox.Text = string.Empty;
 			}
 		}
@@ -242,7 +252,7 @@ namespace SylverInk
 		{
 			var control = (TabControl)sender;
 			if (control.SelectedIndex == 0)
-				DeferUpdateRecentNotes();
+				Common.DeferUpdateRecentNotes();
 		}
 	}
 }

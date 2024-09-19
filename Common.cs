@@ -4,6 +4,8 @@ using System.IO;
 using System.Windows;
 using System.Collections.Generic;
 using System.Windows.Media;
+using System.ComponentModel;
+using System.Threading;
 
 namespace SylverInk
 {
@@ -22,6 +24,7 @@ namespace SylverInk
 		public static double PPD { get; set; } = 1.0;
 		public static bool ForceClose { get; set; } = false;
 		public static Import? ImportWindow { get => _import; set { _import?.Close(); _import = value; _import?.Show(); } }
+		public static BackgroundWorker? MeasureTask { get; set; }
 		public static List<SearchResult> OpenQueries = [];
 		public static int RecentEntries { get; set; } = 10;
 		public static Replace? ReplaceWindow { get => _replace; set { _replace?.Close(); _replace = value; _replace?.Show(); } }
@@ -30,8 +33,15 @@ namespace SylverInk
 		public static string SettingsFile => "user_settings.txt";
 		public static Settings? SettingsWindow { get => _settings; set { _settings?.Close(); _settings = value; _settings?.Show(); } }
 		public static double TextHeight { get; set; } = 0.0;
+		public static BackgroundWorker? UpdateTask { get; set; }
 		public static double WindowHeight { get; set; } = 275.0;
 		public static double WindowWidth { get; set; } = 330.0;
+
+		public static void DeferUpdateRecentNotes()
+		{
+			SpinWait.SpinUntil(() => !MeasureTask?.IsBusy ?? true);
+			MeasureTask?.RunWorkerAsync();
+		}
 
 		public static void MakeBackups()
 		{
@@ -113,7 +123,6 @@ namespace SylverInk
 			Application.Current.Resources["MainFontFamily"] = Settings.MainFontFamily;
 			Application.Current.Resources["MainFontSize"] = Settings.MainFontSize;
 
-			Settings.RecentNotes.Clear();
 			RecentEntries = 0;
 			TextHeight = 0.0;
 			NoteController.Sort(NoteController.SortType.ByChange);
@@ -123,7 +132,6 @@ namespace SylverInk
 				var record = NoteController.GetRecord(RecentEntries);
 				record.Preview = $"{Math.Floor(WindowWidth - 50.0)}";
 
-				Settings.RecentNotes.Add(record);
 				RecentEntries++;
 				TextHeight += MeasureTextHeight(record.Preview) * 1.3333;
 			}
