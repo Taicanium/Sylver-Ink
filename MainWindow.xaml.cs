@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel;
 using System.IO;
-using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -175,31 +174,10 @@ namespace SylverInk
 
 			FindDatabase();
 
+			Common.CanResize = true;
 			Common.Settings.MainTypeFace = new(Common.Settings.MainFontFamily, FontStyles.Normal, FontWeights.Normal, FontStretches.Normal);
 			Common.PPD = VisualTreeHelper.GetDpi(RecentNotes).PixelsPerDip;
 			Common.Settings.SearchTabHeight = Height - 300.0;
-
-			Common.UpdateTask = new();
-			Common.UpdateTask.DoWork += (_, _) => Common.UpdateRecentNotes();
-			Common.UpdateTask.RunWorkerCompleted += (_, _) =>
-			{
-				NoteController.Sort(NoteController.SortType.ByChange);
-				Common.Settings.RecentNotes.Clear();
-				for (int i = 0; i < Common.RecentEntries; i++)
-					Common.Settings.RecentNotes.Add(NoteController.GetRecord(i));
-				NoteController.Sort();
-				RecentNotes.Items.Refresh();
-			};
-
-			Common.MeasureTask = new();
-			Common.MeasureTask.DoWork += (_, _) => SpinWait.SpinUntil(() => RecentNotes.IsMeasureValid, 1000);
-			Common.MeasureTask.RunWorkerCompleted += (_, _) =>
-			{
-				Common.WindowHeight = RecentNotes.ActualHeight;
-				Common.WindowWidth = RecentNotes.ActualWidth;
-
-				Common.UpdateTask?.RunWorkerAsync();
-			};
 
 			Common.DeferUpdateRecentNotes();
 		}

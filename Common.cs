@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Windows.Media;
 using System.ComponentModel;
 using System.Threading;
+using System.Windows.Controls;
 
 namespace SylverInk
 {
@@ -18,6 +19,7 @@ namespace SylverInk
 		private static Search? _search;
 		private static Settings? _settings;
 
+		public static bool CanResize { get; set; } = false;
 		public static bool CloseOnce { get; set; } = false;
 		public static bool DatabaseChanged { get; set; } = false;
 		public static string DatabaseFile => "sylver_ink";
@@ -39,8 +41,49 @@ namespace SylverInk
 
 		public static void DeferUpdateRecentNotes()
 		{
-			SpinWait.SpinUntil(() => !MeasureTask?.IsBusy ?? true);
-			MeasureTask?.RunWorkerAsync();
+			if (!CanResize)
+				return;
+
+			var RecentBox = (ListBox)Application.Current.MainWindow.FindName("RecentNotes");
+
+			if (UpdateTask is null)
+			{
+				UpdateTask = new();
+				UpdateTask.DoWork += (_, _) => UpdateRecentNotes();
+				UpdateTask.RunWorkerCompleted += (_, _) =>
+				{
+					NoteController.Sort(NoteController.SortType.ByChange);
+					Settings.RecentNotes.Clear();
+					for (int i = 0; i < RecentEntries; i++)
+						Settings.RecentNotes.Add(NoteController.GetRecord(i));
+					NoteController.Sort();
+					RecentBox.Items.Refresh();
+				};
+				UpdateTask.WorkerSupportsCancellation = true;
+			}
+
+			if (MeasureTask is null)
+			{
+				MeasureTask = new();
+				MeasureTask.DoWork += (_, _) =>
+				{
+					SpinWait.SpinUntil(() => RecentBox.IsMeasureValid, 1000);
+					WindowHeight = RecentBox.ActualHeight;
+					WindowWidth = RecentBox.ActualWidth;
+
+					SpinWait.SpinUntil(() => !UpdateTask?.IsBusy ?? true, 200);
+					if (UpdateTask?.IsBusy ?? false)
+						UpdateTask?.CancelAsync();
+
+					SpinWait.SpinUntil(() => !UpdateTask?.IsBusy ?? true, 200);
+					if (UpdateTask?.IsBusy ?? false)
+						UpdateTask?.Dispose();
+				};
+				MeasureTask.RunWorkerCompleted += (_, _) => UpdateTask?.RunWorkerAsync();
+			}
+
+			if (!MeasureTask.IsBusy)
+				MeasureTask.RunWorkerAsync();
 		}
 
 		public static void MakeBackups()
