@@ -13,45 +13,45 @@ namespace SylverInk
 
 	public partial class NoteRecord
 	{
-		private long _created = -1;
-		private bool _dirty = true;
-		private int _index = -1;
-		private string? _initial = string.Empty;
-		private long _lastChange = -1;
-		private DateTime _lastChangeObject = DateTime.UtcNow;
-		private string _latest = string.Empty;
-		private string _previewText = string.Empty;
-		private int _previewWidth = 375;
-		private readonly List<NoteRevision> _revisions = [];
-		private readonly List<string> _tags = [];
-		private bool _tagsDirty = true;
+		private long Created = -1;
+		private bool Dirty = true;
+		private int Index = -1;
+		private string? Initial = string.Empty;
+		private long LastChange = -1;
+		private DateTime LastChangeObject = DateTime.UtcNow;
+		private string Latest = string.Empty;
+		private string PreviewText = string.Empty;
+		private int PreviewWidth = 375;
+		private readonly List<NoteRevision> Revisions = [];
+		private readonly List<string> Tags = [];
+		private bool TagsDirty = true;
 
 		public int LastMatchCount { get; private set; } = 0;
 
 		public string Preview
 		{
-			get => _previewText;
+			get => PreviewText;
 
 			set
 			{
-				_dirty = false;
-				_previewText = ToString().Replace("\r", string.Empty).Replace("\n", " ").Replace("\t", " ");
-				if (_previewText.Length > 150)
+				Dirty = false;
+				PreviewText = ToString().Replace("\r", string.Empty).Replace("\n", " ").Replace("\t", " ");
+				if (PreviewText.Length > 150)
 				{
-					_previewText = _previewText[..150];
-					_dirty = true;
+					PreviewText = PreviewText[..150];
+					Dirty = true;
 				}
 
-				_previewWidth = int.Parse(value);
+				PreviewWidth = int.Parse(value);
 
-				while (Common.MeasureTextSize(_previewText) > _previewWidth)
+				while (Common.MeasureTextSize(PreviewText) > PreviewWidth)
 				{
-					_previewText = _previewText[..^4];
-					_dirty = true;
+					PreviewText = PreviewText[..^4];
+					Dirty = true;
 				}
 
-				if (_dirty)
-					_previewText += "...";
+				if (Dirty)
+					PreviewText += "...";
 			}
 		}
 
@@ -59,63 +59,63 @@ namespace SylverInk
 		{
 			get
 			{
-				_lastChangeObject = DateTime.FromBinary(_lastChange);
+				LastChangeObject = DateTime.FromBinary(LastChange);
 				var now = DateTime.UtcNow;
-				var diff = now - _lastChangeObject;
+				var diff = now - LastChangeObject;
 
 				if (diff.TotalHours < 24.0)
-					return _lastChangeObject.ToLocalTime().ToShortTimeString();
+					return LastChangeObject.ToLocalTime().ToShortTimeString();
 
 				if (diff.TotalHours < 168.0)
 					return $"{diff.Days} day{(diff.Days > 1 ? "s" : string.Empty)} ago";
 
-				return _lastChangeObject.ToLocalTime().ToShortDateString();
+				return LastChangeObject.ToLocalTime().ToShortDateString();
 			}
 		}
 
 		public NoteRecord()
 		{
-			_created = DateTime.UnixEpoch.ToBinary();
-			_index = -1;
-			_initial = string.Empty;
-			_lastChange = _created;
-			_tagsDirty = true;
+			Created = DateTime.UnixEpoch.ToBinary();
+			Index = -1;
+			Initial = string.Empty;
+			LastChange = Created;
+			TagsDirty = true;
 		}
 
-		public NoteRecord(int _index, string _initial, long _created = -1)
+		public NoteRecord(int Index, string Initial, long Created = -1)
 		{
-			this._created = _created == -1 ? DateTime.UtcNow.ToBinary() : _created;
-			this._index = _index;
-			this._initial = _initial;
-			_lastChange = this._created;
-			_tagsDirty = true;
+			this.Created = Created == -1 ? DateTime.UtcNow.ToBinary() : Created;
+			this.Index = Index;
+			this.Initial = Initial;
+			LastChange = this.Created;
+			TagsDirty = true;
 		}
 
 		public void Add(NoteRevision _revision)
 		{
-			_revisions.Add(_revision);
-			_tagsDirty = true;
+			Revisions.Add(_revision);
+			TagsDirty = true;
 			var revisionTime = DateTime.FromBinary(_revision._created);
-			var noteTime = DateTime.FromBinary(_lastChange);
+			var noteTime = DateTime.FromBinary(LastChange);
 
-			_revisions.Sort(new Comparison<NoteRevision>(
+			Revisions.Sort(new Comparison<NoteRevision>(
 				(_rev1, _rev2) => DateTime.FromBinary(_rev1._created).CompareTo(DateTime.FromBinary(_rev2._created))
 				));
 
 			if (revisionTime.CompareTo(noteTime) > 0)
 			{
-				_lastChange = _revision._created;
-				_lastChangeObject = DateTime.FromBinary(_lastChange);
+				LastChange = _revision._created;
+				LastChangeObject = DateTime.FromBinary(LastChange);
 			}
 		}
 
 		public void Delete()
 		{
-			_index = 0;
-			_initial = string.Empty;
-			_lastChange = DateTime.UtcNow.ToBinary();
-			_revisions.Clear();
-			_tagsDirty = true;
+			Index = 0;
+			Initial = string.Empty;
+			LastChange = DateTime.UtcNow.ToBinary();
+			Revisions.Clear();
+			TagsDirty = true;
 		}
 
 		public void DeleteRevision(int index)
@@ -123,26 +123,26 @@ namespace SylverInk
 			if (index >= GetNumRevisions())
 				return;
 
-			_revisions.RemoveAt(index);
+			Revisions.RemoveAt(index);
 			Common.DatabaseChanged = true;
 		}
 
 		public NoteRecord Deserialize()
 		{
-			Serializer.ReadLong(ref _created);
-			Serializer.ReadInt32(ref _index);
-			Serializer.ReadString(ref _initial);
-			Serializer.ReadLong(ref _lastChange);
+			Serializer.ReadLong(ref Created);
+			Serializer.ReadInt32(ref Index);
+			Serializer.ReadString(ref Initial);
+			Serializer.ReadLong(ref LastChange);
 
-			int _revisionsCount = 0;
-			Serializer.ReadInt32(ref _revisionsCount);
-			for (int i = 0; i < _revisionsCount; i++)
+			int RevisionsCount = 0;
+			Serializer.ReadInt32(ref RevisionsCount);
+			for (int i = 0; i < RevisionsCount; i++)
 			{
 				NoteRevision _revision = new();
 				Serializer.ReadLong(ref _revision._created);
 				Serializer.ReadInt32(ref _revision._startIndex);
 				Serializer.ReadString(ref _revision._substring);
-				_revisions.Add(_revision);
+				Revisions.Add(_revision);
 			}
 
 			return this;
@@ -150,10 +150,10 @@ namespace SylverInk
 
 		private int ExtractTags()
 		{
-			if (!_tagsDirty)
-				return _tags.Count;
+			if (!TagsDirty)
+				return Tags.Count;
 
-			_tags.Clear();
+			Tags.Clear();
 
 			var recordText = ToString();
 			var matches = NonWhitespace().Matches(recordText);
@@ -166,27 +166,27 @@ namespace SylverInk
 						continue;
 
 					if (NoteController.WordPercentages[val] < Math.Max(20, 100 - NoteController.WordPercentages.Count))
-						_tags.Add(val);
+						Tags.Add(val);
 				}
 			}
 
-			_tagsDirty = false;
-			return _tags.Count;
+			TagsDirty = false;
+			return Tags.Count;
 		}
 
 		public string GetCreated() => GetCreatedObject().ToString("yyyy-MM-dd HH:mm:ss");
 
-		public DateTime GetCreatedObject() => DateTime.FromBinary(_created);
+		public DateTime GetCreatedObject() => DateTime.FromBinary(Created);
 
-		public int GetIndex() => _index;
+		public int GetIndex() => Index;
 
-		public DateTime GetLastChangeObject() => DateTime.FromBinary(_lastChange);
+		public DateTime GetLastChangeObject() => DateTime.FromBinary(LastChange);
 
 		public string GetLastChange() => GetLastChangeObject().ToString("yyyy-MM-dd HH:mm:ss");
 
-		public int GetNumRevisions() => _revisions.Count;
+		public int GetNumRevisions() => Revisions.Count;
 
-		public NoteRevision GetRevision(uint index) => _revisions[_revisions.Count - 1 - (int)index];
+		public NoteRevision GetRevision(uint index) => Revisions[Revisions.Count - 1 - (int)index];
 
 		public string GetRevisionTime(uint index) => DateTime.FromBinary(GetRevision(index)._created).ToString("yyyy-MM-dd HH:mm:ss");
 
@@ -202,7 +202,7 @@ namespace SylverInk
 			{
 				foreach (Group group in match.Groups.Values)
 				{
-					if (_tags.Contains(group.Value.ToLower()))
+					if (Tags.Contains(group.Value.ToLower()))
 						outCount++;
 				}
 			}
@@ -210,41 +210,41 @@ namespace SylverInk
 			return LastMatchCount = outCount;
 		}
 
-		public int OverwriteIndex(int _index)
+		public int OverwriteIndex(int Index)
 		{
-			this._index = _index;
-			return this._index;
+			this.Index = Index;
+			return this.Index;
 		}
 
 		public string Reconstruct(uint backsteps = 0U)
 		{
-			_latest = _initial ?? string.Empty;
-			if (_revisions.Count == 0)
-				return _latest;
+			Latest = Initial ?? string.Empty;
+			if (Revisions.Count == 0)
+				return Latest;
 
-			for (int i = 0; i < _revisions.Count - Math.Min(backsteps, _revisions.Count); i++)
+			for (int i = 0; i < Revisions.Count - Math.Min(backsteps, Revisions.Count); i++)
 			{
-				if (_revisions[i]._startIndex < _latest?.Length)
-					_latest = _latest.Remove(_revisions[i]._startIndex);
-				_latest += _revisions[i]._substring;
+				if (Revisions[i]._startIndex < Latest?.Length)
+					Latest = Latest.Remove(Revisions[i]._startIndex);
+				Latest += Revisions[i]._substring;
 			}
 
-			return _latest ?? string.Empty;
+			return Latest ?? string.Empty;
 		}
 
 		public void Serialize()
 		{
-			Serializer.WriteLong(_created);
-			Serializer.WriteInt32(_index);
-			Serializer.WriteString(_initial);
-			Serializer.WriteLong(_lastChange);
+			Serializer.WriteLong(Created);
+			Serializer.WriteInt32(Index);
+			Serializer.WriteString(Initial);
+			Serializer.WriteLong(LastChange);
 
-			Serializer.WriteInt32(_revisions.Count);
-			for (int i = 0; i < _revisions.Count; i++)
+			Serializer.WriteInt32(Revisions.Count);
+			for (int i = 0; i < Revisions.Count; i++)
 			{
-				Serializer.WriteLong(_revisions[i]._created);
-				Serializer.WriteInt32(_revisions[i]._startIndex);
-				Serializer.WriteString(_revisions[i]._substring);
+				Serializer.WriteLong(Revisions[i]._created);
+				Serializer.WriteInt32(Revisions[i]._startIndex);
+				Serializer.WriteString(Revisions[i]._substring);
 			}
 		}
 

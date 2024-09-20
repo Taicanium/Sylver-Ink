@@ -64,7 +64,7 @@ namespace SylverInk
 			}
 		}
 
-		private void Query_Click(object sender, RoutedEventArgs e)
+		private void QueryClick(object sender, RoutedEventArgs e)
 		{
 			var button = (Button)sender;
 			button.Content = "Querying...";

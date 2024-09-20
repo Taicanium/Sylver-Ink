@@ -8,19 +8,12 @@ namespace SylverInk
 	partial class NoteController
 	{
 		private static int _nextIndex = 0;
-		private readonly static List<NoteRecord> _records = [];
-		public readonly static Dictionary<string, uint> WordPercentages = [];
 
-		public static int RecordCount => _records.Count;
+		public static int RecordCount => Records.Count;
+		private static List<NoteRecord> Records { get; } = [];
+		public static Dictionary<string, uint> WordPercentages { get; } = [];
 
-		public enum SortType
-		{
-			ByIndex,
-			ByChange,
-			ByCreation
-		}
-
-		public static int NextIndex
+		private static int NextIndex
 		{
 			get
 			{
@@ -30,23 +23,30 @@ namespace SylverInk
 			set { _nextIndex = value; }
 		}
 
-		public static int AddRecord(NoteRecord record)
+		public enum SortType
 		{
-			_records.Add(record);
+			ByIndex,
+			ByChange,
+			ByCreation
+		}
+
+		private static int AddRecord(NoteRecord record)
+		{
+			Records.Add(record);
 			return record.GetIndex();
 		}
 
 		public static int CreateRecord(string entry, bool dummy = false)
 		{
 			int Index = NextIndex;
-			_records.Add(new(Index, entry, dummy ? DateTime.UtcNow.AddMinutes(new Random().NextDouble() * 43200.0 - 43200.0).ToBinary() : -1));
+			Records.Add(new(Index, entry, dummy ? DateTime.UtcNow.AddMinutes(new Random().NextDouble() * 43200.0 - 43200.0).ToBinary() : -1));
 			Common.DatabaseChanged = true;
 			return Index;
 		}
 
 		public static void CreateRevision(int index, string NewVersion)
 		{
-			string Current = _records[index].ToString();
+			string Current = Records[index].ToString();
 			int StartIndex = 0;
 
 			if (NewVersion.Equals(Current))
@@ -59,7 +59,7 @@ namespace SylverInk
 				StartIndex = i + 1;
 			}
 
-			_records[index].Add(new()
+			Records[index].Add(new()
 			{
 				_created = DateTime.UtcNow.ToBinary(),
 				_startIndex = StartIndex,
@@ -71,8 +71,8 @@ namespace SylverInk
 
 		public static void DeleteRecord(int index)
 		{
-			_records[index].Delete();
-			_records.RemoveAt(index);
+			Records[index].Delete();
+			Records.RemoveAt(index);
 			PropagateIndices();
 			Common.DatabaseChanged = true;
 		}
@@ -98,7 +98,7 @@ namespace SylverInk
 			Common.DeferUpdateRecentNotes();
 		}
 
-		public static NoteRecord GetRecord(int RecordIndex) => _records[RecordIndex];
+		public static NoteRecord GetRecord(int RecordIndex) => Records[RecordIndex];
 
 		public static void InitializeRecords(bool newDatabase = true, bool dummyData = true)
 		{
@@ -108,7 +108,7 @@ namespace SylverInk
 				return;
 			}
 
-			_records.Clear();
+			Records.Clear();
 
 			if (dummyData)
 			{
@@ -127,7 +127,7 @@ namespace SylverInk
 		private static void PropagateIndices()
 		{
 			for (int i = 0; i < RecordCount; i++)
-				_records[i].OverwriteIndex(i);
+				Records[i].OverwriteIndex(i);
 
 			_nextIndex = RecordCount;
 		}
@@ -136,7 +136,7 @@ namespace SylverInk
 		{
 			int NoteCount = 0;
 			int ReplaceCount = 0;
-			foreach (NoteRecord record in _records)
+			foreach (NoteRecord record in Records)
 			{
 				var recordText = record.ToString();
 				if (!recordText.Contains(oldText, StringComparison.OrdinalIgnoreCase))
@@ -157,7 +157,7 @@ namespace SylverInk
 		{
 			for (int i = RecordCount - 1; i > -1; i--)
 			{
-				var RecordDate = _records[i].GetCreatedObject().ToLocalTime();
+				var RecordDate = Records[i].GetCreatedObject().ToLocalTime();
 				var comparison = RecordDate.CompareTo(targetDate);
 				if (comparison > 0)
 				{
@@ -165,12 +165,12 @@ namespace SylverInk
 					continue;
 				}
 
-				for (int j = _records[i].GetNumRevisions(); j > 0; j--)
+				for (int j = Records[i].GetNumRevisions(); j > 0; j--)
 				{
-					var RevisionDate = DateTime.FromBinary(_records[i].GetRevision((uint)j - 1U)._created).ToLocalTime();
+					var RevisionDate = DateTime.FromBinary(Records[i].GetRevision((uint)j - 1U)._created).ToLocalTime();
 					comparison = RevisionDate.CompareTo(targetDate);
 					if (comparison > 0)
-						_records[i].DeleteRevision(j - 1);
+						Records[i].DeleteRevision(j - 1);
 				}
 			}
 
@@ -182,9 +182,9 @@ namespace SylverInk
 		{
 			PropagateIndices();
 
-			Serializer.WriteInt32(_records.Count);
-			for (int i = 0; i < _records.Count; i++)
-				_records[i].Serialize();
+			Serializer.WriteInt32(Records.Count);
+			for (int i = 0; i < Records.Count; i++)
+				Records[i].Serialize();
 		}
 
 		public static void Sort(SortType type = SortType.ByIndex)
@@ -192,17 +192,17 @@ namespace SylverInk
 			switch (type)
 			{
 				case SortType.ByIndex:
-					_records.Sort(new Comparison<NoteRecord>(
+					Records.Sort(new Comparison<NoteRecord>(
 						(_rev1, _rev2) => _rev1.GetIndex().CompareTo(_rev2.GetIndex())
 						));
 					return;
 				case SortType.ByChange:
-					_records.Sort(new Comparison<NoteRecord>(
+					Records.Sort(new Comparison<NoteRecord>(
 						(_rev2, _rev1) => _rev1.GetLastChangeObject().CompareTo(_rev2.GetLastChangeObject())
 						));
 					return;
 				case SortType.ByCreation:
-					_records.Sort(new Comparison<NoteRecord>(
+					Records.Sort(new Comparison<NoteRecord>(
 						(_rev1, _rev2) => _rev1.GetCreatedObject().CompareTo(_rev2.GetCreatedObject())
 						));
 					return;
@@ -215,9 +215,9 @@ namespace SylverInk
 			{
 				Serializer.BeginCompressionTest();
 
-				Serializer.WriteInt32(_records.Count);
-				for (int i = 0; i < _records.Count; i++)
-					_records[i].Serialize();
+				Serializer.WriteInt32(Records.Count);
+				for (int i = 0; i < Records.Count; i++)
+					Records[i].Serialize();
 
 				Serializer.EndCompressionTest();
 
@@ -244,7 +244,7 @@ namespace SylverInk
 			uint total = 0U;
 			WordPercentages.Clear();
 
-			foreach (NoteRecord record in _records)
+			foreach (NoteRecord record in Records)
 			{
 				string recordText = record.ToString();
 				var matches = NonWhitespace().Matches(recordText);

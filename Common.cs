@@ -20,24 +20,67 @@ namespace SylverInk
 		private static Settings? _settings;
 
 		public static bool CanResize { get; set; } = false;
-		public static bool CloseOnce { get; set; } = false;
 		public static bool DatabaseChanged { get; set; } = false;
 		public static string DatabaseFile => "sylver_ink";
 		public static double PPD { get; set; } = 1.0;
 		public static bool ForceClose { get; set; } = false;
 		public static Import? ImportWindow { get => _import; set { _import?.Close(); _import = value; _import?.Show(); } }
-		public static BackgroundWorker? MeasureTask { get; set; }
-		public static List<SearchResult> OpenQueries = [];
-		public static int RecentEntries { get; set; } = 10;
+		private static BackgroundWorker? MeasureTask { get; set; }
+		public static List<SearchResult> OpenQueries { get; } = [];
+		private static int RecentEntries { get; set; } = 10;
 		public static Replace? ReplaceWindow { get => _replace; set { _replace?.Close(); _replace = value; _replace?.Show(); } }
 		public static Search? SearchWindow { get => _search; set { _search?.Close(); _search = value; _search?.Show(); } }
-		public static ContextSettings Settings = new();
+		public static ContextSettings Settings { get; } = new();
 		public static string SettingsFile => "user_settings.txt";
 		public static Settings? SettingsWindow { get => _settings; set { _settings?.Close(); _settings = value; _settings?.Show(); } }
-		public static double TextHeight { get; set; } = 0.0;
-		public static BackgroundWorker? UpdateTask { get; set; }
+		private static double TextHeight { get; set; } = 0.0;
+		private static BackgroundWorker? UpdateTask { get; set; }
 		public static double WindowHeight { get; set; } = 275.0;
 		public static double WindowWidth { get; set; } = 330.0;
+
+		public static SolidColorBrush? BrushFromBytes(string data)
+		{
+			var hex = NumberStyles.HexNumber;
+			Color color;
+			if (data.Length < 6)
+				return Brushes.Transparent;
+
+			try
+			{
+				if (data.Length == 8)
+				{
+					color = new Color()
+					{
+						A = byte.Parse(data[..2], hex),
+						R = byte.Parse(data[2..4], hex),
+						G = byte.Parse(data[4..6], hex),
+						B = byte.Parse(data[6..8], hex)
+					};
+					return new(color);
+				}
+
+				color = new Color()
+				{
+					A = 0xFF,
+					R = byte.Parse(data[..2], hex),
+					G = byte.Parse(data[2..4], hex),
+					B = byte.Parse(data[4..6], hex)
+				};
+				return new(color);
+			}
+			catch
+			{
+				return null;
+			}
+		}
+
+		public static string BytesFromBrush(Brush? brush, int colors = 4)
+		{
+			var data = brush as SolidColorBrush;
+			if (colors == 4)
+				return string.Format("{0:X2}{1:X2}{2:X2}{3:X2}", data?.Color.A, data?.Color.R, data?.Color.G, data?.Color.B);
+			return string.Format("{0:X2}{1:X2}{2:X2}", data?.Color.R, data?.Color.G, data?.Color.B);
+		}
 
 		public static void DeferUpdateRecentNotes()
 		{
@@ -155,13 +198,13 @@ namespace SylverInk
 			return ft.Width;
 		}
 
-		public static double MeasureTextHeight(string text)
+		private static double MeasureTextHeight(string text)
 		{
 			FormattedText ft = new(text, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, Settings.MainTypeFace, Settings.MainFontSize, Brushes.Black, PPD);
 			return ft.Height;
 		}
 
-		public static void UpdateRecentNotes()
+		private static void UpdateRecentNotes()
 		{
 			Application.Current.Resources["MainFontFamily"] = Settings.MainFontFamily;
 			Application.Current.Resources["MainFontSize"] = Settings.MainFontSize;

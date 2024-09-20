@@ -6,7 +6,7 @@
 		xmlns:local="clr-namespace:SylverInk"
 		mc:Ignorable="d"
 		d:DataContext="{d:DesignInstance Type=local:ContextSettings}"
-		Title="Sylver Ink: Import" Height="525" Width="350" MinHeight="325" MinWidth="250" Background="Beige" ResizeMode="CanResize">
+		Background="{Binding MenuBackground}" Foreground="{Binding MenuForeground}" Height="525" MinHeight="325" MinWidth="250" ResizeMode="CanResize" Title="Sylver Ink: Import" Width="350">
 	<Grid>
 		<Grid.ColumnDefinitions>
 			<ColumnDefinition Width="*"/>
@@ -16,14 +16,14 @@
 			<RowDefinition Height="*"/>
 		</Grid.RowDefinitions>
 		<StackPanel>
-			<Label Margin="0,20,30,0" HorizontalAlignment="Right" FontStyle="Italic" Content="File to import"/>
+			<Label Content="File to import" FontStyle="Italic" HorizontalAlignment="Right" Margin="0,20,30,0"/>
 			<Grid Margin="15,0">
 				<Grid.ColumnDefinitions>
 					<ColumnDefinition Width="Auto"/>
 					<ColumnDefinition Width="*"/>
 				</Grid.ColumnDefinitions>
-				<Button HorizontalAlignment="Right" Width="20" Height="20" Margin="5,5,5,5" Content="..." Click="Open_Click"/>
-				<TextBox Grid.Column="1" Margin="5,5,5,5" Text="{Binding ImportTarget}" IsReadOnly="True" TextChanged="Target_TextChanged"/>
+				<Button Click="Open_Click" Content="..." Height="20" HorizontalAlignment="Right" Margin="5,5,5,5" Width="20"/>
+				<TextBox Grid.Column="1" IsReadOnly="True" Margin="5,5,5,5" Text="{Binding ImportTarget}" TextChanged="Target_TextChanged"/>
 			</Grid>
 			<Grid Margin="0,25,0,0">
 				<Grid.ColumnDefinitions>
@@ -31,12 +31,12 @@
 					<ColumnDefinition Width="*"/>
 				</Grid.ColumnDefinitions>
 
-				<Button x:Name="DoImport" Content="Import" IsEnabled="{Binding ReadyToFinalize}" Click="Finalize_Click"/>
-				<Button Grid.Column="1" Content="Close" Click="CloseClick"/>
+				<Button Click="Finalize_Click" Content="Import" IsEnabled="{Binding ReadyToFinalize}" x:Name="DoImport"/>
+				<Button Click="CloseClick" Content="Close" Grid.Column="1"/>
 			</Grid>
 		</StackPanel>
-		<Border Grid.Row="1" Margin="20,5,20,20" BorderBrush="DarkGray" BorderThickness="1">
-			<TextBlock FontFamily="{Binding MainFontFamily}" FontSize="{Binding MainFontSize}" Background="White" TextWrapping="WrapWithOverflow" Text="{Binding ImportData}"/>
+		<Border BorderBrush="{Binding MenuForeground}" BorderThickness="1" Grid.Row="1" Margin="20,5,20,20">
+			<TextBlock Background="{Binding ListBackground}" FontFamily="{Binding MainFontFamily}" FontSize="{Binding MainFontSize}" Foreground="{Binding ListForeground}" Text="{Binding ImportData}" TextWrapping="WrapWithOverflow"/>
 		</Border>
 	</Grid>
 </Window>

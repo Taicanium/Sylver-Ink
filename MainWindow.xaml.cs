@@ -12,6 +12,8 @@ namespace SylverInk
 	/// </summary>
 	public partial class MainWindow : Window
 	{
+		private bool CloseOnce = false;
+
 		public MainWindow()
 		{
 			InitializeComponent();
@@ -49,7 +51,7 @@ namespace SylverInk
 
 		private void ExitComplete(object? sender, RunWorkerCompletedEventArgs e)
 		{
-			Common.CloseOnce = false;
+			CloseOnce = false;
 			Common.DatabaseChanged = false;
 			ExitButton.Content = "Exit";
 			ExitButton.FontWeight = FontWeights.Normal;
@@ -120,6 +122,27 @@ namespace SylverInk
 					case "FontFamily":
 						Common.Settings.MainFontFamily = new(keyValue[1]);
 						break;
+					case "FontSize":
+						Common.Settings.MainFontSize = double.Parse(keyValue[1]);
+						break;
+					case "MenuForeground":
+						Common.Settings.MenuForeground = Common.BrushFromBytes(keyValue[1]);
+						break;
+					case "MenuBackground":
+						Common.Settings.MenuBackground = Common.BrushFromBytes(keyValue[1]);
+						break;
+					case "ListForeground":
+						Common.Settings.ListForeground = Common.BrushFromBytes(keyValue[1]);
+						break;
+					case "ListBackground":
+						Common.Settings.ListBackground = Common.BrushFromBytes(keyValue[1]);
+						break;
+					case "AccentForeground":
+						Common.Settings.AccentForeground = Common.BrushFromBytes(keyValue[1]);
+						break;
+					case "AccentBackground":
+						Common.Settings.AccentBackground = Common.BrushFromBytes(keyValue[1]);
+						break;
 				}
 			}
 		}
@@ -128,7 +151,7 @@ namespace SylverInk
 		{
 			if (!Common.ForceClose)
 			{
-				if (Common.CloseOnce)
+				if (CloseOnce)
 					return;
 
 				if (Common.DatabaseChanged)
@@ -145,7 +168,7 @@ namespace SylverInk
 				}
 			}
 
-			Common.CloseOnce = true;
+			CloseOnce = true;
 
 			if (Common.DatabaseChanged)
 			{
@@ -207,7 +230,7 @@ namespace SylverInk
 
 			if (!Serializer.OpenWrite($"{Common.DatabaseFile}.sidb"))
 			{
-				Common.CloseOnce = false;
+				CloseOnce = false;
 				return;
 			}
 
@@ -220,7 +243,14 @@ namespace SylverInk
 		private static void SaveUserSettings()
 		{
 			string[] settings = [
-				$"FontFamily:{Common.Settings.MainFontFamily?.Source}"
+				$"FontFamily:{Common.Settings.MainFontFamily?.Source}",
+				$"FontSize:{Common.Settings.MainFontSize}",
+				$"MenuForeground:{Common.BytesFromBrush(Common.Settings.MenuForeground)}",
+				$"MenuBackground:{Common.BytesFromBrush(Common.Settings.MenuBackground)}",
+				$"ListForeground:{Common.BytesFromBrush(Common.Settings.ListForeground)}",
+				$"ListBackground:{Common.BytesFromBrush(Common.Settings.ListBackground)}",
+				$"AccentForeground:{Common.BytesFromBrush(Common.Settings.AccentForeground)}",
+				$"AccentBackground:{Common.BytesFromBrush(Common.Settings.AccentBackground)}"
 			];
 
 			File.WriteAllLines("settings.sis", settings);

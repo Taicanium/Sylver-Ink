@@ -12,8 +12,8 @@ namespace SylverInk
 	/// </summary>
 	public partial class Import : Window
 	{
-		private int _imported = 0;
-		private string _target = string.Empty;
+		private int Imported = 0;
+		private string Target = string.Empty;
 
 		public Import()
 		{
@@ -28,7 +28,8 @@ namespace SylverInk
 			OpenFileDialog dialog = new()
 			{
 				CheckFileExists = true,
-				Filter = "Text files (*.txt)|*.txt|All files (*.*)|*.*",
+				Filter = "Sylver Ink backup files (*.sibk)|*.sibk|Sylver Ink database files (*.sidb)|*.sidb|Text files (*.txt)|*.txt|All files (*.*)|*.*",
+				FilterIndex = 3,
 				ValidateNames = true,
 			};
 
@@ -37,7 +38,7 @@ namespace SylverInk
 
 		private void FinishImport(object? sender, RunWorkerCompletedEventArgs? e)
 		{
-			Common.Settings.ImportData = $"Notes imported: {_imported:N0}";
+			Common.Settings.ImportData = $"Notes imported: {Imported:N0}";
 			var button = (Button)FindName("DoImport");
 			button.Content = "Import";
 			button.IsEnabled = true;
@@ -53,11 +54,11 @@ namespace SylverInk
 			button.Content = "Importing...";
 			button.IsEnabled = false;
 
-			_target = Common.Settings.ImportTarget;
+			Target = Common.Settings.ImportTarget;
 
-			if (_target.EndsWith(".sidb") || _target.EndsWith(".sibk"))
+			if (Target.EndsWith(".sidb") || Target.EndsWith(".sibk"))
 			{
-				if (!Serializer.OpenRead(_target))
+				if (!Serializer.OpenRead(Target))
 					return;
 
 				var result = MessageBox.Show("You have selected an existing Sylver Ink database. Its contents will be merged with your current database.\n\nDo you want to overwrite your current database instead?", "Sylver Ink: Warning", MessageBoxButton.YesNoCancel, MessageBoxImage.Warning);
@@ -74,7 +75,7 @@ namespace SylverInk
 				NoteController.InitializeRecords(false, false);
 				Serializer.Close();
 
-				_imported = NoteController.RecordCount;
+				Imported = NoteController.RecordCount;
 				FinishImport(sender, null);
 
 				return;
@@ -101,7 +102,7 @@ namespace SylverInk
 
 		private void PerformImport(object? sender, DoWorkEventArgs e)
 		{
-			using StreamReader? fileStream = new(_target);
+			using StreamReader? fileStream = new(Target);
 			string recordData = string.Empty;
 			int blankCount = 0;
 
@@ -123,7 +124,7 @@ namespace SylverInk
 				if (recordData.Trim().Length > 0 && (blankCount >= 2 || fileStream?.EndOfStream is true))
 				{
 					NoteController.CreateRecord(recordData.Trim());
-					_imported++;
+					Imported++;
 					recordData = string.Empty;
 					blankCount = 0;
 				}

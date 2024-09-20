@@ -2,7 +2,6 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
-using System.Windows.Media;
 
 namespace SylverInk
 {
@@ -16,7 +15,7 @@ namespace SylverInk
 		public NoteSettings NoteSettings { get { return _noteSettings; } }
 		public string Query { get; set; } = string.Empty;
 		public int ResultRecord { get; set; } = -1;
-		public string ResultText { get; set; } = string.Empty;
+		private string ResultText { get; set; } = string.Empty;
 
 		public SearchResult()
 		{
@@ -57,38 +56,37 @@ namespace SylverInk
 
 			Label revisionLabel = new()
 			{
-				Foreground = Brushes.Gray,
-				Margin = new(0.0, 0.0, 10.0, 0.0),
-				HorizontalAlignment = HorizontalAlignment.Right,
-				VerticalAlignment = VerticalAlignment.Bottom,
+				Content = "Entry last modified: " + NoteController.GetRecord(ResultRecord).GetLastChange(),
 				FontStyle = FontStyles.Italic,
-				Content = "Entry last modified: " + NoteController.GetRecord(ResultRecord).GetLastChange()
+				HorizontalAlignment = HorizontalAlignment.Right,
+				Margin = new(0.0, 0.0, 10.0, 0.0),
+				VerticalAlignment = VerticalAlignment.Bottom
 			};
 
 			TextBox noteBox = new()
 			{
-				TextWrapping = TextWrapping.WrapWithOverflow,
-				Background = Brushes.White,
+				AcceptsReturn = true,
 				Height = 20,
 				Margin = new(5.0),
-				AcceptsReturn = true,
-				VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+				Tag = (0U, ResultRecord),
 				Text = ResultText,
-				Tag = (0U, ResultRecord)
+				TextWrapping = TextWrapping.WrapWithOverflow,
+				VerticalContentAlignment = VerticalAlignment.Top,
+				VerticalScrollBarVisibility = ScrollBarVisibility.Auto
 			};
 
 			Button nextButton = new()
 			{
 				Content = "\u2192",
-				Width = 50,
 				HorizontalAlignment = HorizontalAlignment.Left,
+				Width = 50
 			};
 
 			Button previousButton = new()
 			{
 				Content = "\u2190",
-				Width = 50,
 				HorizontalAlignment = HorizontalAlignment.Right,
+				Width = 50
 			};
 
 			Button deleteButton = new()

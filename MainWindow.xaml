@@ -6,12 +6,10 @@
 		xmlns:local="clr-namespace:SylverInk"
 		mc:Ignorable="d"
 		d:DataContext="{d:DesignInstance Type=local:ContextSettings}"
-		Loaded="MainWindow_Loaded" SizeChanged="MainWindow_SizeChanged" Closing="MainWindow_Closing"
-		Title="Sylver Ink" Height="600" Width="450" MinWidth="400" MinHeight="425" ResizeMode="CanResize"
-		Background="{Binding AccentBackground}">
-	<Grid x:Name="MainGrid">
-		<TabControl x:Name="MainTabPanel" Background="{Binding MenuBackground}" Foreground="{Binding MenuForeground}" SelectionChanged="TabChanged">
-			<TabItem x:Name="PlusTab" Header="+">
+		Background="{Binding MenuBackground}" Closing="MainWindow_Closing" Foreground="{Binding MenuForeground}" Height="600" Loaded="MainWindow_Loaded" MinHeight="425" MinWidth="400" ResizeMode="CanResize" SizeChanged="MainWindow_SizeChanged" Title="Sylver Ink" Width="450">
+	<Grid x:Name="MainGrid" Background="{Binding AccentBackground}">
+		<TabControl Background="{Binding MenuBackground}" Foreground="{Binding MenuForeground}" SelectionChanged="TabChanged" x:Name="MainTabPanel">
+			<TabItem Header="+" x:Name="PlusTab">
 				<Grid Background="{Binding MenuBackground}">
 					<Grid.RowDefinitions>
 						<RowDefinition Height="*"/>
@@ -24,23 +22,25 @@
 							<RowDefinition Height="Auto"/>
 							<RowDefinition Height="*"/>
 						</Grid.RowDefinitions>
-						<Label HorizontalAlignment="Right" VerticalAlignment="Bottom" FontStyle="Italic" Content="Recent notes"/>
+						<Label Content="Recent notes" FontStyle="Italic" HorizontalAlignment="Right" VerticalAlignment="Bottom"/>
 						<Border Grid.Row="1" BorderBrush="{Binding AccentBackground}" BorderThickness="1">
 							<Grid Background="{Binding AccentBackground}">
 								<Grid.ColumnDefinitions>
 									<ColumnDefinition Width="Auto"/>
 									<ColumnDefinition Width="*"/>
 								</Grid.ColumnDefinitions>
-								<ListBox x:Name="ShortChanges" HorizontalContentAlignment="Right" BorderThickness="0" Margin="0,0,1,0" MinWidth="60" ItemsSource="{Binding RecentNotes}" AlternationCount="2"
-										 ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled">
+								<ListBox AlternationCount="2" BorderThickness="0" HorizontalContentAlignment="Right" ItemsSource="{Binding RecentNotes}" Margin="0,0,1,0" MinWidth="60"
+										 ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled"
+										 x:Name="ShortChanges">
 									<ListBox.ItemTemplate>
 										<DataTemplate>
 											<TextBlock HorizontalAlignment="Right" Text="{Binding Path=ShortChange}"/>
 										</DataTemplate>
 									</ListBox.ItemTemplate>
 								</ListBox>
-								<ListBox x:Name="RecentNotes" BorderThickness="0" Margin="1,0,0,0" Grid.Column="1" ItemsSource="{Binding RecentNotes}" AlternationCount="2"
-										 ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled">
+								<ListBox AlternationCount="2" BorderThickness="0" Grid.Column="1" ItemsSource="{Binding RecentNotes}" Margin="1,0,0,0" 
+										 ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled"
+										 x:Name="RecentNotes">
 									<ListBox.ItemTemplate>
 										<DataTemplate>
 											<TextBlock Text="{Binding Path=Preview}"/>
@@ -50,12 +50,12 @@
 							</Grid>
 						</Border>
 					</Grid>
-					<StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom">
-						<Label FontStyle="Italic" Content="New note"/>
-						<Label Foreground="{Binding AccentForeground}" Content="(?)" ToolTip="Write a line of text and press Enter to create a new entry."/>
+					<StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Grid.Row="1" VerticalAlignment="Bottom">
+						<Label Content="New note" FontStyle="Italic"/>
+						<Label Content="(?)" Foreground="{Binding AccentForeground}" ToolTip="Write a line of text and press Enter to create a new entry."/>
 					</StackPanel>
-					<TextBox Grid.Row="2" x:Name="NewNoteBox" Margin="5" KeyDown="NewNote" VerticalAlignment="Top"/>
-					<Grid Grid.Row="4" Margin="0,20,0,80">
+					<TextBox KeyDown="NewNote" Margin="5" Grid.Row="2" VerticalAlignment="Top" x:Name="NewNoteBox" />
+					<Grid Margin="0,20,0,80" Grid.Row="4">
 						<Grid.RowDefinitions>
 							<RowDefinition Height="*"/>
 							<RowDefinition Height="*"/>
@@ -68,9 +68,9 @@
 								<ColumnDefinition Width="*"/>
 								<ColumnDefinition Width="*"/>
 							</Grid.ColumnDefinitions>
-							<Button Grid.Column="1" Content="Search" Click="Button_Click"/>
-							<Button Grid.Column="2" Content="Replace" Click="Button_Click"/>
-							<Button Grid.Column="3" Content="Import" Click="Button_Click"/>
+							<Button Click="Button_Click" Grid.Column="1" Content="Search"/>
+							<Button Click="Button_Click" Grid.Column="2" Content="Replace"/>
+							<Button Click="Button_Click" Grid.Column="3" Content="Import"/>
 						</Grid>
 						<Grid Grid.Row="1" Margin="0,10,0,-10">
 							<Grid.ColumnDefinitions>
@@ -79,15 +79,13 @@
 								<ColumnDefinition Width="*"/>
 								<ColumnDefinition Width="*"/>
 							</Grid.ColumnDefinitions>
-							<Button Grid.Column="1" Content="Settings" Click="Button_Click"/>
-							<Button x:Name="ExitButton" Grid.Column="2" Content="Exit" Background="{Binding AccentBackground}" Click="Button_Click"/>
+							<Button Click="Button_Click" Grid.Column="1" Content="Settings"/>
+							<Button Background="{Binding AccentBackground}" Click="Button_Click" Grid.Column="2" Content="Exit" x:Name="ExitButton"/>
 						</Grid>
 					</Grid>
 				</Grid>
 			</TabItem>
 		</TabControl>
-		<Label HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="8,8"
-				   FontStyle="Italic" FontWeight="Light"
-				   Content="{Binding VersionString}"/>
+		<Label Content="{Binding VersionString}" FontStyle="Italic" FontWeight="Light" HorizontalAlignment="Right" Margin="8,8" VerticalAlignment="Bottom"/>
 	</Grid>
 </Window>

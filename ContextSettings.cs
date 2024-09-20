@@ -21,13 +21,13 @@ namespace SylverInk
 		private double _mainFontSize = 11.0;
 		private Typeface? _mainTypeFace;
 		private Brush? _menuBackgound = Brushes.Beige;
-		private Brush? _menuForegound = Brushes.Gray;
+		private Brush? _menuForegound = Brushes.Black;
 		private string _numReplacements = string.Empty;
 		public event PropertyChangedEventHandler? PropertyChanged;
 		private bool _readyToFinalize = false;
 		private bool _readyToReplace = false;
-		private ObservableCollection<NoteRecord> _recentNotes = [];
-		private ObservableCollection<NoteRecord> _searchResults = [];
+		private readonly ObservableCollection<NoteRecord> _recentNotes = [];
+		private readonly ObservableCollection<NoteRecord> _searchResults = [];
 		private double _searchTabHeight = 0.0;
 		private readonly string _versionString = "Sylver Ink — Version " + Assembly.GetExecutingAssembly().GetName().Version + " © Taica, " + GetBuildYear(Assembly.GetExecutingAssembly());
 
@@ -38,15 +38,15 @@ namespace SylverInk
 		public Brush? ListBackground { get => _listBackgound; set { _listBackgound = value; OnPropertyChanged(); } }
 		public Brush? ListForeground { get => _listForegound; set { _listForegound = value; OnPropertyChanged(); } }
 		public FontFamily? MainFontFamily { get => _mainFontFamily; set { _mainFontFamily = value; MainTypeFace = new(value, FontStyles.Normal, FontWeights.Normal, FontStretches.Normal); OnPropertyChanged(); } }
-		public double MainFontSize { get => _mainFontSize; set { _mainFontSize =value; OnPropertyChanged(); } }
+		public double MainFontSize { get => _mainFontSize; set { _mainFontSize = Math.Min(24.0, Math.Max(10.0, value)); OnPropertyChanged(); } }
 		public Typeface? MainTypeFace { get => _mainTypeFace; set { _mainTypeFace = value; OnPropertyChanged(); } }
 		public Brush? MenuBackground { get => _menuBackgound; set { _menuBackgound = value; OnPropertyChanged(); } }
 		public Brush? MenuForeground { get => _menuForegound; set { _menuForegound = value; OnPropertyChanged(); } }
 		public string NumReplacements { get => _numReplacements; set { _numReplacements = value; OnPropertyChanged(); } }
 		public bool ReadyToFinalize { get => _readyToFinalize; set { _readyToFinalize = value; OnPropertyChanged(); } }
 		public bool ReadyToReplace { get => _readyToReplace; set { _readyToReplace = value; OnPropertyChanged(); } }
-		public ObservableCollection<NoteRecord> RecentNotes { get => _recentNotes; set { _recentNotes = value; OnPropertyChanged(); } }
-		public ObservableCollection<NoteRecord> SearchResults { get => _searchResults; set { _searchResults = value; OnPropertyChanged(); } }
+		public ObservableCollection<NoteRecord> RecentNotes => _recentNotes;
+		public ObservableCollection<NoteRecord> SearchResults => _searchResults;
 		public double SearchTabHeight { get => _searchTabHeight; set { _searchTabHeight = value; OnPropertyChanged(); } }
 		public string VersionString => _versionString;
 

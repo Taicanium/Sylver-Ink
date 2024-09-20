@@ -6,22 +6,22 @@
 		xmlns:local="clr-namespace:SylverInk"
 		mc:Ignorable="d"
 		d:DataContext="{d:DesignInstance Type=local:ContextSettings}"
-		Title="Sylver Ink: Replace" Height="300" Width="525" MinHeight="300" MinWidth="325" Background="Beige" ResizeMode="CanResize">
+		Background="{Binding MenuBackground}" Foreground="{Binding MenuForeground}" Height="300" MinHeight="300" MinWidth="325" ResizeMode="CanResize" Title="Sylver Ink: Replace" Width="525">
 	<Grid>
 		<StackPanel HorizontalAlignment="Stretch">
-			<Label Foreground="Gray" Margin="0,20,40,0" HorizontalAlignment="Right" FontStyle="Italic" Content="Text to replace"/>
-			<TextBox Margin="20,0" x:Name="OldText" TextChanged="ReplaceTextChanged"/>
-			<Label Foreground="Gray" Margin="0,40,40,0" HorizontalAlignment="Right" FontStyle="Italic" Content="New text"/>
+			<Label Content="Text to replace" FontStyle="Italic" HorizontalAlignment="Right" Margin="0,20,40,0"/>
+			<TextBox Margin="20,0" TextChanged="ReplaceTextChanged" x:Name="OldText"/>
+			<Label Content="New text" FontStyle="Italic" HorizontalAlignment="Right" Margin="0,40,40,0"/>
 			<TextBox Margin="20,0" x:Name="NewText"/>
 			<Grid Margin="0,40,0,0">
 				<Grid.ColumnDefinitions>
 					<ColumnDefinition Width="*"/>
 					<ColumnDefinition Width="*"/>
 				</Grid.ColumnDefinitions>
-				<Button x:Name="DoReplace" Content="Replace" IsEnabled="{Binding ReadyToReplace}" Click="Replace_Click"/>
-				<Button Grid.Column="1" Content="Close" Click="CloseClick"/>
+				<Button Click="Replace_Click" Content="Replace" IsEnabled="{Binding ReadyToReplace}" x:Name="DoReplace"/>
+				<Button Click="CloseClick" Grid.Column="1" Content="Close"/>
 			</Grid>
-			<Label Foreground="Blue" Margin="0,20,0,0" HorizontalAlignment="Center" FontStyle="Italic" Content="{Binding NumReplacements}"/>
+			<Label Content="{Binding NumReplacements}" FontStyle="Italic" Foreground="{Binding AccentForeground}" HorizontalAlignment="Center" Margin="0,20,0,0"/>
 		</StackPanel>
 	</Grid>
 </Window>

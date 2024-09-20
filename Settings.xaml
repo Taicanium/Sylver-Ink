@@ -6,63 +6,133 @@
 		xmlns:local="clr-namespace:SylverInk"
 		mc:Ignorable="d"
 		d:DataContext="{d:DesignInstance Type=local:ContextSettings}"
-		Title="Sylver Ink: Settings" Height="450" Width="325" MinHeight="450" MinWidth="300"
-		Loaded="Settings_Loaded"
-		Background="Beige">
-	<Grid Background="Gray">
+		Background="{Binding MenuBackground}" Foreground="{Binding MenuForeground}" Height="450" Loaded="Settings_Loaded" MinHeight="450" MinWidth="300" Title="Sylver Ink: Settings" Width="325">
+	<Grid>
 		<Grid.RowDefinitions>
 			<RowDefinition Height="Auto"/>
 			<RowDefinition Height="Auto"/>
 			<RowDefinition Height="*"/>
+			<RowDefinition Height="Auto"/>
 		</Grid.RowDefinitions>
 		<Grid.ColumnDefinitions>
 			<ColumnDefinition Width="*"/>
 			<ColumnDefinition Width="*"/>
 		</Grid.ColumnDefinitions>
 
-		<Grid Background="{Binding MenuBackground}" Margin="-1,0,0,1">
-			<Label HorizontalAlignment="Right" VerticalAlignment="Center" Margin="10" FontStyle="Italic">
-				<TextBlock>
-					Restore the database<LineBreak/>
-					to a previous state
-				</TextBlock>
-			</Label>
-		</Grid>
-		<Grid Background="{Binding MenuBackground}" Grid.Column="1" Margin="-1,0,0,1">
-			<StackPanel VerticalAlignment="Center" Margin="0,10,10,0">
-				<Popup x:Name="TimeSelector" Width="90" Height="25" Placement="Mouse" StaysOpen="False">
-					<Grid Background="White" HorizontalAlignment="Center" VerticalAlignment="Center">
+		<Border BorderBrush="{Binding AccentBackground}" BorderThickness="1">
+			<Grid Background="{Binding MenuBackground}" Margin="-2,0,-2,0">
+				<Label FontStyle="Italic" HorizontalAlignment="Right" Margin="10" VerticalAlignment="Center">
+					<TextBlock>
+						Restore the database<LineBreak/>
+						to a previous state
+					</TextBlock>
+				</Label>
+			</Grid>
+		</Border>
+
+		<Border BorderBrush="{Binding AccentBackground}" BorderThickness="1" Grid.Column="1">
+			<Grid Background="{Binding MenuBackground}" Margin="-2,0,-2,0">
+				<StackPanel Margin="0,10,10,0" VerticalAlignment="Center">
+					<Popup Height="25" Placement="Mouse" StaysOpen="False" Width="90" x:Name="TimeSelector">
+						<Grid Background="White" HorizontalAlignment="Center" VerticalAlignment="Center">
+							<Grid.ColumnDefinitions>
+								<ColumnDefinition Width="*"/>
+								<ColumnDefinition Width="*"/>
+							</Grid.ColumnDefinitions>
+							<ComboBox Name="Hour" SelectionChanged="Hour_Selected"/>
+							<ComboBox Grid.Column="1" Name="Minute" SelectionChanged="Minute_Selected"/>
+						</Grid>
+					</Popup>
+
+					<DatePicker MaxWidth="120" SelectedDateChanged="SelectedDateChanged" x:Name="ReversionDate"/>
+					<Button Click="SelectTime" Content="12:00 AM" FontStyle="Normal" Margin="0,5" Width="70" x:Name="SelectedTime"/>
+					<Button Click="RestoreClick" Content="Restore" IsEnabled="False" Margin="0,10" x:Name="RestoreButton"/>
+				</StackPanel>
+			</Grid>
+		</Border>
+
+		<Border BorderBrush="{Binding AccentBackground}" BorderThickness="1" Grid.Row="1">
+			<Grid Background="{Binding MenuBackground}" Margin="-2,0,-2,0">
+				<Label Content="Reset the database" FontStyle="Italic" FontWeight="Bold" Foreground="{Binding AccentForeground}" HorizontalAlignment="Right" Margin="10" VerticalAlignment="Center"/>
+			</Grid>
+		</Border>
+
+		<Border BorderBrush="{Binding AccentBackground}" BorderThickness="1" Grid.Column="1" Grid.Row="1">
+			<Grid Background="{Binding MenuBackground}" Margin="-2,0,-2,0">
+				<Button Margin="0,0,10,0" Content="Erase" Click="EraseClick"/>
+			</Grid>
+		</Border>
+
+		<Border BorderBrush="{Binding AccentBackground}" BorderThickness="1" Grid.ColumnSpan="2" Grid.Row="2">
+			<Grid Background="{Binding MenuBackground}" Margin="-2,0,-2,1">
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="*"/>
+					<ColumnDefinition Width="*"/>
+				</Grid.ColumnDefinitions>
+				<Grid.RowDefinitions>
+					<RowDefinition Height="*"/>
+					<RowDefinition Height="*"/>
+					<RowDefinition Height="*"/>
+					<RowDefinition Height="*"/>
+					<RowDefinition Height="*"/>
+				</Grid.RowDefinitions>
+
+				<Popup Height="400" IsOpen="False" Placement="Mouse" PopupAnimation="Fade" StaysOpen="False" Width="265" x:Name="ColorSelection">
+					<Grid Background="{Binding MenuBackground}" x:Name="ColorGrid"/>
+				</Popup>
+
+				<Popup Closed="CustomColorFinished" Height="40" IsOpen="False" Opened="CustomColorOpened" Placement="Mouse" PopupAnimation="Fade" StaysOpen="False" Width="120" x:Name="CustomColorSelection">
+					<Grid Background="{Binding MenuBackground}">
 						<Grid.ColumnDefinitions>
-							<ColumnDefinition Width="*"/>
+							<ColumnDefinition Width="Auto"/>
 							<ColumnDefinition Width="*"/>
 						</Grid.ColumnDefinitions>
-						<ComboBox Name="Hour" SelectionChanged="Hour_Selected"/>
-						<ComboBox Name="Minute" Grid.Column="1" SelectionChanged="Minute_Selected"/>
+						<Border BorderBrush="{Binding MenuForeground}" BorderThickness="1" Height="20" Margin="10,0" Width="20">
+							<Rectangle Stretch="UniformToFill" x:Name="CustomColor"/>
+						</Border>
+						<TextBox Grid.Column="1" HorizontalAlignment="Center" HorizontalContentAlignment="Center" TextChanged="NewCustomColor" VerticalAlignment="Center" VerticalContentAlignment="Center" Width="75" x:Name="CustomColorBox"/>
 					</Grid>
 				</Popup>
 
-				<DatePicker x:Name="ReversionDate" MaxWidth="120" SelectedDateChanged="SelectedDateChanged"/>
-				<Button x:Name="SelectedTime" Margin="0,5" Width="70" Content="12:00 AM" FontStyle="Normal" Foreground="Black" Click="SelectTime"/>
-				<Button x:Name="RestoreButton" Margin="0,10" Content="Restore" IsEnabled="False" Click="RestoreClick"/>
-			</StackPanel>
-		</Grid>
-		<Grid Background="{Binding MenuBackground}" Grid.Row="1" Margin="-1,0,0,1">
-			<Label HorizontalAlignment="Right" VerticalAlignment="Center" Margin="10" Foreground="Red" FontStyle="Italic" FontWeight="Bold" Content="Reset the database"/>
-		</Grid>
-		<Grid Background="{Binding MenuBackground}" Grid.Row="1" Margin="-1,0,0,1" Grid.Column="1">
-			<Button Margin="0,0,10,0" Content="Erase" Click="EraseClick"/>
-		</Grid>
-		<Grid Background="{Binding MenuBackground}" Grid.Row="2" Margin="-1,0,0,1">
-			<StackPanel Margin="0,20,0,70">
-				<Label HorizontalAlignment="Right" VerticalAlignment="Center" Margin="10" FontStyle="Italic"  Content="Font Family"/>
-			</StackPanel>
-		</Grid>
-		<Grid Background="{Binding MenuBackground}" Grid.Row="2" Margin="-1,0,0,1" Grid.Column="1">
-			<StackPanel Margin="0,20,0,70">
-				<ComboBox Name="MenuFont" Margin="10,8,10,0" SelectionChanged="MenuFontChanged"/>
-			</StackPanel>
-		</Grid>
+				<Label Content="Display Font" FontStyle="Italic" HorizontalAlignment="Right" Margin="10,0"/>
+				<Label Content="Font Size" FontStyle="Italic" HorizontalAlignment="Right" Margin="10,0" Grid.Row="1"/>
+				<Label Content="Menu Colors" FontStyle="Italic" HorizontalAlignment="Right" Margin="10,0" Grid.Row="2"/>
+				<Label Content="Text Colors" FontStyle="Italic" HorizontalAlignment="Right" Margin="10,0" Grid.Row="3"/>
+				<Label Content="Accent Colors" FontStyle="Italic" HorizontalAlignment="Right" Margin="10,0" Grid.Row="4"/>
 
-		<Button Grid.Row="2" Grid.ColumnSpan="2" VerticalAlignment="Bottom" Margin="0,40" Content="Close" Click="CloseClick"/>
+				<ComboBox Grid.Column="1" Foreground="Black" HorizontalAlignment="Center" SelectionChanged="MenuFontChanged" VerticalAlignment="Center" Width="150" x:Name="MenuFont"/>
+				<StackPanel Grid.Column="1" HorizontalAlignment="Center" Orientation="Horizontal" Grid.Row="1" VerticalAlignment="Center">
+					<Button Click="FontSizeChanged" Content="-" Width="20"/>
+					<TextBox HorizontalContentAlignment="Center" IsReadOnly="True" Text="{Binding MainFontSize}" Width="40"/>
+					<Button Click="FontSizeChanged" Content="+" Width="20"/>
+				</StackPanel>
+				<StackPanel Grid.Column="1" HorizontalAlignment="Center" Orientation="Horizontal" Grid.Row="2" VerticalAlignment="Center">
+					<Button BorderBrush="Black" BorderThickness="1" Click="ColorPopup" Margin="20,0" Tag="P1F" Width="20">
+						<Rectangle Fill="{Binding MenuForeground}" Margin="-1" Stretch="UniformToFill"/>
+					</Button>
+					<Button BorderBrush="Black" BorderThickness="1" Click="ColorPopup" Margin="20,0" Tag="P1B" Width="20">
+						<Rectangle Fill="{Binding MenuBackground}" Margin="-1" Stretch="UniformToFill"/>
+					</Button>
+				</StackPanel>
+				<StackPanel Grid.Column="1" HorizontalAlignment="Center" Orientation="Horizontal" Grid.Row="3" VerticalAlignment="Center">
+					<Button BorderBrush="Black" BorderThickness="1" Click="ColorPopup" Margin="20,0" Tag="P2F" Width="20">
+						<Rectangle Fill="{Binding ListForeground}" Margin="-1" Stretch="UniformToFill"/>
+					</Button>
+					<Button BorderBrush="Black" BorderThickness="1" Click="ColorPopup" Margin="20,0" Tag="P2B" Width="20">
+						<Rectangle Fill="{Binding ListBackground}" Margin="-1" Stretch="UniformToFill"/>
+					</Button>
+				</StackPanel>
+				<StackPanel Grid.Column="1" HorizontalAlignment="Center" Orientation="Horizontal" Grid.Row="4" VerticalAlignment="Center">
+					<Button BorderBrush="Black" BorderThickness="1" Click="ColorPopup" Margin="20,0" Tag="P3F" Width="20">
+						<Rectangle Fill="{Binding AccentForeground}" Margin="-1" Stretch="UniformToFill"/>
+					</Button>
+					<Button BorderBrush="Black" BorderThickness="1" Click="ColorPopup" Margin="20,0" Tag="P3B" Width="20">
+						<Rectangle Fill="{Binding AccentBackground}" Margin="-1" Stretch="UniformToFill"/>
+					</Button>
+				</StackPanel>
+			</Grid>
+		</Border>
+
+		<Button Click="CloseClick" Grid.ColumnSpan="2" Content="Close" Margin="0,20" Grid.Row="3" VerticalAlignment="Bottom"/>
 	</Grid>
 </Window>

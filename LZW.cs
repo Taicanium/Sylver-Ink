@@ -6,43 +6,39 @@ namespace SylverInk
 {
 	static class LZW
 	{
-		private static string? _lzwC = string.Empty;
-		private readonly static List<byte> _lzwBitStream = [];
-		private readonly static Dictionary<string, uint> _lzwCodes = [];
-		private readonly static int _lzwMaxRange = 24;
-		private static uint _lzwNextCode = 258U;
-		private static bool _lzwOpen = false;
-		private readonly static Dictionary<uint, string> _lzwPackets = [];
-		private static int _lzwRange = 9;
-		private static string _lzwW = string.Empty;
+		private static string? C = string.Empty;
+		private static List<byte> BitStream { get; } = [];
+		private static Dictionary<string, uint> Codes { get; } = [];
 
-		private static string FromByte(byte c) => $"{(char)c}";
-
-		private static string FromChar(char c) => $"{c}";
-
-		public static Stream? FileStream;
-		public static List<byte> Incoming = [];
-		public static List<byte> Outgoing = [];
-		public static bool Writing = false;
+		private static Stream? FileStream;
+		private static List<byte> Incoming { get; } = [];
+		private static int MaxRange { get; } = 24;
+		private static uint NextCode = 258U;
+		private static bool Open = false;
+		public static List<byte> Outgoing { get; } = [];
+		private static Dictionary<uint, string> Packets { get; } = [];
+		private static int Range = 9;
+		private static string W = string.Empty;
+		private static bool Writing = false;
 
 		public static void Close()
 		{
-			if (!_lzwOpen || !Writing)
+			if (!Open || !Writing)
 			{
-				_lzwW = string.Empty;
-				_lzwC = string.Empty;
+				W = string.Empty;
+				C = string.Empty;
 
-				_lzwBitStream.Clear();
+				BitStream.Clear();
 				return;
 			}
 
-			if (!_lzwW.Equals(string.Empty)) // If there's still one or two more letters to write...
-				WriteCode(_lzwCodes[_lzwW]); // Write them.
+			if (!W.Equals(string.Empty)) // If there's still one or two more letters to write...
+				WriteCode(Codes[W]); // Write them.
 
 			WriteCode(257U);
 			WriteCode(0U);
 
-			byte[] bits = [.. _lzwBitStream];
+			byte[] bits = [.. BitStream];
 			var bitSize = bits.Length;
 			byte b = 0;
 			int j = 1;
@@ -58,42 +54,42 @@ namespace SylverInk
 				}
 			}
 
-			_lzwBitStream.Clear();
-			_lzwC = string.Empty;
-			_lzwOpen = false;
-			_lzwW = string.Empty;
+			BitStream.Clear();
+			C = string.Empty;
+			Open = false;
+			W = string.Empty;
 		}
 
 		public static void Compress(byte[] data)
 		{
 			for (int i = 0; i < data.Length; i++)
 			{
-				_lzwC = FromByte(data[i]);
-				string wc = _lzwW + _lzwC;
-				if (!_lzwCodes.TryAdd(wc, _lzwNextCode))
-					_lzwW = wc;
+				C = FromByte(data[i]);
+				string wc = W + C;
+				if (!Codes.TryAdd(wc, NextCode))
+					W = wc;
 				else
 				{
-					var entry = _lzwCodes[_lzwW];
+					var entry = Codes[W];
 					WriteCode(entry);
-					_lzwNextCode++;
-					_lzwW = _lzwC;
+					NextCode++;
+					W = C;
 
-					UpdateRange(_lzwNextCode);
+					UpdateRange(NextCode);
 				}
 			}
 		}
 
 		public static byte[] Decompress(int byteCount = 1)
 		{
-			if (_lzwW.Equals(string.Empty))
+			if (W.Equals(string.Empty))
 			{
 				var k = ReadCode();
 				if (k != 257U)
 				{
-					_lzwW = _lzwPackets[k];
-					for (int i = 0; i < _lzwW.Length; i++)
-						Incoming.Add((byte)_lzwW[i]);
+					W = Packets[k];
+					for (int i = 0; i < W.Length; i++)
+						Incoming.Add((byte)W[i]);
 				}
 			}
 
@@ -106,17 +102,17 @@ namespace SylverInk
 					break;
 				else
 				{
-					if (!_lzwPackets.TryGetValue(k, out _lzwC))
-						_lzwC = $"{_lzwW}{_lzwW[0]}";
+					if (!Packets.TryGetValue(k, out C))
+						C = $"{W}{W[0]}";
 
-					for (int i = 0; i < _lzwC.Length; i++)
-						Incoming.Add((byte)_lzwC[i]);
+					for (int i = 0; i < C.Length; i++)
+						Incoming.Add((byte)C[i]);
 
-					_lzwPackets.Add(_lzwNextCode, $"{_lzwW}{_lzwC[0]}");
-					_lzwW = _lzwC;
-					_lzwNextCode++;
+					Packets.Add(NextCode, $"{W}{C[0]}");
+					W = C;
+					NextCode++;
 
-					UpdateRange(_lzwNextCode + 1);
+					UpdateRange(NextCode + 1);
 				}
 			}
 
@@ -126,29 +122,33 @@ namespace SylverInk
 			return [.. range];
 		}
 
+		private static string FromByte(byte c) => $"{(char)c}";
+
+		private static string FromChar(char c) => $"{c}";
+
 		public static void Init(Stream? _fileStream = null, bool _writing = false)
 		{
 			FileStream = _fileStream ?? FileStream;
 			Writing = _writing;
-			_lzwCodes.Clear();
-			_lzwNextCode = 258U;
-			_lzwPackets.Clear();
-			_lzwRange = 9;
+			Codes.Clear();
+			NextCode = 258U;
+			Packets.Clear();
+			Range = 9;
 
 			for (char i = (char)0; i < 256; i++)
 			{
-				_lzwCodes[FromChar(i)] = i;
-				_lzwPackets[i] = FromChar(i);
+				Codes[FromChar(i)] = i;
+				Packets[i] = FromChar(i);
 			}
 
-			_lzwOpen = true;
+			Open = true;
 		}
 
 		private static uint ReadCode()
 		{
 			uint code = 0;
 
-			while (_lzwBitStream.Count < _lzwRange)
+			while (BitStream.Count < Range)
 			{
 				var n = FileStream?.ReadByte();
 				if (n == -1)
@@ -156,34 +156,34 @@ namespace SylverInk
 
 				byte b = (byte)(n ?? 0);
 				for (int i = 1; i <= 8; i++)
-					_lzwBitStream.Add((byte)((b >> (8 - i)) & 1));
+					BitStream.Add((byte)((b >> (8 - i)) & 1));
 			}
 
-			for (int i = 1; i <= _lzwRange; i++)
-				code += (uint)(_lzwBitStream[i - 1] << (_lzwRange - i));
-			_lzwBitStream.RemoveRange(0, _lzwRange);
+			for (int i = 1; i <= Range; i++)
+				code += (uint)(BitStream[i - 1] << (Range - i));
+			BitStream.RemoveRange(0, Range);
 
 			return code;
 		}
 
 		private static void UpdateRange(uint lastCode)
 		{
-			for (int i = _lzwRange; i <= _lzwMaxRange; i++)
+			for (int i = Range; i <= MaxRange; i++)
 			{
 				if (lastCode >= (uint)Math.Pow(2, i))
-					_lzwRange = i + 1;
+					Range = i + 1;
 				else
 					break;
 			}
 
-			if (lastCode >= (uint)Math.Pow(2, _lzwMaxRange + 1))
+			if (lastCode >= (uint)Math.Pow(2, MaxRange + 1))
 				throw new ApplicationException("Serialized database has exceeded the maximum capacity for restricted LZW compression.", new IndexOutOfRangeException());
 		}
 
 		private static void WriteCode(uint code)
 		{
-			for (int i = 1; i <= _lzwRange; i++)
-				_lzwBitStream.Add((byte)((code >> (_lzwRange - i)) & 1));
+			for (int i = 1; i <= Range; i++)
+				BitStream.Add((byte)((code >> (Range - i)) & 1));
 		}
 	}
 }

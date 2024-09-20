@@ -7,13 +7,32 @@
 	<Application.Resources>
 		<ResourceDictionary>
 			<Style TargetType="{x:Type Button}">
-				<Setter Property="Background" Value="{Binding ListBackground}"/>
 				<Setter Property="FontFamily" Value="{Binding MainFontFamily}"/>
 				<Setter Property="FontSize" Value="{Binding MainFontSize}"/>
 				<Setter Property="FontStyle" Value="Italic"/>
 				<Setter Property="Foreground" Value="{Binding ListForeground}"/>
 				<Setter Property="Height" Value="20"/>
+				<Setter Property="HorizontalContentAlignment" Value="Center"/>
+				<Setter Property="VerticalContentAlignment" Value="Center"/>
 				<Setter Property="Width" Value="75"/>
+				<Setter Property="Template">
+					<Setter.Value>
+						<ControlTemplate TargetType="{x:Type Button}">
+							<Border x:Name="Border" Background="{Binding ListBackground}" BorderBrush="{Binding MenuForeground}" BorderThickness="1">
+								<ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+							</Border>
+							<ControlTemplate.Triggers>
+								<Trigger Property="IsMouseOver" Value="True">
+									<Setter Property="Background" Value="{Binding AccentBackground}" TargetName="Border"/>
+									<Setter Property="Foreground" Value="{Binding AccentForeground}"/>
+								</Trigger>
+							</ControlTemplate.Triggers>
+						</ControlTemplate>
+					</Setter.Value>
+				</Setter>
+			</Style>
+			<Style TargetType="{x:Type ComboBox}">
+				<Setter Property="VerticalContentAlignment" Value="Center"/>
 			</Style>
 			<Style TargetType="{x:Type DatePicker}">
 				<Setter Property="Background" Value="{Binding ListBackground}"/>
@@ -21,14 +40,19 @@
 				<Setter Property="FontFamily" Value="{Binding MainFontFamily}"/>
 				<Setter Property="FontSize" Value="{Binding MainFontSize}"/>
 				<Setter Property="Foreground" Value="{Binding ListForeground}"/>
+				<Setter Property="HorizontalContentAlignment" Value="Center"/>
+				<Setter Property="VerticalContentAlignment" Value="Center"/>
 			</Style>
 			<Style TargetType="{x:Type DatePickerTextBox}">
 				<Setter Property="Background" Value="Transparent"/>
+				<Setter Property="VerticalContentAlignment" Value="Center"/>
 			</Style>
 			<Style TargetType="{x:Type Label}">
 				<Setter Property="FontFamily" Value="{Binding MainFontFamily}"/>
 				<Setter Property="FontSize" Value="{Binding MainFontSize}"/>
 				<Setter Property="Foreground" Value="{Binding MenuForeground}"/>
+				<Setter Property="HorizontalContentAlignment" Value="Center"/>
+				<Setter Property="VerticalContentAlignment" Value="Center"/>
 			</Style>
 			<Style TargetType="{x:Type ListBox}">
 				<Setter Property="Background" Value="{Binding ListBackground}"/>
@@ -38,18 +62,21 @@
 				<EventSetter Event="SelectionChanged" Handler="SearchResultFocus"/>
 			</Style>
 			<Style TargetType="{x:Type ListBoxItem}">
+				<Setter Property="VerticalContentAlignment" Value="Center"/>
 				<Style.Triggers>
 					<Trigger Property="ListBox.AlternationIndex" Value="1">
-						<Setter Property="Background" Value="Beige"/>
+						<Setter Property="Background" Value="{Binding Path=Background, RelativeSource={RelativeSource AncestorType=Window}}"/>
+						<Setter Property="Foreground" Value="{Binding Path=Foreground, RelativeSource={RelativeSource AncestorType=Window}}"/>
 					</Trigger>
 				</Style.Triggers>
 			</Style>
 			<Style TargetType="{x:Type TabItem}">
-				<Setter Property="Background" Value="LemonChiffon"/>
+				<Setter Property="Background" Value="{Binding MenuBackground}"/>
+				<Setter Property="Foreground" Value="{Binding MenuForeground}"/>
 				<Style.Triggers>
 					<Trigger Property="IsSelected" Value="True">
-						<Setter Property="Background" Value="{Binding MenuBackground}"/>
-						<Setter Property="Foreground" Value="{Binding MenuForeground}"/>
+						<Setter Property="Background" Value="White"/>
+						<Setter Property="Foreground" Value="Black"/>
 					</Trigger>
 				</Style.Triggers>
 			</Style>
@@ -59,6 +86,7 @@
 				<Setter Property="FontSize" Value="{Binding MainFontSize}"/>
 				<Setter Property="Foreground" Value="{Binding ListForeground}"/>
 				<Setter Property="Height" Value="20"/>
+				<Setter Property="VerticalContentAlignment" Value="Center"/>
 			</Style>
 		</ResourceDictionary>
 	</Application.Resources>

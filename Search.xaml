@@ -6,26 +6,25 @@
 		xmlns:local="clr-namespace:SylverInk"
 		mc:Ignorable="d"
 		d:DataContext="{d:DesignInstance Type=local:ContextSettings}"
-		SizeChanged="Search_SizeChanged"
-		Title="Sylver Ink: Search" Height="525" Width="350" MinWidth="350" MinHeight="275" Background="Beige" ResizeMode="CanResize">
+		Background="{Binding MenuBackground}" Foreground="{Binding MenuForeground}" Height="525" MinHeight="275" MinWidth="350" ResizeMode="CanResize" SizeChanged="Search_SizeChanged" Title="Sylver Ink: Search" Width="350" >
 	<Grid>
 		<Grid.RowDefinitions>
 			<RowDefinition Height="150"/>
 			<RowDefinition Height="*"/>
 		</Grid.RowDefinitions>
 		<StackPanel>
-			<Label Foreground="Gray" Margin="0,20,40,0" HorizontalAlignment="Right" FontStyle="Italic" Content="Search text"/>
-			<TextBox x:Name="SearchText" Margin="20,0"/>
+			<Label Content="Search text" FontStyle="Italic" HorizontalAlignment="Right" Margin="0,20,40,0"/>
+			<TextBox Margin="20,0" x:Name="SearchText"/>
 			<Grid Margin="0,50,0,0">
 				<Grid.ColumnDefinitions>
 					<ColumnDefinition Width="*"/>
 					<ColumnDefinition Width="*"/>
 				</Grid.ColumnDefinitions>
-				<Button x:Name="DoQuery" Content="Query" Click="Query_Click"/>
-				<Button Grid.Column="1" Content="Close" Click="CloseClick"/>
+				<Button Click="QueryClick" Content="Query" x:Name="DoQuery"/>
+				<Button Click="CloseClick" Grid.Column="1" Content="Close"/>
 			</Grid>
 		</StackPanel>
-		<ListBox Grid.Row="1" Margin="20,0,20,20" x:Name="Results" ItemsSource="{Binding SearchResults}" AlternationCount="2">
+		<ListBox AlternationCount="2" ItemsSource="{Binding SearchResults}" Margin="20,0,20,20" Grid.Row="1" x:Name="Results">
 			<ListBox.ItemTemplate>
 				<DataTemplate>
 					<TextBlock Text="{Binding Path=Preview}"/>
