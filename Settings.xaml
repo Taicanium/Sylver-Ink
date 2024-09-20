@@ -78,20 +78,24 @@
 				</Grid.RowDefinitions>
 
 				<Popup Height="400" IsOpen="False" Placement="Mouse" PopupAnimation="Fade" StaysOpen="False" Width="265" x:Name="ColorSelection">
-					<Grid Background="{Binding MenuBackground}" x:Name="ColorGrid"/>
+					<Border BorderBrush="{Binding MenuForeground}" BorderThickness="1">
+						<Grid Background="{Binding MenuBackground}" x:Name="ColorGrid"/>
+					</Border>
 				</Popup>
 
-				<Popup Closed="CustomColorFinished" Height="40" IsOpen="False" Opened="CustomColorOpened" Placement="Mouse" PopupAnimation="Fade" StaysOpen="False" Width="120" x:Name="CustomColorSelection">
-					<Grid Background="{Binding MenuBackground}">
-						<Grid.ColumnDefinitions>
-							<ColumnDefinition Width="Auto"/>
-							<ColumnDefinition Width="*"/>
-						</Grid.ColumnDefinitions>
-						<Border BorderBrush="{Binding MenuForeground}" BorderThickness="1" Height="20" Margin="10,0" Width="20">
-							<Rectangle Stretch="UniformToFill" x:Name="CustomColor"/>
-						</Border>
-						<TextBox Grid.Column="1" HorizontalAlignment="Center" HorizontalContentAlignment="Center" TextChanged="NewCustomColor" VerticalAlignment="Center" VerticalContentAlignment="Center" Width="75" x:Name="CustomColorBox"/>
-					</Grid>
+				<Popup Closed="CustomColorFinished" Height="40" IsOpen="False" Opened="CustomColorOpened" Placement="Mouse" PopupAnimation="Fade" StaysOpen="False" Width="130" x:Name="CustomColorSelection">
+					<Border BorderBrush="{Binding MenuForeground}" BorderThickness="1">
+						<Grid Background="{Binding MenuBackground}">
+							<Grid.ColumnDefinitions>
+								<ColumnDefinition Width="Auto"/>
+								<ColumnDefinition Width="Auto"/>
+							</Grid.ColumnDefinitions>
+							<Border BorderBrush="{Binding MenuForeground}" BorderThickness="1" Height="20" Margin="10,0" Width="20">
+								<Rectangle Stretch="UniformToFill" x:Name="CustomColor"/>
+							</Border>
+							<TextBox Grid.Column="1" HorizontalAlignment="Center" HorizontalContentAlignment="Center" TextChanged="NewCustomColor" VerticalAlignment="Center" VerticalContentAlignment="Center" Width="75" x:Name="CustomColorBox"/>
+						</Grid>
+					</Border>
 				</Popup>
 
 				<Label Content="Display Font" FontStyle="Italic" HorizontalAlignment="Right" Margin="10,0"/>
@@ -100,34 +104,34 @@
 				<Label Content="Text Colors" FontStyle="Italic" HorizontalAlignment="Right" Margin="10,0" Grid.Row="3"/>
 				<Label Content="Accent Colors" FontStyle="Italic" HorizontalAlignment="Right" Margin="10,0" Grid.Row="4"/>
 
-				<ComboBox Grid.Column="1" Foreground="Black" HorizontalAlignment="Center" SelectionChanged="MenuFontChanged" VerticalAlignment="Center" Width="150" x:Name="MenuFont"/>
+				<ComboBox Grid.Column="1" Foreground="Black" HorizontalAlignment="Center" SelectionChanged="MenuFontChanged" VerticalAlignment="Center" Width="125" x:Name="MenuFont"/>
 				<StackPanel Grid.Column="1" HorizontalAlignment="Center" Orientation="Horizontal" Grid.Row="1" VerticalAlignment="Center">
 					<Button Click="FontSizeChanged" Content="-" Width="20"/>
 					<TextBox HorizontalContentAlignment="Center" IsReadOnly="True" Text="{Binding MainFontSize}" Width="40"/>
 					<Button Click="FontSizeChanged" Content="+" Width="20"/>
 				</StackPanel>
 				<StackPanel Grid.Column="1" HorizontalAlignment="Center" Orientation="Horizontal" Grid.Row="2" VerticalAlignment="Center">
-					<Button BorderBrush="Black" BorderThickness="1" Click="ColorPopup" Margin="20,0" Tag="P1F" Width="20">
-						<Rectangle Fill="{Binding MenuForeground}" Margin="-1" Stretch="UniformToFill"/>
-					</Button>
 					<Button BorderBrush="Black" BorderThickness="1" Click="ColorPopup" Margin="20,0" Tag="P1B" Width="20">
 						<Rectangle Fill="{Binding MenuBackground}" Margin="-1" Stretch="UniformToFill"/>
 					</Button>
+					<Button BorderBrush="Black" BorderThickness="1" Click="ColorPopup" Margin="20,0" Tag="P1F" Width="20">
+						<Rectangle Fill="{Binding MenuForeground}" Margin="-1" Stretch="UniformToFill"/>
+					</Button>
 				</StackPanel>
 				<StackPanel Grid.Column="1" HorizontalAlignment="Center" Orientation="Horizontal" Grid.Row="3" VerticalAlignment="Center">
-					<Button BorderBrush="Black" BorderThickness="1" Click="ColorPopup" Margin="20,0" Tag="P2F" Width="20">
-						<Rectangle Fill="{Binding ListForeground}" Margin="-1" Stretch="UniformToFill"/>
-					</Button>
 					<Button BorderBrush="Black" BorderThickness="1" Click="ColorPopup" Margin="20,0" Tag="P2B" Width="20">
 						<Rectangle Fill="{Binding ListBackground}" Margin="-1" Stretch="UniformToFill"/>
 					</Button>
+					<Button BorderBrush="Black" BorderThickness="1" Click="ColorPopup" Margin="20,0" Tag="P2F" Width="20">
+						<Rectangle Fill="{Binding ListForeground}" Margin="-1" Stretch="UniformToFill"/>
+					</Button>
 				</StackPanel>
 				<StackPanel Grid.Column="1" HorizontalAlignment="Center" Orientation="Horizontal" Grid.Row="4" VerticalAlignment="Center">
-					<Button BorderBrush="Black" BorderThickness="1" Click="ColorPopup" Margin="20,0" Tag="P3F" Width="20">
-						<Rectangle Fill="{Binding AccentForeground}" Margin="-1" Stretch="UniformToFill"/>
-					</Button>
 					<Button BorderBrush="Black" BorderThickness="1" Click="ColorPopup" Margin="20,0" Tag="P3B" Width="20">
 						<Rectangle Fill="{Binding AccentBackground}" Margin="-1" Stretch="UniformToFill"/>
+					</Button>
+					<Button BorderBrush="Black" BorderThickness="1" Click="ColorPopup" Margin="20,0" Tag="P3F" Width="20">
+						<Rectangle Fill="{Binding AccentForeground}" Margin="-1" Stretch="UniformToFill"/>
 					</Button>
 				</StackPanel>
 			</Grid>

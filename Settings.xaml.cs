@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -126,7 +125,7 @@ namespace SylverInk
 				Common.Settings.MainFontSize -= 0.5;
 			else
 				Common.Settings.MainFontSize += 0.5;
-			Common.DeferUpdateRecentNotes(true);
+			Common.DeferUpdateRecentNotes();
 		}
 
 		private void Hour_Selected(object sender, RoutedEventArgs e)
@@ -165,7 +164,7 @@ namespace SylverInk
 		{
 			var item = (ComboBoxItem)MenuFont.SelectedItem;
 			Common.Settings.MainFontFamily = item.FontFamily;
-			Common.DeferUpdateRecentNotes(true);
+			Common.DeferUpdateRecentNotes();
 		}
 
 		private void Minute_Selected(object sender, RoutedEventArgs e)

@@ -10,9 +10,7 @@ namespace SylverInk
 	/// </summary>
 	public partial class SearchResult : Window
 	{
-		private readonly NoteSettings _noteSettings = new();
-
-		public NoteSettings NoteSettings { get { return _noteSettings; } }
+		public bool Edited { get; set; } = false;
 		public string Query { get; set; } = string.Empty;
 		public int ResultRecord { get; set; } = -1;
 		private string ResultText { get; set; } = string.Empty;
@@ -20,7 +18,7 @@ namespace SylverInk
 		public SearchResult()
 		{
 			InitializeComponent();
-			DataContext = NoteSettings;
+			DataContext = Common.Settings;
 		}
 
 		private void AddTabToRibbon()
@@ -269,7 +267,7 @@ namespace SylverInk
 
 		private void CloseClick(object sender, RoutedEventArgs e)
 		{
-			if (NoteSettings.Edited)
+			if (Edited)
 			{
 				var result = MessageBox.Show("You have unsaved changes. Save before closing this note?", "Sylver Ink: Notification", MessageBoxButton.YesNoCancel, MessageBoxImage.Question);
 
@@ -297,10 +295,10 @@ namespace SylverInk
 
 		private void Result_Loaded(object sender, RoutedEventArgs e)
 		{
+			LastChangedLabel.Content = "Entry last modified: " + NoteController.GetRecord(ResultRecord).GetLastChange();
 			ResultText = NoteController.GetRecord(ResultRecord).ToString();
 			ResultBlock.Text = ResultText;
-			NoteSettings.LastChanged = "Entry last modified: " + NoteController.GetRecord(ResultRecord).GetLastChange();
-			NoteSettings.Edited = false;
+			Edited = false;
 
 			var tabPanel = (TabControl)Application.Current.MainWindow.FindName("MainTabPanel");
 			for (int i = tabPanel.Items.Count - 1; i > 0; i--)
@@ -314,7 +312,7 @@ namespace SylverInk
 
 		private void ResultBlock_TextChanged(object sender, TextChangedEventArgs e)
 		{
-			NoteSettings.Edited = true;
+			Edited = true;
 			var senderObject = sender as TextBox;
 			ResultText = senderObject?.Text ?? string.Empty;
 		}
@@ -330,8 +328,8 @@ namespace SylverInk
 		private void SaveRecord()
 		{
 			NoteController.CreateRevision(ResultRecord, ResultText);
-			NoteSettings.LastChanged = "Entry last modified: " + NoteController.GetRecord(ResultRecord).GetLastChange();
-			NoteSettings.Edited = false;
+			LastChangedLabel.Content = "Entry last modified: " + NoteController.GetRecord(ResultRecord).GetLastChange();
+			Edited = false;
 		}
 
 		private void ViewClick(object sender, RoutedEventArgs e)
