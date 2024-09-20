@@ -10,7 +10,6 @@ namespace SylverInk
 	/// </summary>
 	public partial class SearchResult : Window
 	{
-		public bool Edited { get; set; } = false;
 		public string Query { get; set; } = string.Empty;
 		public int ResultRecord { get; set; } = -1;
 		private string ResultText { get; set; } = string.Empty;
@@ -267,7 +266,7 @@ namespace SylverInk
 
 		private void CloseClick(object sender, RoutedEventArgs e)
 		{
-			if (Edited)
+			if (SaveButton.IsEnabled)
 			{
 				var result = MessageBox.Show("You have unsaved changes. Save before closing this note?", "Sylver Ink: Notification", MessageBoxButton.YesNoCancel, MessageBoxImage.Question);
 
@@ -298,7 +297,7 @@ namespace SylverInk
 			LastChangedLabel.Content = "Entry last modified: " + NoteController.GetRecord(ResultRecord).GetLastChange();
 			ResultText = NoteController.GetRecord(ResultRecord).ToString();
 			ResultBlock.Text = ResultText;
-			Edited = false;
+			SaveButton.IsEnabled = false;
 
 			var tabPanel = (TabControl)Application.Current.MainWindow.FindName("MainTabPanel");
 			for (int i = tabPanel.Items.Count - 1; i > 0; i--)
@@ -312,9 +311,9 @@ namespace SylverInk
 
 		private void ResultBlock_TextChanged(object sender, TextChangedEventArgs e)
 		{
-			Edited = true;
 			var senderObject = sender as TextBox;
 			ResultText = senderObject?.Text ?? string.Empty;
+			SaveButton.IsEnabled = !ResultText.Equals(NoteController.GetRecord(ResultRecord).ToString());
 		}
 
 		private void SaveClick(object sender, RoutedEventArgs e)
@@ -329,7 +328,7 @@ namespace SylverInk
 		{
 			NoteController.CreateRevision(ResultRecord, ResultText);
 			LastChangedLabel.Content = "Entry last modified: " + NoteController.GetRecord(ResultRecord).GetLastChange();
-			Edited = false;
+			SaveButton.IsEnabled = false;
 		}
 
 		private void ViewClick(object sender, RoutedEventArgs e)
