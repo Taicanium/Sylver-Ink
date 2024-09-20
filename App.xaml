@@ -5,7 +5,7 @@
 			 StartupUri="MainWindow.xaml"
 			 ShutdownMode="OnExplicitShutdown">
 	<Application.Resources>
-		<ResourceDictionary>
+		<ResourceDictionary>			
 			<Style TargetType="{x:Type Button}">
 				<Setter Property="FontFamily" Value="{Binding MainFontFamily}"/>
 				<Setter Property="FontSize" Value="{Binding MainFontSize}"/>
@@ -13,8 +13,6 @@
 				<Setter Property="Foreground" Value="{Binding ListForeground}"/>
 				<Setter Property="Height" Value="20"/>
 				<Setter Property="HorizontalContentAlignment" Value="Center"/>
-				<Setter Property="VerticalContentAlignment" Value="Center"/>
-				<Setter Property="Width" Value="75"/>
 				<Setter Property="Template">
 					<Setter.Value>
 						<ControlTemplate TargetType="{x:Type Button}">
@@ -22,14 +20,20 @@
 								<ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
 							</Border>
 							<ControlTemplate.Triggers>
+								<Trigger Property="IsEnabled" Value="False">
+									<Setter Property="Background" TargetName="Border" Value="LightGray"/>
+									<Setter Property="Foreground" Value="DimGray"/>
+								</Trigger>
 								<Trigger Property="IsMouseOver" Value="True">
-									<Setter Property="Background" Value="{Binding AccentBackground}" TargetName="Border"/>
+									<Setter Property="Background" TargetName="Border" Value="{Binding AccentBackground}"/>
 									<Setter Property="Foreground" Value="{Binding AccentForeground}"/>
 								</Trigger>
 							</ControlTemplate.Triggers>
 						</ControlTemplate>
 					</Setter.Value>
 				</Setter>
+				<Setter Property="VerticalContentAlignment" Value="Center"/>
+				<Setter Property="Width" Value="75"/>
 			</Style>
 			<Style TargetType="{x:Type ComboBox}">
 				<Setter Property="VerticalContentAlignment" Value="Center"/>
@@ -71,14 +75,26 @@
 				</Style.Triggers>
 			</Style>
 			<Style TargetType="{x:Type TabItem}">
-				<Setter Property="Background" Value="{Binding MenuBackground}"/>
 				<Setter Property="Foreground" Value="{Binding MenuForeground}"/>
-				<Style.Triggers>
-					<Trigger Property="IsSelected" Value="True">
-						<Setter Property="Background" Value="White"/>
-						<Setter Property="Foreground" Value="Black"/>
-					</Trigger>
-				</Style.Triggers>
+				<Setter Property="Template">
+					<Setter.Value>
+						<ControlTemplate TargetType="{x:Type TabItem}">
+							<Grid>
+								<Border Name="Border" Background="{Binding MenuBackground}" BorderBrush="Black" BorderThickness="1">
+									<ContentPresenter x:Name="ContentSite" VerticalAlignment="Center" HorizontalAlignment="Center" ContentSource="Header" Margin="6,2" RecognizesAccessKey="True"/>
+								</Border>
+							</Grid>
+							<ControlTemplate.Triggers>
+								<Trigger Property="IsSelected" Value="True">
+									<Setter Property="Panel.ZIndex" Value="100"/>
+									<Setter Property="Background" TargetName="Border" Value="{Binding ListBackground}"/>
+									<Setter Property="TextElement.Foreground" TargetName="Border" Value="{Binding ListForeground}"/>
+									<Setter Property="BorderThickness" TargetName="Border" Value="1,1,1,0"/>
+								</Trigger>
+							</ControlTemplate.Triggers>
+						</ControlTemplate>
+					</Setter.Value>
+				</Setter>
 			</Style>
 			<Style TargetType="{x:Type TextBox}">
 				<Setter Property="Background" Value="{Binding ListBackground}"/>

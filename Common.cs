@@ -28,6 +28,7 @@ namespace SylverInk
 		private static BackgroundWorker? MeasureTask { get; set; }
 		public static List<SearchResult> OpenQueries { get; } = [];
 		private static int RecentEntries { get; set; } = 10;
+		public static bool RepeatUpdate { get; set; } = false;
 		public static Replace? ReplaceWindow { get => _replace; set { _replace?.Close(); _replace = value; _replace?.Show(); } }
 		public static Search? SearchWindow { get => _search; set { _search?.Close(); _search = value; _search?.Show(); } }
 		public static ContextSettings Settings { get; } = new();
@@ -82,7 +83,7 @@ namespace SylverInk
 			return string.Format("{0:X2}{1:X2}{2:X2}", data?.Color.R, data?.Color.G, data?.Color.B);
 		}
 
-		public static void DeferUpdateRecentNotes()
+		public static void DeferUpdateRecentNotes(bool RepeatUpdate = false)
 		{
 			if (!CanResize)
 				return;
@@ -127,6 +128,14 @@ namespace SylverInk
 
 			if (!MeasureTask.IsBusy)
 				MeasureTask.RunWorkerAsync();
+
+			if (RepeatUpdate)
+			{
+				var RepeatTask = new BackgroundWorker();
+				RepeatTask.DoWork += (_, _) => SpinWait.SpinUntil(() => !MeasureTask.IsBusy, 1500);
+				RepeatTask.RunWorkerCompleted += (_, _) => DeferUpdateRecentNotes();
+				RepeatTask.RunWorkerAsync();
+			}
 		}
 
 		public static void MakeBackups()

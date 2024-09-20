@@ -133,6 +133,9 @@
 			</Grid>
 		</Border>
 
-		<Button Click="CloseClick" Grid.ColumnSpan="2" Content="Close" Margin="0,20" Grid.Row="3" VerticalAlignment="Bottom"/>
+		<StackPanel Grid.ColumnSpan="2" HorizontalAlignment="Center" Margin="0,20" Orientation="Horizontal" Grid.Row="3">
+			<Button Click="ResetClick" Content="Reset" Margin="10,0" VerticalAlignment="Bottom"/>
+			<Button Click="CloseClick" Content="Close" Margin="10,0" VerticalAlignment="Bottom"/>
+		</StackPanel>
 	</Grid>
 </Window>

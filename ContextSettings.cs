@@ -37,7 +37,7 @@ namespace SylverInk
 		public string ImportTarget { get => _importTarget; set { _importTarget = value; OnPropertyChanged(); } }
 		public Brush? ListBackground { get => _listBackgound; set { _listBackgound = value; OnPropertyChanged(); } }
 		public Brush? ListForeground { get => _listForegound; set { _listForegound = value; OnPropertyChanged(); } }
-		public FontFamily? MainFontFamily { get => _mainFontFamily; set { _mainFontFamily = value; MainTypeFace = new(value, FontStyles.Normal, FontWeights.Normal, FontStretches.Normal); OnPropertyChanged(); } }
+		public FontFamily? MainFontFamily { get => _mainFontFamily; set { _mainFontFamily = value; _mainTypeFace = new(value, FontStyles.Normal, FontWeights.Normal, FontStretches.Normal); OnPropertyChanged(); } }
 		public double MainFontSize { get => _mainFontSize; set { _mainFontSize = Math.Min(24.0, Math.Max(10.0, value)); OnPropertyChanged(); } }
 		public Typeface? MainTypeFace { get => _mainTypeFace; set { _mainTypeFace = value; OnPropertyChanged(); } }
 		public Brush? MenuBackground { get => _menuBackgound; set { _menuBackgound = value; OnPropertyChanged(); } }

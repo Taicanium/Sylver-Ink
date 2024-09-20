@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -42,30 +43,6 @@ namespace SylverInk
 		}
 
 		private void CloseClick(object sender, RoutedEventArgs e) => Close();
-
-		private void EraseClick(object sender, RoutedEventArgs e)
-		{
-			if (MessageBox.Show("Are you sure you want to erase your notes and create a new database?", "Sylver Ink: Warning", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.No)
-				return;
-
-			NoteController.EraseDatabase();
-		}
-
-		private void FontSizeChanged(object sender, RoutedEventArgs e)
-		{
-			var button = (Button)sender;
-			if (button.Content.Equals("-"))
-				Common.Settings.MainFontSize -= 0.5;
-			else
-				Common.Settings.MainFontSize += 0.5;
-			Common.DeferUpdateRecentNotes();
-		}
-
-		private void Hour_Selected(object sender, RoutedEventArgs e)
-		{
-			HourSelected = true;
-			ApplyTime();
-		}
 
 		public void ColorChanged()
 		{
@@ -134,6 +111,30 @@ namespace SylverInk
 			CustomColorBox.Text = Common.BytesFromBrush(color, 3);
 		}
 
+		private void EraseClick(object sender, RoutedEventArgs e)
+		{
+			if (MessageBox.Show("Are you sure you want to erase your notes and create a new database?", "Sylver Ink: Warning", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.No)
+				return;
+
+			NoteController.EraseDatabase();
+		}
+
+		private void FontSizeChanged(object sender, RoutedEventArgs e)
+		{
+			var button = (Button)sender;
+			if (button.Content.Equals("-"))
+				Common.Settings.MainFontSize -= 0.5;
+			else
+				Common.Settings.MainFontSize += 0.5;
+			Common.DeferUpdateRecentNotes(true);
+		}
+
+		private void Hour_Selected(object sender, RoutedEventArgs e)
+		{
+			HourSelected = true;
+			ApplyTime();
+		}
+
 		private static uint HSVFromRGB(SolidColorBrush brush)
 		{
 			double r_ = brush.Color.R / 255.0;
@@ -164,7 +165,7 @@ namespace SylverInk
 		{
 			var item = (ComboBoxItem)MenuFont.SelectedItem;
 			Common.Settings.MainFontFamily = item.FontFamily;
-			Common.DeferUpdateRecentNotes();
+			Common.DeferUpdateRecentNotes(true);
 		}
 
 		private void Minute_Selected(object sender, RoutedEventArgs e)
@@ -181,6 +182,21 @@ namespace SylverInk
 
 			CustomColor.Fill = brush ?? Brushes.Transparent;
 			LastColorSelection = brush;
+		}
+
+		private void ResetClick(object sender, RoutedEventArgs e)
+		{
+			Common.Settings.MenuBackground = Brushes.Beige;
+			Common.Settings.MenuForeground = Brushes.Black;
+			Common.Settings.ListBackground = Brushes.White;
+			Common.Settings.ListForeground = Brushes.Black;
+			Common.Settings.AccentBackground = Brushes.Khaki;
+			Common.Settings.AccentForeground = Brushes.Blue;
+			Common.Settings.MainFontSize = 11.0;
+			MenuFont.SelectedIndex = ArialIndex;
+			Common.Settings.MainFontFamily = ((ComboBoxItem)MenuFont.SelectedItem).FontFamily;
+
+			Common.DeferUpdateRecentNotes(true);
 		}
 
 		private void RestoreClick(object sender, RoutedEventArgs e)
