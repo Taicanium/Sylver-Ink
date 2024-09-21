@@ -28,7 +28,9 @@ namespace SylverInk
 		private bool _readyToReplace = false;
 		private readonly ObservableCollection<NoteRecord> _recentNotes = [];
 		private readonly ObservableCollection<NoteRecord> _searchResults = [];
+		private bool _searchResultsOnTop = false;
 		private double _searchTabHeight = 0.0;
+		private bool _snapSearchResults = true;
 		private readonly string _versionString = "Sylver Ink — Version " + Assembly.GetExecutingAssembly().GetName().Version + " © Taica, " + GetBuildYear(Assembly.GetExecutingAssembly());
 
 		public Brush? AccentBackground { get => _accentBackgound; set { _accentBackgound = value; OnPropertyChanged(); } }
@@ -47,7 +49,9 @@ namespace SylverInk
 		public bool ReadyToReplace { get => _readyToReplace; set { _readyToReplace = value; OnPropertyChanged(); } }
 		public ObservableCollection<NoteRecord> RecentNotes => _recentNotes;
 		public ObservableCollection<NoteRecord> SearchResults => _searchResults;
+		public bool SearchResultsOnTop { get => _searchResultsOnTop; set { _searchResultsOnTop = value; OnPropertyChanged(); } }
 		public double SearchTabHeight { get => _searchTabHeight; set { _searchTabHeight = value; OnPropertyChanged(); } }
+		public bool SnapSearchResults { get => _snapSearchResults; set { _snapSearchResults = value; OnPropertyChanged(); } }
 		public string VersionString => _versionString;
 
 		private static int GetBuildYear(Assembly assembly)

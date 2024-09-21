@@ -1,5 +1,4 @@
-﻿using Microsoft.Win32;
-using System;
+﻿using System;
 using System.ComponentModel;
 using System.IO;
 using System.Windows;
@@ -23,38 +22,12 @@ namespace SylverInk
 
 		private void CloseClick(object sender, RoutedEventArgs e) => Close();
 
-		private static string DialogFileSelect()
-		{
-			OpenFileDialog dialog = new()
-			{
-				CheckFileExists = true,
-				Filter = "Sylver Ink backup files (*.sibk)|*.sibk|Sylver Ink database files (*.sidb)|*.sidb|Text files (*.txt)|*.txt|All files (*.*)|*.*",
-				FilterIndex = 3,
-				ValidateNames = true,
-			};
-
-			return dialog.ShowDialog() is true ? dialog.FileName : string.Empty;
-		}
-
-		private void FinishImport(object? sender, RunWorkerCompletedEventArgs? e)
-		{
-			Common.Settings.ImportData = $"Notes imported: {Imported:N0}";
-			var button = (Button)FindName("DoImport");
-			button.Content = "Import";
-			button.IsEnabled = true;
-
-			Common.Settings.ImportTarget = string.Empty;
-			Common.Settings.ReadyToFinalize = false;
-			Common.DeferUpdateRecentNotes();
-		}
-
 		private void Finalize_Click(object sender, RoutedEventArgs e)
 		{
 			var button = (Button)sender;
 			button.Content = "Importing...";
-			button.IsEnabled = false;
-
 			Target = Common.Settings.ImportTarget;
+			Common.Settings.ImportTarget = string.Empty;
 
 			if (Target.EndsWith(".sidb") || Target.EndsWith(".sibk"))
 			{
@@ -94,9 +67,20 @@ namespace SylverInk
 			}
 		}
 
+		private void FinishImport(object? sender, RunWorkerCompletedEventArgs? e)
+		{
+			Common.Settings.ImportData = $"Notes imported: {Imported:N0}";
+			var button = (Button)FindName("DoImport");
+			button.Content = "Import";
+
+			Common.Settings.ImportTarget = string.Empty;
+			Common.Settings.ReadyToFinalize = false;
+			Common.DeferUpdateRecentNotes();
+		}
+
 		private void Open_Click(object sender, RoutedEventArgs e)
 		{
-			Common.Settings.ImportTarget = DialogFileSelect();
+			Common.Settings.ImportTarget = Common.DialogFileSelect();
 			Common.Settings.ImportData = "";
 		}
 

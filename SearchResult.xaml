@@ -6,19 +6,23 @@
 		xmlns:local="clr-namespace:SylverInk"
 		mc:Ignorable="d"
 		d:DataContext="{d:DesignInstance Type=local:ContextSettings}"
-		Background="{Binding MenuBackground}" Closed="Result_Closed" Height="350" Loaded="Result_Loaded" Title="Sylver Ink: Search Result" Width="350">
+		Background="{Binding MenuBackground}" Closed="Result_Closed" Height="250" Loaded="Result_Loaded" MouseDown="WindowMouseDown" MouseMove="WindowMove" MouseUp="WindowMouseUp" Title="Sylver Ink: Sticky Note" Topmost="{Binding SearchResultsOnTop}" Width="250">
 	<Grid>
-		<StackPanel>
-			<TextBox AcceptsReturn="True" Height="220" Margin="0,20,0,0" MaxLines="80" TextChanged="ResultBlock_TextChanged"
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition Width="*"/>
+			<ColumnDefinition Width="*"/>
+		</Grid.ColumnDefinitions>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="*"/>
+			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="Auto"/>
+		</Grid.RowDefinitions>
+		<TextBox AcceptsReturn="True" Grid.ColumnSpan="2" Height="Auto" Margin="5" MaxLines="80" TextChanged="ResultBlock_TextChanged"
 					TextWrapping="WrapWithOverflow" VerticalContentAlignment="Top"
 					ScrollViewer.VerticalScrollBarVisibility="Auto"
-					Width="250" x:Name="ResultBlock"/>
-			<Label FontStyle="Italic" HorizontalAlignment="Center" Margin="0,5,0,0" x:Name="LastChangedLabel"/>
-			<StackPanel Margin="0,5,0,0" Orientation="Horizontal" HorizontalAlignment="Center">
-				<Button Margin="15,0" Content="View..." Click="ViewClick"/>
-				<Button Margin="15,0" Content="Save" Click="SaveClick" IsEnabled="False" x:Name="SaveButton"/>
-				<Button Margin="15,0" Content="Close" Click="CloseClick"/>
-			</StackPanel>
-		</StackPanel>
+					x:Name="ResultBlock"/>
+		<Label Grid.ColumnSpan="2" FontStyle="Italic" HorizontalAlignment="Center" Grid.Row="1" x:Name="LastChangedLabel"/>
+		<Button Click="ViewClick" Content="View..." Margin="15,5" Grid.Row="2" Width="50"/>
+		<Button Click="CloseClick" Grid.Column="1" Content="Close" Margin="15,5" Grid.Row="2" Width="50"/>
 	</Grid>
 </Window>

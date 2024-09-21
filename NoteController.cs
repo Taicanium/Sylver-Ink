@@ -102,6 +102,9 @@ namespace SylverInk
 
 		public static void InitializeRecords(bool newDatabase = true, bool dummyData = true)
 		{
+			for (int i = Common.OpenQueries.Count; i > 0; i--)
+				Common.OpenQueries[i - 1].Close();
+
 			if (!newDatabase)
 			{
 				DeserializeRecords();

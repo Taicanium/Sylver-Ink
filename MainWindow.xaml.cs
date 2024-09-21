@@ -125,6 +125,9 @@ namespace SylverInk
 					case "FontSize":
 						Common.Settings.MainFontSize = double.Parse(keyValue[1]);
 						break;
+					case "SearchResultsOnTop":
+						Common.Settings.SearchResultsOnTop = bool.Parse(keyValue[1]);
+						break;
 					case "MenuForeground":
 						Common.Settings.MenuForeground = Common.BrushFromBytes(keyValue[1]);
 						break;
@@ -224,8 +227,9 @@ namespace SylverInk
 		private void SaveDatabase(object? sender, DoWorkEventArgs e)
 		{
 			Common.MakeBackups();
+			Serializer.DatabaseFormat = 2;
 
-			if (Serializer.DatabaseFormat == 2 && !NoteController.TestCanCompress())
+			if (!NoteController.TestCanCompress())
 				Serializer.DatabaseFormat = 1;
 
 			if (!Serializer.OpenWrite($"{Common.DatabaseFile}.sidb"))
@@ -245,6 +249,7 @@ namespace SylverInk
 			string[] settings = [
 				$"FontFamily:{Common.Settings.MainFontFamily?.Source}",
 				$"FontSize:{Common.Settings.MainFontSize}",
+				$"SearchResultsOnTop:{Common.Settings.SearchResultsOnTop}",
 				$"MenuForeground:{Common.BytesFromBrush(Common.Settings.MenuForeground)}",
 				$"MenuBackground:{Common.BytesFromBrush(Common.Settings.MenuBackground)}",
 				$"ListForeground:{Common.BytesFromBrush(Common.Settings.ListForeground)}",

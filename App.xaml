@@ -35,6 +35,9 @@
 				<Setter Property="VerticalContentAlignment" Value="Center"/>
 				<Setter Property="Width" Value="75"/>
 			</Style>
+			<Style TargetType="{x:Type CheckBox}">
+				<Setter Property="VerticalAlignment" Value="Center"/>
+			</Style>
 			<Style TargetType="{x:Type ComboBox}">
 				<Setter Property="VerticalContentAlignment" Value="Center"/>
 			</Style>

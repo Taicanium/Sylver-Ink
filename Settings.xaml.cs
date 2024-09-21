@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -39,6 +40,12 @@ namespace SylverInk
 
 			if (HourSelected && MinuteSelected)
 				TimeSelector.IsOpen = false;
+		}
+
+		private void BackupClick(object sender, RoutedEventArgs e)
+		{
+			var filename = Common.DialogFileSelect(true);
+			Common.MakeBackup(filename);
 		}
 
 		private void CloseClick(object sender, RoutedEventArgs e) => Close();
@@ -251,7 +258,9 @@ namespace SylverInk
 					if (brush.Color.A < 0xFF)
 						continue;
 
-					AvailableBrushes.Add(brush);
+					SolidColorBrush brushCopy = new(brush.Color);
+					brushCopy.SetValue(TagProperty, UppercaseLetters().Replace(property.Name, new MatchEvaluator((match) => " " + match.Value)).Trim());
+					AvailableBrushes.Add(brushCopy);
 				}
 
 				AvailableBrushes.Sort(new Comparison<SolidColorBrush>((brush1, brush2) =>
@@ -281,7 +290,8 @@ namespace SylverInk
 					new(Colors.Violet, 1.0),
 				], 45.0),
 				Margin = new(-1),
-				Stretch = Stretch.UniformToFill
+				Stretch = Stretch.UniformToFill,
+				ToolTip = "Custom color..."
 			};
 
 			Button customOption = new()
@@ -308,7 +318,8 @@ namespace SylverInk
 				{
 					Fill = brush,
 					Margin = new(-1),
-					Stretch = Stretch.UniformToFill
+					Stretch = Stretch.UniformToFill,
+					ToolTip = brush.GetValue(TagProperty) as string
 				};
 
 				Button option = new()
@@ -379,5 +390,8 @@ namespace SylverInk
 			Hour.SelectedIndex = 0;
 			Minute.SelectedIndex = 0;
 		}
+
+		[GeneratedRegex(@"\p{Lu}")]
+		private static partial Regex UppercaseLetters();
 	}
 }

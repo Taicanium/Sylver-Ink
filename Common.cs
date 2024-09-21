@@ -7,6 +7,7 @@ using System.Windows.Media;
 using System.ComponentModel;
 using System.Threading;
 using System.Windows.Controls;
+using Microsoft.Win32;
 
 namespace SylverInk
 {
@@ -136,6 +137,45 @@ namespace SylverInk
 				RepeatTask.RunWorkerCompleted += (_, _) => DeferUpdateRecentNotes();
 				RepeatTask.RunWorkerAsync();
 			}
+		}
+
+		public static string DialogFileSelect(bool outgoing = false)
+		{
+			FileDialog dialog;
+
+			if (outgoing)
+			{
+				dialog = new SaveFileDialog()
+				{
+					Filter = "Sylver Ink backup files (*.sibk)|*.sibk|All files (*.*)|*.*",
+					ValidateNames = true,
+				};
+
+				return dialog.ShowDialog() is true ? dialog.FileName : string.Empty;
+			}
+
+			dialog = new OpenFileDialog()
+			{
+				CheckFileExists = true,
+				Filter = "Sylver Ink backup files (*.sibk)|*.sibk|Sylver Ink database files (*.sidb)|*.sidb|Text files (*.txt)|*.txt|All files (*.*)|*.*",
+				FilterIndex = 3,
+				ValidateNames = true,
+			};
+
+			return dialog.ShowDialog() is true ? dialog.FileName : string.Empty;
+		}
+
+		public static void MakeBackup(string filename)
+		{
+			Serializer.DatabaseFormat = 2;
+			if (!NoteController.TestCanCompress())
+				Serializer.DatabaseFormat = 1;
+
+			if (!Serializer.OpenWrite(filename))
+				return;
+
+			NoteController.SerializeRecords();
+			Serializer.Close();
 		}
 
 		public static void MakeBackups()
