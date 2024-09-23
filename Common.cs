@@ -106,6 +106,7 @@ namespace SylverInk
 					NoteController.Sort();
 					RecentBox.Items.Refresh();
 					ChangesBox.Items.Refresh();
+					UpdateRibbonTabs(RibbonTabContent);
 				};
 				UpdateTask.WorkerSupportsCancellation = true;
 			}
@@ -181,7 +182,7 @@ namespace SylverInk
 					content = record.ShortChange;
 					break;
 				case "CONTENT":
-					content = record.ToString();
+					content = record.Preview;
 					break;
 				case "INDEX":
 					content = $"Note #{recordIndex + 1:N0}";
@@ -201,20 +202,20 @@ namespace SylverInk
 			switch (RibbonTabContent)
 			{
 				case "CREATED":
-					content = record.GetCreated();
+					content = $"{record.GetCreated()} — {record.Preview}";
 					break;
 				case "CHANGED":
-					content = record.ShortChange;
+					content = $"{record.ShortChange} — {record.Preview}";
 					break;
 				case "CONTENT":
-					content = record.ToString();
+					content = record.Preview;
 					break;
 				case "INDEX":
-					content = $"Note #{recordIndex + 1:N0}";
+					content = $"Note #{recordIndex + 1:N0} — {record.Preview}";
 					break;
 			}
 
-			return $"{content} — {record.Preview}";
+			return content;
 		}
 
 		public static void MakeBackup(string filename)
