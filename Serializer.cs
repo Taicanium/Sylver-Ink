@@ -178,6 +178,7 @@ namespace SylverInk
 					_lzw = false;
 					break;
 				case 2:
+				case 3:
 					LZW.Init(_fileStream);
 					_lzw = true;
 					break;
@@ -268,7 +269,7 @@ namespace SylverInk
 				$"SYL {(char)format}"
 			));
 
-			if (format == 2)
+			if (format > 1)
 			{
 				LZW.Init(_fileStream, true);
 				_lzw = true;

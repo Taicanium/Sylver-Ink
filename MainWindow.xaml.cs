@@ -48,6 +48,7 @@ namespace SylverInk
 					break;
 			}
 		}
+		private void Drag(object sender, MouseButtonEventArgs e) => DragMove();
 
 		private void ExitComplete(object? sender, RunWorkerCompletedEventArgs e)
 		{
@@ -128,6 +129,9 @@ namespace SylverInk
 					case "SearchResultsOnTop":
 						Common.Settings.SearchResultsOnTop = bool.Parse(keyValue[1]);
 						break;
+					case "RibbonDisplayMode":
+						Common.RibbonTabContent = keyValue[1];
+						break;
 					case "MenuForeground":
 						Common.Settings.MenuForeground = Common.BrushFromBytes(keyValue[1]);
 						break;
@@ -203,16 +207,11 @@ namespace SylverInk
 			Common.CanResize = true;
 			Common.Settings.MainTypeFace = new(Common.Settings.MainFontFamily, FontStyles.Normal, FontWeights.Normal, FontStretches.Normal);
 			Common.PPD = VisualTreeHelper.GetDpi(RecentNotes).PixelsPerDip;
-			Common.Settings.SearchTabHeight = Height - 300.0;
 
 			Common.DeferUpdateRecentNotes();
 		}
 
-		private void MainWindow_SizeChanged(object sender, SizeChangedEventArgs e)
-		{
-			Common.Settings.SearchTabHeight = e.NewSize.Height - 300.0;
-			Common.DeferUpdateRecentNotes();
-		}
+		private void MainWindow_SizeChanged(object sender, SizeChangedEventArgs e) => Common.DeferUpdateRecentNotes();
 
 		private void NewNote(object sender, KeyEventArgs e)
 		{
@@ -250,6 +249,7 @@ namespace SylverInk
 				$"FontFamily:{Common.Settings.MainFontFamily?.Source}",
 				$"FontSize:{Common.Settings.MainFontSize}",
 				$"SearchResultsOnTop:{Common.Settings.SearchResultsOnTop}",
+				$"RibbonDisplayMode:{Common.RibbonTabContent}",
 				$"MenuForeground:{Common.BytesFromBrush(Common.Settings.MenuForeground)}",
 				$"MenuBackground:{Common.BytesFromBrush(Common.Settings.MenuBackground)}",
 				$"ListForeground:{Common.BytesFromBrush(Common.Settings.ListForeground)}",
@@ -261,11 +261,6 @@ namespace SylverInk
 			File.WriteAllLines("settings.sis", settings);
 		}
 
-		private void TabChanged(object sender, SelectionChangedEventArgs e)
-		{
-			var control = (TabControl)sender;
-			if (control.SelectedIndex == 0)
-				Common.DeferUpdateRecentNotes();
-		}
+		private void TabChanged(object sender, SelectionChangedEventArgs e) => Common.DeferUpdateRecentNotes(true);
 	}
 }

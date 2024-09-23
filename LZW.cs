@@ -96,9 +96,7 @@ namespace SylverInk
 			while (Incoming.Count == 0 || Incoming.Count < byteCount)
 			{
 				var k = ReadCode();
-				if (k == 256U)
-					Init();
-				else if (k == 257U)
+				if (k == 257U)
 					break;
 				else
 				{
@@ -109,8 +107,8 @@ namespace SylverInk
 						Incoming.Add((byte)C[i]);
 
 					Packets.Add(NextCode, $"{W}{C[0]}");
-					W = C;
 					NextCode++;
+					W = C;
 
 					UpdateRange(NextCode + 1);
 				}
@@ -130,6 +128,13 @@ namespace SylverInk
 		{
 			FileStream = _fileStream ?? FileStream;
 			Writing = _writing;
+			InitDictionary();
+
+			Open = true;
+		}
+
+		private static void InitDictionary()
+		{
 			Codes.Clear();
 			NextCode = 258U;
 			Packets.Clear();
@@ -140,8 +145,6 @@ namespace SylverInk
 				Codes[FromChar(i)] = i;
 				Packets[i] = FromChar(i);
 			}
-
-			Open = true;
 		}
 
 		private static uint ReadCode()

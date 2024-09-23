@@ -21,7 +21,7 @@ namespace SylverInk
 		private double _mainFontSize = 11.0;
 		private Typeface? _mainTypeFace;
 		private Brush? _menuBackgound = Brushes.Beige;
-		private Brush? _menuForegound = Brushes.Black;
+		private Brush? _menuForegound = Brushes.DimGray;
 		private string _numReplacements = string.Empty;
 		public event PropertyChangedEventHandler? PropertyChanged;
 		private bool _readyToFinalize = false;
@@ -29,9 +29,8 @@ namespace SylverInk
 		private readonly ObservableCollection<NoteRecord> _recentNotes = [];
 		private readonly ObservableCollection<NoteRecord> _searchResults = [];
 		private bool _searchResultsOnTop = false;
-		private double _searchTabHeight = 0.0;
 		private bool _snapSearchResults = true;
-		private readonly string _versionString = "Sylver Ink — Version " + Assembly.GetExecutingAssembly().GetName().Version + " © Taica, " + GetBuildYear(Assembly.GetExecutingAssembly());
+		private readonly string _versionString = "v. " + Assembly.GetExecutingAssembly().GetName().Version + " © Taica, " + GetBuildYear(Assembly.GetExecutingAssembly());
 
 		public Brush? AccentBackground { get => _accentBackgound; set { _accentBackgound = value; OnPropertyChanged(); } }
 		public Brush? AccentForeground { get => _accentForegound; set { _accentForegound = value; OnPropertyChanged(); } }
@@ -50,7 +49,6 @@ namespace SylverInk
 		public ObservableCollection<NoteRecord> RecentNotes => _recentNotes;
 		public ObservableCollection<NoteRecord> SearchResults => _searchResults;
 		public bool SearchResultsOnTop { get => _searchResultsOnTop; set { _searchResultsOnTop = value; OnPropertyChanged(); } }
-		public double SearchTabHeight { get => _searchTabHeight; set { _searchTabHeight = value; OnPropertyChanged(); } }
 		public bool SnapSearchResults { get => _snapSearchResults; set { _snapSearchResults = value; OnPropertyChanged(); } }
 		public string VersionString => _versionString;
 

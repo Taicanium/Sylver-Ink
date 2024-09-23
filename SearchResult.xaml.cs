@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
 using System.Windows.Input;
 
 namespace SylverInk
@@ -40,13 +39,11 @@ namespace SylverInk
 				}
 			}
 
-			int abbrevLen = Math.Min(13, Query.Length);
-			string abbrev = Query.Length >= 13 ? $"{Query[..10]}..." : Query;
-
 			TabItem newTab = new()
 			{
-				Header = abbrev.Replace("\t", " ").Replace("\r", string.Empty).Replace("\n", " "),
-				Tag = ResultRecord
+				Header = Common.GetRibbonHeader(ResultRecord),
+				Tag = ResultRecord,
+				ToolTip = Common.GetRibbonTooltip(ResultRecord)
 			};
 
 			tabPanel.SelectedIndex = tabPanel.Items.Add(newTab);
@@ -69,7 +66,7 @@ namespace SylverInk
 			TextBox noteBox = new()
 			{
 				AcceptsReturn = true,
-				Height = 20,
+				Height = double.NaN,
 				Margin = new(5.0),
 				Tag = (0U, ResultRecord),
 				Text = ResultText,
@@ -205,8 +202,6 @@ namespace SylverInk
 					return;
 
 				NoteController.DeleteRecord(tag.Item2);
-				tabPanel.SelectedIndex = 0;
-				tabPanel.Items.RemoveAt(tabIndex);
 				Common.DeferUpdateRecentNotes();
 			};
 
@@ -228,7 +223,7 @@ namespace SylverInk
 
 			Grid buttonGrid = new()
 			{
-				Margin = new(0, 40, 0, 80),
+				Margin = new(0, 20, 0, 20),
 				HorizontalAlignment = HorizontalAlignment.Center,
 			};
 
@@ -262,12 +257,6 @@ namespace SylverInk
 			Grid.SetRow(buttonGrid, 2);
 
 			newTab.Content = grid;
-
-			noteBox.SetBinding(HeightProperty, new Binding()
-			{
-				Mode = BindingMode.OneWay,
-				Path = new("SearchTabHeight"),
-			});
 		}
 
 		private void CloseClick(object sender, RoutedEventArgs e)

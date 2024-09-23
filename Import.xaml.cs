@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 
 namespace SylverInk
 {
@@ -21,6 +22,8 @@ namespace SylverInk
 		}
 
 		private void CloseClick(object sender, RoutedEventArgs e) => Close();
+
+		private void Drag(object sender, MouseButtonEventArgs e) => DragMove();
 
 		private void Finalize_Click(object sender, RoutedEventArgs e)
 		{

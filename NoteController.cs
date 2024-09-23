@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Windows;
+using System.Windows.Controls;
 
 namespace SylverInk
 {
@@ -73,6 +75,24 @@ namespace SylverInk
 		{
 			Records[index].Delete();
 			Records.RemoveAt(index);
+
+			var tabControl = (TabControl)Application.Current.MainWindow.FindName("MainTabPanel");
+			for (int i = tabControl.Items.Count; i > 1; i--)
+			{
+				var item = (TabItem)tabControl.Items[i - 1];
+				
+				if (item.Tag is null)
+					continue;
+
+				if ((int)item.Tag == index)
+				{
+					if (tabControl.SelectedIndex == i - 1)
+						tabControl.SelectedIndex = 0;
+
+					tabControl.Items.RemoveAt(i - 1);
+				}
+			}
+
 			PropagateIndices();
 			Common.DatabaseChanged = true;
 		}
@@ -92,6 +112,7 @@ namespace SylverInk
 
 		public static void EraseDatabase()
 		{
+			PropagateIndices();
 			while (RecordCount > 0)
 				DeleteRecord(0);
 
@@ -129,8 +150,23 @@ namespace SylverInk
 
 		private static void PropagateIndices()
 		{
+			var tabControl = (TabControl)Application.Current.MainWindow.FindName("MainTabPanel");
+
 			for (int i = 0; i < RecordCount; i++)
+			{
+				for (int j = tabControl.Items.Count; j > 1; j--)
+				{
+					var item = (TabItem)tabControl.Items[j - 1];
+
+					if (item.Tag is null)
+						continue;
+
+					if ((int)item.Tag == Records[i].GetIndex())
+						item.Tag = i;
+				}
+
 				Records[i].OverwriteIndex(i);
+			}
 
 			_nextIndex = RecordCount;
 		}

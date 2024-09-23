@@ -6,7 +6,7 @@
 		xmlns:local="clr-namespace:SylverInk"
 		mc:Ignorable="d"
 		d:DataContext="{d:DesignInstance Type=local:ContextSettings}"
-		Background="{Binding MenuBackground}" Closed="Result_Closed" Height="250" Loaded="Result_Loaded" MouseDown="WindowMouseDown" MouseMove="WindowMove" MouseUp="WindowMouseUp" Title="Sylver Ink: Sticky Note" Topmost="{Binding SearchResultsOnTop}" Width="250">
+		Background="{Binding MenuBackground}" Closed="Result_Closed" Height="250" Loaded="Result_Loaded" MouseDown="WindowMouseDown" MouseMove="WindowMove" MouseUp="WindowMouseUp" Title="Sylver Ink: Sticky Note" Topmost="{Binding SearchResultsOnTop}" Width="250" WindowStyle="None">
 	<Grid>
 		<Grid.ColumnDefinitions>
 			<ColumnDefinition Width="*"/>
@@ -17,7 +17,7 @@
 			<RowDefinition Height="Auto"/>
 			<RowDefinition Height="Auto"/>
 		</Grid.RowDefinitions>
-		<TextBox AcceptsReturn="True" Grid.ColumnSpan="2" Height="Auto" Margin="5" MaxLines="80" TextChanged="ResultBlock_TextChanged"
+		<TextBox AcceptsReturn="True" Grid.ColumnSpan="2" Height="Auto" Margin="5" TextChanged="ResultBlock_TextChanged"
 					TextWrapping="WrapWithOverflow" VerticalContentAlignment="Top"
 					ScrollViewer.VerticalScrollBarVisibility="Auto"
 					x:Name="ResultBlock"/>

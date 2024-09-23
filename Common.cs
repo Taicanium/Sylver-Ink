@@ -31,6 +31,7 @@ namespace SylverInk
 		private static int RecentEntries { get; set; } = 10;
 		public static bool RepeatUpdate { get; set; } = false;
 		public static Replace? ReplaceWindow { get => _replace; set { _replace?.Close(); _replace = value; _replace?.Show(); } }
+		public static string RibbonTabContent { get; set; } = "CONTENT";
 		public static Search? SearchWindow { get => _search; set { _search?.Close(); _search = value; _search?.Show(); } }
 		public static ContextSettings Settings { get; } = new();
 		public static string SettingsFile => "user_settings.txt";
@@ -90,6 +91,7 @@ namespace SylverInk
 				return;
 
 			var RecentBox = (ListBox)Application.Current.MainWindow.FindName("RecentNotes");
+			var ChangesBox = (ListBox)Application.Current.MainWindow.FindName("RecentNotes");
 
 			if (UpdateTask is null)
 			{
@@ -103,6 +105,7 @@ namespace SylverInk
 						Settings.RecentNotes.Add(NoteController.GetRecord(i));
 					NoteController.Sort();
 					RecentBox.Items.Refresh();
+					ChangesBox.Items.Refresh();
 				};
 				UpdateTask.WorkerSupportsCancellation = true;
 			}
@@ -163,6 +166,55 @@ namespace SylverInk
 			};
 
 			return dialog.ShowDialog() is true ? dialog.FileName : string.Empty;
+		}
+
+		public static string GetRibbonHeader(int recordIndex)
+		{
+			string content = string.Empty;
+			var record = NoteController.GetRecord(recordIndex);
+			switch (RibbonTabContent)
+			{
+				case "CREATED":
+					content = record.GetCreated();
+					break;
+				case "CHANGED":
+					content = record.ShortChange;
+					break;
+				case "CONTENT":
+					content = record.ToString();
+					break;
+				case "INDEX":
+					content = $"Note #{recordIndex + 1:N0}";
+					break;
+			}
+
+			if (content.Length > 13)
+				content = content[..10] + "...";
+
+			return content;
+		}
+
+		public static string GetRibbonTooltip(int recordIndex)
+		{
+			string content = string.Empty;
+			var record = NoteController.GetRecord(recordIndex);
+			switch (RibbonTabContent)
+			{
+				case "CREATED":
+					content = record.GetCreated();
+					break;
+				case "CHANGED":
+					content = record.ShortChange;
+					break;
+				case "CONTENT":
+					content = record.ToString();
+					break;
+				case "INDEX":
+					content = $"Note #{recordIndex + 1:N0}";
+					break;
+			}
+
+			return $"{content} — {record.Preview}";
 		}
 
 		public static void MakeBackup(string filename)
@@ -272,6 +324,22 @@ namespace SylverInk
 			}
 
 			NoteController.Sort();
+		}
+
+		public static void UpdateRibbonTabs(string protocol)
+		{
+			RibbonTabContent = protocol;
+			var control = (TabControl)Application.Current.MainWindow.FindName("MainTabPanel");
+
+			foreach (TabItem item in control.Items)
+			{
+				var tag = item.Tag;
+				if (tag is null)
+					continue;
+
+				item.Header = GetRibbonHeader((int)tag);
+				item.ToolTip = GetRibbonTooltip((int)tag);
+			}
 		}
 	}
 }

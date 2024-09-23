@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 
 namespace SylverInk
@@ -117,6 +118,8 @@ namespace SylverInk
 			CustomColorBox.Text = Common.BytesFromBrush(color, 3);
 		}
 
+		private void Drag(object sender, MouseButtonEventArgs e) => DragMove();
+
 		private void EraseClick(object sender, RoutedEventArgs e)
 		{
 			if (MessageBox.Show("Are you sure you want to erase your notes and create a new database?", "Sylver Ink: Warning", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.No)
@@ -230,6 +233,14 @@ namespace SylverInk
 				RestoreButton.IsEnabled = false;
 			else
 				RestoreButton.IsEnabled = true;
+		}
+
+		private void SelectionRibbonChanged(object sender, SelectionChangedEventArgs e)
+		{
+			var box = (ComboBox)sender;
+			var item = (ComboBoxItem)box.SelectedItem;
+
+			Common.UpdateRibbonTabs(item.Tag as string ?? string.Empty);
 		}
 
 		private void SelectTime(object sender, RoutedEventArgs e)
@@ -389,9 +400,14 @@ namespace SylverInk
 
 			Hour.SelectedIndex = 0;
 			Minute.SelectedIndex = 0;
+
+			if (RibbonBox.SelectedItem is null)
+				foreach (ComboBoxItem item in RibbonBox.Items)
+					if (item.Tag.Equals(Common.RibbonTabContent))
+						RibbonBox.SelectedItem = item;
 		}
 
 		[GeneratedRegex(@"\p{Lu}")]
 		private static partial Regex UppercaseLetters();
-	}
+    }
 }

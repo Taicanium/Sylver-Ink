@@ -6,9 +6,22 @@
 		xmlns:local="clr-namespace:SylverInk"
 		mc:Ignorable="d"
 		d:DataContext="{d:DesignInstance Type=local:ContextSettings}"
-		Background="{Binding MenuBackground}" Closing="MainWindow_Closing" Foreground="{Binding MenuForeground}" Height="600" Loaded="MainWindow_Loaded" MinHeight="425" MinWidth="400" ResizeMode="CanResize" SizeChanged="MainWindow_SizeChanged" Title="Sylver Ink" Width="450">
-	<Grid x:Name="MainGrid" Background="{Binding AccentBackground}">
-		<TabControl Background="{Binding MenuBackground}" Foreground="{Binding MenuForeground}" SelectionChanged="TabChanged" x:Name="MainTabPanel">
+		Background="{Binding MenuBackground}" Closing="MainWindow_Closing" Foreground="{Binding MenuForeground}" Height="600" Loaded="MainWindow_Loaded" MinHeight="425" MinWidth="400" MouseDown="Drag" ResizeMode="CanResize" SizeChanged="MainWindow_SizeChanged" Title="Sylver Ink" Width="450" WindowStyle="None">
+	<Grid Background="{Binding AccentBackground}" x:Name="MainGrid">
+		<Grid.RowDefinitions>
+			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="*"/>
+		</Grid.RowDefinitions>
+		<Grid>
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="*"/>
+				<ColumnDefinition Width="Auto"/>
+				<ColumnDefinition Width="*"/>
+			</Grid.ColumnDefinitions>
+			<Label Grid.Column="1" Content="Sylver Ink" FontSize="16" FontStyle="Italic" FontWeight="Light" HorizontalAlignment="Center" Margin="0,5" VerticalAlignment="Top"/>
+			<Label Grid.Column="2" Grid.ColumnSpan="2" Content="{Binding VersionString}" FontSize="9" FontStyle="Italic" FontWeight="Light" HorizontalAlignment="Right" Margin="0,5" VerticalAlignment="Bottom"/>
+		</Grid>
+		<TabControl Background="{Binding MenuBackground}" Foreground="{Binding MenuForeground}" Grid.Row="1" SelectionChanged="TabChanged" x:Name="MainTabPanel">
 			<TabItem Header="+" x:Name="PlusTab">
 				<Grid Background="{Binding MenuBackground}">
 					<Grid.RowDefinitions>
@@ -55,7 +68,7 @@
 						<Label Content="(?)" Foreground="{Binding AccentForeground}" ToolTip="Write a line of text and press Enter to create a new entry."/>
 					</StackPanel>
 					<TextBox KeyDown="NewNote" Margin="5" Grid.Row="2" VerticalAlignment="Top" x:Name="NewNoteBox" />
-					<Grid Margin="0,20,0,80" Grid.Row="4">
+					<Grid Margin="0,20,0,40" Grid.Row="4">
 						<Grid.RowDefinitions>
 							<RowDefinition Height="*"/>
 							<RowDefinition Height="*"/>
@@ -86,6 +99,5 @@
 				</Grid>
 			</TabItem>
 		</TabControl>
-		<Label Content="{Binding VersionString}" FontStyle="Italic" FontWeight="Light" HorizontalAlignment="Right" Margin="8,8" VerticalAlignment="Bottom"/>
 	</Grid>
 </Window>
