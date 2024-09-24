@@ -54,7 +54,7 @@ namespace SylverInk
 			_isOpen = true;
 			_writing = true;
 
-			WriteHeader(2);
+			WriteHeader(4);
 		}
 
 		public void ClearCompressionTest()
@@ -97,6 +97,39 @@ namespace SylverInk
 			_writing = false;
 
 			ReadHeader();
+		}
+
+		private void HandleFormat(int format = 0)
+		{
+			format = format < 1 ? DatabaseFormat : format;
+			switch (format)
+			{
+				case 1:
+					Headless = true;
+					UseLZW = false;
+					break;
+				case 2:
+					Headless = true;
+					UseLZW = true;
+					break;
+				case 3:
+					Headless = false;
+					UseLZW = false;
+					break;
+				case 4:
+					Headless = false;
+					UseLZW = true;
+					break;
+				default:
+					MessageBox.Show("The database is in an unrecognized format.", "Sylver Ink: Error", MessageBoxButton.OK, MessageBoxImage.Error);
+					throw new ApplicationException($"Unrecognized database format: {format}", new FormatException());
+			}
+
+			if (UseLZW)
+			{
+				_lzw.Outgoing.Clear();
+				_lzw.Init(_fileStream, _writing);
+			}
 		}
 
 		public bool OpenRead(string path)
@@ -178,20 +211,7 @@ namespace SylverInk
 			string header = Encoding.UTF8.GetString(_buffer);
 			DatabaseFormat = (byte)header[^1];
 
-			switch (DatabaseFormat)
-			{
-				case 1:
-				case 3:
-					UseLZW = false;
-					break;
-				case 2:
-				case 4:
-				case 5:
-					UseLZW = true;
-					_lzw.Outgoing.Clear();
-					_lzw.Init(_fileStream);
-					break;
-			}
+			HandleFormat();
 		}
 
 		public int ReadInt32(ref int item)
@@ -278,35 +298,7 @@ namespace SylverInk
 				$"SYL {(char)format}"
 			));
 
-			switch (format)
-			{
-				case 1:
-					Headless = true;
-					UseLZW = false;
-					break;
-				case 2:
-					Headless = true;
-					UseLZW = true;
-					_lzw.Outgoing.Clear();
-					_lzw.Init(_fileStream, true);
-					break;
-				case 3:
-					Headless = false;
-					UseLZW = false;
-					break;
-				case 4:
-					Headless = false;
-					UseLZW = true;
-					_lzw.Outgoing.Clear();
-					_lzw.Init(_fileStream, true);
-					break;
-				case 5:
-					Headless = false;
-					UseLZW = true;
-					_lzw.Outgoing.Clear();
-					_lzw.Init(_fileStream, true);
-					break;
-			}
+			HandleFormat(format);
 		}
 
 		public void WriteInt32(int value)

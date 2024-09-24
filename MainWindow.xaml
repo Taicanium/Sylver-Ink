@@ -10,15 +10,18 @@
 	<Window.Resources>
 		<ResourceDictionary>
 			<ContextMenu x:Key="DatabaseContextMenu">
-				<MenuItem Header="Database Commands" Focusable="False" IsEnabled="False"/>
-				<Separator Focusable="False" Margin="0,5"/>
-				<MenuItem Click="DatabaseBackup" Header="Backup" Tag="Always"/>
-				<MenuItem Click="DatabaseClose" Header="Close"/>
-				<MenuItem Click="DatabaseCreate" Header="Create" Tag="Always"/>
+				<MenuItem Header="File" Focusable="False" IsEnabled="False" Tag="Always"/>
+				<Separator Focusable="False" Margin="0,5" Tag="Always"/>
+				<MenuItem Click="DatabaseBackup" Header="Backup..." Tag="Always"/>
 				<MenuItem Click="DatabaseDelete" Header="Delete"/>
 				<MenuItem Click="DatabaseOpen" Header="Open..." Tag="Always"/>
-				<MenuItem Click="DatabaseRename" Header="Rename" Tag="Always"/>
 				<MenuItem Click="DatabaseSaveAs" Header="Save as..." Tag="Always"/>
+				<Separator Focusable="False" Margin="0,10,0,5" Tag="Always" Visibility="Hidden"/>
+				<MenuItem Header="Database" Focusable="False" IsEnabled="False" Tag="Always"/>
+				<Separator Focusable="False" Margin="0,5" Tag="Always"/>
+				<MenuItem Click="DatabaseClose" Header="Close"/>
+				<MenuItem Click="DatabaseCreate" Header="Create" Tag="Always"/>
+				<MenuItem Click="DatabaseRename" Header="Rename" Tag="Always"/>
 			</ContextMenu>
 
 			<DataTemplate x:Key="DatabaseContentTemplate">

@@ -24,9 +24,12 @@ namespace SylverInk
 				if (result.ResultRecord == index)
 					return;
 
+			var control = (TabControl)Current.MainWindow.FindName("DatabasesPanel");
+
 			SearchResult resultWindow = new()
 			{
 				Query = record.ToString(),
+				ResultDatabase = control.SelectedIndex,
 				ResultRecord = index
 			};
 			resultWindow.Show();

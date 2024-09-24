@@ -16,6 +16,7 @@ namespace SylverInk
 		private bool Dragging { get; set; } = false;
 		private bool Edited { get; set; } = false;
 		public string Query { get; set; } = string.Empty;
+		public int ResultDatabase { get; set; } = 0;
 		public int ResultRecord { get; set; } = -1;
 		private string ResultText { get; set; } = string.Empty;
 
@@ -27,6 +28,7 @@ namespace SylverInk
 
 		private void AddTabToRibbon()
 		{
+			var control = (TabControl)Application.Current.MainWindow.FindName("DatabasesPanel");
 			var tabPanel = Common.GetChildPanel("DatabasesPanel");
 
 			foreach (TabItem item in tabPanel.Items)
@@ -46,6 +48,7 @@ namespace SylverInk
 				ToolTip = Common.GetRibbonTooltip(ResultRecord)
 			};
 
+			control.SelectedIndex = ResultDatabase;
 			tabPanel.SelectedIndex = tabPanel.Items.Add(newTab);
 
 			Grid grid = new() { Margin = new(2.0, 2.0, 2.0, 2.0), };

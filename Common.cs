@@ -350,6 +350,10 @@ namespace SylverInk
 		{
 			var control = (TabControl)Application.Current.MainWindow.FindName("DatabasesPanel");
 
+			for (int i = OpenQueries.Count; i > 0; i--)
+				if (OpenQueries[i - 1].ResultDatabase == control.SelectedIndex)
+					OpenQueries[i - 1].Close();
+
 			for (int i = Databases.Count; i > 0; i--)
 			{
 				if ((Databases[i - 1].Name ?? string.Empty).Equals(db.Name))

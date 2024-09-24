@@ -65,6 +65,7 @@ namespace SylverInk
 			Database db = new();
 			if (db.Loaded)
 				Common.AddDatabase(db);
+			DatabasesPanel.SelectedIndex = DatabasesPanel.Items.Count - 1;
 		}
 
 		private void DatabaseDelete(object sender, RoutedEventArgs e)

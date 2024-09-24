@@ -10,6 +10,7 @@ namespace SylverInk
 {
 	public partial class NoteController
 	{
+		private short _canCompress = 0; // -1 = Cannot compress, 1 = Can compress, 0 = Not tested.
 		private bool _changed = false;
 		private string? _name;
 		private int _nextIndex = 0;
@@ -159,10 +160,10 @@ namespace SylverInk
 
 		private void DeserializeRecords()
 		{
-			if (_serializer?.Headless is true)
+			if (!_serializer?.Headless is true)
 			{
 				string? _name = string.Empty;
-				Name = _serializer.ReadString(ref _name);
+				Name = _serializer?.ReadString(ref _name);
 			}
 
 			int recordCount = 0;
@@ -174,6 +175,7 @@ namespace SylverInk
 			}
 
 			PropagateIndices();
+			Changed = false;
 		}
 
 		public void EraseDatabase()
@@ -339,6 +341,7 @@ namespace SylverInk
 				Records[i].Serialize(_serializer);
 			_serializer?.WriteString(Name);
 
+			Changed = false;
 			ReloadSerializer();
 		}
 
@@ -366,6 +369,12 @@ namespace SylverInk
 
 		public bool TestCanCompress()
 		{
+			if (Changed)
+				_canCompress = 0;
+
+			if (_canCompress != 0)
+				return _canCompress == 1;
+
 			try
 			{
 				string? _name = Name;
@@ -391,10 +400,14 @@ namespace SylverInk
 			catch
 			{
 				_serializer?.ClearCompressionTest();
+				_canCompress = -1;
+				ReloadSerializer();
 				return false;
 			}
 
 			_serializer?.ClearCompressionTest();
+			_canCompress = 1;
+			ReloadSerializer();
 			return true;
 		}
 
