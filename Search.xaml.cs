@@ -38,11 +38,11 @@ namespace SylverInk
 
 		private void PerformSearch(object? sender, DoWorkEventArgs e)
 		{
-			NoteController.UpdateWordPercentages();
+			Common.CurrentDatabase.Controller.UpdateWordPercentages();
 
-			for (int i = 0; i < NoteController.RecordCount; i++)
+			for (int i = 0; i < Common.CurrentDatabase.Controller.RecordCount; i++)
 			{
-				var newRecord = NoteController.GetRecord(i);
+				var newRecord = Common.CurrentDatabase.Controller.GetRecord(i);
 				var recordText = newRecord.ToString();
 				if (!recordText.Contains(_query, StringComparison.OrdinalIgnoreCase))
 					continue;

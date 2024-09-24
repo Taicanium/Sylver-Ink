@@ -6,7 +6,7 @@
 		xmlns:local="clr-namespace:SylverInk"
 		mc:Ignorable="d"
 		d:DataContext="{d:DesignInstance Type=local:ContextSettings}"
-		Background="{Binding MenuBackground}" Foreground="{Binding MenuForeground}" Height="575" Loaded="Settings_Loaded" MinHeight="550" MinWidth="300" MouseDown="Drag" Title="Sylver Ink: Settings" Width="325">
+		Background="{Binding MenuBackground}" Foreground="{Binding MenuForeground}" Height="550" Loaded="Settings_Loaded" MinHeight="525" MinWidth="300" MouseLeftButtonDown="Drag" Title="Sylver Ink: Settings" Width="325">
 	<Grid>
 		<Grid.RowDefinitions>
 			<RowDefinition Height="Auto"/>
@@ -147,23 +147,6 @@
 					<Button Click="SelectTime" Content="12:00 AM" FontStyle="Normal" Margin="0,5" Width="70" x:Name="SelectedTime"/>
 					<Button Click="RestoreClick" Content="Restore" IsEnabled="False" Margin="0,10" x:Name="RestoreButton"/>
 				</StackPanel>
-			</Grid>
-		</Border>
-
-		<Border BorderBrush="{Binding AccentBackground}" BorderThickness="0,0,0,1" Grid.ColumnSpan="2" Grid.Row="3">
-			<Grid Background="{Binding MenuBackground}" Margin="0,0">
-				<Grid.ColumnDefinitions>
-					<ColumnDefinition Width="*"/>
-					<ColumnDefinition Width="*"/>
-				</Grid.ColumnDefinitions>
-				<Grid.RowDefinitions>
-					<RowDefinition Height="*"/>
-					<RowDefinition Height="*"/>
-				</Grid.RowDefinitions>
-				<Label Content="Backup the database" FontStyle="Italic" Foreground="{Binding MenuForeground}" HorizontalAlignment="Right" Margin="10,10" VerticalAlignment="Center"/>
-				<Label Content="Erase the database" FontStyle="Italic" FontWeight="Bold" Foreground="{Binding AccentForeground}" HorizontalAlignment="Right" Margin="10,10" Grid.Row="1" VerticalAlignment="Center"/>
-				<Button Click="BackupClick" Grid.Column="1" Content="Backup"/>
-				<Button Click="EraseClick" Grid.Column="1" Content="Erase" Grid.Row="1"/>
 			</Grid>
 		</Border>
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows;
@@ -7,22 +8,37 @@ using System.Windows.Controls;
 
 namespace SylverInk
 {
-	partial class NoteController
+	public partial class NoteController
 	{
-		private static int _nextIndex = 0;
+		private bool _changed = false;
+		private string? _name;
+		private int _nextIndex = 0;
+		private Serializer? _serializer;
 
-		public static int RecordCount => Records.Count;
-		private static List<NoteRecord> Records { get; } = [];
-		public static Dictionary<string, uint> WordPercentages { get; } = [];
+		public bool Changed
+		{
+			get => _changed;
+			private set
+			{
+				_changed = value;
+				Common.DatabaseChanged = Common.DatabaseChanged || value;
+			}
+		}
 
-		private static int NextIndex
+		public bool Loaded = false;
+		public string? Name { get => _name; set { _name = value; } }
+		public int RecordCount => Records.Count;
+		private List<NoteRecord> Records { get; } = [];
+		public Dictionary<string, uint> WordPercentages { get; } = [];
+
+		private int NextIndex
 		{
 			get
 			{
 				_nextIndex++;
 				return _nextIndex - 1;
 			}
-			set { _nextIndex = value; }
+			set => _nextIndex = value;
 		}
 
 		public enum SortType
@@ -32,21 +48,63 @@ namespace SylverInk
 			ByCreation
 		}
 
-		private static int AddRecord(NoteRecord record)
+		public NoteController()
+		{
+			InitializeRecords(true, false);
+			Loaded = true;
+		}
+
+		public NoteController(string dbFile)
+		{
+			ReloadSerializer();
+
+			if (!_serializer?.OpenRead($"{dbFile}") is true)
+			{
+				ReloadSerializer();
+
+				string backup = FindBackup(dbFile);
+				if (!backup.Equals(string.Empty))
+				{
+					var result = MessageBox.Show($"Unable to load database file: {dbFile}\n\nLoad your most recent backup?", "Sylver Ink: Warning", MessageBoxButton.YesNo, MessageBoxImage.Question);
+					if (result == MessageBoxResult.Yes)
+					{
+						var opened = _serializer?.OpenRead(backup) ?? false;
+						InitializeRecords(!opened);
+						ReloadSerializer();
+						Loaded = true;
+					}
+				}
+
+				if (dbFile.Contains(Common.DefaultDatabase))
+				{
+					var result = MessageBox.Show($"Unable to load database file: {dbFile}\n\nCreate placeholder data for your new database?", "Sylver Ink: Warning", MessageBoxButton.YesNo, MessageBoxImage.Question);
+					InitializeRecords(dummyData: result == MessageBoxResult.Yes);
+					Loaded = true;
+				}
+
+				return;
+			}
+
+			InitializeRecords(false, false);
+			ReloadSerializer();
+			Loaded = true;
+		}
+
+		private int AddRecord(NoteRecord record)
 		{
 			Records.Add(record);
 			return record.GetIndex();
 		}
 
-		public static int CreateRecord(string entry, bool dummy = false)
+		public int CreateRecord(string entry, bool dummy = false)
 		{
 			int Index = NextIndex;
 			Records.Add(new(Index, entry, dummy ? DateTime.UtcNow.AddMinutes(new Random().NextDouble() * 43200.0 - 43200.0).ToBinary() : -1));
-			Common.DatabaseChanged = true;
+			Changed = true;
 			return Index;
 		}
 
-		public static void CreateRevision(int index, string NewVersion)
+		public void CreateRevision(int index, string NewVersion)
 		{
 			string Current = Records[index].ToString();
 			int StartIndex = 0;
@@ -68,15 +126,15 @@ namespace SylverInk
 				_substring = StartIndex >= NewVersion.Length ? string.Empty : NewVersion[StartIndex..]
 			});
 
-			Common.DatabaseChanged = true;
+			Changed = true;
 		}
 
-		public static void DeleteRecord(int index)
+		public void DeleteRecord(int index)
 		{
 			Records[index].Delete();
 			Records.RemoveAt(index);
 
-			var tabControl = (TabControl)Application.Current.MainWindow.FindName("MainTabPanel");
+			var tabControl = Common.GetChildPanel("DatabasesPanel");
 			for (int i = tabControl.Items.Count; i > 1; i--)
 			{
 				var item = (TabItem)tabControl.Items[i - 1];
@@ -91,26 +149,34 @@ namespace SylverInk
 
 					tabControl.Items.RemoveAt(i - 1);
 				}
+				else if ((int)item.Tag > index)
+					item.Tag = (int)item.Tag - 1;
 			}
 
 			PropagateIndices();
-			Common.DatabaseChanged = true;
+			Changed = true;
 		}
 
-		private static void DeserializeRecords()
+		private void DeserializeRecords()
 		{
+			if (_serializer?.Headless is true)
+			{
+				string? _name = string.Empty;
+				Name = _serializer.ReadString(ref _name);
+			}
+
 			int recordCount = 0;
-			Serializer.ReadInt32(ref recordCount);
+			_serializer?.ReadInt32(ref recordCount);
 			for (int i = 0; i < recordCount; i++)
 			{
 				NoteRecord record = new();
-				AddRecord(record.Deserialize());
+				AddRecord(record.Deserialize(_serializer));
 			}
 
 			PropagateIndices();
 		}
 
-		public static void EraseDatabase()
+		public void EraseDatabase()
 		{
 			PropagateIndices();
 			while (RecordCount > 0)
@@ -119,16 +185,37 @@ namespace SylverInk
 			Common.DeferUpdateRecentNotes();
 		}
 
-		public static NoteRecord GetRecord(int RecordIndex) => Records[RecordIndex];
-
-		public static void InitializeRecords(bool newDatabase = true, bool dummyData = true)
+		private static string FindBackup(string dbFile)
 		{
-			for (int i = Common.OpenQueries.Count; i > 0; i--)
-				Common.OpenQueries[i - 1].Close();
+			var Extensionless = Path.GetFileNameWithoutExtension(dbFile);
+			for (int i = 1; i < 4; i++)
+			{
+				string backup = $"{Extensionless}_{i}.sibk";
+				if (File.Exists(backup))
+					return backup;
+			}
+
+			return string.Empty;
+		}
+
+		public string? GetDatabaseName() => Name;
+
+		public NoteRecord GetRecord(int RecordIndex) => Records[RecordIndex];
+		public Serializer GetSerializer()
+		{
+			_serializer ??= new();
+			return _serializer;
+		}
+
+		public void InitializeRecords(bool newDatabase = true, bool dummyData = true)
+		{
+			for (int i = (Common.OpenQueries ?? []).Count; i > 0; i--)
+				Common.OpenQueries?[i - 1].Close();
 
 			if (!newDatabase)
 			{
 				DeserializeRecords();
+				Common.DeferUpdateRecentNotes(true);
 				return;
 			}
 
@@ -145,33 +232,53 @@ namespace SylverInk
 			}
 
 			PropagateIndices();
-			Common.DatabaseChanged = true;
+			Common.DeferUpdateRecentNotes(true);
 		}
 
-		private static void PropagateIndices()
+		public void MakeBackup()
 		{
-			var tabControl = (TabControl)Application.Current.MainWindow.FindName("MainTabPanel");
+			ReloadSerializer();
 
+			string file = Common.DialogFileSelect(true, 1, Name);
+
+			if (!_serializer?.OpenWrite($"{file}") is true)
+				return;
+
+			SerializeRecords();
+			ReloadSerializer();
+		}
+
+		public bool Open(string path, bool writing = false)
+		{
+			_serializer = new();
+
+			if (writing)
+				return _serializer.OpenWrite(path);
+
+			return _serializer.OpenRead(path);
+		}
+
+		private void PropagateIndices()
+		{
 			for (int i = 0; i < RecordCount; i++)
-			{
-				for (int j = tabControl.Items.Count; j > 1; j--)
-				{
-					var item = (TabItem)tabControl.Items[j - 1];
-
-					if (item.Tag is null)
-						continue;
-
-					if ((int)item.Tag == Records[i].GetIndex())
-						item.Tag = i;
-				}
-
 				Records[i].OverwriteIndex(i);
-			}
 
 			_nextIndex = RecordCount;
 		}
 
-		public static (int, int) Replace(string oldText, string newText)
+		public void ReloadSerializer()
+		{
+			_serializer?.Close();
+			_serializer = new()
+			{
+				DatabaseFormat = 4
+			};
+
+			if (!TestCanCompress())
+				_serializer.DatabaseFormat = 3;
+		}
+
+		public (int, int) Replace(string oldText, string newText)
 		{
 			int NoteCount = 0;
 			int ReplaceCount = 0;
@@ -187,12 +294,12 @@ namespace SylverInk
 				CreateRevision(record.GetIndex(), newVersion);
 			}
 
-			Common.DatabaseChanged = Common.DatabaseChanged || ReplaceCount > 0;
+			Changed = Changed || ReplaceCount > 0;
 			PropagateIndices();
 			return (ReplaceCount, NoteCount);
 		}
 
-		public static void Revert(DateTime targetDate)
+		public void Revert(DateTime targetDate)
 		{
 			for (int i = RecordCount - 1; i > -1; i--)
 			{
@@ -209,7 +316,10 @@ namespace SylverInk
 					var RevisionDate = DateTime.FromBinary(Records[i].GetRevision((uint)j - 1U)._created).ToLocalTime();
 					comparison = RevisionDate.CompareTo(targetDate);
 					if (comparison > 0)
+					{
 						Records[i].DeleteRevision(j - 1);
+						Changed = true;
+					}
 				}
 			}
 
@@ -217,16 +327,22 @@ namespace SylverInk
 			Common.DeferUpdateRecentNotes();
 		}
 
-		public static void SerializeRecords()
+		public void SerializeRecords()
 		{
 			PropagateIndices();
 
-			Serializer.WriteInt32(Records.Count);
+			if (!_serializer?.Headless is true)
+				_serializer?.WriteString(Name);
+
+			_serializer?.WriteInt32(Records.Count);
 			for (int i = 0; i < Records.Count; i++)
-				Records[i].Serialize();
+				Records[i].Serialize(_serializer);
+			_serializer?.WriteString(Name);
+
+			ReloadSerializer();
 		}
 
-		public static void Sort(SortType type = SortType.ByIndex)
+		public void Sort(SortType type = SortType.ByIndex)
 		{
 			switch (type)
 			{
@@ -248,37 +364,41 @@ namespace SylverInk
 			}
 		}
 
-		public static bool TestCanCompress()
+		public bool TestCanCompress()
 		{
 			try
 			{
-				Serializer.BeginCompressionTest();
-
-				Serializer.WriteInt32(Records.Count);
-				for (int i = 0; i < Records.Count; i++)
-					Records[i].Serialize();
-
-				Serializer.EndCompressionTest();
-
+				string? _name = Name;
 				int recordCount = 0;
-				Serializer.ReadInt32(ref recordCount);
+
+				_serializer?.BeginCompressionTest();
+
+				_serializer?.WriteInt32(Records.Count);
+				for (int i = 0; i < Records.Count; i++)
+					Records[i].Serialize(_serializer);
+				_serializer?.WriteString(_name);
+
+				_serializer?.EndCompressionTest();
+
+				_serializer?.ReadInt32(ref recordCount);
 				for (int i = 0; i < recordCount; i++)
 				{
 					NoteRecord record = new();
-					record.Deserialize();
+					record.Deserialize(_serializer);
 				}
+				_serializer?.ReadString(ref _name);
 			}
-			catch (ApplicationException)
+			catch
 			{
-				Serializer.ClearCompressionTest();
+				_serializer?.ClearCompressionTest();
 				return false;
 			}
 
-			Serializer.ClearCompressionTest();
+			_serializer?.ClearCompressionTest();
 			return true;
 		}
 
-		public static void UpdateWordPercentages()
+		public void UpdateWordPercentages()
 		{
 			uint total = 0U;
 			WordPercentages.Clear();
@@ -308,6 +428,6 @@ namespace SylverInk
 		}
 
 		[GeneratedRegex(@"(\S+)")]
-		private static partial Regex NonWhitespace();
+		private partial Regex NonWhitespace();
 	}
 }

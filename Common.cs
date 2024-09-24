@@ -1,13 +1,14 @@
-﻿using System;
+﻿using Microsoft.Win32;
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Globalization;
 using System.IO;
-using System.Windows;
-using System.Collections.Generic;
-using System.Windows.Media;
-using System.ComponentModel;
 using System.Threading;
+using System.Windows;
 using System.Windows.Controls;
-using Microsoft.Win32;
+using System.Windows.Media;
 
 namespace SylverInk
 {
@@ -21,8 +22,11 @@ namespace SylverInk
 		private static Settings? _settings;
 
 		public static bool CanResize { get; set; } = false;
+		public static Database CurrentDatabase { get; set; } = new();
 		public static bool DatabaseChanged { get; set; } = false;
-		public static string DatabaseFile => "sylver_ink";
+		public static List<string> DatabaseFiles => Settings.DatabaseFiles;
+		public static ObservableCollection<Database> Databases { get => Settings.Databases; set => Settings.Databases = value; }
+		public static string DefaultDatabase { get; } = "New 1";
 		public static double PPD { get; set; } = 1.0;
 		public static bool ForceClose { get; set; } = false;
 		public static Import? ImportWindow { get => _import; set { _import?.Close(); _import = value; _import?.Show(); } }
@@ -34,12 +38,54 @@ namespace SylverInk
 		public static string RibbonTabContent { get; set; } = "CONTENT";
 		public static Search? SearchWindow { get => _search; set { _search?.Close(); _search = value; _search?.Show(); } }
 		public static ContextSettings Settings { get; } = new();
-		public static string SettingsFile => "user_settings.txt";
 		public static Settings? SettingsWindow { get => _settings; set { _settings?.Close(); _settings = value; _settings?.Show(); } }
 		private static double TextHeight { get; set; } = 0.0;
 		private static BackgroundWorker? UpdateTask { get; set; }
 		public static double WindowHeight { get; set; } = 275.0;
 		public static double WindowWidth { get; set; } = 330.0;
+
+		public static void AddDatabase(Database db)
+		{
+			var template = (DataTemplate)Application.Current.MainWindow.TryFindResource("DatabaseContentTemplate");
+			var menu = (ContextMenu)Application.Current.MainWindow.TryFindResource("DatabaseContextMenu");
+			var control = (TabControl)Application.Current.MainWindow.FindName("DatabasesPanel");
+
+			if ((db.Name ?? string.Empty).Equals(string.Empty))
+			{
+				db.Name = $"New 1";
+				if (control.Items.Count > 0)
+				{
+					var lastItem = (TabItem)control.Items[^1];
+					var header = (string)lastItem.Header;
+					if (lastItem is not null && int.TryParse(header.Replace("New ", string.Empty), out int newIndex))
+						newIndex++;
+					else
+						newIndex = 1;
+					db.Name = $"New {newIndex}";
+				}
+				db.DBFile = $"{db.Name}.sidb";
+			}
+
+			var _name = db.Name ?? string.Empty;
+			var dbHeaderLength = _name.Length > 12 ? 9 : _name.Length;
+			var dbHeader = _name[..dbHeaderLength];
+			if (_name.Length > 12)
+				dbHeader += "...";
+
+			TabItem item = new()
+			{
+				Content = template.LoadContent(),
+				ContextMenu = menu,
+				Header = dbHeader,
+				Tag = db,
+				ToolTip = db.Name,
+			};
+
+			item.MouseRightButtonDown += (sender, e) => { control.SelectedItem = item; };
+			control.Items.Add(item);
+			Databases.Add(db);
+			UpdateContextMenu();
+		}
 
 		public static SolidColorBrush? BrushFromBytes(string data)
 		{
@@ -90,8 +136,11 @@ namespace SylverInk
 			if (!CanResize)
 				return;
 
-			var RecentBox = (ListBox)Application.Current.MainWindow.FindName("RecentNotes");
-			var ChangesBox = (ListBox)Application.Current.MainWindow.FindName("RecentNotes");
+			var RecentBox = (ListBox?)GetChildPanel("DatabasesPanel").FindName("RecentNotes");
+			var ChangesBox = (ListBox?)GetChildPanel("DatabasesPanel").FindName("ShortChanges");
+
+			if ((RecentBox ?? ChangesBox) is null)
+				return;
 
 			if (UpdateTask is null)
 			{
@@ -99,13 +148,13 @@ namespace SylverInk
 				UpdateTask.DoWork += (_, _) => UpdateRecentNotes();
 				UpdateTask.RunWorkerCompleted += (_, _) =>
 				{
-					NoteController.Sort(NoteController.SortType.ByChange);
+					CurrentDatabase.Controller.Sort(NoteController.SortType.ByChange);
 					Settings.RecentNotes.Clear();
-					for (int i = 0; i < RecentEntries; i++)
-						Settings.RecentNotes.Add(NoteController.GetRecord(i));
-					NoteController.Sort();
-					RecentBox.Items.Refresh();
-					ChangesBox.Items.Refresh();
+					for (int i = 0; i < Math.Min(RecentEntries, CurrentDatabase.Controller.RecordCount); i++)
+						Settings.RecentNotes.Add(CurrentDatabase.Controller.GetRecord(i));
+					CurrentDatabase.Controller.Sort();
+					RecentBox?.Items.Refresh();
+					ChangesBox?.Items.Refresh();
 					UpdateRibbonTabs(RibbonTabContent);
 				};
 				UpdateTask.WorkerSupportsCancellation = true;
@@ -116,9 +165,9 @@ namespace SylverInk
 				MeasureTask = new();
 				MeasureTask.DoWork += (_, _) =>
 				{
-					SpinWait.SpinUntil(() => RecentBox.IsMeasureValid, 1000);
-					WindowHeight = RecentBox.ActualHeight;
-					WindowWidth = RecentBox.ActualWidth;
+					SpinWait.SpinUntil(() => RecentBox?.IsMeasureValid ?? true, 1000);
+					WindowHeight = RecentBox?.ActualHeight ?? Application.Current.MainWindow.ActualHeight - 225;
+					WindowWidth = RecentBox?.ActualWidth ?? Application.Current.MainWindow.ActualHeight - 100;
 
 					SpinWait.SpinUntil(() => !UpdateTask?.IsBusy ?? true, 200);
 					if (UpdateTask?.IsBusy ?? false)
@@ -143,7 +192,7 @@ namespace SylverInk
 			}
 		}
 
-		public static string DialogFileSelect(bool outgoing = false)
+		public static string DialogFileSelect(bool outgoing = false, int filterIndex = 3, string? defaultName = null)
 		{
 			FileDialog dialog;
 
@@ -151,7 +200,9 @@ namespace SylverInk
 			{
 				dialog = new SaveFileDialog()
 				{
-					Filter = "Sylver Ink backup files (*.sibk)|*.sibk|All files (*.*)|*.*",
+					FileName = defaultName ?? DefaultDatabase,
+					Filter = "Sylver Ink backup files (*.sibk)|*.sibk|Sylver Ink database files (*.sidb)|*.sidb|All files (*.*)|*.*",
+					FilterIndex = filterIndex,
 					ValidateNames = true,
 				};
 
@@ -162,7 +213,7 @@ namespace SylverInk
 			{
 				CheckFileExists = true,
 				Filter = "Sylver Ink backup files (*.sibk)|*.sibk|Sylver Ink database files (*.sidb)|*.sidb|Text files (*.txt)|*.txt|All files (*.*)|*.*",
-				FilterIndex = 3,
+				FilterIndex = filterIndex,
 				ValidateNames = true,
 			};
 
@@ -172,7 +223,7 @@ namespace SylverInk
 		public static string GetRibbonHeader(int recordIndex)
 		{
 			string content = string.Empty;
-			var record = NoteController.GetRecord(recordIndex);
+			var record = CurrentDatabase.Controller.GetRecord(recordIndex);
 			switch (RibbonTabContent)
 			{
 				case "CREATED":
@@ -198,7 +249,7 @@ namespace SylverInk
 		public static string GetRibbonTooltip(int recordIndex)
 		{
 			string content = string.Empty;
-			var record = NoteController.GetRecord(recordIndex);
+			var record = CurrentDatabase.Controller.GetRecord(recordIndex);
 			switch (RibbonTabContent)
 			{
 				case "CREATED":
@@ -218,29 +269,18 @@ namespace SylverInk
 			return content;
 		}
 
-		public static void MakeBackup(string filename)
+		public static TabControl GetChildPanel(string basePanel)
 		{
-			Serializer.DatabaseFormat = 2;
-			if (!NoteController.TestCanCompress())
-				Serializer.DatabaseFormat = 1;
-
-			if (!Serializer.OpenWrite(filename))
-				return;
-
-			NoteController.SerializeRecords();
-			Serializer.Close();
+			var db = (TabControl)Application.Current.MainWindow.FindName(basePanel);
+			var dbItem = (TabItem)db.SelectedItem;
+			var tabPanel = (TabControl)dbItem.Content;
+			return tabPanel;
 		}
 
 		public static void MakeBackups()
 		{
-			for (int i = 2; i > 0; i--)
-			{
-				if (File.Exists($"{DatabaseFile}{i}.sibk"))
-					File.Copy($"{DatabaseFile}{i}.sibk", $"{DatabaseFile}{i + 1}.sibk", true);
-			}
-
-			if (File.Exists($"{DatabaseFile}.sidb"))
-				File.Copy($"{DatabaseFile}.sidb", $"{DatabaseFile}1.sibk", true);
+			for (int db = 0; db < Databases.Count; db++)
+				Databases[db].MakeBackup(true);
 		}
 
 		public static string MakeDummySearchResult()
@@ -306,6 +346,49 @@ namespace SylverInk
 			return ft.Height;
 		}
 
+		public static void RemoveDatabase(Database db)
+		{
+			var control = (TabControl)Application.Current.MainWindow.FindName("DatabasesPanel");
+
+			for (int i = Databases.Count; i > 0; i--)
+			{
+				if ((Databases[i - 1].Name ?? string.Empty).Equals(db.Name))
+					Databases.RemoveAt(i - 1);
+			}
+
+			control.SelectedIndex = Math.Max(0, control.SelectedIndex - 1);
+			control.Items.RemoveAt(control.SelectedIndex + 1);
+
+			UpdateContextMenu();
+		}
+
+		public static void UpdateContextMenu()
+		{
+			var menu = (ContextMenu)Application.Current.MainWindow.TryFindResource("DatabaseContextMenu");
+			var control = (TabControl)Application.Current.MainWindow.FindName("DatabasesPanel");
+
+			if (control.Items.Count == 1)
+			{
+				foreach (DependencyObject mItem in menu.Items)
+				{
+					if ((mItem.GetValue(FrameworkElement.TagProperty) ?? string.Empty).Equals("Always"))
+						continue;
+
+					mItem.SetValue(UIElement.IsEnabledProperty, false);
+				}
+
+				return;
+			}
+
+			foreach (DependencyObject mItem in menu.Items)
+			{
+				if ((mItem.GetValue(FrameworkElement.TagProperty) ?? string.Empty).Equals("Always"))
+					continue;
+
+				mItem.SetValue(UIElement.IsEnabledProperty, true);
+			}
+		}
+
 		private static void UpdateRecentNotes()
 		{
 			Application.Current.Resources["MainFontFamily"] = Settings.MainFontFamily;
@@ -313,24 +396,26 @@ namespace SylverInk
 
 			RecentEntries = 0;
 			TextHeight = 0.0;
-			NoteController.Sort(NoteController.SortType.ByChange);
+			CurrentDatabase.Controller.Sort(NoteController.SortType.ByChange);
 
-			while (RecentEntries < NoteController.RecordCount && TextHeight < WindowHeight - 25.0)
+			while (RecentEntries < CurrentDatabase.Controller.RecordCount && TextHeight < WindowHeight - 25.0)
 			{
-				var record = NoteController.GetRecord(RecentEntries);
+				var record = CurrentDatabase.Controller.GetRecord(RecentEntries);
 				record.Preview = $"{Math.Floor(WindowWidth - 50.0)}";
 
 				RecentEntries++;
 				TextHeight += MeasureTextHeight(record.Preview) * 1.3333;
 			}
 
-			NoteController.Sort();
+			CurrentDatabase.Controller.Sort();
 		}
 
 		public static void UpdateRibbonTabs(string protocol)
 		{
 			RibbonTabContent = protocol;
-			var control = (TabControl)Application.Current.MainWindow.FindName("MainTabPanel");
+			var control = GetChildPanel("DatabasesPanel");
+			if (control is null)
+				return;
 
 			foreach (TabItem item in control.Items)
 			{

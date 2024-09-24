@@ -34,9 +34,6 @@ namespace SylverInk
 
 			if (Target.EndsWith(".sidb") || Target.EndsWith(".sibk"))
 			{
-				if (!Serializer.OpenRead(Target))
-					return;
-
 				var result = MessageBox.Show("You have selected an existing Sylver Ink database. Its contents will be merged with your current database.\n\nDo you want to overwrite your current database instead?", "Sylver Ink: Warning", MessageBoxButton.YesNoCancel, MessageBoxImage.Warning);
 
 				if (result == MessageBoxResult.Cancel)
@@ -44,14 +41,13 @@ namespace SylverInk
 
 				if (result == MessageBoxResult.Yes)
 				{
-					Common.MakeBackups();
-					NoteController.EraseDatabase();
+					Common.CurrentDatabase.MakeBackup(true);
+					Common.CurrentDatabase.Controller.EraseDatabase();
 				}
 
-				NoteController.InitializeRecords(false, false);
-				Serializer.Close();
+				Common.CurrentDatabase.Controller.SerializeRecords();
 
-				Imported = NoteController.RecordCount;
+				Imported = Common.CurrentDatabase.Controller.RecordCount;
 				FinishImport(sender, null);
 
 				return;
@@ -110,7 +106,7 @@ namespace SylverInk
 
 				if (recordData.Trim().Length > 0 && (blankCount >= 2 || fileStream?.EndOfStream is true))
 				{
-					NoteController.CreateRecord(recordData.Trim());
+					Common.CurrentDatabase.Controller.CreateRecord(recordData.Trim());
 					Imported++;
 					recordData = string.Empty;
 					blankCount = 0;

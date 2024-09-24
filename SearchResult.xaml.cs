@@ -27,7 +27,7 @@ namespace SylverInk
 
 		private void AddTabToRibbon()
 		{
-			var tabPanel = (TabControl)Application.Current.MainWindow.FindName("MainTabPanel");
+			var tabPanel = Common.GetChildPanel("DatabasesPanel");
 
 			foreach (TabItem item in tabPanel.Items)
 			{
@@ -56,7 +56,7 @@ namespace SylverInk
 
 			Label revisionLabel = new()
 			{
-				Content = "Entry last modified: " + NoteController.GetRecord(ResultRecord).GetLastChange(),
+				Content = "Entry last modified: " + Common.CurrentDatabase.Controller.GetRecord(ResultRecord).GetLastChange(),
 				FontStyle = FontStyles.Italic,
 				HorizontalAlignment = HorizontalAlignment.Right,
 				Margin = new(0.0, 0.0, 10.0, 0.0),
@@ -106,23 +106,23 @@ namespace SylverInk
 			Button saveButton = new() { Content = "Save" };
 
 			nextButton.IsEnabled = false;
-			previousButton.IsEnabled = NoteController.GetRecord(ResultRecord).GetNumRevisions() > 0;
+			previousButton.IsEnabled = Common.CurrentDatabase.Controller.GetRecord(ResultRecord).GetNumRevisions() > 0;
 			saveButton.IsEnabled = false;
 
 			noteBox.TextChanged += (sender, e) =>
 			{
 				var senderObject = (TextBox)sender;
 				var tag = ((uint, int))senderObject.Tag;
-				var record = NoteController.GetRecord(tag.Item2);
+				var record = Common.CurrentDatabase.Controller.GetRecord(tag.Item2);
 				saveButton.IsEnabled = !senderObject.Text.Equals(record.ToString());
 			};
 
 			nextButton.Click += (sender, e) =>
 			{
 				var senderObject = (Button)sender;
-				var tabPanel = (TabControl)Application.Current.MainWindow.FindName("MainTabPanel");
+				var tabPanel = Common.GetChildPanel("DatabasesPanel");
 				var tag = ((uint, int))noteBox.Tag;
-				var record = NoteController.GetRecord(tag.Item2);
+				var record = Common.CurrentDatabase.Controller.GetRecord(tag.Item2);
 				string revisionTime = record.GetCreated();
 
 				tag.Item1 -= 1U;
@@ -145,9 +145,9 @@ namespace SylverInk
 			previousButton.Click += (sender, e) =>
 			{
 				var senderObject = (Button)sender;
-				var tabPanel = (TabControl)Application.Current.MainWindow.FindName("MainTabPanel");
+				var tabPanel = Common.GetChildPanel("DatabasesPanel");
 				var tag = ((uint, int))noteBox.Tag;
-				var record = NoteController.GetRecord(tag.Item2);
+				var record = Common.CurrentDatabase.Controller.GetRecord(tag.Item2);
 				string revisionTime = record.GetLastChange();
 
 				tag.Item1 += 1U;
@@ -170,7 +170,7 @@ namespace SylverInk
 			returnButton.Click += (sender, e) =>
 			{
 				var senderObject = (Button)sender;
-				var tabPanel = (TabControl)Application.Current.MainWindow.FindName("MainTabPanel");
+				var tabPanel = Common.GetChildPanel("DatabasesPanel");
 				var tag = ((uint, int))noteBox.Tag;
 				var tabIndex = (int)senderObject.Tag;
 
@@ -181,7 +181,7 @@ namespace SylverInk
 						case MessageBoxResult.Cancel:
 							return;
 						case MessageBoxResult.Yes:
-							NoteController.CreateRevision(tag.Item2, noteBox.Text);
+							Common.CurrentDatabase.Controller.CreateRevision(tag.Item2, noteBox.Text);
 							Common.DeferUpdateRecentNotes();
 							break;
 					}
@@ -194,14 +194,14 @@ namespace SylverInk
 			deleteButton.Click += (sender, e) =>
 			{
 				var senderObject = (Button)sender;
-				var tabPanel = (TabControl)Application.Current.MainWindow.FindName("MainTabPanel");
+				var tabPanel = Common.GetChildPanel("DatabasesPanel");
 				var tag = ((uint, int))noteBox.Tag;
 				var tabIndex = (int)senderObject.Tag;
 
 				if (MessageBox.Show("Are you sure you want to permanently delete this note?", "Sylver Ink: Notification", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.No)
 					return;
 
-				NoteController.DeleteRecord(tag.Item2);
+				Common.CurrentDatabase.Controller.DeleteRecord(tag.Item2);
 				Common.DeferUpdateRecentNotes();
 			};
 
@@ -210,14 +210,14 @@ namespace SylverInk
 				var senderObject = (Button)sender;
 				var tag = ((uint, int))noteBox.Tag;
 
-				NoteController.CreateRevision(tag.Item2, noteBox.Text);
+				Common.CurrentDatabase.Controller.CreateRevision(tag.Item2, noteBox.Text);
 				Common.DeferUpdateRecentNotes();
 
 				noteBox.Tag = (0U, tag.Item2);
 				noteBox.IsEnabled = true;
 				previousButton.IsEnabled = true;
 				nextButton.IsEnabled = false;
-				revisionLabel.Content = "Entry last modified: " + NoteController.GetRecord(tag.Item2).GetLastChange();
+				revisionLabel.Content = "Entry last modified: " + Common.CurrentDatabase.Controller.GetRecord(tag.Item2).GetLastChange();
 				senderObject.IsEnabled = false;
 			};
 
@@ -311,12 +311,12 @@ namespace SylverInk
 
 		private void Result_Loaded(object sender, RoutedEventArgs e)
 		{
-			LastChangedLabel.Content = "Last modified: " + NoteController.GetRecord(ResultRecord).GetLastChange();
-			ResultText = NoteController.GetRecord(ResultRecord).ToString();
+			LastChangedLabel.Content = "Last modified: " + Common.CurrentDatabase.Controller.GetRecord(ResultRecord).GetLastChange();
+			ResultText = Common.CurrentDatabase.Controller.GetRecord(ResultRecord).ToString();
 			ResultBlock.Text = ResultText;
 			Edited = false;
 
-			var tabPanel = (TabControl)Application.Current.MainWindow.FindName("MainTabPanel");
+			var tabPanel = Common.GetChildPanel("DatabasesPanel");
 			for (int i = tabPanel.Items.Count - 1; i > 0; i--)
 			{
 				var item = (TabItem)tabPanel.Items[i];
@@ -330,7 +330,7 @@ namespace SylverInk
 		{
 			var senderObject = sender as TextBox;
 			ResultText = senderObject?.Text ?? string.Empty;
-			Edited = !ResultText.Equals(NoteController.GetRecord(ResultRecord).ToString());
+			Edited = !ResultText.Equals(Common.CurrentDatabase.Controller.GetRecord(ResultRecord).ToString());
 		}
 
 		private void SaveClick(object sender, RoutedEventArgs e)
@@ -343,8 +343,8 @@ namespace SylverInk
 
 		private void SaveRecord()
 		{
-			NoteController.CreateRevision(ResultRecord, ResultText);
-			LastChangedLabel.Content = "Last modified: " + NoteController.GetRecord(ResultRecord).GetLastChange();
+			Common.CurrentDatabase.Controller.CreateRevision(ResultRecord, ResultText);
+			LastChangedLabel.Content = "Last modified: " + Common.CurrentDatabase.Controller.GetRecord(ResultRecord).GetLastChange();
 		}
 
 		private Point Snap(ref Point Coords)

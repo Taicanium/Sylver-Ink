@@ -4,63 +4,60 @@ using System.IO;
 
 namespace SylverInk
 {
-	static class LZW
+	public partial class LZW
 	{
-		private static string? C = string.Empty;
-		private static List<byte> BitStream { get; } = [];
-		private static Dictionary<string, uint> Codes { get; } = [];
+		private string? C = string.Empty;
+		private List<byte> BitStream { get; } = [];
+		private Dictionary<string, uint> Codes { get; } = [];
 
-		private static Stream? FileStream;
-		private static List<byte> Incoming { get; } = [];
-		private static int MaxRange { get; } = 24;
-		private static uint NextCode = 258U;
-		private static bool Open = false;
-		public static List<byte> Outgoing { get; } = [];
-		private static Dictionary<uint, string> Packets { get; } = [];
-		private static int Range = 9;
-		private static string W = string.Empty;
-		private static bool Writing = false;
+		private Stream? FileStream;
+		private List<byte> Incoming { get; } = [];
+		private int MaxRange { get; } = 24;
+		private uint NextCode = 258U;
+		private bool Open = false;
+		public List<byte> Outgoing { get; } = [];
+		private Dictionary<uint, string> Packets { get; } = [];
+		private int Range = 9;
+		private string W = string.Empty;
+		private bool Writing = false;
 
-		public static void Close()
+		public void Close()
 		{
-			if (!Open || !Writing)
+			if (Open && Writing)
 			{
-				W = string.Empty;
-				C = string.Empty;
+				if (!W.Equals(string.Empty))
+					WriteCode(Codes[W]);
 
-				BitStream.Clear();
-				return;
-			}
+				WriteCode(257U);
+				WriteCode(0U);
 
-			if (!W.Equals(string.Empty)) // If there's still one or two more letters to write...
-				WriteCode(Codes[W]); // Write them.
-
-			WriteCode(257U);
-			WriteCode(0U);
-
-			byte[] bits = [.. BitStream];
-			var bitSize = bits.Length;
-			byte b = 0;
-			int j = 1;
-			for (int i = 0; i < bitSize; i++)
-			{
-				b += (byte)(bits[i] << (8 - j));
-				j++;
-				if (j == 9)
+				byte[] bits = [.. BitStream];
+				var bitSize = bits.Length;
+				byte b = 0;
+				int j = 1;
+				for (int i = 0; i < bitSize; i++)
 				{
-					j = 1;
-					Outgoing.Add(b);
-					b = 0;
+					b += (byte)(bits[i] << (8 - j));
+					j++;
+					if (j == 9)
+					{
+						j = 1;
+						Outgoing.Add(b);
+						b = 0;
+					}
 				}
 			}
 
 			BitStream.Clear();
 			C = string.Empty;
+			Codes.Clear();
 			Open = false;
+			Packets.Clear();
 			W = string.Empty;
+			Writing = false;
 		}
 
-		public static void Compress(byte[] data)
+		public void Compress(byte[] data)
 		{
 			for (int i = 0; i < data.Length; i++)
 			{
@@ -80,7 +77,7 @@ namespace SylverInk
 			}
 		}
 
-		public static byte[] Decompress(int byteCount = 1)
+		public byte[] Decompress(int byteCount = 1)
 		{
 			if (W.Equals(string.Empty))
 			{
@@ -124,7 +121,7 @@ namespace SylverInk
 
 		private static string FromChar(char c) => $"{c}";
 
-		public static void Init(Stream? _fileStream = null, bool _writing = false)
+		public void Init(Stream? _fileStream = null, bool _writing = false)
 		{
 			FileStream = _fileStream ?? FileStream;
 			Writing = _writing;
@@ -133,7 +130,7 @@ namespace SylverInk
 			Open = true;
 		}
 
-		private static void InitDictionary()
+		private void InitDictionary()
 		{
 			Codes.Clear();
 			NextCode = 258U;
@@ -147,7 +144,7 @@ namespace SylverInk
 			}
 		}
 
-		private static uint ReadCode()
+		private uint ReadCode()
 		{
 			uint code = 0;
 
@@ -169,7 +166,7 @@ namespace SylverInk
 			return code;
 		}
 
-		private static void UpdateRange(uint lastCode)
+		private void UpdateRange(uint lastCode)
 		{
 			for (int i = Range; i <= MaxRange; i++)
 			{
@@ -183,7 +180,7 @@ namespace SylverInk
 				throw new ApplicationException("Serialized database has exceeded the maximum capacity for restricted LZW compression.", new IndexOutOfRangeException());
 		}
 
-		private static void WriteCode(uint code)
+		private void WriteCode(uint code)
 		{
 			for (int i = 1; i <= Range; i++)
 				BitStream.Add((byte)((code >> (Range - i)) & 1));

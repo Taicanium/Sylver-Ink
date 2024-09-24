@@ -6,12 +6,120 @@
 		xmlns:local="clr-namespace:SylverInk"
 		mc:Ignorable="d"
 		d:DataContext="{d:DesignInstance Type=local:ContextSettings}"
-		Background="{Binding MenuBackground}" Closing="MainWindow_Closing" Foreground="{Binding MenuForeground}" Height="600" Loaded="MainWindow_Loaded" MinHeight="425" MinWidth="400" MouseDown="Drag" ResizeMode="CanResize" SizeChanged="MainWindow_SizeChanged" Title="Sylver Ink" Width="450" WindowStyle="None">
+		Background="{Binding MenuBackground}" Closing="MainWindow_Closing" Foreground="{Binding MenuForeground}" Height="600" Loaded="MainWindow_Loaded" MinHeight="425" MinWidth="400" MouseLeftButtonDown="Drag" ResizeMode="CanResize" SizeChanged="MainWindow_SizeChanged" Title="Sylver Ink" Width="450" WindowStyle="None">
+	<Window.Resources>
+		<ResourceDictionary>
+			<ContextMenu x:Key="DatabaseContextMenu">
+				<MenuItem Header="Database Commands" Focusable="False" IsEnabled="False"/>
+				<Separator Focusable="False" Margin="0,5"/>
+				<MenuItem Click="DatabaseBackup" Header="Backup" Tag="Always"/>
+				<MenuItem Click="DatabaseClose" Header="Close"/>
+				<MenuItem Click="DatabaseCreate" Header="Create" Tag="Always"/>
+				<MenuItem Click="DatabaseDelete" Header="Delete"/>
+				<MenuItem Click="DatabaseOpen" Header="Open..." Tag="Always"/>
+				<MenuItem Click="DatabaseRename" Header="Rename" Tag="Always"/>
+				<MenuItem Click="DatabaseSaveAs" Header="Save as..." Tag="Always"/>
+			</ContextMenu>
+
+			<DataTemplate x:Key="DatabaseContentTemplate">
+				<TabControl Background="{Binding MenuBackground}" Foreground="{Binding MenuForeground}" Margin="-3,0" SelectedIndex="0" SelectionChanged="TabChanged">
+					<TabItem Header="+">
+						<Grid>
+							<Grid.RowDefinitions>
+								<RowDefinition Height="*"/>
+								<RowDefinition Height="Auto"/>
+								<RowDefinition Height="Auto"/>
+								<RowDefinition Height="Auto"/>
+							</Grid.RowDefinitions>
+							<Grid Margin="10">
+								<Grid.RowDefinitions>
+									<RowDefinition Height="Auto"/>
+									<RowDefinition Height="*"/>
+								</Grid.RowDefinitions>
+								<Label Content="Recent notes" FontStyle="Italic" HorizontalAlignment="Right" VerticalAlignment="Bottom"/>
+								<Border Grid.Row="1" BorderBrush="{Binding AccentBackground}" BorderThickness="1">
+									<Grid Background="{Binding AccentBackground}">
+										<Grid.ColumnDefinitions>
+											<ColumnDefinition Width="Auto"/>
+											<ColumnDefinition Width="*"/>
+										</Grid.ColumnDefinitions>
+										<ListBox AlternationCount="2" BorderThickness="0" HorizontalContentAlignment="Right" ItemsSource="{Binding RecentNotes}" Margin="0,0,1,0" MinWidth="60" x:Name="ShortChanges"
+									 ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled">
+											<ListBox.ItemTemplate>
+												<DataTemplate>
+													<TextBlock HorizontalAlignment="Right" Text="{Binding Path=ShortChange}"/>
+												</DataTemplate>
+											</ListBox.ItemTemplate>
+										</ListBox>
+										<ListBox AlternationCount="2" BorderThickness="0" Grid.Column="1" ItemsSource="{Binding RecentNotes}" Margin="1,0,0,0" x:Name="RecentNotes"
+									 ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled">
+											<ListBox.ItemTemplate>
+												<DataTemplate>
+													<TextBlock Text="{Binding Path=Preview}"/>
+												</DataTemplate>
+											</ListBox.ItemTemplate>
+										</ListBox>
+									</Grid>
+								</Border>
+							</Grid>
+							<StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Grid.Row="1" VerticalAlignment="Bottom">
+								<Label Content="New note" FontStyle="Italic"/>
+								<Label Content="(?)" Foreground="{Binding AccentForeground}" ToolTip="Write a line of text and press Enter to create a new entry."/>
+							</StackPanel>
+							<TextBox KeyDown="NewNote" Margin="5" Grid.Row="2" VerticalAlignment="Top"/>
+							<Grid Margin="0,20,0,40" Grid.Row="4">
+								<Grid.RowDefinitions>
+									<RowDefinition Height="*"/>
+									<RowDefinition Height="*"/>
+								</Grid.RowDefinitions>
+								<Grid Margin="0,10,0,10">
+									<Grid.ColumnDefinitions>
+										<ColumnDefinition Width="*"/>
+										<ColumnDefinition Width="*"/>
+										<ColumnDefinition Width="*"/>
+										<ColumnDefinition Width="*"/>
+										<ColumnDefinition Width="*"/>
+									</Grid.ColumnDefinitions>
+									<Button Click="Button_Click" Grid.Column="1" Content="Search"/>
+									<Button Click="Button_Click" Grid.Column="2" Content="Replace"/>
+									<Button Click="Button_Click" Grid.Column="3" Content="Import"/>
+								</Grid>
+								<Grid Grid.Row="1" Margin="0,10,0,-10">
+									<Grid.ColumnDefinitions>
+										<ColumnDefinition Width="*"/>
+										<ColumnDefinition Width="*"/>
+										<ColumnDefinition Width="*"/>
+										<ColumnDefinition Width="*"/>
+									</Grid.ColumnDefinitions>
+									<Button Click="Button_Click" Grid.Column="1" Content="Settings"/>
+									<Button Background="{Binding AccentBackground}" Foreground="{Binding AccentForeground}" Click="Button_Click" Grid.Column="2" Content="Exit"/>
+								</Grid>
+							</Grid>
+						</Grid>
+					</TabItem>
+				</TabControl>
+			</DataTemplate>
+		</ResourceDictionary>
+	</Window.Resources>
 	<Grid Background="{Binding AccentBackground}" x:Name="MainGrid">
 		<Grid.RowDefinitions>
 			<RowDefinition Height="Auto"/>
 			<RowDefinition Height="*"/>
 		</Grid.RowDefinitions>
+
+		<Popup Closed="RenameDatabase_Closed" Height="75" IsOpen="False" Placement="Mouse" PopupAnimation="Fade" StaysOpen="False" Width="275" x:Name="RenameDatabase">
+			<Border BorderBrush="{Binding MenuForeground}" BorderThickness="1">
+				<Grid Background="{Binding MenuBackground}">
+					<Grid.RowDefinitions>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="Auto"/>
+					</Grid.RowDefinitions>
+					<TextBox Width="250" Margin="0,10" x:Name="DatabaseNameBox"/>
+					<Button Click="SaveNewName" Content="Save" Margin="0,5" Grid.Row="1"/>
+				</Grid>
+			</Border>
+		</Popup>
+
 		<Grid>
 			<Grid.ColumnDefinitions>
 				<ColumnDefinition Width="*"/>
@@ -21,83 +129,6 @@
 			<Label Grid.Column="1" Content="Sylver Ink" FontSize="16" FontStyle="Italic" FontWeight="Light" HorizontalAlignment="Center" Margin="0,5" VerticalAlignment="Top"/>
 			<Label Grid.Column="2" Grid.ColumnSpan="2" Content="{Binding VersionString}" FontSize="9" FontStyle="Italic" FontWeight="Light" HorizontalAlignment="Right" Margin="0,5" VerticalAlignment="Bottom"/>
 		</Grid>
-		<TabControl Background="{Binding MenuBackground}" Foreground="{Binding MenuForeground}" Grid.Row="1" SelectionChanged="TabChanged" x:Name="MainTabPanel">
-			<TabItem Header="+" x:Name="PlusTab">
-				<Grid Background="{Binding MenuBackground}">
-					<Grid.RowDefinitions>
-						<RowDefinition Height="*"/>
-						<RowDefinition Height="Auto"/>
-						<RowDefinition Height="Auto"/>
-						<RowDefinition Height="Auto"/>
-					</Grid.RowDefinitions>
-					<Grid Margin="10">
-						<Grid.RowDefinitions>
-							<RowDefinition Height="Auto"/>
-							<RowDefinition Height="*"/>
-						</Grid.RowDefinitions>
-						<Label Content="Recent notes" FontStyle="Italic" HorizontalAlignment="Right" VerticalAlignment="Bottom"/>
-						<Border Grid.Row="1" BorderBrush="{Binding AccentBackground}" BorderThickness="1">
-							<Grid Background="{Binding AccentBackground}">
-								<Grid.ColumnDefinitions>
-									<ColumnDefinition Width="Auto"/>
-									<ColumnDefinition Width="*"/>
-								</Grid.ColumnDefinitions>
-								<ListBox AlternationCount="2" BorderThickness="0" HorizontalContentAlignment="Right" ItemsSource="{Binding RecentNotes}" Margin="0,0,1,0" MinWidth="60"
-										 ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled"
-										 x:Name="ShortChanges">
-									<ListBox.ItemTemplate>
-										<DataTemplate>
-											<TextBlock HorizontalAlignment="Right" Text="{Binding Path=ShortChange}"/>
-										</DataTemplate>
-									</ListBox.ItemTemplate>
-								</ListBox>
-								<ListBox AlternationCount="2" BorderThickness="0" Grid.Column="1" ItemsSource="{Binding RecentNotes}" Margin="1,0,0,0" 
-										 ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled"
-										 x:Name="RecentNotes">
-									<ListBox.ItemTemplate>
-										<DataTemplate>
-											<TextBlock Text="{Binding Path=Preview}"/>
-										</DataTemplate>
-									</ListBox.ItemTemplate>
-								</ListBox>
-							</Grid>
-						</Border>
-					</Grid>
-					<StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Grid.Row="1" VerticalAlignment="Bottom">
-						<Label Content="New note" FontStyle="Italic"/>
-						<Label Content="(?)" Foreground="{Binding AccentForeground}" ToolTip="Write a line of text and press Enter to create a new entry."/>
-					</StackPanel>
-					<TextBox KeyDown="NewNote" Margin="5" Grid.Row="2" VerticalAlignment="Top" x:Name="NewNoteBox" />
-					<Grid Margin="0,20,0,40" Grid.Row="4">
-						<Grid.RowDefinitions>
-							<RowDefinition Height="*"/>
-							<RowDefinition Height="*"/>
-						</Grid.RowDefinitions>
-						<Grid Margin="0,10,0,10">
-							<Grid.ColumnDefinitions>
-								<ColumnDefinition Width="*"/>
-								<ColumnDefinition Width="*"/>
-								<ColumnDefinition Width="*"/>
-								<ColumnDefinition Width="*"/>
-								<ColumnDefinition Width="*"/>
-							</Grid.ColumnDefinitions>
-							<Button Click="Button_Click" Grid.Column="1" Content="Search"/>
-							<Button Click="Button_Click" Grid.Column="2" Content="Replace"/>
-							<Button Click="Button_Click" Grid.Column="3" Content="Import"/>
-						</Grid>
-						<Grid Grid.Row="1" Margin="0,10,0,-10">
-							<Grid.ColumnDefinitions>
-								<ColumnDefinition Width="*"/>
-								<ColumnDefinition Width="*"/>
-								<ColumnDefinition Width="*"/>
-								<ColumnDefinition Width="*"/>
-							</Grid.ColumnDefinitions>
-							<Button Click="Button_Click" Grid.Column="1" Content="Settings"/>
-							<Button Background="{Binding AccentBackground}" Click="Button_Click" Grid.Column="2" Content="Exit" x:Name="ExitButton"/>
-						</Grid>
-					</Grid>
-				</Grid>
-			</TabItem>
-		</TabControl>
+		<TabControl Background="{Binding MenuBackground}" Foreground="{Binding MenuForeground}" Grid.Row="1" SelectionChanged="TabChanged" x:Name="DatabasesPanel"/>
 	</Grid>
 </Window>

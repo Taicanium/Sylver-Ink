@@ -6,7 +6,7 @@
 		xmlns:local="clr-namespace:SylverInk"
 		mc:Ignorable="d"
 		d:DataContext="{d:DesignInstance Type=local:ContextSettings}"
-		Background="{Binding MenuBackground}" Foreground="{Binding MenuForeground}" Height="525" MinHeight="325" MinWidth="250" MouseDown="Drag" ResizeMode="CanResize" Title="Sylver Ink: Import" Width="350">
+		Background="{Binding MenuBackground}" Foreground="{Binding MenuForeground}" Height="525" MinHeight="325" MinWidth="250" MouseLeftButtonDown="Drag" ResizeMode="CanResize" Title="Sylver Ink: Import" Width="350">
 	<Grid>
 		<Grid.ColumnDefinitions>
 			<ColumnDefinition Width="*"/>

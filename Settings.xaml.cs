@@ -43,12 +43,6 @@ namespace SylverInk
 				TimeSelector.IsOpen = false;
 		}
 
-		private void BackupClick(object sender, RoutedEventArgs e)
-		{
-			var filename = Common.DialogFileSelect(true);
-			Common.MakeBackup(filename);
-		}
-
 		private void CloseClick(object sender, RoutedEventArgs e) => Close();
 
 		public void ColorChanged()
@@ -125,7 +119,7 @@ namespace SylverInk
 			if (MessageBox.Show("Are you sure you want to erase your notes and create a new database?", "Sylver Ink: Warning", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.No)
 				return;
 
-			NoteController.EraseDatabase();
+			Common.CurrentDatabase.Controller.EraseDatabase();
 		}
 
 		private void FontSizeChanged(object sender, RoutedEventArgs e)
@@ -224,7 +218,7 @@ namespace SylverInk
 			DateTime reversion = ReversionDate?.SelectedDate ?? DateTime.Now;
 			reversion = reversion.Date.AddHours(hourValue).AddMinutes(minuteValue);
 
-			NoteController.Revert(reversion);
+			Common.CurrentDatabase.Controller.Revert(reversion);
 		}
 
 		private void SelectedDateChanged(object sender, SelectionChangedEventArgs e)

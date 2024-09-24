@@ -124,24 +124,23 @@ namespace SylverInk
 				return;
 
 			Revisions.RemoveAt(index);
-			Common.DatabaseChanged = true;
 		}
 
-		public NoteRecord Deserialize()
+		public NoteRecord Deserialize(Serializer? _serializer)
 		{
-			Serializer.ReadLong(ref Created);
-			Serializer.ReadInt32(ref Index);
-			Serializer.ReadString(ref Initial);
-			Serializer.ReadLong(ref LastChange);
+			_serializer?.ReadLong(ref Created);
+			_serializer?.ReadInt32(ref Index);
+			_serializer?.ReadString(ref Initial);
+			_serializer?.ReadLong(ref LastChange);
 
 			int RevisionsCount = 0;
-			Serializer.ReadInt32(ref RevisionsCount);
+			_serializer?.ReadInt32(ref RevisionsCount);
 			for (int i = 0; i < RevisionsCount; i++)
 			{
 				NoteRevision _revision = new();
-				Serializer.ReadLong(ref _revision._created);
-				Serializer.ReadInt32(ref _revision._startIndex);
-				Serializer.ReadString(ref _revision._substring);
+				_serializer?.ReadLong(ref _revision._created);
+				_serializer?.ReadInt32(ref _revision._startIndex);
+				_serializer?.ReadString(ref _revision._substring);
 				Revisions.Add(_revision);
 			}
 
@@ -162,10 +161,10 @@ namespace SylverInk
 				foreach (Group group in match.Groups.Values)
 				{
 					var val = group.Value.ToLower();
-					if (!NoteController.WordPercentages.ContainsKey(val))
+					if (!Common.CurrentDatabase.Controller.WordPercentages.ContainsKey(val))
 						continue;
 
-					if (NoteController.WordPercentages[val] < Math.Max(20, 100 - NoteController.WordPercentages.Count))
+					if (Common.CurrentDatabase.Controller.WordPercentages[val] < Math.Max(20, 100 - Common.CurrentDatabase.Controller.WordPercentages.Count))
 						Tags.Add(val);
 				}
 			}
@@ -232,19 +231,19 @@ namespace SylverInk
 			return Latest ?? string.Empty;
 		}
 
-		public void Serialize()
+		public void Serialize(Serializer? _serializer)
 		{
-			Serializer.WriteLong(Created);
-			Serializer.WriteInt32(Index);
-			Serializer.WriteString(Initial);
-			Serializer.WriteLong(LastChange);
+			_serializer?.WriteLong(Created);
+			_serializer?.WriteInt32(Index);
+			_serializer?.WriteString(Initial);
+			_serializer?.WriteLong(LastChange);
 
-			Serializer.WriteInt32(Revisions.Count);
+			_serializer?.WriteInt32(Revisions.Count);
 			for (int i = 0; i < Revisions.Count; i++)
 			{
-				Serializer.WriteLong(Revisions[i]._created);
-				Serializer.WriteInt32(Revisions[i]._startIndex);
-				Serializer.WriteString(Revisions[i]._substring);
+				_serializer?.WriteLong(Revisions[i]._created);
+				_serializer?.WriteInt32(Revisions[i]._startIndex);
+				_serializer?.WriteString(Revisions[i]._substring);
 			}
 		}
 
