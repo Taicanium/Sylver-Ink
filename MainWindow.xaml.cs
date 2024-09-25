@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using System;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -89,6 +90,20 @@ namespace SylverInk
 			string dbFile = Common.DialogFileSelect(filterIndex: 2);
 			if (dbFile.Equals(string.Empty))
 				return;
+
+			var path = Path.GetFullPath(dbFile);
+
+			if (Common.DatabaseFiles.Contains(path))
+			{
+				var items = DatabasesPanel.Items.Cast<TabItem>().ToList();
+				var predicate = new Predicate<TabItem>((item) => {
+					var innerDB = (Database)item.Tag;
+					return Path.GetFullPath(innerDB.DBFile).Equals(path);
+				});
+				var db = items?.FindIndex(predicate);
+				DatabasesPanel.SelectedIndex = db ?? DatabasesPanel.SelectedIndex;
+				return;
+			}
 
 			Database.Create(dbFile, true);
 			Common.DeferUpdateRecentNotes();
