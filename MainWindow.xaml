@@ -24,8 +24,15 @@
 				<MenuItem Click="DatabaseRename" Header="Rename" Tag="Always"/>
 			</ContextMenu>
 
+			<ContextMenu x:Key="NoteContextMenu">
+				<MenuItem Header="Note" Focusable="False" IsEnabled="False"/>
+				<Separator Focusable="False" Margin="0,5"/>
+				<MenuItem Header="Delete" Click="NoteDelete"/>
+				<MenuItem Header="Open..." Click="NoteOpen"/>
+			</ContextMenu>
+
 			<DataTemplate x:Key="DatabaseContentTemplate">
-				<TabControl Background="{Binding MenuBackground}" Foreground="{Binding MenuForeground}" Margin="-3,0" SelectedIndex="0" SelectionChanged="TabChanged">
+				<TabControl Background="{Binding MenuBackground}" Foreground="{Binding MenuForeground}" Margin="-3,0" SelectedIndex="0">
 					<TabItem Header="+">
 						<Grid>
 							<Grid.RowDefinitions>
@@ -41,21 +48,21 @@
 								</Grid.RowDefinitions>
 								<Label Content="Recent notes" FontStyle="Italic" HorizontalAlignment="Right" VerticalAlignment="Bottom"/>
 								<Border Grid.Row="1" BorderBrush="{Binding AccentBackground}" BorderThickness="1">
-									<Grid Background="{Binding AccentBackground}">
+									<Grid Background="{Binding AccentBackground}" ContextMenu="{x:Null}">
 										<Grid.ColumnDefinitions>
 											<ColumnDefinition Width="Auto"/>
 											<ColumnDefinition Width="*"/>
 										</Grid.ColumnDefinitions>
-										<ListBox AlternationCount="2" BorderThickness="0" HorizontalContentAlignment="Right" ItemsSource="{Binding RecentNotes}" Margin="0,0,1,0" MinWidth="60" x:Name="ShortChanges"
-									 ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled">
+										<ListBox AlternationCount="2" BorderThickness="0" ContextMenu="{StaticResource NoteContextMenu}" HorizontalContentAlignment="Right" ItemsSource="{Binding RecentNotes}" Margin="0,0,1,0" MinWidth="60" MouseDoubleClick="SublistOpen" SelectionChanged="SublistChanged"
+												 ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled" x:Name="ShortChanges">
 											<ListBox.ItemTemplate>
 												<DataTemplate>
 													<TextBlock HorizontalAlignment="Right" Text="{Binding Path=ShortChange}"/>
 												</DataTemplate>
 											</ListBox.ItemTemplate>
 										</ListBox>
-										<ListBox AlternationCount="2" BorderThickness="0" Grid.Column="1" ItemsSource="{Binding RecentNotes}" Margin="1,0,0,0" x:Name="RecentNotes"
-									 ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled">
+										<ListBox AlternationCount="2" BorderThickness="0" Grid.Column="1" ContextMenu="{StaticResource NoteContextMenu}" ItemsSource="{Binding RecentNotes}" Margin="1,0,0,0" MouseDoubleClick="SublistOpen" SelectionChanged="SublistChanged"
+												 ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled" x:Name="RecentNotes">
 											<ListBox.ItemTemplate>
 												<DataTemplate>
 													<TextBlock Text="{Binding Path=Preview}"/>

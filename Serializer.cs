@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using System.Windows;
 
 namespace SylverInk
 {
@@ -120,9 +118,6 @@ namespace SylverInk
 					Headless = false;
 					UseLZW = true;
 					break;
-				default:
-					MessageBox.Show("The database is in an unrecognized format.", "Sylver Ink: Error", MessageBoxButton.OK, MessageBoxImage.Error);
-					throw new ApplicationException($"Unrecognized database format: {format}", new FormatException());
 			}
 
 			if (UseLZW)
@@ -144,9 +139,8 @@ namespace SylverInk
 
 				ReadHeader();
 			}
-			catch (Exception ex)
+			catch
 			{
-				MessageBox.Show($"WARNING: Failed to access {Path.GetFileName(path)} - {ex.Message}", "Sylver Ink: Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
 				return false;
 			}
 
@@ -168,9 +162,8 @@ namespace SylverInk
 
 				WriteHeader(DatabaseFormat);
 			}
-			catch (Exception ex)
+			catch
 			{
-				MessageBox.Show($"WARNING: Failed to access {Path.GetFileName(path)} - {ex.Message}", "Sylver Ink: Error", MessageBoxButton.OK, MessageBoxImage.Error);
 				return false;
 			}
 

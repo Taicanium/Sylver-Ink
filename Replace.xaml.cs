@@ -36,7 +36,7 @@ namespace SylverInk
 
 		private void PerformReplace(object? sender, DoWorkEventArgs e)
 		{
-			_counts = Common.CurrentDatabase.Controller.Replace(_oldText ?? string.Empty, _newText ?? string.Empty);
+			_counts = Common.CurrentDatabase.Controller.Replace(_oldText, _newText);
 		}
 
 		private void ReplaceTextChanged(object sender, TextChangedEventArgs e) => Common.Settings.ReadyToReplace = OldText.Text.Equals(string.Empty) is false;

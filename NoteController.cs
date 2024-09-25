@@ -66,14 +66,10 @@ namespace SylverInk
 				string backup = FindBackup(dbFile);
 				if (!backup.Equals(string.Empty))
 				{
-					var result = MessageBox.Show($"Unable to load database file: {dbFile}\n\nLoad your most recent backup?", "Sylver Ink: Warning", MessageBoxButton.YesNo, MessageBoxImage.Question);
-					if (result == MessageBoxResult.Yes)
-					{
-						var opened = _serializer?.OpenRead(backup) ?? false;
-						InitializeRecords(!opened);
-						ReloadSerializer();
-						Loaded = true;
-					}
+					var opened = _serializer?.OpenRead(backup) ?? false;
+					InitializeRecords(!opened);
+					ReloadSerializer();
+					Loaded = true;
 				}
 
 				if (dbFile.Contains(Common.DefaultDatabase))
@@ -132,8 +128,9 @@ namespace SylverInk
 
 		public void DeleteRecord(int index)
 		{
-			Records[index].Delete();
-			Records.RemoveAt(index);
+			var recordIndex = Records.FindIndex(new((record) => record.GetIndex() == index));
+			Records[recordIndex].Delete();
+			Records.RemoveAt(recordIndex);
 
 			var tabControl = Common.GetChildPanel("DatabasesPanel");
 			for (int i = tabControl.Items.Count; i > 1; i--)
@@ -217,7 +214,6 @@ namespace SylverInk
 			if (!newDatabase)
 			{
 				DeserializeRecords();
-				Common.DeferUpdateRecentNotes(true);
 				return;
 			}
 
@@ -234,7 +230,6 @@ namespace SylverInk
 			}
 
 			PropagateIndices();
-			Common.DeferUpdateRecentNotes(true);
 		}
 
 		public void MakeBackup()

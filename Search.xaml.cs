@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -13,6 +14,7 @@ namespace SylverInk
 	public partial class Search : Window
 	{
 		private string _query = string.Empty;
+		private NoteRecord _recentSelection = new();
 		private readonly List<NoteRecord> _results = [];
 		private string _width = string.Empty;
 
@@ -34,6 +36,41 @@ namespace SylverInk
 			var button = (Button)FindName("DoQuery");
 			button.Content = "Query";
 			button.IsEnabled = true;
+		}
+
+		private void NoteDelete(object sender, RoutedEventArgs e)
+		{
+			var item = (MenuItem)sender;
+			var menu = (ContextMenu)item.Parent;
+			int index;
+			if (menu.DataContext.GetType() == typeof(NoteRecord))
+			{
+				var record = (NoteRecord)menu.DataContext;
+				index = record.GetIndex();
+			}
+			else
+				index = _recentSelection.GetIndex();
+
+			Common.Settings.SearchResults.RemoveAt(Common.Settings.SearchResults.ToList().FindIndex((result) => result.GetIndex() == index));
+			Common.CurrentDatabase.Controller.DeleteRecord(index);
+			Results.Items.Refresh();
+		}
+
+		private void NoteOpen(object sender, RoutedEventArgs e)
+		{
+			var item = (MenuItem)sender;
+			var menu = (ContextMenu)item.Parent;
+			if (menu.DataContext.GetType() == typeof(NoteRecord))
+			{
+				var record = (NoteRecord)menu.DataContext;
+				SearchResult result = Common.OpenQuery(record, false);
+				result.AddTabToRibbon();
+			}
+			else if (menu.DataContext.GetType() == typeof(ContextSettings))
+			{
+				SearchResult result = Common.OpenQuery(_recentSelection, false);
+				result.AddTabToRibbon();
+			}
 		}
 
 		private void PerformSearch(object? sender, DoWorkEventArgs e)
@@ -90,6 +127,25 @@ namespace SylverInk
 			foreach (NoteRecord record in Common.Settings.SearchResults)
 				record.Preview = $"{Math.Floor(Width - 115.0)}";
 			Results.Items.Refresh();
+		}
+
+		private void SublistChanged(object sender, RoutedEventArgs e)
+		{
+			var box = (ListBox)sender;
+			_recentSelection = (NoteRecord)box.SelectedItem;
+		}
+
+		private void SublistOpen(object sender, RoutedEventArgs e)
+		{
+			if (Mouse.RightButton == MouseButtonState.Pressed)
+				return;
+
+			var box = (ListBox)sender;
+			if (box.SelectedItem is null)
+				return;
+
+			Common.OpenQuery(_recentSelection);
+			box.SelectedItem = null;
 		}
 	}
 }

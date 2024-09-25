@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -14,6 +15,8 @@ namespace SylverInk
 	public partial class MainWindow : Window
 	{
 		private bool CloseOnce = false;
+		private static bool FirstRun = true;
+		private NoteRecord RecentSelection = new();
 
 		public MainWindow()
 		{
@@ -58,6 +61,7 @@ namespace SylverInk
 		private void DatabaseClose(object sender, RoutedEventArgs e)
 		{
 			Common.RemoveDatabase(Common.CurrentDatabase);
+			Common.DeferUpdateRecentNotes();
 		}
 
 		private void DatabaseCreate(object sender, RoutedEventArgs e)
@@ -66,6 +70,7 @@ namespace SylverInk
 			if (db.Loaded)
 				Common.AddDatabase(db);
 			DatabasesPanel.SelectedIndex = DatabasesPanel.Items.Count - 1;
+			Common.DeferUpdateRecentNotes();
 		}
 
 		private void DatabaseDelete(object sender, RoutedEventArgs e)
@@ -76,6 +81,7 @@ namespace SylverInk
 			if (File.Exists(Common.CurrentDatabase.DBFile))
 				File.Delete(Common.CurrentDatabase.DBFile);
 			Common.RemoveDatabase(Common.CurrentDatabase);
+			Common.DeferUpdateRecentNotes();
 		}
 
 		private void DatabaseOpen(object sender, RoutedEventArgs e)
@@ -84,9 +90,8 @@ namespace SylverInk
 			if (dbFile.Equals(string.Empty))
 				return;
 
-			Database db = new(dbFile);
-			if (db.Loaded)
-				Common.AddDatabase(db);
+			Database.Create(dbFile, true);
+			Common.DeferUpdateRecentNotes();
 		}
 
 		private void DatabaseRename(object sender, RoutedEventArgs e)
@@ -141,13 +146,12 @@ namespace SylverInk
 						Common.RibbonTabContent = keyValue[1];
 						break;
 					case "LastDatabases":
-						var files = keyValue[1].Split(';').Distinct();
+						FirstRun = false;
+						var files = keyValue[1].Split(';').Distinct().Where(File.Exists);
 						foreach (var file in files)
-						{
-							Database db = new(file);
-							if (db.Loaded)
-								Common.AddDatabase(db);
-						}
+							Database.Create(file, true);
+						if (!files.Any())
+							Database.Create($"{Common.DefaultDatabase}.sidb");
 						break;
 					case "MenuForeground":
 						Common.Settings.MenuForeground = Common.BrushFromBytes(keyValue[1]);
@@ -217,21 +221,21 @@ namespace SylverInk
 		{
 			LoadUserSettings();
 
-			if (Common.Databases.Count == 0)
-			{
-				Database db = new("New 1.sidb");
-				if (db.Loaded)
-					Common.AddDatabase(db);
-			}
-
 			DatabasesPanel.SelectedIndex = 0;
 
-			Common.CanResize = true;
-			Common.CurrentDatabase = Common.Databases[0];
-			Common.Settings.MainTypeFace = new(Common.Settings.MainFontFamily, FontStyles.Normal, FontWeights.Normal, FontStretches.Normal);
-			Common.PPD = VisualTreeHelper.GetDpi(this).PixelsPerDip;
+			if (FirstRun)
+				Database.Create($"{Common.DefaultDatabase}.sidb");
 
-			Common.DeferUpdateRecentNotes(true);
+			BackgroundWorker worker = new();
+			worker.DoWork += (_, _) => SpinWait.SpinUntil(() => Common.Databases.Count > 0);
+			worker.RunWorkerCompleted += (_, _) =>
+			{
+				Common.CanResize = true;
+				Common.Settings.MainTypeFace = new(Common.Settings.MainFontFamily, FontStyles.Normal, FontWeights.Normal, FontStretches.Normal);
+				Common.PPD = VisualTreeHelper.GetDpi(this).PixelsPerDip;
+				Common.DeferUpdateRecentNotes(true);
+			};
+			worker.RunWorkerAsync();
 		}
 
 		private void MainWindow_SizeChanged(object sender, SizeChangedEventArgs e) => Common.DeferUpdateRecentNotes();
@@ -244,6 +248,40 @@ namespace SylverInk
 				Common.CurrentDatabase.Controller.CreateRecord(box.Text);
 				Common.DeferUpdateRecentNotes();
 				box.Text = string.Empty;
+			}
+		}
+
+		private void NoteDelete(object sender, RoutedEventArgs e)
+		{
+			var item = (MenuItem)sender;
+			var menu = (ContextMenu)item.Parent;
+			if (menu.DataContext.GetType() == typeof(NoteRecord))
+			{
+				var record = (NoteRecord)menu.DataContext;
+				Common.CurrentDatabase.Controller.DeleteRecord(record.GetIndex());
+				Common.DeferUpdateRecentNotes();
+			}
+			else if (menu.DataContext.GetType() == typeof(ContextSettings))
+			{
+				Common.CurrentDatabase.Controller.DeleteRecord(RecentSelection.GetIndex());
+				Common.DeferUpdateRecentNotes();
+			}
+		}
+
+		private void NoteOpen(object sender, RoutedEventArgs e)
+		{
+			var item = (MenuItem)sender;
+			var menu = (ContextMenu)item.Parent;
+			if (menu.DataContext.GetType() == typeof(NoteRecord))
+			{
+				var record = (NoteRecord)menu.DataContext;
+				SearchResult result = Common.OpenQuery(record, false);
+				result.AddTabToRibbon();
+			}
+			else if (menu.DataContext.GetType() == typeof(ContextSettings))
+			{
+				SearchResult result = Common.OpenQuery(RecentSelection, false);
+				result.AddTabToRibbon();
 			}
 		}
 
@@ -274,12 +312,14 @@ namespace SylverInk
 
 		private static void SaveUserSettings()
 		{
+			var files = Common.DatabaseFiles.Distinct().Where(File.Exists);
+
 			string[] settings = [
 				$"FontFamily:{Common.Settings.MainFontFamily?.Source}",
 				$"FontSize:{Common.Settings.MainFontSize}",
 				$"SearchResultsOnTop:{Common.Settings.SearchResultsOnTop}",
 				$"RibbonDisplayMode:{Common.RibbonTabContent}",
-				$"LastDatabases:{string.Join(';', Common.DatabaseFiles.Distinct())}",
+				$"LastDatabases:{string.Join(';', files)}",
 				$"MenuForeground:{Common.BytesFromBrush(Common.Settings.MenuForeground)}",
 				$"MenuBackground:{Common.BytesFromBrush(Common.Settings.MenuBackground)}",
 				$"ListForeground:{Common.BytesFromBrush(Common.Settings.ListForeground)}",
@@ -291,15 +331,45 @@ namespace SylverInk
 			File.WriteAllLines("settings.sis", settings);
 		}
 
+		private void SublistChanged(object sender, RoutedEventArgs e)
+		{
+			var box = (ListBox)sender;
+			var grid = (Grid)box.Parent;
+			RecentSelection = (NoteRecord)box.SelectedItem;
+
+			foreach (ListBox item in grid.Children)
+			{
+				if (item.SelectedIndex != box.SelectedIndex)
+					item.SelectedIndex = box.SelectedIndex;
+			}
+		}
+
+		private void SublistOpen(object sender, RoutedEventArgs e)
+		{
+			if (Mouse.RightButton == MouseButtonState.Pressed)
+				return;
+
+			var box = (ListBox)sender;
+			if (box.SelectedItem is null)
+				return;
+
+			Common.OpenQuery(RecentSelection);
+			box.SelectedItem = null;
+		}
+
 		private void TabChanged(object sender, SelectionChangedEventArgs e)
 		{
 			var control = (TabControl)sender;
 			if (control.Name.Equals("DatabasesPanel"))
 			{
 				var item = (TabItem)control.SelectedItem;
-				Common.CurrentDatabase = (Database)item.Tag;
+				var newDB = (Database)item.Tag;
+				if (newDB.Equals(Common.CurrentDatabase))
+					return;
+				Common.CurrentDatabase = newDB;
+				Common.Settings.SearchResults.Clear();
+				Common.DeferUpdateRecentNotes(true);
 			}
-			Common.DeferUpdateRecentNotes(true);
 		}
 	}
 }

@@ -18,7 +18,7 @@ namespace SylverInk
 		public string Query { get; set; } = string.Empty;
 		public int ResultDatabase { get; set; } = 0;
 		public int ResultRecord { get; set; } = -1;
-		private string ResultText { get; set; } = string.Empty;
+		public string ResultText { get; set; } = string.Empty;
 
 		public SearchResult()
 		{
@@ -26,7 +26,7 @@ namespace SylverInk
 			DataContext = Common.Settings;
 		}
 
-		private void AddTabToRibbon()
+		public void AddTabToRibbon()
 		{
 			var control = (TabControl)Application.Current.MainWindow.FindName("DatabasesPanel");
 			var tabPanel = Common.GetChildPanel("DatabasesPanel");
@@ -315,7 +315,8 @@ namespace SylverInk
 		private void Result_Loaded(object sender, RoutedEventArgs e)
 		{
 			LastChangedLabel.Content = "Last modified: " + Common.CurrentDatabase.Controller.GetRecord(ResultRecord).GetLastChange();
-			ResultText = Common.CurrentDatabase.Controller.GetRecord(ResultRecord).ToString();
+			if (ResultText.Equals(string.Empty))
+				ResultText = Common.CurrentDatabase.Controller.GetRecord(ResultRecord).ToString();
 			ResultBlock.Text = ResultText;
 			Edited = false;
 

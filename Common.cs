@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
@@ -24,8 +25,8 @@ namespace SylverInk
 		public static bool CanResize { get; set; } = false;
 		public static Database CurrentDatabase { get; set; } = new();
 		public static bool DatabaseChanged { get; set; } = false;
-		public static List<string> DatabaseFiles => Settings.DatabaseFiles;
-		public static ObservableCollection<Database> Databases { get => Settings.Databases; set => Settings.Databases = value; }
+		public static List<string> DatabaseFiles { get => Databases.ToList().ConvertAll(new Converter<Database, string>((db) => Path.GetFullPath(db.DBFile))); }
+		public static ObservableCollection<Database> Databases { get; set; } = [];
 		public static string DefaultDatabase { get; } = "New 1";
 		public static double PPD { get; set; } = 1.0;
 		public static bool ForceClose { get; set; } = false;
@@ -49,22 +50,24 @@ namespace SylverInk
 			var template = (DataTemplate)Application.Current.MainWindow.TryFindResource("DatabaseContentTemplate");
 			var menu = (ContextMenu)Application.Current.MainWindow.TryFindResource("DatabaseContextMenu");
 			var control = (TabControl)Application.Current.MainWindow.FindName("DatabasesPanel");
+			var tabs = control.Items.Cast<TabItem>();
+			var index = 1;
 
 			if ((db.Name ?? string.Empty).Equals(string.Empty))
 			{
-				db.Name = $"New 1";
-				if (control.Items.Count > 0)
-				{
-					var lastItem = (TabItem)control.Items[^1];
-					var header = (string)lastItem.Header;
-					if (lastItem is not null && int.TryParse(header.Replace("New ", string.Empty), out int newIndex))
-						newIndex++;
-					else
-						newIndex = 1;
-					db.Name = $"New {newIndex}";
-				}
-				db.DBFile = $"{db.Name}.sidb";
+				while (tabs.Where((item) => item.Header.Equals($"New {index}")).Any())
+					index++;
+				db.Name = $"New {index}";
 			}
+			else if (tabs.Where((item) => item.Header.Equals(db.Name)).Any())
+			{
+				while (tabs.Where((item) => item.Header.Equals($"{db.Name} ({index})")).Any())
+					index++;
+				db.Name = $"{db.Name} ({index})";
+			}
+
+			if (db.DBFile.Equals(string.Empty))
+				db.DBFile = $"{db.Name}.sidb";
 
 			var _name = db.Name ?? string.Empty;
 			var dbHeaderLength = _name.Length > 12 ? 9 : _name.Length;
@@ -84,6 +87,10 @@ namespace SylverInk
 			item.MouseRightButtonDown += (sender, e) => { control.SelectedItem = item; };
 			control.Items.Add(item);
 			Databases.Add(db);
+			if (Databases.Count == 1)
+				CurrentDatabase = Databases[0];
+
+			DeferUpdateRecentNotes(true);
 			UpdateContextMenu();
 		}
 
@@ -344,6 +351,32 @@ namespace SylverInk
 		{
 			FormattedText ft = new(text, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, Settings.MainTypeFace, Settings.MainFontSize, Brushes.Black, PPD);
 			return ft.Height;
+		}
+
+		public static SearchResult OpenQuery(NoteRecord record, bool show = true)
+		{
+			var index = record.GetIndex();
+			foreach (SearchResult result in OpenQueries)
+				if (result.ResultRecord == index)
+					return result;
+
+			var control = (TabControl)Application.Current.MainWindow.FindName("DatabasesPanel");
+
+			SearchResult resultWindow = new()
+			{
+				Query = record.ToString(),
+				ResultDatabase = control.SelectedIndex,
+				ResultRecord = index,
+				ResultText = CurrentDatabase.Controller.GetRecord(index).ToString()
+			};
+
+			if (show)
+			{
+				resultWindow.Show();
+				OpenQueries.Add(resultWindow);
+			}
+
+			return resultWindow;
 		}
 
 		public static void RemoveDatabase(Database db)

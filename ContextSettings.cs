@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Globalization;
-using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Windows;
@@ -37,8 +34,6 @@ namespace SylverInk
 
 		public Brush? AccentBackground { get => _accentBackgound; set { _accentBackgound = value; OnPropertyChanged(); } }
 		public Brush? AccentForeground { get => _accentForegound; set { _accentForegound = value; OnPropertyChanged(); } }
-		public List<string> DatabaseFiles { get => Databases.ToList().ConvertAll(new Converter<Database, string>((db) => Path.GetFullPath(db.DBFile))); }
-		public ObservableCollection<Database> Databases { get; set; } = [];
 		public string ImportData { get => _importData; set { _importData = value; OnPropertyChanged(); } }
 		public string ImportTarget { get => _importTarget; set { _importTarget = value; OnPropertyChanged(); } }
 		public Brush? ListBackground { get => _listBackgound; set { _listBackgound = value; OnPropertyChanged(); } }

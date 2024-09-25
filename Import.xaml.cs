@@ -45,7 +45,13 @@ namespace SylverInk
 					Common.CurrentDatabase.Controller.EraseDatabase();
 				}
 
-				Common.CurrentDatabase.Controller.SerializeRecords();
+				if (!Common.CurrentDatabase.Controller.Open(Target))
+				{
+					MessageBox.Show($"Failed to import the selected file.", "Sylver Ink: Error", MessageBoxButton.OK);
+					return;
+				}
+
+				Common.CurrentDatabase.Controller.InitializeRecords(false, false);
 
 				Imported = Common.CurrentDatabase.Controller.RecordCount;
 				FinishImport(sender, null);

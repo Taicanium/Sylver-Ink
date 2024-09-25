@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.ComponentModel;
+using System.IO;
 
 namespace SylverInk
 {
@@ -16,11 +17,33 @@ namespace SylverInk
 			Loaded = Controller.Loaded;
 		}
 
-		public Database(string dbFile)
+		public static void Create(string dbFile, bool threaded = false)
 		{
-			DBFile = Path.GetFullPath(dbFile);
-			Controller = new(DBFile);
+			Database db = new();
+			if (threaded)
+			{
+				BackgroundWorker worker = new();
+				worker.DoWork += (_, _) => db.Load(dbFile);
+				worker.RunWorkerCompleted += (_, _) => {
+					Common.AddDatabase(db);
+				};
+				worker.RunWorkerAsync();
+
+				return;
+			}
+
+			db.Load(dbFile);
+			Common.AddDatabase(db);
+		}
+
+		public void Load(string dbFile)
+		{
+			DBFile = dbFile;
+			Controller = new(dbFile);
 			Loaded = Controller.Loaded;
+
+			if ((Name ?? string.Empty).Equals(string.Empty))
+				Name = Path.GetFileNameWithoutExtension(DBFile);
 		}
 
 		public void MakeBackup(bool auto = false)
