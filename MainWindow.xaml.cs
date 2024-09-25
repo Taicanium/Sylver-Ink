@@ -117,7 +117,9 @@ namespace SylverInk
 
 		private void DatabaseSaveAs(object sender, RoutedEventArgs e)
 		{
-			Common.CurrentDatabase.DBFile = Common.DialogFileSelect(true, 1, Common.CurrentDatabase.Name);
+			var newPath = Common.DialogFileSelect(true, 2, Common.CurrentDatabase.Name);
+			if (!newPath.Equals(string.Empty))
+				Common.CurrentDatabase.DBFile = newPath;
 		}
 
 		private void Drag(object sender, MouseButtonEventArgs e) => DragMove();
@@ -300,11 +302,24 @@ namespace SylverInk
 			}
 		}
 
-		private void RenameDatabase_Closed(object sender, System.EventArgs e)
+		private void RenameClosed(object sender, EventArgs e)
 		{
+			if (DatabaseNameBox.Text.Equals(string.Empty))
+				return;
+
+			if (Common.CurrentDatabase.Name != DatabaseNameBox.Text)
+				Common.DatabaseChanged = true;
+
 			Common.CurrentDatabase.Name = DatabaseNameBox.Text;
 			var currentTab = (TabItem)DatabasesPanel.SelectedItem;
 			currentTab.Header = Common.CurrentDatabase.Name;
+			currentTab.ToolTip = Common.CurrentDatabase.Name;
+		}
+
+		private void RenameKeyDown(object sender, KeyEventArgs e)
+		{
+			if (e.Key == Key.Enter)
+				RenameDatabase.IsOpen = false;
 		}
 
 		private static void SaveDatabase(Database db)

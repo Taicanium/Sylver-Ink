@@ -117,7 +117,7 @@
 			<RowDefinition Height="*"/>
 		</Grid.RowDefinitions>
 
-		<Popup Closed="RenameDatabase_Closed" Height="75" IsOpen="False" Placement="Mouse" PopupAnimation="Fade" StaysOpen="False" Width="275" x:Name="RenameDatabase">
+		<Popup Closed="RenameClosed" Height="75" IsOpen="False" KeyDown="RenameKeyDown" Placement="Mouse" PopupAnimation="Fade" StaysOpen="False" Width="275" x:Name="RenameDatabase">
 			<Border BorderBrush="{Binding MenuForeground}" BorderThickness="1">
 				<Grid Background="{Binding MenuBackground}">
 					<Grid.RowDefinitions>

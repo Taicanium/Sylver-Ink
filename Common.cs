@@ -27,7 +27,7 @@ namespace SylverInk
 		public static bool DatabaseChanged { get; set; } = false;
 		public static List<string> DatabaseFiles { get => Databases.ToList().ConvertAll(new Converter<Database, string>((db) => Path.GetFullPath(db.DBFile))); }
 		public static ObservableCollection<Database> Databases { get; set; } = [];
-		public static string DefaultDatabase { get; } = "New 1";
+		public static string DefaultDatabase { get; } = "New";
 		public static double PPD { get; set; } = 1.0;
 		public static bool ForceClose { get; set; } = false;
 		public static Import? ImportWindow { get => _import; set { _import?.Close(); _import = value; _import?.Show(); } }
@@ -51,16 +51,13 @@ namespace SylverInk
 			var menu = (ContextMenu)Application.Current.MainWindow.TryFindResource("DatabaseContextMenu");
 			var control = (TabControl)Application.Current.MainWindow.FindName("DatabasesPanel");
 			var tabs = control.Items.Cast<TabItem>();
-			var index = 1;
 
 			if ((db.Name ?? string.Empty).Equals(string.Empty))
+				db.Name = DefaultDatabase;
+
+			if (tabs.Where((item) => item.Header.Equals(db.Name)).Any())
 			{
-				while (tabs.Where((item) => item.Header.Equals($"New {index}")).Any())
-					index++;
-				db.Name = $"New {index}";
-			}
-			else if (tabs.Where((item) => item.Header.Equals(db.Name)).Any())
-			{
+				var index = 1;
 				while (tabs.Where((item) => item.Header.Equals($"{db.Name} ({index})")).Any())
 					index++;
 				db.Name = $"{db.Name} ({index})";
