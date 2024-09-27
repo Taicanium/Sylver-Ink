@@ -60,16 +60,21 @@ namespace SylverInk
 			get
 			{
 				LastChangeObject = DateTime.FromBinary(LastChange);
+				var dtObject = Common.RecentEntriesSortMode switch
+				{
+					NoteController.SortType.ByCreation => GetCreatedObject(),
+					_ => LastChangeObject,
+				};
 				var now = DateTime.UtcNow;
-				var diff = now - LastChangeObject;
+				var diff = now - dtObject;
 
 				if (diff.TotalHours < 24.0)
-					return LastChangeObject.ToLocalTime().ToShortTimeString();
+					return dtObject.ToLocalTime().ToShortTimeString();
 
 				if (diff.TotalHours < 168.0)
 					return $"{diff.Days} day{(diff.Days > 1 ? "s" : string.Empty)} ago";
 
-				return LastChangeObject.ToLocalTime().ToShortDateString();
+				return dtObject.ToLocalTime().ToShortDateString();
 			}
 		}
 
@@ -79,6 +84,7 @@ namespace SylverInk
 			Index = -1;
 			Initial = string.Empty;
 			LastChange = Created;
+			LastChangeObject = DateTime.FromBinary(LastChange);
 			TagsDirty = true;
 		}
 
@@ -88,6 +94,7 @@ namespace SylverInk
 			this.Index = Index;
 			this.Initial = Initial;
 			LastChange = this.Created;
+			LastChangeObject = DateTime.FromBinary(LastChange);
 			TagsDirty = true;
 		}
 
@@ -95,14 +102,17 @@ namespace SylverInk
 		{
 			Revisions.Add(_revision);
 			TagsDirty = true;
+			
+			if (_revision._created == -1)
+				_revision._created = DateTime.UtcNow.ToBinary();
+
 			var revisionTime = DateTime.FromBinary(_revision._created);
-			var noteTime = DateTime.FromBinary(LastChange);
 
 			Revisions.Sort(new Comparison<NoteRevision>(
 				(_rev1, _rev2) => DateTime.FromBinary(_rev1._created).CompareTo(DateTime.FromBinary(_rev2._created))
 				));
 
-			if (revisionTime.CompareTo(noteTime) > 0)
+			if (revisionTime.CompareTo(LastChangeObject) > 0)
 			{
 				LastChange = _revision._created;
 				LastChangeObject = DateTime.FromBinary(LastChange);
@@ -221,7 +231,7 @@ namespace SylverInk
 
 			for (int i = 0; i < Revisions.Count - Math.Min(backsteps, Revisions.Count); i++)
 			{
-				if (Revisions[i]._startIndex < Latest?.Length)
+				if (Revisions[i]._startIndex > -1 && Revisions[i]._startIndex < Latest?.Length)
 					Latest = Latest.Remove(Revisions[i]._startIndex);
 				Latest += Revisions[i]._substring;
 			}

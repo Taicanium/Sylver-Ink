@@ -229,14 +229,6 @@ namespace SylverInk
 				RestoreButton.IsEnabled = true;
 		}
 
-		private void SelectionRibbonChanged(object sender, SelectionChangedEventArgs e)
-		{
-			var box = (ComboBox)sender;
-			var item = (ComboBoxItem)box.SelectedItem;
-
-			Common.UpdateRibbonTabs(item.Tag as string ?? string.Empty);
-		}
-
 		private void SelectTime(object sender, RoutedEventArgs e)
 		{
 			TimeSelector.IsOpen = true;
@@ -399,6 +391,27 @@ namespace SylverInk
 				foreach (ComboBoxItem item in RibbonBox.Items)
 					if (item.Tag.Equals(Common.RibbonTabContent))
 						RibbonBox.SelectedItem = item;
+
+			if (SortBox.SelectedItem is null)
+				foreach (ComboBoxItem item in SortBox.Items)
+					if (item.Tag.Equals(Common.RecentEntriesSortMode.ToString()))
+						SortBox.SelectedItem = item;
+		}
+
+		private void SortRibbonChanged(object sender, SelectionChangedEventArgs e)
+		{
+			var box = (ComboBox)sender;
+			var item = (ComboBoxItem)box.SelectedItem;
+
+			Common.UpdateRecentNotesSorting(item.Tag as string ?? string.Empty);
+		}
+
+		private void StickyRibbonChanged(object sender, SelectionChangedEventArgs e)
+		{
+			var box = (ComboBox)sender;
+			var item = (ComboBoxItem)box.SelectedItem;
+
+			Common.UpdateRibbonTabs(item.Tag as string ?? string.Empty);
 		}
 
 		[GeneratedRegex(@"\p{Lu}")]

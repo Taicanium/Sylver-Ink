@@ -162,6 +162,9 @@ namespace SylverInk
 					case "RibbonDisplayMode":
 						Common.RibbonTabContent = keyValue[1];
 						break;
+					case "RecentNotesSortMode":
+						Common.RecentEntriesSortMode = (NoteController.SortType)int.Parse(keyValue[1]);
+						break;
 					case "LastDatabases":
 						FirstRun = false;
 						var files = keyValue[1].Split(';').Distinct().Where(File.Exists);
@@ -342,6 +345,7 @@ namespace SylverInk
 				$"FontSize:{Common.Settings.MainFontSize}",
 				$"SearchResultsOnTop:{Common.Settings.SearchResultsOnTop}",
 				$"RibbonDisplayMode:{Common.RibbonTabContent}",
+				$"RecentNotesSortMode:{(int)Common.RecentEntriesSortMode}",
 				$"LastDatabases:{string.Join(';', files)}",
 				$"MenuForeground:{Common.BytesFromBrush(Common.Settings.MenuForeground)}",
 				$"MenuBackground:{Common.BytesFromBrush(Common.Settings.MenuBackground)}",

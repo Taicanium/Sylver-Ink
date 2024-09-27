@@ -95,7 +95,7 @@ namespace SylverInk
 		public int CreateRecord(string entry, bool dummy = false)
 		{
 			int Index = NextIndex;
-			Records.Add(new(Index, entry, dummy ? DateTime.UtcNow.AddMinutes(new Random().NextDouble() * 43200.0 - 43200.0).ToBinary() : -1));
+			Records.Add(new(Index, entry, dummy ? DateTime.UtcNow.AddMinutes(new Random().NextDouble() * 129600.0 - 139681.0).ToBinary() : -1));
 			Changed = true;
 			return Index;
 		}
@@ -220,11 +220,23 @@ namespace SylverInk
 
 			if (dummyData)
 			{
-				var newCount = new Random().Next(40, 160);
-				for (int i = 0; i < newCount; i++)
+				var newRecords = new Random().Next(40, 160);
+				for (int i = 0; i < newRecords; i++)
 				{
 					var newText = Common.MakeDummySearchResult();
 					CreateRecord(newText, true);
+
+					var newRevisions = Math.Max(1, new Random().Next(0, 10) - 4);
+					for (int j = 0; j < newRevisions; j++)
+					{
+						NoteRevision revision = new()
+						{
+							_created = Records[i].GetCreatedObject().AddMinutes(new Random().NextDouble() * 10080.0).ToBinary(),
+							_startIndex = -1,
+							_substring = $"\n{Common.MakeDummySearchResult()}"
+						};
+						Records[i].Add(revision);
+					}
 				}
 			}
 
@@ -355,7 +367,7 @@ namespace SylverInk
 					return;
 				case SortType.ByCreation:
 					Records.Sort(new Comparison<NoteRecord>(
-						(_rev1, _rev2) => _rev1.GetCreatedObject().CompareTo(_rev2.GetCreatedObject())
+						(_rev2, _rev1) => _rev1.GetCreatedObject().CompareTo(_rev2.GetCreatedObject())
 						));
 					return;
 			}

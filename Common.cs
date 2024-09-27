@@ -34,6 +34,7 @@ namespace SylverInk
 		private static BackgroundWorker? MeasureTask { get; set; }
 		public static List<SearchResult> OpenQueries { get; } = [];
 		private static int RecentEntries { get; set; } = 10;
+		public static NoteController.SortType RecentEntriesSortMode { get; set; } = NoteController.SortType.ByChange;
 		public static bool RepeatUpdate { get; set; } = false;
 		public static Replace? ReplaceWindow { get => _replace; set { _replace?.Close(); _replace = value; _replace?.Show(); } }
 		public static string RibbonTabContent { get; set; } = "CONTENT";
@@ -152,7 +153,7 @@ namespace SylverInk
 				UpdateTask.DoWork += (_, _) => UpdateRecentNotes();
 				UpdateTask.RunWorkerCompleted += (_, _) =>
 				{
-					CurrentDatabase.Controller.Sort(NoteController.SortType.ByChange);
+					CurrentDatabase.Controller.Sort(RecentEntriesSortMode);
 					Settings.RecentNotes.Clear();
 					for (int i = 0; i < Math.Min(RecentEntries, CurrentDatabase.Controller.RecordCount); i++)
 						Settings.RecentNotes.Add(CurrentDatabase.Controller.GetRecord(i));
@@ -295,7 +296,7 @@ namespace SylverInk
 			var starter = _dummyStrings[r.Next(0, _dummyStrings.Length)];
 			result = result + " " + _dummyNames[r.Next(0, _dummyNames.Length)] + ": " + starter[0].ToString().ToUpper() + starter[1..];
 
-			for (int i = 1; i < r.Next(4, 25); i++)
+			for (int i = 1; i < r.Next(3, 16); i++)
 			{
 				result += " " + _dummyStrings[r.Next(0, _dummyStrings.Length)];
 				switch (r.Next(0, 28))
@@ -429,7 +430,7 @@ namespace SylverInk
 
 			RecentEntries = 0;
 			TextHeight = 0.0;
-			CurrentDatabase.Controller.Sort(NoteController.SortType.ByChange);
+			CurrentDatabase.Controller.Sort(RecentEntriesSortMode);
 
 			while (RecentEntries < CurrentDatabase.Controller.RecordCount && TextHeight < WindowHeight - 25.0)
 			{
@@ -443,8 +444,22 @@ namespace SylverInk
 			CurrentDatabase.Controller.Sort();
 		}
 
+		public static void UpdateRecentNotesSorting(string protocol)
+		{
+			if (protocol.Equals(string.Empty))
+				return;
+
+			EnumConverter cv = new(typeof(NoteController.SortType));
+			RecentEntriesSortMode = (NoteController.SortType?)cv.ConvertFromString(protocol) ?? NoteController.SortType.ByChange;
+
+			DeferUpdateRecentNotes(true);
+		}
+
 		public static void UpdateRibbonTabs(string protocol)
 		{
+			if (protocol.Equals(string.Empty))
+				return;
+
 			RibbonTabContent = protocol;
 			var control = GetChildPanel("DatabasesPanel");
 			if (control is null)
