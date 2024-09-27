@@ -7,9 +7,6 @@ using System.Windows.Input;
 
 namespace SylverInk
 {
-	/// <summary>
-	/// Interaction logic for Import.xaml
-	/// </summary>
 	public partial class Import : Window
 	{
 		private int Imported = 0;

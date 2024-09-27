@@ -15,7 +15,6 @@ namespace SylverInk
 	{
 		private long Created = -1;
 		private bool Dirty = true;
-		private int Index = -1;
 		private string? Initial = string.Empty;
 		private long LastChange = -1;
 		private DateTime LastChangeObject = DateTime.UtcNow;
@@ -26,6 +25,7 @@ namespace SylverInk
 		private readonly List<string> Tags = [];
 		private bool TagsDirty = true;
 
+		public int Index = -1;
 		public int LastMatchCount { get; private set; } = 0;
 
 		public string Preview
@@ -176,8 +176,6 @@ namespace SylverInk
 		public string GetCreated() => GetCreatedObject().ToString("yyyy-MM-dd HH:mm:ss");
 
 		public DateTime GetCreatedObject() => DateTime.FromBinary(Created);
-
-		public int GetIndex() => Index;
 
 		public DateTime GetLastChangeObject() => DateTime.FromBinary(LastChange);
 

@@ -5,10 +5,11 @@ namespace SylverInk
 {
 	public partial class Database
 	{
-		public bool Changed => Controller.Changed;
-		public NoteController Controller { get; set; } = new();
+		public NoteController Controller = new();
 		public string DBFile = string.Empty;
 		public bool Loaded = false;
+
+		public bool Changed => Controller.Changed;
 		public string? Name { get => Controller.Name; set => Controller.Name = value; }
 
 		public Database()
@@ -24,9 +25,7 @@ namespace SylverInk
 			{
 				BackgroundWorker worker = new();
 				worker.DoWork += (_, _) => db.Load(dbFile);
-				worker.RunWorkerCompleted += (_, _) => {
-					Common.AddDatabase(db);
-				};
+				worker.RunWorkerCompleted += (_, _) => Common.AddDatabase(db);
 				worker.RunWorkerAsync();
 
 				return;
@@ -38,8 +37,7 @@ namespace SylverInk
 
 		public void Load(string dbFile)
 		{
-			DBFile = dbFile;
-			Controller = new(dbFile);
+			Controller = new(DBFile = dbFile);
 			Loaded = Controller.Loaded;
 
 			if ((Name ?? string.Empty).Equals(string.Empty))

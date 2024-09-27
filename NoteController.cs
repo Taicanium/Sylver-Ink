@@ -12,7 +12,6 @@ namespace SylverInk
 	{
 		private short _canCompress = 0; // -1 = Cannot compress, 1 = Can compress, 0 = Not tested.
 		private bool _changed = false;
-		private string? _name;
 		private int _nextIndex = 0;
 		private Serializer? _serializer;
 
@@ -27,7 +26,7 @@ namespace SylverInk
 		}
 
 		public bool Loaded = false;
-		public string? Name { get => _name; set { _name = value; } }
+		public string? Name;
 		public int RecordCount => Records.Count;
 		private List<NoteRecord> Records { get; } = [];
 		public Dictionary<string, uint> WordPercentages { get; } = [];
@@ -90,7 +89,7 @@ namespace SylverInk
 		private int AddRecord(NoteRecord record)
 		{
 			Records.Add(record);
-			return record.GetIndex();
+			return record.Index;
 		}
 
 		public int CreateRecord(string entry, bool dummy = false)
@@ -128,7 +127,7 @@ namespace SylverInk
 
 		public void DeleteRecord(int index)
 		{
-			var recordIndex = Records.FindIndex(new((record) => record.GetIndex() == index));
+			var recordIndex = Records.FindIndex(new((record) => record.Index == index));
 			Records[recordIndex].Delete();
 			Records.RemoveAt(recordIndex);
 
@@ -288,7 +287,7 @@ namespace SylverInk
 				var newVersion = recordText.Replace(oldText, newText, StringComparison.OrdinalIgnoreCase);
 				ReplaceCount += (recordText.Length - recordText.Replace(oldText, string.Empty, StringComparison.OrdinalIgnoreCase).Length) / oldText.Length;
 				NoteCount++;
-				CreateRevision(record.GetIndex(), newVersion);
+				CreateRevision(record.Index, newVersion);
 			}
 
 			Changed = Changed || ReplaceCount > 0;
@@ -346,7 +345,7 @@ namespace SylverInk
 			{
 				case SortType.ByIndex:
 					Records.Sort(new Comparison<NoteRecord>(
-						(_rev1, _rev2) => _rev1.GetIndex().CompareTo(_rev2.GetIndex())
+						(_rev1, _rev2) => _rev1.Index.CompareTo(_rev2.Index)
 						));
 					return;
 				case SortType.ByChange:

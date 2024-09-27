@@ -352,9 +352,8 @@ namespace SylverInk
 
 		public static SearchResult OpenQuery(NoteRecord record, bool show = true)
 		{
-			var index = record.GetIndex();
 			foreach (SearchResult result in OpenQueries)
-				if (result.ResultRecord == index)
+				if (result.ResultRecord == record.Index)
 					return result;
 
 			var control = (TabControl)Application.Current.MainWindow.FindName("DatabasesPanel");
@@ -363,8 +362,8 @@ namespace SylverInk
 			{
 				Query = record.ToString(),
 				ResultDatabase = control.SelectedIndex,
-				ResultRecord = index,
-				ResultText = CurrentDatabase.Controller.GetRecord(index).ToString()
+				ResultRecord = record.Index,
+				ResultText = CurrentDatabase.Controller.GetRecord(record.Index).ToString()
 			};
 
 			if (show)
@@ -390,8 +389,8 @@ namespace SylverInk
 					Databases.RemoveAt(i - 1);
 			}
 
-			control.SelectedIndex = Math.Max(0, control.SelectedIndex - 1);
-			control.Items.RemoveAt(control.SelectedIndex + 1);
+			control.Items.RemoveAt(control.SelectedIndex);
+			control.SelectedIndex = Math.Max(0, Math.Min(control.Items.Count - 1, control.SelectedIndex));
 
 			UpdateContextMenu();
 		}

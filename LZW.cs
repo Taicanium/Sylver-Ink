@@ -95,20 +95,18 @@ namespace SylverInk
 				var k = ReadCode();
 				if (k == 257U)
 					break;
-				else
-				{
-					if (!Packets.TryGetValue(k, out C))
-						C = $"{W}{W[0]}";
 
-					for (int i = 0; i < C.Length; i++)
-						Incoming.Add((byte)C[i]);
+				if (!Packets.TryGetValue(k, out C))
+					C = $"{W}{W[0]}";
 
-					Packets.Add(NextCode, $"{W}{C[0]}");
-					NextCode++;
-					W = C;
+				for (int i = 0; i < C.Length; i++)
+					Incoming.Add((byte)C[i]);
 
-					UpdateRange(NextCode + 1);
-				}
+				Packets.Add(NextCode, $"{W}{C[0]}");
+				NextCode++;
+				W = C;
+
+				UpdateRange(NextCode + 1);
 			}
 
 			var limit = Math.Min(byteCount, Incoming.Count);
@@ -124,10 +122,9 @@ namespace SylverInk
 		public void Init(Stream? _fileStream = null, bool _writing = false)
 		{
 			FileStream = _fileStream ?? FileStream;
+			Open = true;
 			Writing = _writing;
 			InitDictionary();
-
-			Open = true;
 		}
 
 		private void InitDictionary()

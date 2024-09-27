@@ -30,6 +30,8 @@ namespace SylverInk
 
 		private void FinishSearch(object? sender, RunWorkerCompletedEventArgs e)
 		{
+			Common.Settings.SearchResults.Clear();
+
 			for (int i = 0; i < _results.Count; i++)
 				Common.Settings.SearchResults.Add(_results[i]);
 
@@ -46,12 +48,12 @@ namespace SylverInk
 			if (menu.DataContext.GetType() == typeof(NoteRecord))
 			{
 				var record = (NoteRecord)menu.DataContext;
-				index = record.GetIndex();
+				index = record.Index;
 			}
 			else
-				index = _recentSelection.GetIndex();
+				index = _recentSelection.Index;
 
-			Common.Settings.SearchResults.RemoveAt(Common.Settings.SearchResults.ToList().FindIndex((result) => result.GetIndex() == index));
+			Common.Settings.SearchResults.RemoveAt(Common.Settings.SearchResults.ToList().FindIndex((result) => result.Index == index));
 			Common.CurrentDatabase.Controller.DeleteRecord(index);
 			Results.Items.Refresh();
 		}
@@ -60,17 +62,16 @@ namespace SylverInk
 		{
 			var item = (MenuItem)sender;
 			var menu = (ContextMenu)item.Parent;
+			SearchResult result;
 			if (menu.DataContext.GetType() == typeof(NoteRecord))
 			{
 				var record = (NoteRecord)menu.DataContext;
-				SearchResult result = Common.OpenQuery(record, false);
-				result.AddTabToRibbon();
+				result = Common.OpenQuery(record, false);
 			}
-			else if (menu.DataContext.GetType() == typeof(ContextSettings))
-			{
-				SearchResult result = Common.OpenQuery(_recentSelection, false);
-				result.AddTabToRibbon();
-			}
+			else
+				result = Common.OpenQuery(_recentSelection, false);
+
+			result.AddTabToRibbon();
 		}
 
 		private void PerformSearch(object? sender, DoWorkEventArgs e)
@@ -80,8 +81,7 @@ namespace SylverInk
 			for (int i = 0; i < Common.CurrentDatabase.Controller.RecordCount; i++)
 			{
 				var newRecord = Common.CurrentDatabase.Controller.GetRecord(i);
-				var recordText = newRecord.ToString();
-				if (!recordText.Contains(_query, StringComparison.OrdinalIgnoreCase))
+				if (!newRecord.ToString().Contains(_query, StringComparison.OrdinalIgnoreCase))
 					continue;
 
 				newRecord.Preview = _width;
@@ -90,8 +90,7 @@ namespace SylverInk
 
 				for (int j = 0; j < _results.Count; j++)
 				{
-					var result = _results[j];
-					if (result.LastMatchCount <= matches)
+					if (_results[j].LastMatchCount <= matches)
 					{
 						_results.Insert(j, newRecord);
 						matched = true;
@@ -111,10 +110,8 @@ namespace SylverInk
 			button.IsEnabled = false;
 
 			_query = SearchText.Text ?? string.Empty;
-			Common.Settings.SearchResults.Clear();
-
+			_results.Clear();
 			_width = $"{Math.Floor(Width - 115.0)}";
-			List<NoteRecord> _results = [];
 
 			BackgroundWorker queryTask = new();
 			queryTask.DoWork += PerformSearch;

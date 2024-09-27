@@ -67,9 +67,7 @@ namespace SylverInk
 
 		private void DatabaseCreate(object sender, RoutedEventArgs e)
 		{
-			Database db = new();
-			if (db.Loaded)
-				Common.AddDatabase(db);
+			Common.AddDatabase(new());
 			DatabasesPanel.SelectedIndex = DatabasesPanel.Items.Count - 1;
 			Common.DeferUpdateRecentNotes();
 		}
@@ -100,8 +98,10 @@ namespace SylverInk
 					var innerDB = (Database)item.Tag;
 					return Path.GetFullPath(innerDB.DBFile).Equals(path);
 				});
+
 				var db = items?.FindIndex(predicate);
 				DatabasesPanel.SelectedIndex = db ?? DatabasesPanel.SelectedIndex;
+				
 				return;
 			}
 
@@ -272,34 +272,32 @@ namespace SylverInk
 		{
 			var item = (MenuItem)sender;
 			var menu = (ContextMenu)item.Parent;
+			
 			if (menu.DataContext.GetType() == typeof(NoteRecord))
 			{
 				var record = (NoteRecord)menu.DataContext;
-				Common.CurrentDatabase.Controller.DeleteRecord(record.GetIndex());
-				Common.DeferUpdateRecentNotes();
+				Common.CurrentDatabase.Controller.DeleteRecord(record.Index);
 			}
-			else if (menu.DataContext.GetType() == typeof(ContextSettings))
-			{
-				Common.CurrentDatabase.Controller.DeleteRecord(RecentSelection.GetIndex());
-				Common.DeferUpdateRecentNotes();
-			}
+			else
+				Common.CurrentDatabase.Controller.DeleteRecord(RecentSelection.Index);
+
+			Common.DeferUpdateRecentNotes();
 		}
 
 		private void NoteOpen(object sender, RoutedEventArgs e)
 		{
 			var item = (MenuItem)sender;
 			var menu = (ContextMenu)item.Parent;
+			SearchResult result;
 			if (menu.DataContext.GetType() == typeof(NoteRecord))
 			{
 				var record = (NoteRecord)menu.DataContext;
-				SearchResult result = Common.OpenQuery(record, false);
-				result.AddTabToRibbon();
+				result = Common.OpenQuery(record, false);
 			}
-			else if (menu.DataContext.GetType() == typeof(ContextSettings))
-			{
-				SearchResult result = Common.OpenQuery(RecentSelection, false);
-				result.AddTabToRibbon();
-			}
+			else
+				result = Common.OpenQuery(RecentSelection, false);
+
+			result.AddTabToRibbon();
 		}
 
 		private void RenameClosed(object sender, EventArgs e)
@@ -322,15 +320,10 @@ namespace SylverInk
 				RenameDatabase.IsOpen = false;
 		}
 
-		private static void SaveDatabase(Database db)
-		{
-			db.Save();
-		}
-
 		private void SaveDatabases(object? sender, DoWorkEventArgs e)
 		{
 			foreach (Database db in Common.Databases)
-				SaveDatabase(db);
+				db.Save();
 
 			Common.ForceClose = true;
 		}
@@ -393,9 +386,13 @@ namespace SylverInk
 			if (control.Name.Equals("DatabasesPanel"))
 			{
 				var item = (TabItem)control.SelectedItem;
+				if (item is null)
+					return;
+
 				var newDB = (Database)item.Tag;
 				if (newDB.Equals(Common.CurrentDatabase))
 					return;
+
 				Common.CurrentDatabase = newDB;
 				Common.Settings.SearchResults.Clear();
 				Common.DeferUpdateRecentNotes(true);

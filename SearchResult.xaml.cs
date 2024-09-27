@@ -10,15 +10,14 @@ namespace SylverInk
 	/// </summary>
 	public partial class SearchResult : Window
 	{
+		private bool Dragging = false;
 		private Point DragMouseCoords = new(0, 0);
+		private bool Edited = false;
+		public string Query = string.Empty;
+		public int ResultDatabase = 0;
+		public int ResultRecord = -1;
+		public string ResultText = string.Empty;
 		private readonly double SnapTolerance = 20.0;
-
-		private bool Dragging { get; set; } = false;
-		private bool Edited { get; set; } = false;
-		public string Query { get; set; } = string.Empty;
-		public int ResultDatabase { get; set; } = 0;
-		public int ResultRecord { get; set; } = -1;
-		public string ResultText { get; set; } = string.Empty;
 
 		public SearchResult()
 		{
@@ -450,10 +449,7 @@ namespace SylverInk
 			Close();
 		}
 
-		private void WindowMove(object sender, MouseEventArgs e)
-		{
-			Drag(sender, e);
-		}
+		private void WindowMove(object sender, MouseEventArgs e) => Drag(sender, e);
 
 		private void WindowMouseDown(object sender, MouseButtonEventArgs e)
 		{
