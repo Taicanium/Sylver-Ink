@@ -79,6 +79,7 @@ namespace SylverInk
 
 			if (File.Exists(Common.CurrentDatabase.DBFile))
 				File.Delete(Common.CurrentDatabase.DBFile);
+
 			Common.RemoveDatabase(Common.CurrentDatabase);
 			Common.DeferUpdateRecentNotes();
 		}
@@ -122,6 +123,11 @@ namespace SylverInk
 				Common.CurrentDatabase.DBFile = newPath;
 		}
 
+		private void DatabaseSaveLocal(object sender, RoutedEventArgs e)
+		{
+			Common.CurrentDatabase.DBFile = Path.Join(Common.DocumentsSubfolders["Databases"], Path.GetFileNameWithoutExtension(Common.CurrentDatabase.DBFile), Path.GetFileName(Common.CurrentDatabase.DBFile));
+		}
+
 		private void Drag(object sender, MouseButtonEventArgs e) => DragMove();
 
 		private void ExitComplete(object? sender, RunWorkerCompletedEventArgs e)
@@ -139,10 +145,10 @@ namespace SylverInk
 
 		private static void LoadUserSettings()
 		{
-			if (!File.Exists("settings.sis"))
+			if (!File.Exists(Common.SettingsFile))
 				return;
 
-			string[] settings = File.ReadAllLines("settings.sis");
+			string[] settings = File.ReadAllLines(Common.SettingsFile);
 
 			for (int i = 0; i < settings.Length; i++)
 			{
@@ -171,7 +177,7 @@ namespace SylverInk
 						foreach (var file in files)
 							Database.Create(file, true);
 						if (!files.Any())
-							Database.Create($"{Common.DefaultDatabase}.sidb");
+							Database.Create(Path.Join(Common.DocumentsSubfolders["Databases"], $"{Common.DefaultDatabase}", $"{Common.DefaultDatabase}.sidb"));
 						break;
 					case "MenuForeground":
 						Common.Settings.MenuForeground = Common.BrushFromBytes(keyValue[1]);
@@ -241,10 +247,14 @@ namespace SylverInk
 		{
 			LoadUserSettings();
 
-			DatabasesPanel.SelectedIndex = 0;
+			foreach (var folder in Common.DocumentsSubfolders)
+				if (!Directory.Exists(folder.Value))
+					Directory.CreateDirectory(folder.Value);
 
 			if (FirstRun)
-				Database.Create($"{Common.DefaultDatabase}.sidb");
+				Database.Create(Path.Join(Common.DocumentsSubfolders["Databases"], $"{Common.DefaultDatabase}", $"{Common.DefaultDatabase}.sidb"));
+
+			DatabasesPanel.SelectedIndex = 0;
 
 			BackgroundWorker worker = new();
 			worker.DoWork += (_, _) => SpinWait.SpinUntil(() => Common.Databases.Count > 0);
@@ -308,9 +318,19 @@ namespace SylverInk
 			if (DatabaseNameBox.Text.Equals(string.Empty))
 				return;
 
-			if (Common.CurrentDatabase.Name != DatabaseNameBox.Text)
-				Common.DatabaseChanged = true;
+			if (DatabaseNameBox.Text.Equals(Common.CurrentDatabase.Name))
+				return;
 
+			foreach (Database db in Common.Databases)
+			{
+				if (DatabaseNameBox.Text.Equals(db.Name))
+				{
+					MessageBox.Show("A database already exists with the provided name.", "Sylver Ink: Error", MessageBoxButton.OK, MessageBoxImage.Error);
+					return;
+				}
+			}
+
+			Common.DatabaseChanged = true;
 			Common.CurrentDatabase.Name = DatabaseNameBox.Text;
 			var currentTab = (TabItem)DatabasesPanel.SelectedItem;
 			currentTab.Header = Common.CurrentDatabase.Name;
@@ -355,7 +375,7 @@ namespace SylverInk
 				$"AccentBackground:{Common.BytesFromBrush(Common.Settings.AccentBackground)}"
 			];
 
-			File.WriteAllLines("settings.sis", settings);
+			File.WriteAllLines(Common.SettingsFile, settings);
 		}
 
 		private void SublistChanged(object sender, RoutedEventArgs e)

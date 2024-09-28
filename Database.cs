@@ -46,18 +46,19 @@ namespace SylverInk
 
 		public void MakeBackup(bool auto = false)
 		{
-			var Extensionless = Path.GetFileNameWithoutExtension(DBFile);
+			var DBPath = Common.GetDatabasePath(this);
+			var BKPath = Common.GetBackupPath(this);
 
 			if (auto)
 			{
 				for (int i = 2; i > 0; i--)
 				{
-					if (File.Exists($"{Extensionless}_{i}.sibk"))
-						File.Copy($"{Extensionless}_{i}.sibk", $"{Extensionless}_{i + 1}.sibk", true);
+					if (File.Exists($"{BKPath}_{i}.sibk"))
+						File.Copy($"{BKPath}_{i}.sibk", $"{BKPath}_{i + 1}.sibk", true);
 				}
 
-				if (File.Exists($"{DBFile}"))
-					File.Copy($"{DBFile}", $"{Extensionless}_1.sibk", true);
+				if (File.Exists($"{DBPath}"))
+					File.Copy($"{DBPath}", $"{BKPath}_1.sibk", true);
 
 				return;
 			}
@@ -70,10 +71,13 @@ namespace SylverInk
 			if (!Changed)
 				return;
 
-			MakeBackup(true);
-
 			if (DBFile.Equals(string.Empty))
-				DBFile = Common.DialogFileSelect(true, 2, Name);
+				DBFile = Common.GetDatabasePath(this);
+
+			MakeBackup(true);
+			
+			if (!Directory.Exists(Path.GetDirectoryName(DBFile)))
+				Directory.CreateDirectory(Path.GetDirectoryName(DBFile) ?? DBFile);
 
 			if (!Controller.Open($"{DBFile}", true))
 				return;

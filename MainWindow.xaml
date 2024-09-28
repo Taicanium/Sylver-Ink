@@ -6,7 +6,7 @@
 		xmlns:local="clr-namespace:SylverInk"
 		mc:Ignorable="d"
 		d:DataContext="{d:DesignInstance Type=local:ContextSettings}"
-		Background="{Binding MenuBackground}" Closing="MainWindow_Closing" Foreground="{Binding MenuForeground}" Height="600" Loaded="MainWindow_Loaded" MinHeight="425" MinWidth="400" MouseLeftButtonDown="Drag" ResizeMode="CanResize" SizeChanged="MainWindow_SizeChanged" Title="Sylver Ink" Width="450" WindowStyle="None">
+		Background="{Binding MenuBackground}" Closing="MainWindow_Closing" Foreground="{Binding MenuForeground}" Height="625" Loaded="MainWindow_Loaded" MinHeight="450" MinWidth="400" MouseLeftButtonDown="Drag" ResizeMode="CanResize" SizeChanged="MainWindow_SizeChanged" Title="Sylver Ink" Width="450">
 	<Window.Resources>
 		<ResourceDictionary>
 			<ContextMenu x:Key="DatabaseContextMenu">
@@ -16,6 +16,7 @@
 				<MenuItem Click="DatabaseDelete" Header="Delete"/>
 				<MenuItem Click="DatabaseOpen" Header="Open..." Tag="Always"/>
 				<MenuItem Click="DatabaseSaveAs" Header="Save as..." Tag="Always"/>
+				<MenuItem Click="DatabaseSaveLocal" Header="Save to Documents" Tag="Always"/>
 				<Separator Focusable="False" Margin="0,10,0,5" Tag="Always" Visibility="Hidden"/>
 				<MenuItem Header="Database" Focusable="False" IsEnabled="False" Tag="Always"/>
 				<Separator Focusable="False" Margin="0,5" Tag="Always"/>
@@ -77,33 +78,24 @@
 								<Label Content="(?)" Foreground="{Binding AccentForeground}" ToolTip="Write a line of text and press Enter to create a new entry."/>
 							</StackPanel>
 							<TextBox KeyDown="NewNote" Margin="5" Grid.Row="2" VerticalAlignment="Top"/>
-							<Grid Margin="0,20,0,40" Grid.Row="4">
+							<Grid Margin="0,10" Grid.Row="3">
+								<Grid.ColumnDefinitions>
+									<ColumnDefinition Width="*"/>
+									<ColumnDefinition Width="*"/>
+									<ColumnDefinition Width="*"/>
+									<ColumnDefinition Width="*"/>
+									<ColumnDefinition Width="*"/>
+								</Grid.ColumnDefinitions>
 								<Grid.RowDefinitions>
 									<RowDefinition Height="*"/>
 									<RowDefinition Height="*"/>
+									<RowDefinition Height="*"/>
 								</Grid.RowDefinitions>
-								<Grid Margin="0,10,0,10">
-									<Grid.ColumnDefinitions>
-										<ColumnDefinition Width="*"/>
-										<ColumnDefinition Width="*"/>
-										<ColumnDefinition Width="*"/>
-										<ColumnDefinition Width="*"/>
-										<ColumnDefinition Width="*"/>
-									</Grid.ColumnDefinitions>
-									<Button Click="Button_Click" Grid.Column="1" Content="Search"/>
-									<Button Click="Button_Click" Grid.Column="2" Content="Replace"/>
-									<Button Click="Button_Click" Grid.Column="3" Content="Import"/>
-								</Grid>
-								<Grid Grid.Row="1" Margin="0,10,0,-10">
-									<Grid.ColumnDefinitions>
-										<ColumnDefinition Width="*"/>
-										<ColumnDefinition Width="*"/>
-										<ColumnDefinition Width="*"/>
-										<ColumnDefinition Width="*"/>
-									</Grid.ColumnDefinitions>
-									<Button Click="Button_Click" Grid.Column="1" Content="Settings"/>
-									<Button Background="{Binding AccentBackground}" Foreground="{Binding AccentForeground}" Click="Button_Click" Grid.Column="2" Content="Exit"/>
-								</Grid>
+								<Button Click="Button_Click" Grid.Column="1" Content="Search"/>
+								<Button Click="Button_Click" Grid.Column="3" Content="Replace" Grid.Row="2"/>
+								<Button Click="Button_Click" Grid.Column="3" Content="Import"/>
+								<Button Click="Button_Click" Grid.Column="1" Content="Settings" Grid.Row="2"/>
+								<Button Background="{Binding AccentBackground}" Click="Button_Click" Grid.Column="2" Content="Exit" Foreground="{Binding AccentForeground}" Grid.Row="1"/>
 							</Grid>
 						</Grid>
 					</TabItem>
@@ -115,6 +107,7 @@
 		<Grid.RowDefinitions>
 			<RowDefinition Height="Auto"/>
 			<RowDefinition Height="*"/>
+			<RowDefinition Height="Auto"/>
 		</Grid.RowDefinitions>
 
 		<Popup Closed="RenameClosed" Height="75" IsOpen="False" KeyDown="RenameKeyDown" Placement="Mouse" PopupAnimation="Fade" StaysOpen="False" Width="275" x:Name="RenameDatabase">
@@ -130,15 +123,8 @@
 			</Border>
 		</Popup>
 
-		<Grid>
-			<Grid.ColumnDefinitions>
-				<ColumnDefinition Width="*"/>
-				<ColumnDefinition Width="Auto"/>
-				<ColumnDefinition Width="*"/>
-			</Grid.ColumnDefinitions>
-			<Label Grid.Column="1" Content="Sylver Ink" FontSize="16" FontStyle="Italic" FontWeight="Light" HorizontalAlignment="Center" Margin="0,5" VerticalAlignment="Top"/>
-			<Label Grid.Column="2" Grid.ColumnSpan="2" Content="{Binding VersionString}" FontSize="9" FontStyle="Italic" FontWeight="Light" HorizontalAlignment="Right" Margin="0,5" VerticalAlignment="Bottom"/>
-		</Grid>
+		<Label Content="Sylver Ink" FontSize="16" FontStyle="Italic" FontWeight="Light" HorizontalAlignment="Center" Margin="0,15" VerticalAlignment="Top"/>
 		<TabControl Background="{Binding MenuBackground}" Foreground="{Binding MenuForeground}" Grid.Row="1" SelectionChanged="TabChanged" x:Name="DatabasesPanel"/>
+		<Label Content="{Binding VersionString}" FontSize="9" FontStyle="Italic" FontWeight="Light" HorizontalAlignment="Right" Margin="0,5" Grid.Row="2" VerticalAlignment="Bottom"/>
 	</Grid>
 </Window>

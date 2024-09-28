@@ -25,9 +25,14 @@ namespace SylverInk
 		public static bool CanResize { get; set; } = false;
 		public static Database CurrentDatabase { get; set; } = new();
 		public static bool DatabaseChanged { get; set; } = false;
-		public static List<string> DatabaseFiles { get => Databases.ToList().ConvertAll(new Converter<Database, string>((db) => Path.GetFullPath(db.DBFile))); }
+		public static List<string> DatabaseFiles { get => Databases.ToList().ConvertAll(new Converter<Database, string>((db) => db.DBFile)); }
 		public static ObservableCollection<Database> Databases { get; set; } = [];
 		public static string DefaultDatabase { get; } = "New";
+		public static string DocumentsFolder { get; } = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Sylver Ink");
+		public static Dictionary<string, string> DocumentsSubfolders { get; } = new([
+			new("Main", DocumentsFolder),
+			new("Databases", Path.Join(DocumentsFolder, "Databases"))
+			]);
 		public static double PPD { get; set; } = 1.0;
 		public static bool ForceClose { get; set; } = false;
 		public static Import? ImportWindow { get => _import; set { _import?.Close(); _import = value; _import?.Show(); } }
@@ -40,6 +45,7 @@ namespace SylverInk
 		public static string RibbonTabContent { get; set; } = "CONTENT";
 		public static Search? SearchWindow { get => _search; set { _search?.Close(); _search = value; _search?.Show(); } }
 		public static ContextSettings Settings { get; } = new();
+		public static string SettingsFile { get; } = Path.Join(DocumentsFolder, "settings.sis");
 		public static Settings? SettingsWindow { get => _settings; set { _settings?.Close(); _settings = value; _settings?.Show(); } }
 		private static double TextHeight { get; set; } = 0.0;
 		private static BackgroundWorker? UpdateTask { get; set; }
@@ -65,7 +71,7 @@ namespace SylverInk
 			}
 
 			if (db.DBFile.Equals(string.Empty))
-				db.DBFile = $"{db.Name}.sidb";
+				db.DBFile = GetDatabasePath(db);
 
 			var _name = db.Name ?? string.Empty;
 			var dbHeaderLength = _name.Length > 12 ? 9 : _name.Length;
@@ -224,6 +230,10 @@ namespace SylverInk
 
 			return dialog.ShowDialog() is true ? dialog.FileName : string.Empty;
 		}
+
+		public static string GetBackupPath(Database db) => Path.Join(DocumentsSubfolders["Databases"], db.Name, db.Name);
+
+		public static string GetDatabasePath(Database db) => Path.Join(DocumentsSubfolders["Databases"], db.Name, $"{db.Name}.sidb");
 
 		public static string GetRibbonHeader(int recordIndex)
 		{

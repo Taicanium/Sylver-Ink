@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Globalization;
+using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Windows;
@@ -30,7 +32,7 @@ namespace SylverInk
 		private readonly ObservableCollection<NoteRecord> _searchResults = [];
 		private bool _searchResultsOnTop = false;
 		private bool _snapSearchResults = true;
-		private readonly string _versionString = "v. " + Assembly.GetExecutingAssembly().GetName().Version + " © Taica, " + GetBuildYear(Assembly.GetExecutingAssembly());
+		private readonly string _versionString = $"v. {Assembly.GetExecutingAssembly().GetName().Version} © Taica, {GetBuildYear(Assembly.GetExecutingAssembly())}";
 
 		public Brush? AccentBackground { get => _accentBackgound; set { _accentBackgound = value; OnPropertyChanged(); } }
 		public Brush? AccentForeground { get => _accentForegound; set { _accentForegound = value; OnPropertyChanged(); } }

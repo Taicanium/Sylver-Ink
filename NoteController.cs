@@ -29,7 +29,7 @@ namespace SylverInk
 		public string? Name;
 		public int RecordCount => Records.Count;
 		private List<NoteRecord> Records { get; } = [];
-		public Dictionary<string, uint> WordPercentages { get; } = [];
+		public Dictionary<string, double> WordPercentages { get; } = [];
 
 		private int NextIndex
 		{
@@ -69,16 +69,17 @@ namespace SylverInk
 					InitializeRecords(!opened);
 					ReloadSerializer();
 					Loaded = true;
+					return;
 				}
 
 				if (dbFile.Contains(Common.DefaultDatabase))
 				{
 					var result = MessageBox.Show($"Unable to load database file: {dbFile}\n\nCreate placeholder data for your new database?", "Sylver Ink: Warning", MessageBoxButton.YesNo, MessageBoxImage.Question);
 					InitializeRecords(dummyData: result == MessageBoxResult.Yes);
+					ReloadSerializer();
 					Loaded = true;
+					return;
 				}
-
-				return;
 			}
 
 			InitializeRecords(false, false);
@@ -188,7 +189,7 @@ namespace SylverInk
 			var Extensionless = Path.GetFileNameWithoutExtension(dbFile);
 			for (int i = 1; i < 4; i++)
 			{
-				string backup = $"{Extensionless}_{i}.sibk";
+				string backup = Path.Join(Path.GetDirectoryName(dbFile), $"{Extensionless}_{i}.sibk");
 				if (File.Exists(backup))
 					return backup;
 			}
@@ -425,14 +426,12 @@ namespace SylverInk
 			foreach (NoteRecord record in Records)
 			{
 				string recordText = record.ToString();
-				var matches = NonWhitespace().Matches(recordText);
+				var matches = Lowercase().Matches(recordText.ToLower());
 				foreach (Match match in matches)
 				{
 					foreach (Group group in match.Groups.Values)
 					{
-						if (!WordPercentages.ContainsKey(group.Value))
-							WordPercentages.Add(group.Value, 0);
-
+						WordPercentages.TryAdd(group.Value, 0.0);
 						WordPercentages[group.Value]++;
 						total++;
 					}
@@ -442,11 +441,12 @@ namespace SylverInk
 			foreach (string key in WordPercentages.Keys.ToList())
 			{
 				double value = WordPercentages[key];
-				WordPercentages[key] = (uint)Math.Floor(value/total);
+				double ratio = 100.0 * value / total;
+				WordPercentages[key] = ratio;
 			}
 		}
 
-		[GeneratedRegex(@"(\S+)")]
-		private partial Regex NonWhitespace();
+		[GeneratedRegex(@"(\p{Ll}+)")]
+		private partial Regex Lowercase();
 	}
 }

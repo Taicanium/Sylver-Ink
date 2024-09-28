@@ -36,9 +36,9 @@ namespace SylverInk
 			{
 				Dirty = false;
 				PreviewText = ToString().Replace("\r", string.Empty).Replace("\n", " ").Replace("\t", " ");
-				if (PreviewText.Length > 150)
+				if (PreviewText.Length > 225)
 				{
-					PreviewText = PreviewText[..150];
+					PreviewText = PreviewText[..225];
 					Dirty = true;
 				}
 
@@ -165,16 +165,20 @@ namespace SylverInk
 			Tags.Clear();
 
 			var recordText = ToString();
-			var matches = NonWhitespace().Matches(recordText);
+			var matches = Lowercase().Matches(recordText.ToLower());
 			foreach (Match match in matches)
 			{
 				foreach (Group group in match.Groups.Values)
 				{
 					var val = group.Value.ToLower();
+
+					if (Tags.Contains(val))
+						continue;
+
 					if (!Common.CurrentDatabase.Controller.WordPercentages.ContainsKey(val))
 						continue;
 
-					if (Common.CurrentDatabase.Controller.WordPercentages[val] < Math.Max(20, 100 - Common.CurrentDatabase.Controller.WordPercentages.Count))
+					if (Common.CurrentDatabase.Controller.WordPercentages[val] < Math.Max(0.2, 100.0 - Common.CurrentDatabase.Controller.WordPercentages.Count))
 						Tags.Add(val);
 				}
 			}
@@ -200,7 +204,7 @@ namespace SylverInk
 		public int MatchTags(string text)
 		{
 			var format = text.Trim();
-			var matches = NonWhitespace().Matches(format);
+			var matches = Lowercase().Matches(format.ToLower());
 			int outCount = 0;
 
 			ExtractTags();
@@ -257,7 +261,7 @@ namespace SylverInk
 
 		public override string ToString() => Reconstruct();
 
-		[GeneratedRegex(@"\S+")]
-		private static partial Regex NonWhitespace();
+		[GeneratedRegex(@"(\p{Ll}+)")]
+		private static partial Regex Lowercase();
 	}
 }
