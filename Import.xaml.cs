@@ -27,6 +27,9 @@ namespace SylverInk
 
 		private void DoMeasureTask()
 		{
+			if (Target.Equals(string.Empty))
+				return;
+
 			if (MeasureTask is null)
 			{
 				MeasureTask = new();
