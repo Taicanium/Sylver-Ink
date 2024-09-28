@@ -15,8 +15,6 @@ namespace SylverInk
 {
 	internal class Common
 	{
-		private readonly static string[] _dummyNames = ["Taica", "Unit 731", "Unit 732", "Tai Ca", "Dumbass", "Dumbfuck", "Some Guy", "Notafurrylad", "Floof", "Ballztothewallz", "Blazor", "Rhian", "Simha", "Coomer", "Dude", "Not Dude", "That One Chick", "Sephiroth", "Buizy", "Superfurry", "Butch Hartman", "Mah boi", "Goku"];
-		private readonly static string[] _dummyStrings = ["a", "about", "all", "also", "and", "as", "at", "be", "because", "but", "by", "can", "come", "could", "day", "do", "even", "find", "first", "for", "from", "get", "give", "go", "have", "he", "her", "here", "him", "his", "how", "I", "if", "in", "into", "it", "its", "just", "know", "like", "look", "make", "man", "many", "me", "more", "my", "new", "no", "not", "now", "of", "on", "one", "only", "or", "other", "our", "out", "people", "say", "see", "she", "so", "some", "take", "tell", "than", "that", "the", "their", "them", "then", "there", "these", "they", "thing", "think", "this", "those", "time", "to", "two", "up", "use", "very", "want", "way", "we", "well", "what", "when", "which", "who", "will", "with", "would", "year", "you", "your"];
 		private static Import? _import;
 		private static Replace? _replace;
 		private static Search? _search;
@@ -296,57 +294,6 @@ namespace SylverInk
 		{
 			for (int db = 0; db < Databases.Count; db++)
 				Databases[db].MakeBackup(true);
-		}
-
-		public static string MakeDummySearchResult()
-		{
-			Random r = new();
-			string result = new DateTime(r.Next(2004, 2030), r.Next(1, 13), r.Next(1, 29), r.Next(0, 24), r.Next(0, 60), r.Next(0, 60)).ToString("[yyyy-MM-dd HH:mm:ss]");
-
-			var starter = _dummyStrings[r.Next(0, _dummyStrings.Length)];
-			result = result + " " + _dummyNames[r.Next(0, _dummyNames.Length)] + ": " + starter[0].ToString().ToUpper() + starter[1..];
-
-			for (int i = 1; i < r.Next(3, 16); i++)
-			{
-				result += " " + _dummyStrings[r.Next(0, _dummyStrings.Length)];
-				switch (r.Next(0, 28))
-				{
-					case 5:
-					case 6:
-					case 7:
-					case 8:
-						result += ",";
-						break;
-					case 9:
-						result += ";";
-						break;
-					case 10:
-					case 11:
-						result += "?";
-						break;
-					case 12:
-					case 13:
-						result += ".";
-						break;
-					case 14:
-					case 15:
-						result += "!";
-						break;
-					case 16:
-						result += " - ";
-						break;
-					case 17:
-						result += "...";
-						break;
-					case 18:
-						result += "~";
-						break;
-					default:
-						break;
-				}
-			}
-
-			return result;
 		}
 
 		public static double MeasureTextSize(string text)

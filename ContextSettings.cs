@@ -17,6 +17,7 @@ namespace SylverInk
 		private Brush? _accentForegound = Brushes.Blue;
 		private string _importData = string.Empty;
 		private string _importTarget = string.Empty;
+		private int _lineTolerance = 2;
 		private Brush? _listBackgound = Brushes.White;
 		private Brush? _listForegound = Brushes.Black;
 		private FontFamily? _mainFontFamily = new("Arial");
@@ -38,6 +39,7 @@ namespace SylverInk
 		public Brush? AccentForeground { get => _accentForegound; set { _accentForegound = value; OnPropertyChanged(); } }
 		public string ImportData { get => _importData; set { _importData = value; OnPropertyChanged(); } }
 		public string ImportTarget { get => _importTarget; set { _importTarget = value; OnPropertyChanged(); } }
+		public int LineTolerance { get => _lineTolerance; set { _lineTolerance = Math.Min(36, Math.Max(0, value)); OnPropertyChanged(); } }
 		public Brush? ListBackground { get => _listBackgound; set { _listBackgound = value; OnPropertyChanged(); } }
 		public Brush? ListForeground { get => _listForegound; set { _listForegound = value; OnPropertyChanged(); } }
 		public FontFamily? MainFontFamily { get => _mainFontFamily; set { _mainFontFamily = value; _mainTypeFace = new(value, FontStyles.Normal, FontWeights.Normal, FontStretches.Normal); OnPropertyChanged(); } }

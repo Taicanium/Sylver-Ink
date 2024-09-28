@@ -13,6 +13,7 @@
 		</Grid.ColumnDefinitions>
 		<Grid.RowDefinitions>
 			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="Auto"/>
 			<RowDefinition Height="*"/>
 		</Grid.RowDefinitions>
 		<StackPanel>
@@ -35,7 +36,21 @@
 				<Button Click="CloseClick" Content="Close" Grid.Column="1"/>
 			</Grid>
 		</StackPanel>
-		<Border BorderBrush="{Binding MenuForeground}" BorderThickness="1" Grid.Row="1" Margin="20,5,20,20">
+		<Grid Margin="0,20" Grid.Row="1">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="2*"/>
+				<ColumnDefinition Width="2*"/>
+				<ColumnDefinition Width="*"/>
+			</Grid.ColumnDefinitions>
+			<Label Content="Line tolerance:"/>
+			<Label Grid.Column="2" Content="(?)" Foreground="{Binding AccentForeground}" ToolTip="The number of blank lines to look for when separating the file into different notes."/>
+			<StackPanel Grid.Column="1" HorizontalAlignment="Center" Orientation="Horizontal">
+				<Button Click="LineToleranceChanged" Content="-" Width="20" x:Name="LTLess"/>
+				<TextBox HorizontalContentAlignment="Center" IsReadOnly="True" Text="{Binding LineTolerance}" Width="40"/>
+				<Button Click="LineToleranceChanged" Content="+" Width="20" x:Name="LTMore"/>
+			</StackPanel>
+		</Grid>
+		<Border BorderBrush="{Binding MenuForeground}" BorderThickness="1" Grid.Row="2" Margin="20,5,20,20">
 			<TextBlock Background="{Binding ListBackground}" FontFamily="{Binding MainFontFamily}" FontSize="{Binding MainFontSize}" Foreground="{Binding ListForeground}" Text="{Binding ImportData}" TextWrapping="WrapWithOverflow"/>
 		</Border>
 	</Grid>

@@ -13,7 +13,7 @@
 	<SourceRevisionId>build$([System.DateTime]::UtcNow.ToString("yyyyMMdd"))</SourceRevisionId>
 	<SupportedOSPlatformVersion>7.0</SupportedOSPlatformVersion>
 	<NeutralLanguage>en-US</NeutralLanguage>
-	<Version>1.0.1.1</Version>
+	<Version>1.0.1.2</Version>
 	<UseWindowsForms>False</UseWindowsForms>
 	<Title>Sylver Ink</Title>
 	<Authors>Taica</Authors>
@@ -21,6 +21,7 @@
 	<ApplicationIcon>glasses.ico</ApplicationIcon>
 	<PackageReadmeFile>README.md</PackageReadmeFile>
 	<Company />
+	<PackageProjectUrl>https://github.com/Taicanium/Sylver-Ink</PackageProjectUrl>
   </PropertyGroup>
   
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

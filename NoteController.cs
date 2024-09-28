@@ -50,7 +50,7 @@ namespace SylverInk
 
 		public NoteController()
 		{
-			InitializeRecords(true, false);
+			InitializeRecords();
 			Loaded = true;
 		}
 
@@ -60,29 +60,19 @@ namespace SylverInk
 
 			if (!_serializer?.OpenRead($"{dbFile}") is true)
 			{
-				ReloadSerializer();
-
 				string backup = FindBackup(dbFile);
 				if (!backup.Equals(string.Empty))
 				{
-					var opened = _serializer?.OpenRead(backup) ?? false;
-					InitializeRecords(!opened);
 					ReloadSerializer();
-					Loaded = true;
-					return;
-				}
-
-				if (dbFile.Contains(Common.DefaultDatabase))
-				{
-					var result = MessageBox.Show($"Unable to load database file: {dbFile}\n\nCreate placeholder data for your new database?", "Sylver Ink: Warning", MessageBoxButton.YesNo, MessageBoxImage.Question);
-					InitializeRecords(dummyData: result == MessageBoxResult.Yes);
-					ReloadSerializer();
-					Loaded = true;
-					return;
+					if (!_serializer?.OpenRead(backup) is true)
+					{
+						MessageBox.Show($"Unable to load database file: {dbFile}", "Sylver Ink: Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+						return;
+					}
 				}
 			}
 
-			InitializeRecords(false, false);
+			InitializeRecords();
 			ReloadSerializer();
 			Loaded = true;
 		}
@@ -206,42 +196,16 @@ namespace SylverInk
 			return _serializer;
 		}
 
-		public void InitializeRecords(bool newDatabase = true, bool dummyData = true)
+		public void InitializeRecords(bool newDatabase = true)
 		{
 			for (int i = (Common.OpenQueries ?? []).Count; i > 0; i--)
 				Common.OpenQueries?[i - 1].Close();
 
-			if (!newDatabase)
-			{
-				DeserializeRecords();
-				return;
-			}
+			if (newDatabase)
+				Records.Clear();
 
-			Records.Clear();
-
-			if (dummyData)
-			{
-				var newRecords = new Random().Next(40, 160);
-				for (int i = 0; i < newRecords; i++)
-				{
-					var newText = Common.MakeDummySearchResult();
-					CreateRecord(newText, true);
-
-					var newRevisions = Math.Max(1, new Random().Next(0, 10) - 4);
-					for (int j = 0; j < newRevisions; j++)
-					{
-						NoteRevision revision = new()
-						{
-							_created = Records[i].GetCreatedObject().AddMinutes(new Random().NextDouble() * 10080.0).ToBinary(),
-							_startIndex = -1,
-							_substring = $"\n{Common.MakeDummySearchResult()}"
-						};
-						Records[i].Add(revision);
-					}
-				}
-			}
-
-			PropagateIndices();
+			DeserializeRecords();
+			return;
 		}
 
 		public void MakeBackup()
