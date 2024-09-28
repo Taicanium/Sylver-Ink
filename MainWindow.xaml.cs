@@ -80,6 +80,10 @@ namespace SylverInk
 			if (File.Exists(Common.CurrentDatabase.DBFile))
 				File.Delete(Common.CurrentDatabase.DBFile);
 
+			var BKPath = Path.GetDirectoryName(Common.GetBackupPath(Common.CurrentDatabase));
+			if (Directory.Exists(BKPath))
+				Directory.Delete(BKPath, true);
+
 			Common.RemoveDatabase(Common.CurrentDatabase);
 			Common.DeferUpdateRecentNotes();
 		}
