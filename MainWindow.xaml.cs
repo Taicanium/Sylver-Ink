@@ -118,6 +118,8 @@ namespace SylverInk
 		{
 			RenameDatabase.IsOpen = true;
 			DatabaseNameBox.Text = Common.CurrentDatabase.Name;
+			DatabaseNameBox.Focus();
+			DatabaseNameBox.CaretIndex = DatabaseNameBox.Text?.Length ?? 0;
 		}
 
 		private void DatabaseSaveAs(object sender, RoutedEventArgs e)
@@ -334,8 +336,24 @@ namespace SylverInk
 				}
 			}
 
-			Common.DatabaseChanged = true;
+			Common.CurrentDatabase.Changed = true;
 			Common.CurrentDatabase.Name = DatabaseNameBox.Text;
+
+			var oldFile = Common.CurrentDatabase.DBFile;
+			var oldPath = Path.GetDirectoryName(oldFile);
+			Common.CurrentDatabase.DBFile = Common.GetDatabasePath(Common.CurrentDatabase);
+			var newFile = Common.CurrentDatabase.DBFile;
+			var newPath = Path.GetDirectoryName(newFile);
+
+			var directorySearch = Directory.GetDirectories(Common.DocumentsSubfolders["Databases"], "*", new EnumerationOptions() { IgnoreInaccessible = true, RecurseSubdirectories = true, MaxRecursionDepth = 3 });
+			if (oldPath is not null && newPath is not null && directorySearch.Contains(oldPath))
+				Directory.Move(oldPath, newPath);
+
+			var adjustedPath = Path.Join(Path.GetDirectoryName(newFile), Path.GetFileName(oldFile));
+
+			if (File.Exists(adjustedPath))
+				File.Move(adjustedPath, newFile);
+
 			var currentTab = (TabItem)DatabasesPanel.SelectedItem;
 			currentTab.Header = Common.CurrentDatabase.Name;
 			currentTab.ToolTip = Common.CurrentDatabase.Name;

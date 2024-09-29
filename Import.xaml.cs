@@ -195,8 +195,9 @@ namespace SylverInk
 
 		private void PerformImport(object? sender, DoWorkEventArgs e)
 		{
-			string recordData = string.Empty;
 			int blankCount = 0;
+			Imported = 0;
+			string recordData = string.Empty;
 
 			for (int i = 0; i < DataLines.Count; i++)
 			{

@@ -111,7 +111,7 @@ namespace SylverInk
 			previousButton.IsEnabled = Common.CurrentDatabase.Controller.GetRecord(ResultRecord).GetNumRevisions() > 0;
 			saveButton.IsEnabled = false;
 
-			noteBox.TextChanged += (sender, e) =>
+			noteBox.TextChanged += (sender, _) =>
 			{
 				var senderObject = (TextBox)sender;
 				var tag = ((uint, int))senderObject.Tag;
@@ -119,7 +119,7 @@ namespace SylverInk
 				saveButton.IsEnabled = !senderObject.Text.Equals(record.ToString());
 			};
 
-			nextButton.Click += (sender, e) =>
+			nextButton.Click += (sender, _) =>
 			{
 				var senderObject = (Button)sender;
 				var tabPanel = Common.GetChildPanel("DatabasesPanel");
@@ -144,7 +144,7 @@ namespace SylverInk
 				saveButton.IsEnabled = !latestText.Equals(noteBox.Text);
 			};
 
-			previousButton.Click += (sender, e) =>
+			previousButton.Click += (sender, _) =>
 			{
 				var senderObject = (Button)sender;
 				var tabPanel = Common.GetChildPanel("DatabasesPanel");
@@ -169,7 +169,7 @@ namespace SylverInk
 				saveButton.IsEnabled = !latestText.Equals(noteBox.Text);
 			};
 
-			returnButton.Click += (sender, e) =>
+			returnButton.Click += (sender, _) =>
 			{
 				var senderObject = (Button)sender;
 				var tabPanel = Common.GetChildPanel("DatabasesPanel");
@@ -193,7 +193,7 @@ namespace SylverInk
 				tabPanel.Items.RemoveAt(tabIndex);
 			};
 
-			deleteButton.Click += (sender, e) =>
+			deleteButton.Click += (sender, _) =>
 			{
 				var senderObject = (Button)sender;
 				var tabPanel = Common.GetChildPanel("DatabasesPanel");
@@ -207,7 +207,7 @@ namespace SylverInk
 				Common.DeferUpdateRecentNotes();
 			};
 
-			saveButton.Click += (sender, e) =>
+			saveButton.Click += (sender, _) =>
 			{
 				var senderObject = (Button)sender;
 				var tag = ((uint, int))noteBox.Tag;

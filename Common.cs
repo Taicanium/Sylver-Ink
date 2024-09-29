@@ -86,7 +86,7 @@ namespace SylverInk
 				ToolTip = db.Name,
 			};
 
-			item.MouseRightButtonDown += (sender, e) => { control.SelectedItem = item; };
+			item.MouseRightButtonDown += (_, _) => control.SelectedItem = item;
 			control.Items.Add(item);
 			Databases.Add(db);
 			if (Databases.Count == 1)

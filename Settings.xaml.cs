@@ -299,7 +299,7 @@ namespace SylverInk
 				Width = 20
 			};
 
-			customOption.Click += (sender, e) =>
+			customOption.Click += (_, _) =>
 			{
 				ColorSelection.IsOpen = false;
 				CustomColorSelection.IsOpen = true;
@@ -327,7 +327,7 @@ namespace SylverInk
 					Width = 20,
 				};
 
-				option.Click += (sender, e) => {
+				option.Click += (sender, _) => {
 					var button = (Button)sender;
 					LastColorSelection = ((System.Windows.Shapes.Rectangle)button.Content).Fill;
 					ColorChanged();

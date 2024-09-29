@@ -18,7 +18,7 @@ namespace SylverInk
 		public bool Changed
 		{
 			get => _changed;
-			private set
+			set
 			{
 				_changed = value;
 				Common.DatabaseChanged = Common.DatabaseChanged || value;

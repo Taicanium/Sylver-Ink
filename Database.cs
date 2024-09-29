@@ -9,7 +9,7 @@ namespace SylverInk
 		public string DBFile = string.Empty;
 		public bool Loaded = false;
 
-		public bool Changed => Controller.Changed;
+		public bool Changed { get => Controller.Changed; set => Controller.Changed = value; }
 		public string? Name { get => Controller.Name; set => Controller.Name = value; }
 
 		public Database()
