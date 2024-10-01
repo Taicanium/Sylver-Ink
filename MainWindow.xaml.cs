@@ -99,7 +99,7 @@ namespace SylverInk
 			if (Common.DatabaseFiles.Contains(path))
 			{
 				var items = DatabasesPanel.Items.Cast<TabItem>().ToList();
-				var predicate = new Predicate<TabItem>((item) => {
+				var predicate = new Predicate<TabItem>(item => {
 					var innerDB = (Database)item.Tag;
 					return Path.GetFullPath(innerDB.DBFile).Equals(path);
 				});

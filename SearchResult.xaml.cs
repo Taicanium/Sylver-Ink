@@ -44,7 +44,6 @@ namespace SylverInk
 			{
 				Header = Common.GetRibbonHeader(ResultRecord),
 				Tag = ResultRecord,
-				ToolTip = Common.GetRibbonTooltip(ResultRecord)
 			};
 
 			control.SelectedIndex = ResultDatabase;
@@ -292,8 +291,8 @@ namespace SylverInk
 			if (Common.Settings.SnapSearchResults)
 				Snap(ref newCoords);
 
-			Left = Math.Max(0.0, newCoords.X);
-			Top = Math.Max(0.0, newCoords.Y);
+			Left = newCoords.X;
+			Top = newCoords.Y;
 		}
 
 		private void Result_Closed(object sender, EventArgs e)

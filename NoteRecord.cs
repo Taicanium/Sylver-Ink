@@ -85,7 +85,6 @@ namespace SylverInk
 			Initial = string.Empty;
 			LastChange = Created;
 			LastChangeObject = DateTime.FromBinary(LastChange);
-			TagsDirty = true;
 		}
 
 		public NoteRecord(int Index, string Initial, long Created = -1)
@@ -95,7 +94,6 @@ namespace SylverInk
 			this.Initial = Initial;
 			LastChange = this.Created;
 			LastChangeObject = DateTime.FromBinary(LastChange);
-			TagsDirty = true;
 		}
 
 		public void Add(NoteRevision _revision)
@@ -210,22 +208,14 @@ namespace SylverInk
 			ExtractTags();
 
 			foreach (Match match in matches)
-			{
 				foreach (Group group in match.Groups.Values)
-				{
 					if (Tags.Contains(group.Value.ToLower()))
 						outCount++;
-				}
-			}
 
 			return LastMatchCount = outCount;
 		}
 
-		public int OverwriteIndex(int Index)
-		{
-			this.Index = Index;
-			return this.Index;
-		}
+		public void OverwriteIndex(int Index) => this.Index = Index;
 
 		public string Reconstruct(uint backsteps = 0U)
 		{

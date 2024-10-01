@@ -34,7 +34,12 @@
 
 			<DataTemplate x:Key="DatabaseContentTemplate">
 				<TabControl Background="{Binding MenuBackground}" Foreground="{Binding MenuForeground}" Margin="-3,0" SelectedIndex="0">
-					<TabItem Header="+">
+					<TabItem>
+						<TabItem.Header>
+							<Grid>
+								<Label Content="+"/>
+							</Grid>
+						</TabItem.Header>
 						<Grid>
 							<Grid.RowDefinitions>
 								<RowDefinition Height="*"/>

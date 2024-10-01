@@ -6,14 +6,13 @@
 	<RootNamespace>SylverInk</RootNamespace>
 	<Nullable>enable</Nullable>
 	<UseWPF>true</UseWPF>
-	<SupportedOSPlatformVersion>7.0</SupportedOSPlatformVersion>
   </PropertyGroup>
   
   <PropertyGroup>
 	<SourceRevisionId>build$([System.DateTime]::UtcNow.ToString("yyyyMMdd"))</SourceRevisionId>
 	<SupportedOSPlatformVersion>7.0</SupportedOSPlatformVersion>
 	<NeutralLanguage>en-US</NeutralLanguage>
-	<Version>1.0.1.2</Version>
+	<Version>1.0.1.3</Version>
 	<UseWindowsForms>False</UseWindowsForms>
 	<Title>Sylver Ink</Title>
 	<Authors>Taica</Authors>

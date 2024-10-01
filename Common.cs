@@ -23,7 +23,7 @@ namespace SylverInk
 		public static bool CanResize { get; set; } = false;
 		public static Database CurrentDatabase { get; set; } = new();
 		public static bool DatabaseChanged { get; set; } = false;
-		public static List<string> DatabaseFiles { get => Databases.ToList().ConvertAll(new Converter<Database, string>((db) => db.DBFile)); }
+		public static List<string> DatabaseFiles { get => Databases.ToList().ConvertAll(new Converter<Database, string>(db => db.DBFile)); }
 		public static ObservableCollection<Database> Databases { get; set; } = [];
 		public static string DefaultDatabase { get; } = "New";
 		public static string DocumentsFolder { get; } = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Sylver Ink");
@@ -60,10 +60,10 @@ namespace SylverInk
 			if ((db.Name ?? string.Empty).Equals(string.Empty))
 				db.Name = DefaultDatabase;
 
-			if (tabs.Where((item) => item.Header.Equals(db.Name)).Any())
+			if (tabs.Where(item => item.Header.Equals(db.Name)).Any())
 			{
 				var index = 1;
-				while (tabs.Where((item) => item.Header.Equals($"{db.Name} ({index})")).Any())
+				while (tabs.Where(item => item.Header.Equals($"{db.Name} ({index})")).Any())
 					index++;
 				db.Name = $"{db.Name} ({index})";
 			}
@@ -72,18 +72,13 @@ namespace SylverInk
 				db.DBFile = GetDatabasePath(db);
 
 			var _name = db.Name ?? string.Empty;
-			var dbHeaderLength = _name.Length > 12 ? 9 : _name.Length;
-			var dbHeader = _name[..dbHeaderLength];
-			if (_name.Length > 12)
-				dbHeader += "...";
 
 			TabItem item = new()
 			{
 				Content = template.LoadContent(),
 				ContextMenu = menu,
-				Header = dbHeader,
+				Header = db.GetHeader(),
 				Tag = db,
-				ToolTip = db.Name,
 			};
 
 			item.MouseRightButtonDown += (_, _) => control.SelectedItem = item;
@@ -176,7 +171,7 @@ namespace SylverInk
 				{
 					SpinWait.SpinUntil(() => RecentBox?.IsMeasureValid ?? true, 1000);
 					WindowHeight = RecentBox?.ActualHeight ?? Application.Current.MainWindow.ActualHeight - 225;
-					WindowWidth = RecentBox?.ActualWidth ?? Application.Current.MainWindow.ActualHeight - 100;
+					WindowWidth = RecentBox?.ActualWidth ?? Application.Current.MainWindow.ActualWidth - 75;
 
 					SpinWait.SpinUntil(() => !UpdateTask?.IsBusy ?? true, 200);
 					if (UpdateTask?.IsBusy ?? false)
@@ -233,7 +228,7 @@ namespace SylverInk
 
 		public static string GetDatabasePath(Database db) => Path.Join(DocumentsSubfolders["Databases"], db.Name, $"{db.Name}.sidb");
 
-		public static string GetRibbonHeader(int recordIndex)
+		public static Label GetRibbonHeader(int recordIndex)
 		{
 			string content = string.Empty;
 			var record = CurrentDatabase.Controller.GetRecord(recordIndex);
@@ -253,10 +248,16 @@ namespace SylverInk
 					break;
 			}
 
+			var headerContent = content;
 			if (content.Length > 13)
-				content = content[..10] + "...";
+				content = $"{content[..10]}...";
 
-			return content;
+			return new()
+			{
+				Content = headerContent,
+				Margin = new(0),
+				ToolTip = content,
+			};
 		}
 
 		public static string GetRibbonTooltip(int recordIndex)
@@ -298,13 +299,13 @@ namespace SylverInk
 
 		public static double MeasureTextSize(string text)
 		{
-			FormattedText ft = new(text, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, Settings.MainTypeFace, Settings.MainFontSize, Brushes.Black, PPD);
+			FormattedText ft = new(text, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, Settings.MainTypeFace, Settings.MainFontSize * 4.0 / 3.0, Brushes.Black, PPD);
 			return ft.Width;
 		}
 
 		private static double MeasureTextHeight(string text)
 		{
-			FormattedText ft = new(text, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, Settings.MainTypeFace, Settings.MainFontSize, Brushes.Black, PPD);
+			FormattedText ft = new(text, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, Settings.MainTypeFace, Settings.MainFontSize * 4.0 / 3.0, Brushes.Black, PPD);
 			return ft.Height;
 		}
 
@@ -392,10 +393,11 @@ namespace SylverInk
 			while (RecentEntries < CurrentDatabase.Controller.RecordCount && TextHeight < WindowHeight - 25.0)
 			{
 				var record = CurrentDatabase.Controller.GetRecord(RecentEntries);
-				record.Preview = $"{Math.Floor(WindowWidth - 50.0)}";
+				record.Preview = $"{WindowWidth}";
 
 				RecentEntries++;
-				TextHeight += MeasureTextHeight(record.Preview) * 1.3333;
+				var height = MeasureTextHeight(record.Preview);
+				TextHeight += Math.Ceiling(height);
 			}
 
 			CurrentDatabase.Controller.Sort();

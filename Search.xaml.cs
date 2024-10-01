@@ -53,7 +53,7 @@ namespace SylverInk
 			else
 				index = _recentSelection.Index;
 
-			Common.Settings.SearchResults.RemoveAt(Common.Settings.SearchResults.ToList().FindIndex((result) => result.Index == index));
+			Common.Settings.SearchResults.RemoveAt(Common.Settings.SearchResults.ToList().FindIndex(result => result.Index == index));
 			Common.CurrentDatabase.Controller.DeleteRecord(index);
 			Results.Items.Refresh();
 		}

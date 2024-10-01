@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using System.IO;
+using System.Windows.Controls;
 
 namespace SylverInk
 {
@@ -33,6 +34,20 @@ namespace SylverInk
 
 			db.Load(dbFile);
 			Common.AddDatabase(db);
+		}
+
+		public Label GetHeader()
+		{
+			var headerContent = Name;
+			if (headerContent?.Length > 12)
+				headerContent = $"{headerContent[..10]}...";
+
+			return new()
+			{
+				Content = headerContent,
+				Margin = new(0),
+				ToolTip = Name,
+			};
 		}
 
 		public void Load(string dbFile)

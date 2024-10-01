@@ -256,7 +256,7 @@ namespace SylverInk
 						continue;
 
 					SolidColorBrush brushCopy = new(brush.Color);
-					brushCopy.SetValue(TagProperty, UppercaseLetters().Replace(property.Name, new MatchEvaluator((match) => " " + match.Value)).Trim());
+					brushCopy.SetValue(TagProperty, UppercaseLetters().Replace(property.Name, new MatchEvaluator(match => " " + match.Value)).Trim());
 					AvailableBrushes.Add(brushCopy);
 				}
 
@@ -264,7 +264,7 @@ namespace SylverInk
 				{
 					var HSV1 = HSVFromRGB(brush1);
 					var HSV2 = HSVFromRGB(brush2);
-					return HSV1 > HSV2 ? 1 : (HSV1 < HSV2 ? -1 : 0);
+					return HSV1.CompareTo(HSV2);
 				}));
 			}
 

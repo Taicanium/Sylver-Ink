@@ -83,10 +83,10 @@ namespace SylverInk
 			return record.Index;
 		}
 
-		public int CreateRecord(string entry, bool dummy = false)
+		public int CreateRecord(string entry)
 		{
 			int Index = NextIndex;
-			Records.Add(new(Index, entry, dummy ? DateTime.UtcNow.AddMinutes(new Random().NextDouble() * 129600.0 - 139681.0).ToBinary() : -1));
+			Records.Add(new(Index, entry));
 			Changed = true;
 			return Index;
 		}
@@ -118,7 +118,7 @@ namespace SylverInk
 
 		public void DeleteRecord(int index)
 		{
-			var recordIndex = Records.FindIndex(new((record) => record.Index == index));
+			var recordIndex = Records.FindIndex(new(record => record.Index == index));
 			Records[recordIndex].Delete();
 			Records.RemoveAt(recordIndex);
 
