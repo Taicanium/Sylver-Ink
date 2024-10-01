@@ -38,6 +38,6 @@ The Settings window provides options for customizing the user's experience; plac
 
 ## Contributions
 
-- Taica (code base, frontend design)
+- [Taica](https://github.com/taicanium/) (code base, frontend design)
 - N. Hunter (backend debugging and testing)
-- M. Farber (therapy)
+- [Miles Farber](https://github.com/milesfarber/) (therapy)
