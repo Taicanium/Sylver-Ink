@@ -57,7 +57,7 @@ namespace SylverInk
 
 			Label revisionLabel = new()
 			{
-				Content = "Entry last modified: " + Common.CurrentDatabase.Controller.GetRecord(ResultRecord).GetLastChange(),
+				Content = "Entry last modified: " + Common.CurrentDatabase.GetRecord(ResultRecord).GetLastChange(),
 				FontStyle = FontStyles.Italic,
 				HorizontalAlignment = HorizontalAlignment.Right,
 				Margin = new(0.0, 0.0, 10.0, 0.0),
@@ -107,14 +107,17 @@ namespace SylverInk
 			Button saveButton = new() { Content = "Save" };
 
 			nextButton.IsEnabled = false;
-			previousButton.IsEnabled = Common.CurrentDatabase.Controller.GetRecord(ResultRecord).GetNumRevisions() > 0;
+			previousButton.IsEnabled = Common.CurrentDatabase.GetRecord(ResultRecord).GetNumRevisions() > 0;
 			saveButton.IsEnabled = false;
 
-			noteBox.TextChanged += (sender, _) =>
+			noteBox.TextChanged += (sender, e) =>
 			{
+				var changes = e.Changes.GetEnumerator();
+				changes.MoveNext();
+				var index = changes.Current.Offset;
 				var senderObject = (TextBox)sender;
 				var tag = ((uint, int))senderObject.Tag;
-				var record = Common.CurrentDatabase.Controller.GetRecord(tag.Item2);
+				var record = Common.CurrentDatabase.GetRecord(tag.Item2);
 				saveButton.IsEnabled = !senderObject.Text.Equals(record.ToString());
 			};
 
@@ -123,7 +126,7 @@ namespace SylverInk
 				var senderObject = (Button)sender;
 				var tabPanel = Common.GetChildPanel("DatabasesPanel");
 				var tag = ((uint, int))noteBox.Tag;
-				var record = Common.CurrentDatabase.Controller.GetRecord(tag.Item2);
+				var record = Common.CurrentDatabase.GetRecord(tag.Item2);
 				string revisionTime = record.GetCreated();
 
 				tag.Item1 -= 1U;
@@ -148,7 +151,7 @@ namespace SylverInk
 				var senderObject = (Button)sender;
 				var tabPanel = Common.GetChildPanel("DatabasesPanel");
 				var tag = ((uint, int))noteBox.Tag;
-				var record = Common.CurrentDatabase.Controller.GetRecord(tag.Item2);
+				var record = Common.CurrentDatabase.GetRecord(tag.Item2);
 				string revisionTime = record.GetLastChange();
 
 				tag.Item1 += 1U;
@@ -182,7 +185,7 @@ namespace SylverInk
 						case MessageBoxResult.Cancel:
 							return;
 						case MessageBoxResult.Yes:
-							Common.CurrentDatabase.Controller.CreateRevision(tag.Item2, noteBox.Text);
+							Common.CurrentDatabase.CreateRevision(tag.Item2, noteBox.Text);
 							Common.DeferUpdateRecentNotes();
 							break;
 					}
@@ -202,7 +205,7 @@ namespace SylverInk
 				if (MessageBox.Show("Are you sure you want to permanently delete this note?", "Sylver Ink: Notification", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.No)
 					return;
 
-				Common.CurrentDatabase.Controller.DeleteRecord(tag.Item2);
+				Common.CurrentDatabase.DeleteRecord(tag.Item2);
 				Common.DeferUpdateRecentNotes();
 			};
 
@@ -211,14 +214,14 @@ namespace SylverInk
 				var senderObject = (Button)sender;
 				var tag = ((uint, int))noteBox.Tag;
 
-				Common.CurrentDatabase.Controller.CreateRevision(tag.Item2, noteBox.Text);
+				Common.CurrentDatabase.CreateRevision(tag.Item2, noteBox.Text);
 				Common.DeferUpdateRecentNotes();
 
 				noteBox.Tag = (0U, tag.Item2);
 				noteBox.IsEnabled = true;
 				previousButton.IsEnabled = true;
 				nextButton.IsEnabled = false;
-				revisionLabel.Content = "Entry last modified: " + Common.CurrentDatabase.Controller.GetRecord(tag.Item2).GetLastChange();
+				revisionLabel.Content = "Entry last modified: " + Common.CurrentDatabase.GetRecord(tag.Item2).GetLastChange();
 				senderObject.IsEnabled = false;
 			};
 
@@ -312,9 +315,9 @@ namespace SylverInk
 
 		private void Result_Loaded(object sender, RoutedEventArgs e)
 		{
-			LastChangedLabel.Content = "Last modified: " + Common.CurrentDatabase.Controller.GetRecord(ResultRecord).GetLastChange();
+			LastChangedLabel.Content = "Last modified: " + Common.CurrentDatabase.GetRecord(ResultRecord).GetLastChange();
 			if (ResultText.Equals(string.Empty))
-				ResultText = Common.CurrentDatabase.Controller.GetRecord(ResultRecord).ToString();
+				ResultText = Common.CurrentDatabase.GetRecord(ResultRecord).ToString();
 			ResultBlock.Text = ResultText;
 			Edited = false;
 
@@ -332,7 +335,7 @@ namespace SylverInk
 		{
 			var senderObject = sender as TextBox;
 			ResultText = senderObject?.Text ?? string.Empty;
-			Edited = !ResultText.Equals(Common.CurrentDatabase.Controller.GetRecord(ResultRecord).ToString());
+			Edited = !ResultText.Equals(Common.CurrentDatabase.GetRecord(ResultRecord).ToString());
 		}
 
 		private void SaveClick(object sender, RoutedEventArgs e)
@@ -345,8 +348,8 @@ namespace SylverInk
 
 		private void SaveRecord()
 		{
-			Common.CurrentDatabase.Controller.CreateRevision(ResultRecord, ResultText);
-			LastChangedLabel.Content = "Last modified: " + Common.CurrentDatabase.Controller.GetRecord(ResultRecord).GetLastChange();
+			Common.CurrentDatabase.CreateRevision(ResultRecord, ResultText);
+			LastChangedLabel.Content = "Last modified: " + Common.CurrentDatabase.GetRecord(ResultRecord).GetLastChange();
 		}
 
 		private Point Snap(ref Point Coords)

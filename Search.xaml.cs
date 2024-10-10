@@ -54,7 +54,7 @@ namespace SylverInk
 				index = _recentSelection.Index;
 
 			Common.Settings.SearchResults.RemoveAt(Common.Settings.SearchResults.ToList().FindIndex(result => result.Index == index));
-			Common.CurrentDatabase.Controller.DeleteRecord(index);
+			Common.CurrentDatabase.DeleteRecord(index);
 			Results.Items.Refresh();
 		}
 
@@ -76,12 +76,16 @@ namespace SylverInk
 
 		private void PerformSearch(object? sender, DoWorkEventArgs e)
 		{
-			Common.CurrentDatabase.Controller.UpdateWordPercentages();
+			Common.CurrentDatabase.UpdateWordPercentages();
 
-			for (int i = 0; i < Common.CurrentDatabase.Controller.RecordCount; i++)
+			for (int i = 0; i < Common.CurrentDatabase.RecordCount; i++)
 			{
-				var newRecord = Common.CurrentDatabase.Controller.GetRecord(i);
-				if (!newRecord.ToString().Contains(_query, StringComparison.OrdinalIgnoreCase))
+				var newRecord = Common.CurrentDatabase.GetRecord(i);
+				
+				if (newRecord is null)
+					continue;
+
+				if (!newRecord.ToString().Contains(_query, StringComparison.OrdinalIgnoreCase) is true)
 					continue;
 
 				newRecord.Preview = _width;

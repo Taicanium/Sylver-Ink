@@ -36,7 +36,7 @@ namespace SylverInk
 				MeasureTask.DoWork += (_, _) => MeasureNotes();
 				MeasureTask.RunWorkerCompleted += (_, _) =>
 				{
-					Common.Settings.ImportData = $"Estimated new notes: {RunningCount}\nAverage length of new notes: {RunningAverage:N0} characters\n\nRemember to press Import to finalize your changes!";
+					Common.Settings.ImportData = $"Estimated new notes: {RunningCount}\nAverage length: {RunningAverage:N0} characters per note\n\nRemember to press Import to finalize your changes!";
 					((Button)FindName("DoImport")).Content = "Import";
 					((Button)FindName("LTLess")).IsEnabled = true;
 					((Button)FindName("LTMore")).IsEnabled = true;
@@ -126,19 +126,14 @@ namespace SylverInk
 
 				while (fileStream?.EndOfStream is false)
 				{
-					string line = fileStream?.ReadLine()?.Trim() ?? string.Empty;
+					string line = fileStream?.ReadLine() ?? string.Empty;
 					DataLines.Add(line);
+					recordData += line + "\r\n";
 
-					if (line.Length == 0)
-					{
-						recordData += "\r\n";
+					if (line.Trim().Length == 0)
 						blankCount++;
-					}
 					else
-					{
-						recordData += line + "\r\n";
 						blankCount = 0;
-					}
 
 					if (recordData.Length > 0 && (blankCount >= Common.Settings.LineTolerance || fileStream?.EndOfStream is true))
 					{
@@ -173,18 +168,18 @@ namespace SylverInk
 				if (result == MessageBoxResult.Yes)
 				{
 					Common.CurrentDatabase.MakeBackup(true);
-					Common.CurrentDatabase.Controller.EraseDatabase();
+					Common.CurrentDatabase.Erase();
 				}
 
-				if (!Common.CurrentDatabase.Controller.Open(Target))
+				if (!Common.CurrentDatabase.Open(Target))
 				{
 					MessageBox.Show($"Failed to import the selected file.", "Sylver Ink: Error", MessageBoxButton.OK);
 					return;
 				}
 
-				Common.CurrentDatabase.Controller.InitializeRecords(false);
+				Common.CurrentDatabase.Initialize(false);
 
-				Imported = Common.CurrentDatabase.Controller.RecordCount;
+				Imported = Common.CurrentDatabase.RecordCount;
 				FinishImport(sender, null);
 
 				return;
@@ -202,21 +197,16 @@ namespace SylverInk
 			for (int i = 0; i < DataLines.Count; i++)
 			{
 				string line = DataLines[i];
+				recordData += line + "\r\n";
 
 				if (line.Length == 0)
-				{
-					recordData += "\r\n";
 					blankCount++;
-				}
 				else
-				{
-					recordData += line + "\r\n";
 					blankCount = 0;
-				}
 
 				if (recordData.Length > 0 && (blankCount >= Common.Settings.LineTolerance || i >= DataLines.Count - 1))
 				{
-					Common.CurrentDatabase.Controller.CreateRecord(recordData);
+					Common.CurrentDatabase.CreateRecord(recordData);
 					Imported++;
 					recordData = string.Empty;
 					blankCount = 0;

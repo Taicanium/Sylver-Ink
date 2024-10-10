@@ -58,7 +58,7 @@ namespace SylverInk
 		{
 			ReloadSerializer();
 
-			if (!_serializer?.OpenRead($"{dbFile}") is true)
+			if (!File.Exists(dbFile) || _serializer?.OpenRead(dbFile) is true)
 			{
 				string backup = FindBackup(dbFile);
 				if (!backup.Equals(string.Empty))
@@ -145,8 +145,14 @@ namespace SylverInk
 			Changed = true;
 		}
 
-		private void DeserializeRecords()
+		public void DeserializeRecords(List<byte>? inMemory = null)
 		{
+			if (_serializer is null)
+				ReloadSerializer();
+
+			if (inMemory is not null)
+				_serializer?.OpenRead(string.Empty, inMemory);
+
 			if (!_serializer?.Headless is true)
 			{
 				string? _name = string.Empty;
@@ -189,7 +195,8 @@ namespace SylverInk
 
 		public string? GetDatabaseName() => Name;
 
-		public NoteRecord GetRecord(int RecordIndex) => Records[RecordIndex];
+		public NoteRecord GetRecord(int RecordIndex) => RecordIndex < Records.Count ? Records[RecordIndex] : new();
+
 		public Serializer GetSerializer()
 		{
 			_serializer ??= new();
@@ -231,7 +238,7 @@ namespace SylverInk
 			return _serializer.OpenRead(path);
 		}
 
-		private void PropagateIndices()
+		public void PropagateIndices()
 		{
 			for (int i = 0; i < RecordCount; i++)
 				Records[i].OverwriteIndex(i);
@@ -244,11 +251,11 @@ namespace SylverInk
 			_serializer?.Close();
 			_serializer = new()
 			{
-				DatabaseFormat = 4
+				DatabaseFormat = 6
 			};
 
-			if (!TestCanCompress())
-				_serializer.DatabaseFormat = 3;
+			if (_canCompress == -1 || (_canCompress == 0 && !TestCanCompress()))
+				_serializer.DatabaseFormat = 5;
 		}
 
 		public (int, int) Replace(string oldText, string newText)
@@ -300,9 +307,15 @@ namespace SylverInk
 			Common.DeferUpdateRecentNotes();
 		}
 
-		public void SerializeRecords()
+		public List<byte>? SerializeRecords(bool inMemory = false)
 		{
 			PropagateIndices();
+
+			if (inMemory)
+			{
+				ReloadSerializer();
+				_serializer?.OpenWrite(string.Empty, true);
+			}
 
 			if (!_serializer?.Headless is true)
 				_serializer?.WriteString(Name);
@@ -312,8 +325,12 @@ namespace SylverInk
 				Records[i].Serialize(_serializer);
 			_serializer?.WriteString(Name);
 
+			if (inMemory)
+				return _serializer?.GetStream();
+
 			Changed = false;
 			ReloadSerializer();
+			return null;
 		}
 
 		public void Sort(SortType type = SortType.ByIndex)

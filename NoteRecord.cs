@@ -4,11 +4,11 @@ using System.Text.RegularExpressions;
 
 namespace SylverInk
 {
-	public struct NoteRevision
+	public struct NoteRevision(long _created = -1, int _startIndex = -1, string? _substring = null)
 	{
-		public long _created;
-		public int _startIndex;
-		public string? _substring;
+		public long _created = _created;
+		public int _startIndex = _startIndex;
+		public string? _substring = _substring;
 	}
 
 	public partial class NoteRecord
@@ -27,6 +27,7 @@ namespace SylverInk
 
 		public int Index = -1;
 		public int LastMatchCount { get; private set; } = 0;
+		public string? UUID;
 
 		public string Preview
 		{
@@ -85,15 +86,17 @@ namespace SylverInk
 			Initial = string.Empty;
 			LastChange = Created;
 			LastChangeObject = DateTime.FromBinary(LastChange);
+			UUID = Common.MakeUUID();
 		}
 
-		public NoteRecord(int Index, string Initial, long Created = -1)
+		public NoteRecord(int Index, string Initial, long Created = -1, string? UUID = null)
 		{
 			this.Created = Created == -1 ? DateTime.UtcNow.ToBinary() : Created;
 			this.Index = Index;
 			this.Initial = Initial;
 			LastChange = this.Created;
 			LastChangeObject = DateTime.FromBinary(LastChange);
+			this.UUID = UUID ?? Common.MakeUUID();
 		}
 
 		public void Add(NoteRevision _revision)
@@ -136,6 +139,8 @@ namespace SylverInk
 
 		public NoteRecord Deserialize(Serializer? _serializer)
 		{
+			if (_serializer?.DatabaseFormat >= 5)
+				_serializer?.ReadString(ref UUID);
 			_serializer?.ReadLong(ref Created);
 			_serializer?.ReadInt32(ref Index);
 			_serializer?.ReadString(ref Initial);
@@ -153,6 +158,17 @@ namespace SylverInk
 			}
 
 			return this;
+		}
+
+		public override bool Equals(object? obj)
+		{
+			if (!GetType().Equals(obj?.GetType()))
+				return false;
+
+			var recordObj = (NoteRecord?)obj;
+			return base.Equals(obj) ||
+				(UUID?.Equals(recordObj?.UUID) is true) ||
+				(Created.Equals(recordObj?.Created) && Index.Equals(recordObj?.Index) && Initial?.Equals(recordObj?.Initial) is true && LastChange.Equals(recordObj?.LastChange));
 		}
 
 		private int ExtractTags()
@@ -173,10 +189,10 @@ namespace SylverInk
 					if (Tags.Contains(val))
 						continue;
 
-					if (!Common.CurrentDatabase.Controller.WordPercentages.ContainsKey(val))
+					if (!Common.CurrentDatabase.WordPercentages.ContainsKey(val))
 						continue;
 
-					if (Common.CurrentDatabase.Controller.WordPercentages[val] < Math.Max(0.2, 100.0 - Common.CurrentDatabase.Controller.WordPercentages.Count))
+					if (Common.CurrentDatabase.WordPercentages[val] < Math.Max(0.2, 100.0 - Common.CurrentDatabase.WordPercentages.Count))
 						Tags.Add(val);
 				}
 			}
@@ -188,6 +204,8 @@ namespace SylverInk
 		public string GetCreated() => GetCreatedObject().ToString("yyyy-MM-dd HH:mm:ss");
 
 		public DateTime GetCreatedObject() => DateTime.FromBinary(Created);
+
+		public override int GetHashCode() => int.Parse((UUID ??= Common.MakeUUID())[^4..], System.Globalization.NumberStyles.HexNumber);
 
 		public DateTime GetLastChangeObject() => DateTime.FromBinary(LastChange);
 
@@ -217,6 +235,11 @@ namespace SylverInk
 
 		public void OverwriteIndex(int Index) => this.Index = Index;
 
+		/// <summary>
+		/// <para>Reverts this record to a previous state by applying each of its stored revisions while leaving a requested count undone, specified by <paramref name="backsteps"/>.</para>
+		/// </summary>
+		/// <param name="backsteps">The number of revisions to undo, or 0 for the current state of the record.</param>
+		/// <returns>The text of this record after undoing the requested number of revisions.</returns>
 		public string Reconstruct(uint backsteps = 0U)
 		{
 			Latest = Initial ?? string.Empty;
@@ -227,6 +250,7 @@ namespace SylverInk
 			{
 				if (Revisions[i]._startIndex > -1 && Revisions[i]._startIndex < Latest?.Length)
 					Latest = Latest.Remove(Revisions[i]._startIndex);
+
 				Latest += Revisions[i]._substring;
 			}
 
@@ -235,6 +259,8 @@ namespace SylverInk
 
 		public void Serialize(Serializer? _serializer)
 		{
+			if (_serializer?.DatabaseFormat >= 5)
+				_serializer?.WriteString(UUID);
 			_serializer?.WriteLong(Created);
 			_serializer?.WriteInt32(Index);
 			_serializer?.WriteString(Initial);

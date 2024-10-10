@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace SylverInk
@@ -15,32 +16,9 @@ namespace SylverInk
 		private bool _writing = false;
 
 		/// <summary>
-		/// <para>
-		/// Format 1: Uncompressed Headless.
-		/// Data is serialized to plaintext.
-		/// Four bytes are written indicating the object's length in string format, followed by that formatted string.
-		/// </para>
-		/// <para>
-		/// Format 2: LZW Restricted Headless.
-		/// Data is compressed using the Lempel–Ziv–Welch (LZW) algorithm.
-		/// The LZW bit stream is formatted with a code dictionary at most 25 bits wide, yielding a length at most 2^25, or ~33.5 million.
-		/// The dictionary is not reset when its width limit is reached. This results in exponential resource usage with increasing database size, eventually becoming prohibitive.
-		/// </para>
-		/// <para>
-		/// Format 3: Uncompressed.
-		/// Data is uncompressed, with the added feature of a database name/title at the start of data.
-		/// </para>
-		/// <para>
-		/// Format 4: LZW Restricted.
-		/// Data is compressed according to format 2, with the added feature of a database name/title at the start of data.
-		/// </para>
-		/// <para>
-		/// Format 5: LZW Unrestricted.
-		/// Not yet implemented.
-		/// When implemented, this format will compress data with an LZW dictionary that resets once its width limit is reached, preventing runaway resource usage and allowing for much larger databases.
-		/// </para>
+		/// See SIDB.md for a file format description.
 		/// </summary>
-		public byte DatabaseFormat { get; set; } = 4;
+		public byte DatabaseFormat { get; set; } = 6;
 		public bool Headless { get; private set; } = false;
 		public bool UseLZW { get; private set; } = false;
 
@@ -52,7 +30,7 @@ namespace SylverInk
 			_isOpen = true;
 			_writing = true;
 
-			WriteHeader(4);
+			WriteHeader(6);
 		}
 
 		public void ClearCompressionTest()
@@ -97,6 +75,19 @@ namespace SylverInk
 			ReadHeader();
 		}
 
+		// WARNING: If writing, do not call until we're done.
+		// It clears the LZW compression data.
+		public List<byte> GetStream()
+		{
+			if (_writing)
+			{
+				_lzw.Close();
+				_outgoing = _lzw.Outgoing;
+			}
+			var _memoryStream = _fileStream as MemoryStream;
+			return _memoryStream?.ToArray().Concat(_outgoing).ToList() ?? [];
+		}
+
 		private void HandleFormat(int format = 0)
 		{
 			format = format < 1 ? DatabaseFormat : format;
@@ -111,10 +102,12 @@ namespace SylverInk
 					UseLZW = true;
 					break;
 				case 3:
+				case 5:
 					Headless = false;
 					UseLZW = false;
 					break;
 				case 4:
+				case 6:
 					Headless = false;
 					UseLZW = true;
 					break;
@@ -127,13 +120,17 @@ namespace SylverInk
 			}
 		}
 
-		public bool OpenRead(string path)
+		public bool OpenRead(string path, List<byte>? inMemory = null)
 		{
 			Close();
 
 			try
 			{
-				_fileStream = new FileStream(path, FileMode.Open);
+				if (inMemory is null)
+					_fileStream = new FileStream(path, FileMode.Open);
+				else
+					_fileStream = new MemoryStream(inMemory?.ToArray() ?? []);
+
 				_isOpen = true;
 				_writing = false;
 
@@ -147,16 +144,22 @@ namespace SylverInk
 			return true;
 		}
 
-		public bool OpenWrite(string path)
+		public bool OpenWrite(string path, bool inMemory = false)
 		{
 			Close();
 
 			try
 			{
-				if (File.Exists(path))
-					File.Delete(path);
+				if (inMemory)
+					_fileStream = new MemoryStream();
+				else
+				{
+					if (File.Exists(path))
+						File.Delete(path);
 
-				_fileStream = new FileStream(path, FileMode.Create);
+					_fileStream = new FileStream(path, FileMode.Create);
+				}
+
 				_isOpen = true;
 				_writing = true;
 

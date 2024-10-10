@@ -119,7 +119,7 @@ namespace SylverInk
 			if (MessageBox.Show("Are you sure you want to erase your notes and create a new database?", "Sylver Ink: Warning", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.No)
 				return;
 
-			Common.CurrentDatabase.Controller.EraseDatabase();
+			Common.CurrentDatabase.Erase();
 		}
 
 		private void FontSizeChanged(object sender, RoutedEventArgs e)
@@ -218,7 +218,7 @@ namespace SylverInk
 			DateTime reversion = ReversionDate?.SelectedDate ?? DateTime.Now;
 			reversion = reversion.Date.AddHours(hourValue).AddMinutes(minuteValue);
 
-			Common.CurrentDatabase.Controller.Revert(reversion);
+			Common.CurrentDatabase.Revert(reversion);
 		}
 
 		private void SelectedDateChanged(object sender, SelectionChangedEventArgs e)

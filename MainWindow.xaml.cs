@@ -25,6 +25,12 @@ namespace SylverInk
 			DataContext = Common.Settings;
 		}
 
+		private void AddressKeyDown(object sender, KeyEventArgs e)
+		{
+			if (e.Key == Key.Enter)
+				ConnectAddress.IsOpen = false;
+		}
+
 		private void Button_Click(object sender, RoutedEventArgs e)
 		{
 			var senderObject = (Button)sender;
@@ -54,15 +60,26 @@ namespace SylverInk
 			}
 		}
 
-		private void DatabaseBackup(object sender, RoutedEventArgs e)
+		private void CodePopupClosed(object sender, EventArgs e) => Clipboard.SetText(CodeBox.Text);
+
+		private void CopyCode(object sender, RoutedEventArgs e)
 		{
-			Common.CurrentDatabase.MakeBackup();
+			Clipboard.SetData(DataFormats.UnicodeText, CodeBox.Text);
+			CodePopup.IsOpen = false;
 		}
+
+		private void DatabaseBackup(object sender, RoutedEventArgs e) => Common.CurrentDatabase.MakeBackup();
 
 		private void DatabaseClose(object sender, RoutedEventArgs e)
 		{
 			Common.RemoveDatabase(Common.CurrentDatabase);
 			Common.DeferUpdateRecentNotes();
+		}
+
+		private void DatabaseConnect(object sender, RoutedEventArgs e)
+		{
+			ConnectAddress.IsOpen = true;
+			AddressBox.Text = string.Empty;
 		}
 
 		private void DatabaseCreate(object sender, RoutedEventArgs e)
@@ -87,6 +104,8 @@ namespace SylverInk
 			Common.RemoveDatabase(Common.CurrentDatabase);
 			Common.DeferUpdateRecentNotes();
 		}
+
+		private void DatabaseDisconnect(object sender, RoutedEventArgs e) => Common.RemoveDatabase(Common.CurrentDatabase);
 
 		private void DatabaseOpen(object sender, RoutedEventArgs e)
 		{
@@ -129,10 +148,11 @@ namespace SylverInk
 				Common.CurrentDatabase.DBFile = newPath;
 		}
 
-		private void DatabaseSaveLocal(object sender, RoutedEventArgs e)
-		{
-			Common.CurrentDatabase.DBFile = Path.Join(Common.DocumentsSubfolders["Databases"], Path.GetFileNameWithoutExtension(Common.CurrentDatabase.DBFile), Path.GetFileName(Common.CurrentDatabase.DBFile));
-		}
+		private void DatabaseSaveLocal(object sender, RoutedEventArgs e) => Common.CurrentDatabase.DBFile = Path.Join(Common.DocumentsSubfolders["Databases"], Path.GetFileNameWithoutExtension(Common.CurrentDatabase.DBFile), Path.GetFileName(Common.CurrentDatabase.DBFile));
+
+		private void DatabaseServe(object sender, RoutedEventArgs e) => Common.CurrentDatabase.Server?.Serve(0);
+
+		private void DatabaseUnserve(object sender, RoutedEventArgs e) => Common.CurrentDatabase.Server?.Close();
 
 		private void Drag(object sender, MouseButtonEventArgs e) => DragMove();
 
@@ -141,12 +161,10 @@ namespace SylverInk
 			CloseOnce = false;
 			Common.DatabaseChanged = false;
 			MainGrid.IsEnabled = true;
+			SaveUserSettings();
 
 			if (Common.ForceClose)
-			{
-				SaveUserSettings();
 				Application.Current.Shutdown();
-			}
 		}
 
 		private static void LoadUserSettings()
@@ -281,7 +299,7 @@ namespace SylverInk
 			if (e.Key == Key.Enter)
 			{
 				var box = (TextBox)sender;
-				Common.CurrentDatabase.Controller.CreateRecord(box.Text);
+				Common.CurrentDatabase.CreateRecord(box.Text);
 				Common.DeferUpdateRecentNotes();
 				box.Text = string.Empty;
 			}
@@ -295,10 +313,10 @@ namespace SylverInk
 			if (menu.DataContext.GetType() == typeof(NoteRecord))
 			{
 				var record = (NoteRecord)menu.DataContext;
-				Common.CurrentDatabase.Controller.DeleteRecord(record.Index);
+				Common.CurrentDatabase.DeleteRecord(record.Index);
 			}
 			else
-				Common.CurrentDatabase.Controller.DeleteRecord(RecentSelection.Index);
+				Common.CurrentDatabase.DeleteRecord(RecentSelection.Index);
 
 			Common.DeferUpdateRecentNotes();
 		}
@@ -337,7 +355,9 @@ namespace SylverInk
 			}
 
 			Common.CurrentDatabase.Changed = true;
+			var oldName = Common.CurrentDatabase.Name;
 			Common.CurrentDatabase.Name = DatabaseNameBox.Text;
+			var overwrite = false;
 
 			var oldFile = Common.CurrentDatabase.DBFile;
 			var oldPath = Path.GetDirectoryName(oldFile);
@@ -345,24 +365,67 @@ namespace SylverInk
 			var newFile = Common.CurrentDatabase.DBFile;
 			var newPath = Path.GetDirectoryName(newFile);
 
+			var currentTab = (TabItem)DatabasesPanel.SelectedItem;
+			currentTab.Header = Common.CurrentDatabase.GetHeader();
+
+			if (!File.Exists(oldFile))
+				return;
+
+			if (!Directory.Exists(oldPath))
+				return;
+
 			var directorySearch = Directory.GetDirectories(Common.DocumentsSubfolders["Databases"], "*", new EnumerationOptions() { IgnoreInaccessible = true, RecurseSubdirectories = true, MaxRecursionDepth = 3 });
 			if (oldPath is not null && newPath is not null && directorySearch.Contains(oldPath))
-				Directory.Move(oldPath, newPath);
+			{
+				if (Directory.Exists(newPath))
+				{
+					if (MessageBox.Show($"A database with that name already exists in {newPath}.\n\nDo you want to overwrite it?", "Sylver Ink: Warning", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.No)
+					{
+						Common.CurrentDatabase.DBFile = oldFile;
+						Common.CurrentDatabase.Name = oldName;
+						return;
+					}
+					Directory.Delete(newPath, true);
+					overwrite = true;
+				}	
+				else
+					Directory.Move(oldPath, newPath);
+			}
 
 			var adjustedPath = Path.Join(Path.GetDirectoryName(newFile), Path.GetFileName(oldFile));
 
 			if (File.Exists(adjustedPath))
+			{
+				if (File.Exists(newFile) && !overwrite)
+				{
+					if (MessageBox.Show($"A database with that name already exists at {newFile}.\n\nDo you want to overwrite it?", "Sylver Ink: Warning", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.No)
+					{
+						Common.CurrentDatabase.DBFile = oldFile;
+						Common.CurrentDatabase.Name = oldName;
+						return;
+					}
+					overwrite = true;
+				}
+				if (File.Exists(newFile) && overwrite)
+					File.Delete(newFile);
 				File.Move(adjustedPath, newFile);
-
-			var currentTab = (TabItem)DatabasesPanel.SelectedItem;
-			currentTab.Header = Common.CurrentDatabase.Name;
-			currentTab.ToolTip = Common.CurrentDatabase.Name;
+			}
 		}
 
 		private void RenameKeyDown(object sender, KeyEventArgs e)
 		{
 			if (e.Key == Key.Enter)
 				RenameDatabase.IsOpen = false;
+		}
+
+		private void SaveAddress(object sender, RoutedEventArgs e)
+		{
+			ConnectAddress.IsOpen = false;
+
+			var addr = AddressBox.Text;
+			BackgroundWorker worker = new();
+			worker.DoWork += (_, _) => Common.CurrentDatabase.Client?.Connect(addr);
+			worker.RunWorkerAsync();
 		}
 
 		private void SaveDatabases(object? sender, DoWorkEventArgs e)
@@ -373,10 +436,7 @@ namespace SylverInk
 			Common.ForceClose = true;
 		}
 
-		private void SaveNewName(object? sender, RoutedEventArgs e)
-		{
-			RenameDatabase.IsOpen = false;
-		}
+		private void SaveNewName(object? sender, RoutedEventArgs e) => RenameDatabase.IsOpen = false;
 
 		private static void SaveUserSettings()
 		{
@@ -441,6 +501,7 @@ namespace SylverInk
 
 				Common.CurrentDatabase = newDB;
 				Common.Settings.SearchResults.Clear();
+				Common.UpdateContextMenu();
 				Common.DeferUpdateRecentNotes(true);
 			}
 		}
