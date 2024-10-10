@@ -130,10 +130,7 @@ namespace SylverInk
 				};
 				return new(color);
 			}
-			catch
-			{
-				return null;
-			}
+			catch { return null; }
 		}
 
 		public static string BytesFromBrush(Brush? brush, int colors = 4)
@@ -149,8 +146,9 @@ namespace SylverInk
 			if (!CanResize)
 				return;
 
-			var RecentBox = (ListBox?)GetChildPanel("DatabasesPanel").FindName("RecentNotes");
-			var ChangesBox = (ListBox?)GetChildPanel("DatabasesPanel").FindName("ShortChanges");
+			var panel = GetChildPanel("DatabasesPanel");
+			var RecentBox = (ListBox?)panel.FindName("RecentNotes");
+			var ChangesBox = (ListBox?)panel.FindName("ShortChanges");
 
 			if ((RecentBox ?? ChangesBox) is null)
 				return;
@@ -240,45 +238,27 @@ namespace SylverInk
 		{
 			var db = (TabControl)Application.Current.MainWindow.FindName(basePanel);
 			var dbItem = (TabItem)db.SelectedItem;
-			var tabPanel = (TabControl)dbItem.Content;
-			return tabPanel;
+			return (TabControl)dbItem.Content;
 		}
 
 		public static string GetDatabasePath(Database db) => Path.Join(DocumentsSubfolders["Databases"], db.Name, $"{db.Name}.sidb");
 
 		public static Label GetRibbonHeader(int recordIndex)
 		{
-			string content = string.Empty;
-			var record = CurrentDatabase.GetRecord(recordIndex);
-			switch (RibbonTabContent)
-			{
-				case "CREATED":
-					content = record.GetCreated();
-					break;
-				case "CHANGED":
-					content = record.ShortChange;
-					break;
-				case "CONTENT":
-					content = record.Preview;
-					break;
-				case "INDEX":
-					content = $"Note #{recordIndex + 1:N0}";
-					break;
-			}
+			var tooltip = GetRibbonTooltip(recordIndex);
+			var content = tooltip;
 
-			var headerContent = content;
+			if (content.Contains('\n'))
+				content = content[..content.IndexOf('\n')];
 
-			if (headerContent.Contains('\n'))
-				headerContent = headerContent[..headerContent.IndexOf('\n')];
-
-			if (headerContent.Length >= 13)
-				headerContent = $"{headerContent[..10]}...";
+			if (content.Length >= 13)
+				content = $"{content[..10]}...";
 
 			return new()
 			{
-				Content = headerContent,
+				Content = content,
 				Margin = new(0),
-				ToolTip = content,
+				ToolTip = tooltip,
 			};
 		}
 
@@ -314,9 +294,9 @@ namespace SylverInk
 
 			var mac = binary;
 			for (int i = 2; i < 10; i++)
-				mac -= Math.Sign(mac.CompareTo(0)) * (long)Math.Floor(mac / (new Random().NextDouble() + 1.0 + (i / 10.0)));
+				mac -= Math.Sign(mac) * (long)Math.Floor(mac / (new Random().NextDouble() + 1.0 + (i / 10.0)));
 
-			var uuid = string.Format("{0:X8}-{1:X4}-{2:X4}-{3:X2}{4:X2}-{5:X12}", (binary >> 32) & 0xFFFFFFFF, (binary >> 16) & 0xFFFF, binary & 0xFFFF, nano & 0xFFF, (byte)type, mac & 0xFFFFFFFFFFFF);
+			var uuid = string.Format("{0:X8}-{1:X4}-{2:X4}-{3:X2}{4:X2}-{5:X12}", (binary >> 32) & 0xFFFFFFFF, (binary >> 16) & 0xFFFF, binary & 0xFFFF, (nano & 0x3FC) >> 2, (byte)type, mac & 0xFFFFFFFFFFFF);
 
 			return uuid;
 		}

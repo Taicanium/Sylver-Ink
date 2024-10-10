@@ -21,6 +21,7 @@
 	<PackageReadmeFile>README.md</PackageReadmeFile>
 	<Company />
 	<PackageProjectUrl>https://github.com/Taicanium/Sylver-Ink</PackageProjectUrl>
+	<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

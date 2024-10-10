@@ -40,7 +40,7 @@
 			</ContextMenu>
 
 			<DataTemplate x:Key="DatabaseContentTemplate">
-				<TabControl Background="{Binding MenuBackground}" Foreground="{Binding MenuForeground}" Margin="-3,0" SelectedIndex="0">
+				<TabControl Background="{Binding MenuBackground}" Foreground="{Binding MenuForeground}" Margin="-3,0" SelectedIndex="0" SelectionChanged="TabChanged">
 					<TabItem>
 						<TabItem.Header>
 							<Grid>

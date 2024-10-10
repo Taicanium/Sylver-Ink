@@ -93,7 +93,7 @@ namespace SylverInk
 
 		}
 
-		public async void Send(TcpClient client, Network.MessageType type = Network.MessageType.TextInsert, params byte[] data)
+		public async static void Send(TcpClient client, Network.MessageType type = Network.MessageType.TextInsert, params byte[] data)
 		{
 			if (!client.Connected)
 				return;

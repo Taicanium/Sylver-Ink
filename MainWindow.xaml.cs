@@ -180,20 +180,17 @@ namespace SylverInk
 				var keyValue = setting.Split(':', 2);
 				switch (keyValue[0])
 				{
+					case "AccentBackground":
+						Common.Settings.AccentBackground = Common.BrushFromBytes(keyValue[1]);
+						break;
+					case "AccentForeground":
+						Common.Settings.AccentForeground = Common.BrushFromBytes(keyValue[1]);
+						break;
 					case "FontFamily":
 						Common.Settings.MainFontFamily = new(keyValue[1]);
 						break;
 					case "FontSize":
 						Common.Settings.MainFontSize = double.Parse(keyValue[1]);
-						break;
-					case "SearchResultsOnTop":
-						Common.Settings.SearchResultsOnTop = bool.Parse(keyValue[1]);
-						break;
-					case "RibbonDisplayMode":
-						Common.RibbonTabContent = keyValue[1];
-						break;
-					case "RecentNotesSortMode":
-						Common.RecentEntriesSortMode = (NoteController.SortType)int.Parse(keyValue[1]);
 						break;
 					case "LastDatabases":
 						FirstRun = false;
@@ -203,23 +200,29 @@ namespace SylverInk
 						if (!files.Any())
 							Database.Create(Path.Join(Common.DocumentsSubfolders["Databases"], $"{Common.DefaultDatabase}", $"{Common.DefaultDatabase}.sidb"));
 						break;
-					case "MenuForeground":
-						Common.Settings.MenuForeground = Common.BrushFromBytes(keyValue[1]);
-						break;
-					case "MenuBackground":
-						Common.Settings.MenuBackground = Common.BrushFromBytes(keyValue[1]);
+					case "ListBackground":
+						Common.Settings.ListBackground = Common.BrushFromBytes(keyValue[1]);
 						break;
 					case "ListForeground":
 						Common.Settings.ListForeground = Common.BrushFromBytes(keyValue[1]);
 						break;
-					case "ListBackground":
-						Common.Settings.ListBackground = Common.BrushFromBytes(keyValue[1]);
+					case "MenuBackground":
+						Common.Settings.MenuBackground = Common.BrushFromBytes(keyValue[1]);
 						break;
-					case "AccentForeground":
-						Common.Settings.AccentForeground = Common.BrushFromBytes(keyValue[1]);
+					case "MenuForeground":
+						Common.Settings.MenuForeground = Common.BrushFromBytes(keyValue[1]);
 						break;
-					case "AccentBackground":
-						Common.Settings.AccentBackground = Common.BrushFromBytes(keyValue[1]);
+					case "RecentNotesSortMode":
+						Common.RecentEntriesSortMode = (NoteController.SortType)int.Parse(keyValue[1]);
+						break;
+					case "RibbonDisplayMode":
+						Common.RibbonTabContent = keyValue[1];
+						break;
+					case "SearchResultsOnTop":
+						Common.Settings.SearchResultsOnTop = bool.Parse(keyValue[1]);
+						break;
+					case "SnapSearchResults":
+						Common.Settings.SnapSearchResults = bool.Parse(keyValue[1]);
 						break;
 					default:
 						break;
@@ -443,18 +446,19 @@ namespace SylverInk
 			var files = Common.DatabaseFiles.Distinct().Where(File.Exists);
 
 			string[] settings = [
+				$"AccentBackground:{Common.BytesFromBrush(Common.Settings.AccentBackground)}",
+				$"AccentForeground:{Common.BytesFromBrush(Common.Settings.AccentForeground)}",
 				$"FontFamily:{Common.Settings.MainFontFamily?.Source}",
 				$"FontSize:{Common.Settings.MainFontSize}",
-				$"SearchResultsOnTop:{Common.Settings.SearchResultsOnTop}",
-				$"RibbonDisplayMode:{Common.RibbonTabContent}",
-				$"RecentNotesSortMode:{(int)Common.RecentEntriesSortMode}",
 				$"LastDatabases:{string.Join(';', files)}",
-				$"MenuForeground:{Common.BytesFromBrush(Common.Settings.MenuForeground)}",
-				$"MenuBackground:{Common.BytesFromBrush(Common.Settings.MenuBackground)}",
-				$"ListForeground:{Common.BytesFromBrush(Common.Settings.ListForeground)}",
 				$"ListBackground:{Common.BytesFromBrush(Common.Settings.ListBackground)}",
-				$"AccentForeground:{Common.BytesFromBrush(Common.Settings.AccentForeground)}",
-				$"AccentBackground:{Common.BytesFromBrush(Common.Settings.AccentBackground)}"
+				$"ListForeground:{Common.BytesFromBrush(Common.Settings.ListForeground)}",
+				$"MenuBackground:{Common.BytesFromBrush(Common.Settings.MenuBackground)}",
+				$"MenuForeground:{Common.BytesFromBrush(Common.Settings.MenuForeground)}",
+				$"RecentNotesSortMode:{(int)Common.RecentEntriesSortMode}",
+				$"RibbonDisplayMode:{Common.RibbonTabContent}",
+				$"SearchResultsOnTop:{Common.Settings.SearchResultsOnTop}",
+				$"SnapSearchResults:{Common.Settings.SnapSearchResults}",
 			];
 
 			File.WriteAllLines(Common.SettingsFile, settings);
@@ -467,10 +471,8 @@ namespace SylverInk
 			RecentSelection = (NoteRecord)box.SelectedItem;
 
 			foreach (ListBox item in grid.Children)
-			{
 				if (item.SelectedIndex != box.SelectedIndex)
 					item.SelectedIndex = box.SelectedIndex;
-			}
 		}
 
 		private void SublistOpen(object sender, RoutedEventArgs e)
@@ -501,9 +503,10 @@ namespace SylverInk
 
 				Common.CurrentDatabase = newDB;
 				Common.Settings.SearchResults.Clear();
-				Common.UpdateContextMenu();
-				Common.DeferUpdateRecentNotes(true);
 			}
+
+			Common.UpdateContextMenu();
+			Common.DeferUpdateRecentNotes(true);
 		}
 	}
 }
