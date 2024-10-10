@@ -189,15 +189,19 @@ namespace SylverInk
 
 		private void ResetClick(object sender, RoutedEventArgs e)
 		{
-			Common.Settings.MenuBackground = Brushes.Beige;
-			Common.Settings.MenuForeground = Brushes.Black;
-			Common.Settings.ListBackground = Brushes.White;
-			Common.Settings.ListForeground = Brushes.Black;
 			Common.Settings.AccentBackground = Brushes.Khaki;
 			Common.Settings.AccentForeground = Brushes.Blue;
-			Common.Settings.MainFontSize = 11.0;
+			Common.Settings.ListBackground = Brushes.White;
+			Common.Settings.ListForeground = Brushes.Black;
 			MenuFont.SelectedIndex = ArialIndex;
 			Common.Settings.MainFontFamily = ((ComboBoxItem)MenuFont.SelectedItem).FontFamily;
+			Common.Settings.MainFontSize = 11.0;
+			Common.Settings.MenuBackground = Brushes.Beige;
+			Common.Settings.MenuForeground = Brushes.Black;
+			Common.RecentEntriesSortMode = NoteController.SortType.ByChange;
+			Common.RibbonTabContent = "CONTENT";
+			Common.Settings.SearchResultsOnTop = false;
+			Common.Settings.SnapSearchResults = true;
 
 			Common.DeferUpdateRecentNotes(true);
 		}
