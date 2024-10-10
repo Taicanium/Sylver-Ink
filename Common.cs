@@ -92,9 +92,10 @@ namespace SylverInk
 
 			item.MouseRightButtonDown += (_, _) => control.SelectedItem = item;
 			control.Items.Add(item);
+			control.SelectedItem = item;
+
 			Databases.Add(db);
-			if (Databases.Count == 1)
-				CurrentDatabase = Databases[0];
+			CurrentDatabase = db;
 
 			DeferUpdateRecentNotes(true);
 		}
@@ -235,6 +236,14 @@ namespace SylverInk
 
 		public static string GetBackupPath(Database db) => Path.Join(DocumentsSubfolders["Databases"], db.Name, db.Name);
 
+		public static TabControl GetChildPanel(string basePanel)
+		{
+			var db = (TabControl)Application.Current.MainWindow.FindName(basePanel);
+			var dbItem = (TabItem)db.SelectedItem;
+			var tabPanel = (TabControl)dbItem.Content;
+			return tabPanel;
+		}
+
 		public static string GetDatabasePath(Database db) => Path.Join(DocumentsSubfolders["Databases"], db.Name, $"{db.Name}.sidb");
 
 		public static Label GetRibbonHeader(int recordIndex)
@@ -258,8 +267,12 @@ namespace SylverInk
 			}
 
 			var headerContent = content;
-			if (content.Length > 13)
-				content = $"{content[..10]}...";
+
+			if (headerContent.Contains('\n'))
+				headerContent = headerContent[..headerContent.IndexOf('\n')];
+
+			if (headerContent.Length >= 13)
+				headerContent = $"{headerContent[..10]}...";
 
 			return new()
 			{
@@ -290,14 +303,6 @@ namespace SylverInk
 			}
 
 			return content;
-		}
-
-		public static TabControl GetChildPanel(string basePanel)
-		{
-			var db = (TabControl)Application.Current.MainWindow.FindName(basePanel);
-			var dbItem = (TabItem)db.SelectedItem;
-			var tabPanel = (TabControl)dbItem.Content;
-			return tabPanel;
 		}
 
 		public static string MakeUUID(UUIDType type = UUIDType.Record)
@@ -418,7 +423,7 @@ namespace SylverInk
 			while (RecentEntries < CurrentDatabase.RecordCount && TextHeight < WindowHeight - 25.0)
 			{
 				var record = CurrentDatabase.GetRecord(RecentEntries);
-				record.Preview = $"{WindowWidth}";
+				record.Preview = $"{WindowWidth:N0}";
 
 				RecentEntries++;
 				var height = MeasureTextHeight(record.Preview);

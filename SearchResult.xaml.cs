@@ -40,11 +40,7 @@ namespace SylverInk
 				}
 			}
 
-			TabItem newTab = new()
-			{
-				Header = Common.GetRibbonHeader(ResultRecord),
-				Tag = ResultRecord,
-			};
+			TabItem newTab = new() { Header = Common.GetRibbonHeader(ResultRecord) };
 
 			control.SelectedIndex = ResultDatabase;
 			tabPanel.SelectedIndex = tabPanel.Items.Add(newTab);

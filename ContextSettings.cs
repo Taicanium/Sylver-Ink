@@ -9,7 +9,7 @@ using System.Windows.Media;
 
 namespace SylverInk
 {
-	public class ContextSettings : INotifyPropertyChanged
+	public partial class ContextSettings : INotifyPropertyChanged
 	{
 		private Brush? _accentBackgound = Brushes.Khaki;
 		private Brush? _accentForegound = Brushes.Blue;
