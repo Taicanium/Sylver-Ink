@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Windows.Controls;
+using static SylverInk.Common;
 
 namespace SylverInk
 {
@@ -35,14 +36,14 @@ namespace SylverInk
 			{
 				BackgroundWorker worker = new();
 				worker.DoWork += (_, _) => db.Load(dbFile);
-				worker.RunWorkerCompleted += (_, _) => Common.AddDatabase(db);
+				worker.RunWorkerCompleted += (_, _) => AddDatabase(db);
 				worker.RunWorkerAsync();
 
 				return;
 			}
 
 			db.Load(dbFile);
-			Common.AddDatabase(db);
+			AddDatabase(db);
 		}
 
 		public int CreateRecord(string entry) => Controller.CreateRecord(entry);
@@ -112,8 +113,8 @@ namespace SylverInk
 
 		public void MakeBackup(bool auto = false)
 		{
-			var DBPath = Common.GetDatabasePath(this);
-			var BKPath = Common.GetBackupPath(this);
+			var DBPath = GetDatabasePath(this);
+			var BKPath = GetBackupPath(this);
 
 			if (auto)
 			{
@@ -144,7 +145,7 @@ namespace SylverInk
 				return;
 
 			if (DBFile.Equals(string.Empty))
-				DBFile = Common.GetDatabasePath(this);
+				DBFile = GetDatabasePath(this);
 
 			MakeBackup(true);
 			
@@ -157,9 +158,9 @@ namespace SylverInk
 			Controller.SerializeRecords();
 		}
 
-		public void Sort(NoteController.SortType type = NoteController.SortType.ByIndex)
+		public void Sort(SortType type = SortType.ByIndex)
 		{
-			if (type == NoteController.SortType.ByIndex)
+			if (type == SortType.ByIndex)
 				Controller.PropagateIndices();
 			Controller.Sort(type);
 		}

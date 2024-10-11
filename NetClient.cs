@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
+using static SylverInk.Common;
 
 namespace SylverInk
 {
@@ -141,8 +142,8 @@ namespace SylverInk
 				Indicator.Width = 15;
 				Indicator.InvalidateVisual();
 				DB?.GetHeader();
-				Common.UpdateContextMenu();
-				Common.DeferUpdateRecentNotes(true);
+				UpdateContextMenu();
+				DeferUpdateRecentNotes(true);
 			});
 		}
 	}

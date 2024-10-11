@@ -18,6 +18,21 @@ namespace SylverInk
 	/// </summary>
 	public static class Common
 	{
+		public enum DisplayType
+		{
+			Content,
+			Change,
+			Creation,
+			Index,
+		}
+
+		public enum SortType
+		{
+			ByIndex,
+			ByChange,
+			ByCreation,
+		}
+
 		public enum UUIDType
 		{
 			Database,
@@ -47,9 +62,9 @@ namespace SylverInk
 		public static List<SearchResult> OpenQueries { get; } = [];
 		public static double PPD { get; set; } = 1.0;
 		private static int RecentEntries { get; set; } = 10;
-		public static NoteController.SortType RecentEntriesSortMode { get; set; } = NoteController.SortType.ByChange;
+		public static SortType RecentEntriesSortMode { get; set; } = SortType.ByChange;
 		public static Replace? ReplaceWindow { get => _replace; set { _replace?.Close(); _replace = value; _replace?.Show(); } }
-		public static string RibbonTabContent { get; set; } = "CONTENT";
+		public static DisplayType RibbonTabContent { get; set; } = DisplayType.Change;
 		public static Search? SearchWindow { get => _search; set { _search?.Close(); _search = value; _search?.Show(); } }
 		public static ContextSettings Settings { get; } = new();
 		public static string SettingsFile { get; } = Path.Join(DocumentsFolder, "settings.sis");
@@ -177,8 +192,8 @@ namespace SylverInk
 				MeasureTask.DoWork += (_, _) =>
 				{
 					SpinWait.SpinUntil(() => RecentBox?.IsMeasureValid ?? true, 1000);
-					WindowHeight = RecentBox?.ActualHeight ?? Application.Current.MainWindow.ActualHeight - 225;
-					WindowWidth = RecentBox?.ActualWidth ?? Application.Current.MainWindow.ActualWidth - 75;
+					WindowHeight = 0.8 * (RecentBox?.ActualHeight ?? Application.Current.MainWindow.ActualHeight) - 35.0;
+					WindowWidth = (RecentBox?.ActualWidth ?? Application.Current.MainWindow.ActualWidth) - 75.0;
 
 					SpinWait.SpinUntil(() => !UpdateTask?.IsBusy ?? true, 200);
 					if (UpdateTask?.IsBusy ?? false)
@@ -268,16 +283,16 @@ namespace SylverInk
 			var record = CurrentDatabase.GetRecord(recordIndex);
 			switch (RibbonTabContent)
 			{
-				case "CREATED":
+				case DisplayType.Creation:
 					content = $"{record.GetCreated()} — {record.Preview}";
 					break;
-				case "CHANGED":
+				case DisplayType.Change:
 					content = $"{record.ShortChange} — {record.Preview}";
 					break;
-				case "CONTENT":
+				case DisplayType.Content:
 					content = record.Preview;
 					break;
-				case "INDEX":
+				case DisplayType.Index:
 					content = $"Note #{recordIndex + 1:N0} — {record.Preview}";
 					break;
 			}
@@ -301,16 +316,16 @@ namespace SylverInk
 			return uuid;
 		}
 
-		public static double MeasureTextSize(string text)
-		{
-			FormattedText ft = new(text, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, Settings.MainTypeFace, Settings.MainFontSize * 4.0 / 3.0, Brushes.Black, PPD);
-			return ft.Width;
-		}
-
 		private static double MeasureTextHeight(string text)
 		{
-			FormattedText ft = new(text, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, Settings.MainTypeFace, Settings.MainFontSize * 4.0 / 3.0, Brushes.Black, PPD);
+			FormattedText ft = new(text, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, Settings.MainTypeFace, Settings.MainFontSize, Brushes.Black, PPD);
 			return ft.Height;
+		}
+
+		public static double MeasureTextWidth(string text)
+		{
+			FormattedText ft = new(text, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, Settings.MainTypeFace, Settings.MainFontSize, Brushes.Black, PPD);
+			return ft.Width;
 		}
 
 		public static SearchResult OpenQuery(NoteRecord record, bool show = true)
@@ -400,10 +415,10 @@ namespace SylverInk
 			TextHeight = 0.0;
 			CurrentDatabase.Sort(RecentEntriesSortMode);
 
-			while (RecentEntries < CurrentDatabase.RecordCount && TextHeight < WindowHeight - 25.0)
+			while (RecentEntries < CurrentDatabase.RecordCount && TextHeight < WindowHeight)
 			{
 				var record = CurrentDatabase.GetRecord(RecentEntries);
-				record.Preview = $"{WindowWidth:N0}";
+				record.Preview = $"{WindowWidth}";
 
 				RecentEntries++;
 				var height = MeasureTextHeight(record.Preview);
@@ -413,22 +428,17 @@ namespace SylverInk
 			CurrentDatabase.Sort();
 		}
 
-		public static void UpdateRecentNotesSorting(string protocol)
+		public static void UpdateRecentNotesSorting(SortType protocol)
 		{
 			if (protocol.Equals(string.Empty))
 				return;
 
-			EnumConverter cv = new(typeof(NoteController.SortType));
-			RecentEntriesSortMode = (NoteController.SortType?)cv.ConvertFromString(protocol) ?? NoteController.SortType.ByChange;
-
+			RecentEntriesSortMode = protocol;
 			DeferUpdateRecentNotes(true);
 		}
 
-		public static void UpdateRibbonTabs(string protocol)
+		public static void UpdateRibbonTabs(DisplayType protocol)
 		{
-			if (protocol.Equals(string.Empty))
-				return;
-
 			RibbonTabContent = protocol;
 			var control = GetChildPanel("DatabasesPanel");
 			if (control is null)

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using static SylverInk.Common;
 
 namespace SylverInk
 {
@@ -43,12 +44,14 @@ namespace SylverInk
 					Dirty = true;
 				}
 
-				PreviewWidth = int.Parse(value);
+				PreviewWidth = (int)Math.Round(double.Parse(value));
 
-				while (Common.MeasureTextSize(PreviewText) > PreviewWidth)
+				var width = MeasureTextWidth(PreviewText);
+				while (width > PreviewWidth)
 				{
-					PreviewText = PreviewText[..^4];
+					PreviewText = PreviewText[..^1];
 					Dirty = true;
+					width = MeasureTextWidth(PreviewText);
 				}
 
 				if (Dirty)
@@ -61,9 +64,9 @@ namespace SylverInk
 			get
 			{
 				LastChangeObject = DateTime.FromBinary(LastChange);
-				var dtObject = Common.RecentEntriesSortMode switch
+				var dtObject = RecentEntriesSortMode switch
 				{
-					NoteController.SortType.ByCreation => GetCreatedObject(),
+					SortType.ByCreation => GetCreatedObject(),
 					_ => LastChangeObject,
 				};
 				var now = DateTime.UtcNow;
@@ -86,7 +89,7 @@ namespace SylverInk
 			Initial = string.Empty;
 			LastChange = Created;
 			LastChangeObject = DateTime.FromBinary(LastChange);
-			UUID = Common.MakeUUID();
+			UUID = MakeUUID();
 		}
 
 		public NoteRecord(int Index, string Initial, long Created = -1, string? UUID = null)
@@ -96,7 +99,7 @@ namespace SylverInk
 			this.Initial = Initial;
 			LastChange = this.Created;
 			LastChangeObject = DateTime.FromBinary(LastChange);
-			this.UUID = UUID ?? Common.MakeUUID();
+			this.UUID = UUID ?? MakeUUID();
 		}
 
 		public void Add(NoteRevision _revision)
@@ -189,10 +192,10 @@ namespace SylverInk
 					if (Tags.Contains(val))
 						continue;
 
-					if (!Common.CurrentDatabase.WordPercentages.ContainsKey(val))
+					if (!CurrentDatabase.WordPercentages.ContainsKey(val))
 						continue;
 
-					if (Common.CurrentDatabase.WordPercentages[val] < Math.Max(0.2, 100.0 - Common.CurrentDatabase.WordPercentages.Count))
+					if (CurrentDatabase.WordPercentages[val] < Math.Max(0.2, 100.0 - CurrentDatabase.WordPercentages.Count))
 						Tags.Add(val);
 				}
 			}
@@ -205,7 +208,7 @@ namespace SylverInk
 
 		public DateTime GetCreatedObject() => DateTime.FromBinary(Created);
 
-		public override int GetHashCode() => int.Parse((UUID ??= Common.MakeUUID())[^4..], System.Globalization.NumberStyles.HexNumber);
+		public override int GetHashCode() => int.Parse((UUID ??= MakeUUID())[^4..], System.Globalization.NumberStyles.HexNumber);
 
 		public DateTime GetLastChangeObject() => DateTime.FromBinary(LastChange);
 

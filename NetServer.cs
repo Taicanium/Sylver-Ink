@@ -7,6 +7,7 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Windows;
 using System.Windows.Media;
+using static SylverInk.Common;
 
 namespace SylverInk
 {
@@ -147,7 +148,7 @@ namespace SylverInk
 				Indicator.Stroke = Common.Settings.MenuForeground;
 				Indicator.Width = 15;
 				Indicator.InvalidateVisual();
-				Common.DeferUpdateRecentNotes(true);
+				DeferUpdateRecentNotes(true);
 			});
 		}
 	}

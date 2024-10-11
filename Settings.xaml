@@ -69,10 +69,10 @@
 				<Label Content="Recent notes sort by..." FontStyle="Italic" Foreground="{Binding MenuForeground}" HorizontalAlignment="Right" Margin="10,0" Grid.Row="1"/>
 				<Label Content="Sticky notes stay on top" FontStyle="Italic" Foreground="{Binding MenuForeground}" HorizontalAlignment="Right" Margin="10,0" Grid.Row="2"/>
 				<ComboBox Grid.Column="1" Margin="0,10" SelectionChanged="StickyRibbonChanged" Width="150" x:Name="RibbonBox">
-					<ComboBoxItem Content="Content preview" Tag="CONTENT"/>
-					<ComboBoxItem Content="Last changed date" Tag="CHANGED"/>
-					<ComboBoxItem Content="Created date" Tag="CREATED"/>
-					<ComboBoxItem Content="Index number" Tag="INDEX"/>
+					<ComboBoxItem Content="Content preview" Tag="Content"/>
+					<ComboBoxItem Content="Last changed date" Tag="Changed"/>
+					<ComboBoxItem Content="Created date" Tag="Creation"/>
+					<ComboBoxItem Content="Index number" Tag="Index"/>
 				</ComboBox>
 				<ComboBox Grid.Column="1" Margin="0,10" Grid.Row="1" SelectionChanged="SortRibbonChanged" Width="150" x:Name="SortBox">
 					<ComboBoxItem Content="Created date" Tag="ByCreation"/>

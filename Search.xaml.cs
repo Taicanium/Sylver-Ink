@@ -5,6 +5,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using static SylverInk.Common;
 
 namespace SylverInk
 {
@@ -54,7 +55,7 @@ namespace SylverInk
 				index = _recentSelection.Index;
 
 			Common.Settings.SearchResults.RemoveAt(Common.Settings.SearchResults.ToList().FindIndex(result => result.Index == index));
-			Common.CurrentDatabase.DeleteRecord(index);
+			CurrentDatabase.DeleteRecord(index);
 			Results.Items.Refresh();
 		}
 
@@ -66,21 +67,21 @@ namespace SylverInk
 			if (menu.DataContext.GetType() == typeof(NoteRecord))
 			{
 				var record = (NoteRecord)menu.DataContext;
-				result = Common.OpenQuery(record, false);
+				result = OpenQuery(record, false);
 			}
 			else
-				result = Common.OpenQuery(_recentSelection, false);
+				result = OpenQuery(_recentSelection, false);
 
 			result.AddTabToRibbon();
 		}
 
 		private void PerformSearch(object? sender, DoWorkEventArgs e)
 		{
-			Common.CurrentDatabase.UpdateWordPercentages();
+			CurrentDatabase.UpdateWordPercentages();
 
-			for (int i = 0; i < Common.CurrentDatabase.RecordCount; i++)
+			for (int i = 0; i < CurrentDatabase.RecordCount; i++)
 			{
-				var newRecord = Common.CurrentDatabase.GetRecord(i);
+				var newRecord = CurrentDatabase.GetRecord(i);
 				
 				if (newRecord is null)
 					continue;
@@ -123,13 +124,6 @@ namespace SylverInk
 			queryTask.RunWorkerAsync();
 		}
 
-		private void Search_SizeChanged(object sender, SizeChangedEventArgs e)
-		{
-			foreach (NoteRecord record in Common.Settings.SearchResults)
-				record.Preview = $"{Math.Floor(Width - 115.0)}";
-			Results.Items.Refresh();
-		}
-
 		private void SublistChanged(object sender, RoutedEventArgs e)
 		{
 			var box = (ListBox)sender;
@@ -145,7 +139,7 @@ namespace SylverInk
 			if (box.SelectedItem is null)
 				return;
 
-			Common.OpenQuery(_recentSelection);
+			OpenQuery(_recentSelection);
 			box.SelectedItem = null;
 		}
 	}

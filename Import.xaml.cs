@@ -5,6 +5,7 @@ using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using static SylverInk.Common;
 
 namespace SylverInk
 {
@@ -84,7 +85,7 @@ namespace SylverInk
 
 			Common.Settings.ImportTarget = string.Empty;
 			Common.Settings.ReadyToFinalize = false;
-			Common.DeferUpdateRecentNotes(true);
+			DeferUpdateRecentNotes(true);
 			DataLines.Clear();
 		}
 
@@ -155,7 +156,7 @@ namespace SylverInk
 
 		private void Open_Click(object sender, RoutedEventArgs e)
 		{
-			Common.Settings.ImportTarget = Common.DialogFileSelect();
+			Common.Settings.ImportTarget = DialogFileSelect();
 			Common.Settings.ImportData = string.Empty;
 
 			if (Target.EndsWith(".sidb") || Target.EndsWith(".sibk"))
@@ -167,19 +168,19 @@ namespace SylverInk
 
 				if (result == MessageBoxResult.Yes)
 				{
-					Common.CurrentDatabase.MakeBackup(true);
-					Common.CurrentDatabase.Erase();
+					CurrentDatabase.MakeBackup(true);
+					CurrentDatabase.Erase();
 				}
 
-				if (!Common.CurrentDatabase.Open(Target))
+				if (!CurrentDatabase.Open(Target))
 				{
 					MessageBox.Show($"Failed to import the selected file.", "Sylver Ink: Error", MessageBoxButton.OK);
 					return;
 				}
 
-				Common.CurrentDatabase.Initialize(false);
+				CurrentDatabase.Initialize(false);
 
-				Imported = Common.CurrentDatabase.RecordCount;
+				Imported = CurrentDatabase.RecordCount;
 				FinishImport(sender, null);
 
 				return;
@@ -206,7 +207,7 @@ namespace SylverInk
 
 				if (recordData.Length > 0 && (blankCount >= Common.Settings.LineTolerance || i >= DataLines.Count - 1))
 				{
-					Common.CurrentDatabase.CreateRecord(recordData);
+					CurrentDatabase.CreateRecord(recordData);
 					Imported++;
 					recordData = string.Empty;
 					blankCount = 0;

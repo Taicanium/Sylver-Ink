@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
+using static SylverInk.Common;
 
 namespace SylverInk
 {
@@ -21,7 +22,7 @@ namespace SylverInk
 			set
 			{
 				_changed = value;
-				Common.DatabaseChanged = Common.DatabaseChanged || value;
+				DatabaseChanged = DatabaseChanged || value;
 			}
 		}
 
@@ -39,13 +40,6 @@ namespace SylverInk
 				return _nextIndex - 1;
 			}
 			set => _nextIndex = value;
-		}
-
-		public enum SortType
-		{
-			ByIndex,
-			ByChange,
-			ByCreation
 		}
 
 		public NoteController()
@@ -122,7 +116,7 @@ namespace SylverInk
 			Records[recordIndex].Delete();
 			Records.RemoveAt(recordIndex);
 
-			var tabControl = Common.GetChildPanel("DatabasesPanel");
+			var tabControl = GetChildPanel("DatabasesPanel");
 			for (int i = tabControl.Items.Count; i > 1; i--)
 			{
 				var item = (TabItem)tabControl.Items[i - 1];
@@ -177,7 +171,7 @@ namespace SylverInk
 			while (RecordCount > 0)
 				DeleteRecord(0);
 
-			Common.DeferUpdateRecentNotes();
+			DeferUpdateRecentNotes();
 		}
 
 		private static string FindBackup(string dbFile)
@@ -205,8 +199,8 @@ namespace SylverInk
 
 		public void InitializeRecords(bool newDatabase = true)
 		{
-			for (int i = (Common.OpenQueries ?? []).Count; i > 0; i--)
-				Common.OpenQueries?[i - 1].Close();
+			for (int i = (OpenQueries ?? []).Count; i > 0; i--)
+				OpenQueries?[i - 1].Close();
 
 			if (newDatabase)
 				Records.Clear();
@@ -219,7 +213,7 @@ namespace SylverInk
 		{
 			ReloadSerializer();
 
-			string file = Common.DialogFileSelect(true, 1, Name);
+			string file = DialogFileSelect(true, 1, Name);
 
 			if (!_serializer?.OpenWrite($"{file}") is true)
 				return;
@@ -304,7 +298,7 @@ namespace SylverInk
 			}
 
 			PropagateIndices();
-			Common.DeferUpdateRecentNotes();
+			DeferUpdateRecentNotes();
 		}
 
 		public List<byte>? SerializeRecords(bool inMemory = false)

@@ -7,6 +7,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using static SylverInk.Common;
 
 namespace SylverInk
 {
@@ -41,18 +42,18 @@ namespace SylverInk
 					Common.Settings.ImportTarget = string.Empty;
 					Common.Settings.ReadyToFinalize = false;
 
-					Common.ImportWindow = new();
+					ImportWindow = new();
 					break;
 				case "Replace":
 					Common.Settings.NumReplacements = string.Empty;
 
-					Common.ReplaceWindow = new();
+					ReplaceWindow = new();
 					break;
 				case "Search":
-					Common.SearchWindow = new();
+					SearchWindow = new();
 					break;
 				case "Settings":
-					Common.SettingsWindow = new();
+					SettingsWindow = new();
 					break;
 				case "Exit":
 					Close();
@@ -68,12 +69,12 @@ namespace SylverInk
 			CodePopup.IsOpen = false;
 		}
 
-		private void DatabaseBackup(object sender, RoutedEventArgs e) => Common.CurrentDatabase.MakeBackup();
+		private void DatabaseBackup(object sender, RoutedEventArgs e) => CurrentDatabase.MakeBackup();
 
 		private void DatabaseClose(object sender, RoutedEventArgs e)
 		{
-			Common.RemoveDatabase(Common.CurrentDatabase);
-			Common.DeferUpdateRecentNotes();
+			RemoveDatabase(CurrentDatabase);
+			DeferUpdateRecentNotes();
 		}
 
 		private void DatabaseConnect(object sender, RoutedEventArgs e)
@@ -84,9 +85,9 @@ namespace SylverInk
 
 		private void DatabaseCreate(object sender, RoutedEventArgs e)
 		{
-			Common.AddDatabase(new());
+			AddDatabase(new());
 			DatabasesPanel.SelectedIndex = DatabasesPanel.Items.Count - 1;
-			Common.DeferUpdateRecentNotes();
+			DeferUpdateRecentNotes();
 		}
 
 		private void DatabaseDelete(object sender, RoutedEventArgs e)
@@ -94,28 +95,28 @@ namespace SylverInk
 			if (MessageBox.Show("Are you sure you want to permanently delete this database?", "Sylver Ink: Warning", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.No)
 				return;
 
-			if (File.Exists(Common.CurrentDatabase.DBFile))
-				File.Delete(Common.CurrentDatabase.DBFile);
+			if (File.Exists(CurrentDatabase.DBFile))
+				File.Delete(CurrentDatabase.DBFile);
 
-			var BKPath = Path.GetDirectoryName(Common.GetBackupPath(Common.CurrentDatabase));
+			var BKPath = Path.GetDirectoryName(GetBackupPath(CurrentDatabase));
 			if (Directory.Exists(BKPath))
 				Directory.Delete(BKPath, true);
 
-			Common.RemoveDatabase(Common.CurrentDatabase);
-			Common.DeferUpdateRecentNotes();
+			RemoveDatabase(CurrentDatabase);
+			DeferUpdateRecentNotes();
 		}
 
-		private void DatabaseDisconnect(object sender, RoutedEventArgs e) => Common.RemoveDatabase(Common.CurrentDatabase);
+		private void DatabaseDisconnect(object sender, RoutedEventArgs e) => RemoveDatabase(CurrentDatabase);
 
 		private void DatabaseOpen(object sender, RoutedEventArgs e)
 		{
-			string dbFile = Common.DialogFileSelect(filterIndex: 2);
+			string dbFile = DialogFileSelect(filterIndex: 2);
 			if (dbFile.Equals(string.Empty))
 				return;
 
 			var path = Path.GetFullPath(dbFile);
 
-			if (Common.DatabaseFiles.Contains(path))
+			if (DatabaseFiles.Contains(path))
 			{
 				var items = DatabasesPanel.Items.Cast<TabItem>().ToList();
 				var predicate = new Predicate<TabItem>(item => {
@@ -130,49 +131,49 @@ namespace SylverInk
 			}
 
 			Database.Create(dbFile, true);
-			Common.DeferUpdateRecentNotes();
+			DeferUpdateRecentNotes();
 		}
 
 		private void DatabaseRename(object sender, RoutedEventArgs e)
 		{
 			RenameDatabase.IsOpen = true;
-			DatabaseNameBox.Text = Common.CurrentDatabase.Name;
+			DatabaseNameBox.Text = CurrentDatabase.Name;
 			DatabaseNameBox.Focus();
 			DatabaseNameBox.CaretIndex = DatabaseNameBox.Text?.Length ?? 0;
 		}
 
 		private void DatabaseSaveAs(object sender, RoutedEventArgs e)
 		{
-			var newPath = Common.DialogFileSelect(true, 2, Common.CurrentDatabase.Name);
+			var newPath = DialogFileSelect(true, 2, CurrentDatabase.Name);
 			if (!newPath.Equals(string.Empty))
-				Common.CurrentDatabase.DBFile = newPath;
+				CurrentDatabase.DBFile = newPath;
 		}
 
-		private void DatabaseSaveLocal(object sender, RoutedEventArgs e) => Common.CurrentDatabase.DBFile = Path.Join(Common.DocumentsSubfolders["Databases"], Path.GetFileNameWithoutExtension(Common.CurrentDatabase.DBFile), Path.GetFileName(Common.CurrentDatabase.DBFile));
+		private void DatabaseSaveLocal(object sender, RoutedEventArgs e) => CurrentDatabase.DBFile = Path.Join(DocumentsSubfolders["Databases"], Path.GetFileNameWithoutExtension(CurrentDatabase.DBFile), Path.GetFileName(CurrentDatabase.DBFile));
 
-		private void DatabaseServe(object sender, RoutedEventArgs e) => Common.CurrentDatabase.Server?.Serve(0);
+		private void DatabaseServe(object sender, RoutedEventArgs e) => CurrentDatabase.Server?.Serve(0);
 
-		private void DatabaseUnserve(object sender, RoutedEventArgs e) => Common.CurrentDatabase.Server?.Close();
+		private void DatabaseUnserve(object sender, RoutedEventArgs e) => CurrentDatabase.Server?.Close();
 
 		private void Drag(object sender, MouseButtonEventArgs e) => DragMove();
 
 		private void ExitComplete(object? sender, RunWorkerCompletedEventArgs e)
 		{
 			CloseOnce = false;
-			Common.DatabaseChanged = false;
+			DatabaseChanged = false;
 			MainGrid.IsEnabled = true;
 			SaveUserSettings();
 
-			if (Common.ForceClose)
+			if (ForceClose)
 				Application.Current.Shutdown();
 		}
 
 		private static void LoadUserSettings()
 		{
-			if (!File.Exists(Common.SettingsFile))
+			if (!File.Exists(SettingsFile))
 				return;
 
-			string[] settings = File.ReadAllLines(Common.SettingsFile);
+			string[] settings = File.ReadAllLines(SettingsFile);
 
 			for (int i = 0; i < settings.Length; i++)
 			{
@@ -181,10 +182,10 @@ namespace SylverInk
 				switch (keyValue[0])
 				{
 					case "AccentBackground":
-						Common.Settings.AccentBackground = Common.BrushFromBytes(keyValue[1]);
+						Common.Settings.AccentBackground = BrushFromBytes(keyValue[1]);
 						break;
 					case "AccentForeground":
-						Common.Settings.AccentForeground = Common.BrushFromBytes(keyValue[1]);
+						Common.Settings.AccentForeground = BrushFromBytes(keyValue[1]);
 						break;
 					case "FontFamily":
 						Common.Settings.MainFontFamily = new(keyValue[1]);
@@ -198,25 +199,29 @@ namespace SylverInk
 						foreach (var file in files)
 							Database.Create(file, true);
 						if (!files.Any())
-							Database.Create(Path.Join(Common.DocumentsSubfolders["Databases"], $"{Common.DefaultDatabase}", $"{Common.DefaultDatabase}.sidb"));
+							Database.Create(Path.Join(DocumentsSubfolders["Databases"], $"{DefaultDatabase}", $"{DefaultDatabase}.sidb"));
 						break;
 					case "ListBackground":
-						Common.Settings.ListBackground = Common.BrushFromBytes(keyValue[1]);
+						Common.Settings.ListBackground = BrushFromBytes(keyValue[1]);
 						break;
 					case "ListForeground":
-						Common.Settings.ListForeground = Common.BrushFromBytes(keyValue[1]);
+						Common.Settings.ListForeground = BrushFromBytes(keyValue[1]);
 						break;
 					case "MenuBackground":
-						Common.Settings.MenuBackground = Common.BrushFromBytes(keyValue[1]);
+						Common.Settings.MenuBackground = BrushFromBytes(keyValue[1]);
 						break;
 					case "MenuForeground":
-						Common.Settings.MenuForeground = Common.BrushFromBytes(keyValue[1]);
+						Common.Settings.MenuForeground = BrushFromBytes(keyValue[1]);
 						break;
 					case "RecentNotesSortMode":
-						Common.RecentEntriesSortMode = (NoteController.SortType)int.Parse(keyValue[1]);
+						if (!int.TryParse(keyValue[1], out var sortMode))
+							sortMode = 0;
+						RecentEntriesSortMode = (SortType)sortMode;
 						break;
 					case "RibbonDisplayMode":
-						Common.RibbonTabContent = keyValue[1];
+						if (!int.TryParse(keyValue[1], out var displayMode))
+							displayMode = 0;
+						RibbonTabContent = (DisplayType)displayMode;
 						break;
 					case "SearchResultsOnTop":
 						Common.Settings.SearchResultsOnTop = bool.Parse(keyValue[1]);
@@ -232,12 +237,12 @@ namespace SylverInk
 
 		private void MainWindow_Closing(object sender, CancelEventArgs e)
 		{
-			if (!Common.ForceClose)
+			if (!ForceClose)
 			{
 				if (CloseOnce)
 					return;
 
-				if (Common.DatabaseChanged)
+				if (DatabaseChanged)
 				{
 					switch (MessageBox.Show("Do you want to save your work before exiting?", "Sylver Ink: Notification", MessageBoxButton.YesNoCancel, MessageBoxImage.Question))
 					{
@@ -245,7 +250,7 @@ namespace SylverInk
 							e.Cancel = true;
 							return;
 						case MessageBoxResult.No:
-							Common.DatabaseChanged = false;
+							DatabaseChanged = false;
 							break;
 					}
 				}
@@ -253,7 +258,7 @@ namespace SylverInk
 
 			CloseOnce = true;
 
-			if (Common.DatabaseChanged)
+			if (DatabaseChanged)
 			{
 				e.Cancel = true;
 				MainGrid.IsEnabled = false;
@@ -274,36 +279,36 @@ namespace SylverInk
 		{
 			LoadUserSettings();
 
-			foreach (var folder in Common.DocumentsSubfolders)
+			foreach (var folder in DocumentsSubfolders)
 				if (!Directory.Exists(folder.Value))
 					Directory.CreateDirectory(folder.Value);
 
 			if (FirstRun)
-				Database.Create(Path.Join(Common.DocumentsSubfolders["Databases"], $"{Common.DefaultDatabase}", $"{Common.DefaultDatabase}.sidb"));
+				Database.Create(Path.Join(DocumentsSubfolders["Databases"], $"{DefaultDatabase}", $"{DefaultDatabase}.sidb"));
 
 			DatabasesPanel.SelectedIndex = 0;
 
 			BackgroundWorker worker = new();
-			worker.DoWork += (_, _) => SpinWait.SpinUntil(() => Common.Databases.Count > 0);
+			worker.DoWork += (_, _) => SpinWait.SpinUntil(() => Databases.Count > 0);
 			worker.RunWorkerCompleted += (_, _) =>
 			{
-				Common.CanResize = true;
+				CanResize = true;
 				Common.Settings.MainTypeFace = new(Common.Settings.MainFontFamily, FontStyles.Normal, FontWeights.Normal, FontStretches.Normal);
-				Common.PPD = VisualTreeHelper.GetDpi(this).PixelsPerDip;
-				Common.DeferUpdateRecentNotes(true);
+				PPD = VisualTreeHelper.GetDpi(this).PixelsPerDip;
+				DeferUpdateRecentNotes(true);
 			};
 			worker.RunWorkerAsync();
 		}
 
-		private void MainWindow_SizeChanged(object sender, SizeChangedEventArgs e) => Common.DeferUpdateRecentNotes();
+		private void MainWindow_SizeChanged(object sender, SizeChangedEventArgs e) => DeferUpdateRecentNotes(true);
 
 		private void NewNote(object sender, KeyEventArgs e)
 		{
 			if (e.Key == Key.Enter)
 			{
 				var box = (TextBox)sender;
-				Common.CurrentDatabase.CreateRecord(box.Text);
-				Common.DeferUpdateRecentNotes();
+				CurrentDatabase.CreateRecord(box.Text);
+				DeferUpdateRecentNotes();
 				box.Text = string.Empty;
 			}
 		}
@@ -316,12 +321,12 @@ namespace SylverInk
 			if (menu.DataContext.GetType() == typeof(NoteRecord))
 			{
 				var record = (NoteRecord)menu.DataContext;
-				Common.CurrentDatabase.DeleteRecord(record.Index);
+				CurrentDatabase.DeleteRecord(record.Index);
 			}
 			else
-				Common.CurrentDatabase.DeleteRecord(RecentSelection.Index);
+				CurrentDatabase.DeleteRecord(RecentSelection.Index);
 
-			Common.DeferUpdateRecentNotes();
+			DeferUpdateRecentNotes();
 		}
 
 		private void NoteOpen(object sender, RoutedEventArgs e)
@@ -332,10 +337,10 @@ namespace SylverInk
 			if (menu.DataContext.GetType() == typeof(NoteRecord))
 			{
 				var record = (NoteRecord)menu.DataContext;
-				result = Common.OpenQuery(record, false);
+				result = OpenQuery(record, false);
 			}
 			else
-				result = Common.OpenQuery(RecentSelection, false);
+				result = OpenQuery(RecentSelection, false);
 
 			result.AddTabToRibbon();
 		}
@@ -345,10 +350,10 @@ namespace SylverInk
 			if (DatabaseNameBox.Text.Equals(string.Empty))
 				return;
 
-			if (DatabaseNameBox.Text.Equals(Common.CurrentDatabase.Name))
+			if (DatabaseNameBox.Text.Equals(CurrentDatabase.Name))
 				return;
 
-			foreach (Database db in Common.Databases)
+			foreach (Database db in Databases)
 			{
 				if (DatabaseNameBox.Text.Equals(db.Name))
 				{
@@ -357,19 +362,19 @@ namespace SylverInk
 				}
 			}
 
-			Common.CurrentDatabase.Changed = true;
-			var oldName = Common.CurrentDatabase.Name;
-			Common.CurrentDatabase.Name = DatabaseNameBox.Text;
+			CurrentDatabase.Changed = true;
+			var oldName = CurrentDatabase.Name;
+			CurrentDatabase.Name = DatabaseNameBox.Text;
 			var overwrite = false;
 
-			var oldFile = Common.CurrentDatabase.DBFile;
+			var oldFile = CurrentDatabase.DBFile;
 			var oldPath = Path.GetDirectoryName(oldFile);
-			Common.CurrentDatabase.DBFile = Common.GetDatabasePath(Common.CurrentDatabase);
-			var newFile = Common.CurrentDatabase.DBFile;
+			CurrentDatabase.DBFile = GetDatabasePath(CurrentDatabase);
+			var newFile = CurrentDatabase.DBFile;
 			var newPath = Path.GetDirectoryName(newFile);
 
 			var currentTab = (TabItem)DatabasesPanel.SelectedItem;
-			currentTab.Header = Common.CurrentDatabase.GetHeader();
+			currentTab.Header = CurrentDatabase.GetHeader();
 
 			if (!File.Exists(oldFile))
 				return;
@@ -377,15 +382,15 @@ namespace SylverInk
 			if (!Directory.Exists(oldPath))
 				return;
 
-			var directorySearch = Directory.GetDirectories(Common.DocumentsSubfolders["Databases"], "*", new EnumerationOptions() { IgnoreInaccessible = true, RecurseSubdirectories = true, MaxRecursionDepth = 3 });
+			var directorySearch = Directory.GetDirectories(DocumentsSubfolders["Databases"], "*", new EnumerationOptions() { IgnoreInaccessible = true, RecurseSubdirectories = true, MaxRecursionDepth = 3 });
 			if (oldPath is not null && newPath is not null && directorySearch.Contains(oldPath))
 			{
 				if (Directory.Exists(newPath))
 				{
 					if (MessageBox.Show($"A database with that name already exists in {newPath}.\n\nDo you want to overwrite it?", "Sylver Ink: Warning", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.No)
 					{
-						Common.CurrentDatabase.DBFile = oldFile;
-						Common.CurrentDatabase.Name = oldName;
+						CurrentDatabase.DBFile = oldFile;
+						CurrentDatabase.Name = oldName;
 						return;
 					}
 					Directory.Delete(newPath, true);
@@ -403,8 +408,8 @@ namespace SylverInk
 				{
 					if (MessageBox.Show($"A database with that name already exists at {newFile}.\n\nDo you want to overwrite it?", "Sylver Ink: Warning", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.No)
 					{
-						Common.CurrentDatabase.DBFile = oldFile;
-						Common.CurrentDatabase.Name = oldName;
+						CurrentDatabase.DBFile = oldFile;
+						CurrentDatabase.Name = oldName;
 						return;
 					}
 					overwrite = true;
@@ -427,41 +432,41 @@ namespace SylverInk
 
 			var addr = AddressBox.Text;
 			BackgroundWorker worker = new();
-			worker.DoWork += (_, _) => Common.CurrentDatabase.Client?.Connect(addr);
+			worker.DoWork += (_, _) => CurrentDatabase.Client?.Connect(addr);
 			worker.RunWorkerAsync();
 		}
 
 		private void SaveDatabases(object? sender, DoWorkEventArgs e)
 		{
-			foreach (Database db in Common.Databases)
+			foreach (Database db in Databases)
 				db.Save();
 
-			Common.ForceClose = true;
+			ForceClose = true;
 		}
 
 		private void SaveNewName(object? sender, RoutedEventArgs e) => RenameDatabase.IsOpen = false;
 
 		private static void SaveUserSettings()
 		{
-			var files = Common.DatabaseFiles.Distinct().Where(File.Exists);
+			var files = DatabaseFiles.Distinct().Where(File.Exists);
 
 			string[] settings = [
-				$"AccentBackground:{Common.BytesFromBrush(Common.Settings.AccentBackground)}",
-				$"AccentForeground:{Common.BytesFromBrush(Common.Settings.AccentForeground)}",
+				$"AccentBackground:{BytesFromBrush(Common.Settings.AccentBackground)}",
+				$"AccentForeground:{BytesFromBrush(Common.Settings.AccentForeground)}",
 				$"FontFamily:{Common.Settings.MainFontFamily?.Source}",
 				$"FontSize:{Common.Settings.MainFontSize}",
 				$"LastDatabases:{string.Join(';', files)}",
-				$"ListBackground:{Common.BytesFromBrush(Common.Settings.ListBackground)}",
-				$"ListForeground:{Common.BytesFromBrush(Common.Settings.ListForeground)}",
-				$"MenuBackground:{Common.BytesFromBrush(Common.Settings.MenuBackground)}",
-				$"MenuForeground:{Common.BytesFromBrush(Common.Settings.MenuForeground)}",
-				$"RecentNotesSortMode:{(int)Common.RecentEntriesSortMode}",
-				$"RibbonDisplayMode:{Common.RibbonTabContent}",
+				$"ListBackground:{BytesFromBrush(Common.Settings.ListBackground)}",
+				$"ListForeground:{BytesFromBrush(Common.Settings.ListForeground)}",
+				$"MenuBackground:{BytesFromBrush(Common.Settings.MenuBackground)}",
+				$"MenuForeground:{BytesFromBrush(Common.Settings.MenuForeground)}",
+				$"RecentNotesSortMode:{(int)RecentEntriesSortMode}",
+				$"RibbonDisplayMode:{(int)RibbonTabContent}",
 				$"SearchResultsOnTop:{Common.Settings.SearchResultsOnTop}",
 				$"SnapSearchResults:{Common.Settings.SnapSearchResults}",
 			];
 
-			File.WriteAllLines(Common.SettingsFile, settings);
+			File.WriteAllLines(SettingsFile, settings);
 		}
 
 		private void SublistChanged(object sender, RoutedEventArgs e)
@@ -484,7 +489,7 @@ namespace SylverInk
 			if (box.SelectedItem is null)
 				return;
 
-			Common.OpenQuery(RecentSelection);
+			OpenQuery(RecentSelection);
 			box.SelectedItem = null;
 		}
 
@@ -498,15 +503,15 @@ namespace SylverInk
 					return;
 
 				var newDB = (Database)item.Tag;
-				if (newDB.Equals(Common.CurrentDatabase))
+				if (newDB.Equals(CurrentDatabase))
 					return;
 
-				Common.CurrentDatabase = newDB;
+				CurrentDatabase = newDB;
 				Common.Settings.SearchResults.Clear();
 			}
 
-			Common.UpdateContextMenu();
-			Common.DeferUpdateRecentNotes(true);
+			UpdateContextMenu();
+			DeferUpdateRecentNotes(true);
 		}
 	}
 }

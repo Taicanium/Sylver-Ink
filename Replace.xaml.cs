@@ -2,6 +2,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using static SylverInk.Common;
 
 namespace SylverInk
 {
@@ -27,7 +28,7 @@ namespace SylverInk
 		private void FinishReplace(object? sender, RunWorkerCompletedEventArgs e)
 		{
 			Common.Settings.NumReplacements = $"Replaced {_counts.Item1:N0} occurrences in {_counts.Item2:N0} notes.";
-			Common.DeferUpdateRecentNotes();
+			DeferUpdateRecentNotes();
 
 			var button = (Button)FindName("DoReplace");
 			button.Content = "Replace";
@@ -36,7 +37,7 @@ namespace SylverInk
 
 		private void PerformReplace(object? sender, DoWorkEventArgs e)
 		{
-			_counts = Common.CurrentDatabase.Replace(_oldText, _newText);
+			_counts = CurrentDatabase.Replace(_oldText, _newText);
 		}
 
 		private void ReplaceTextChanged(object sender, TextChangedEventArgs e) => Common.Settings.ReadyToReplace = OldText.Text.Equals(string.Empty) is false;

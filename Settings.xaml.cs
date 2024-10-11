@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using static SylverInk.Common;
 
 namespace SylverInk
 {
@@ -140,25 +142,26 @@ namespace SylverInk
 
 		private static uint HSVFromRGB(SolidColorBrush brush)
 		{
-			double r_ = brush.Color.R / 255.0;
-			double g_ = brush.Color.G / 255.0;
-			double b_ = brush.Color.B / 255.0;
+			double r_ = brush.Color.R * 0.0039215686;
+			double g_ = brush.Color.G * 0.0039215686;
+			double b_ = brush.Color.B * 0.0039215686;
 			var Cmax = Math.Max(r_, Math.Max(g_, b_));
 			var Cmin = Math.Min(r_, Math.Min(g_, b_));
 			var delta = Cmax - Cmin;
 			var _h = 0.0;
+			var _s = Cmax == 0.0 ? 0.0 : (delta / Cmax);
 			if (delta != 0.0)
 			{
+				delta = 60.0 / delta;
 				if (Cmax == r_)
-					_h = (60.0 * ((g_ - b_) / delta) + 360.0) % 360.0;
+					_h = (delta * (g_ - b_) + 360.0) % 360.0;
 				if (Cmax == g_)
-					_h = (60.0 * ((b_ - r_) / delta) + 120.0) % 360.0;
+					_h = (delta * (b_ - r_) + 120.0) % 360.0;
 				if (Cmax == b_)
-					_h = (60.0 * ((r_ - g_) / delta) + 240.0) % 360.0;
+					_h = (delta * (r_ - g_) + 240.0) % 360.0;
 			}
-			var _s = Cmax == 0.0 ? 0.0 : (delta / Cmax);
 			var _v = Cmax;
-			var H = (uint)(_h * 255.0 / 360.0);
+			var H = (uint)(_h * 0.7083333333);
 			var S = (uint)(_s * 255.0);
 			var V = (uint)(_v * 255.0);
 			return (H << 16) + (S << 8) + V;
@@ -198,8 +201,8 @@ namespace SylverInk
 			Common.Settings.MainFontSize = 11.0;
 			Common.Settings.MenuBackground = Brushes.Beige;
 			Common.Settings.MenuForeground = Brushes.Black;
-			Common.RecentEntriesSortMode = NoteController.SortType.ByChange;
-			Common.RibbonTabContent = "CONTENT";
+			Common.RecentEntriesSortMode = Common.SortType.ByChange;
+			Common.RibbonTabContent = Common.DisplayType.Content;
 			Common.Settings.SearchResultsOnTop = false;
 			Common.Settings.SnapSearchResults = true;
 
@@ -225,13 +228,7 @@ namespace SylverInk
 			Common.CurrentDatabase.Revert(reversion);
 		}
 
-		private void SelectedDateChanged(object sender, SelectionChangedEventArgs e)
-		{
-			if (ReversionDate.SelectedDate is null)
-				RestoreButton.IsEnabled = false;
-			else
-				RestoreButton.IsEnabled = true;
-		}
+		private void SelectedDateChanged(object sender, SelectionChangedEventArgs e) => RestoreButton.IsEnabled = ReversionDate.SelectedDate is not null;
 
 		private void SelectTime(object sender, RoutedEventArgs e)
 		{
@@ -371,34 +368,22 @@ namespace SylverInk
 				MenuFont.SelectedIndex = ArialIndex;
 
 			for (int i = 0; i < 24; i++)
-			{
-				ComboBoxItem item = new()
-				{
-					Content = $"{i:0,0}"
-				};
-				Hour.Items.Add(item);
-			}
+				Hour.Items.Add(new ComboBoxItem() { Content = $"{i:0,0}" });
 
 			for (int i = 0; i < 60; i++)
-			{
-				ComboBoxItem item = new()
-				{
-					Content = $"{i:0,0}"
-				};
-				Minute.Items.Add(item);
-			}
+				Minute.Items.Add(new ComboBoxItem() { Content = $"{i:0,0}" });
 
 			Hour.SelectedIndex = 0;
 			Minute.SelectedIndex = 0;
 
 			if (RibbonBox.SelectedItem is null)
 				foreach (ComboBoxItem item in RibbonBox.Items)
-					if (item.Tag.Equals(Common.RibbonTabContent))
+					if (item.Tag.Equals(RibbonTabContent.ToString()))
 						RibbonBox.SelectedItem = item;
 
 			if (SortBox.SelectedItem is null)
 				foreach (ComboBoxItem item in SortBox.Items)
-					if (item.Tag.Equals(Common.RecentEntriesSortMode.ToString()))
+					if (item.Tag.Equals(RecentEntriesSortMode.ToString()))
 						SortBox.SelectedItem = item;
 		}
 
@@ -407,7 +392,10 @@ namespace SylverInk
 			var box = (ComboBox)sender;
 			var item = (ComboBoxItem)box.SelectedItem;
 
-			Common.UpdateRecentNotesSorting(item.Tag as string ?? string.Empty);
+			EnumConverter cv = new(typeof(SortType));
+			var tag = (SortType?)cv.ConvertFromString((string)item.Tag ?? "ByChange") ?? SortType.ByChange;
+
+			UpdateRecentNotesSorting(tag);
 		}
 
 		private void StickyRibbonChanged(object sender, SelectionChangedEventArgs e)
@@ -415,7 +403,10 @@ namespace SylverInk
 			var box = (ComboBox)sender;
 			var item = (ComboBoxItem)box.SelectedItem;
 
-			Common.UpdateRibbonTabs(item.Tag as string ?? string.Empty);
+			EnumConverter ev = new(typeof(DisplayType));
+			var tag = (DisplayType?)ev.ConvertFromString((string)item.Tag ?? "Content");
+
+			UpdateRibbonTabs(tag ?? DisplayType.Content);
 		}
 
 		[GeneratedRegex(@"\p{Lu}")]
