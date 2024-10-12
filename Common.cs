@@ -192,7 +192,7 @@ namespace SylverInk
 				MeasureTask.DoWork += (_, _) =>
 				{
 					SpinWait.SpinUntil(() => RecentBox?.IsMeasureValid ?? true, 1000);
-					WindowHeight = 0.8 * (RecentBox?.ActualHeight ?? Application.Current.MainWindow.ActualHeight) - 35.0;
+					WindowHeight = (RecentBox?.ActualHeight ?? Application.Current.MainWindow.ActualHeight) - 75.0;
 					WindowWidth = (RecentBox?.ActualWidth ?? Application.Current.MainWindow.ActualWidth) - 75.0;
 
 					SpinWait.SpinUntil(() => !UpdateTask?.IsBusy ?? true, 200);
@@ -308,8 +308,8 @@ namespace SylverInk
 			var nano = time.Nanosecond;
 
 			var mac = binary;
-			for (int i = 2; i < 10; i++)
-				mac -= Math.Sign(mac) * (long)Math.Floor(mac / (new Random().NextDouble() + 1.0 + (i / 10.0)));
+			for (double i = 1.2; i < 2.0; i += 0.1)
+				mac -= Math.Sign(mac) * (long)Math.Floor(mac / (new Random().NextDouble() + i));
 
 			var uuid = string.Format("{0:X8}-{1:X4}-{2:X4}-{3:X2}{4:X2}-{5:X12}", (binary >> 32) & 0xFFFFFFFF, (binary >> 16) & 0xFFFF, binary & 0xFFFF, (nano & 0x3FC) >> 2, (byte)type, mac & 0xFFFFFFFFFFFF);
 

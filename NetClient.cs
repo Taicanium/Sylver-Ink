@@ -38,7 +38,7 @@ namespace SylverInk
 			{
 				var task = (BackgroundWorker?)sender;
 				while (!task?.CancellationPending is true)
-					if (DBClient.Available >= 10)
+					if (DBClient.Available > 0)
 						ReadFromStream();
 			};
 
@@ -117,7 +117,39 @@ namespace SylverInk
 
 		private void ReadFromStream()
 		{
+			int oldData = DBClient.Available;
+			bool dataFinished = false;
+			do
+			{
+				dataFinished = !SpinWait.SpinUntil(() => DBClient.Available != oldData, 200);
+				oldData = DBClient.Available;
+			} while (!dataFinished);
 
+			var stream = DBClient.GetStream();
+
+			var type = (Network.MessageType)stream.ReadByte();
+			var intBuffer = new byte[4];
+			var recordIndex = 0;
+
+			switch (type)
+			{
+				case Network.MessageType.RecordLock:
+					stream.Read(intBuffer, 0, 4);
+					recordIndex = (intBuffer[0] << 24)
+						+ (intBuffer[1] << 16)
+						+ (intBuffer[2] << 8)
+						+ intBuffer[3];
+					DB?.GetRecord(recordIndex).Lock();
+					break;
+				case Network.MessageType.RecordUnlock:
+					stream.Read(intBuffer, 0, 4);
+					recordIndex = (intBuffer[0] << 24)
+						+ (intBuffer[1] << 16)
+						+ (intBuffer[2] << 8)
+						+ intBuffer[3];
+					DB?.GetRecord(recordIndex).Unlock();
+					break;
+			}
 		}
 
 		public async void Send(Network.MessageType type = Network.MessageType.TextInsert, params byte[] data)

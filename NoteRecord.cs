@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using System.Windows.Controls;
 using static SylverInk.Common;
 
 namespace SylverInk
@@ -28,6 +29,7 @@ namespace SylverInk
 
 		public int Index = -1;
 		public int LastMatchCount { get; private set; } = 0;
+		public bool Locked { get; private set; } = false;
 		public string? UUID;
 
 		public string Preview
@@ -170,7 +172,7 @@ namespace SylverInk
 
 			var recordObj = (NoteRecord?)obj;
 			return base.Equals(obj) ||
-				(UUID?.Equals(recordObj?.UUID) is true) ||
+				(UUID?.Equals(recordObj?.UUID ?? string.Empty) is true) ||
 				(Created.Equals(recordObj?.Created) && Index.Equals(recordObj?.Index) && Initial?.Equals(recordObj?.Initial) is true && LastChange.Equals(recordObj?.LastChange));
 		}
 
@@ -219,6 +221,34 @@ namespace SylverInk
 		public NoteRevision GetRevision(uint index) => Revisions[Revisions.Count - 1 - (int)index];
 
 		public string GetRevisionTime(uint index) => DateTime.FromBinary(GetRevision(index)._created).ToString("yyyy-MM-dd HH:mm:ss");
+
+		public void Lock()
+		{
+			if (Locked)
+				return;
+
+			Locked = true;
+
+			foreach (var query in OpenQueries)
+			{
+				if (query.ResultRecord.Equals(Index))
+				{
+					query.LastChangedLabel.Content = "Note locked by another user";
+					query.ResultBlock.IsEnabled = false;
+				}
+			}
+
+			var panel = GetChildPanel("DatabasesPanel");
+
+			foreach (TabItem item in panel.Items)
+			{
+				if (Index == (int)(item.Tag ?? -1))
+				{
+					var grid = (Grid)item.Content;
+					grid.IsEnabled = false;
+				}
+			}
+		}
 
 		public int MatchTags(string text)
 		{
@@ -275,6 +305,34 @@ namespace SylverInk
 				_serializer?.WriteLong(Revisions[i]._created);
 				_serializer?.WriteInt32(Revisions[i]._startIndex);
 				_serializer?.WriteString(Revisions[i]._substring);
+			}
+		}
+
+		public void Unlock()
+		{
+			if (!Locked)
+				return;
+
+			Locked = false;
+
+			foreach (var query in OpenQueries)
+			{
+				if (query.ResultRecord.Equals(Index))
+				{
+					query.LastChangedLabel.Content = "Last modified: " + CurrentDatabase.GetRecord(Index).GetLastChange();
+					query.ResultBlock.IsEnabled = true;
+				}
+			}
+
+			var panel = GetChildPanel("DatabasesPanel");
+
+			foreach (TabItem item in panel.Items)
+			{
+				if (Index == (int)(item.Tag ?? -1))
+				{
+					var grid = (Grid)item.Content;
+					grid.IsEnabled = true;
+				}
 			}
 		}
 

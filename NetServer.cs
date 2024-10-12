@@ -34,7 +34,7 @@ namespace SylverInk
 				var task = (BackgroundWorker?)sender;
 				while (!task?.CancellationPending is true)
 					foreach (var client in Clients)
-						if (client.Available >= 10)
+						if (client.Available > 0)
 							ReadFromStream();
 			};
 

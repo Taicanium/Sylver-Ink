@@ -15,7 +15,9 @@ namespace SylverInk
 			Connect,
 			Disconnect,
 			RecordAdd,
+			RecordLock,
 			RecordRemove,
+			RecordUnlock,
 			TextInsert,
 			TextRemove
 		}
@@ -27,7 +29,7 @@ namespace SylverInk
 
 		public static string CodeFromAddress(IPAddress? Address, byte? Flags)
 		{
-			var workingList = Address?.GetAddressBytes() ?? [0, 0, 0, 0];
+			var workingList = Address?.GetAddressBytes() ?? [127, 0, 0, 1];
 			if (workingList.Length != 4)
 				return "127.0.0.1";
 
