@@ -19,6 +19,7 @@ namespace SylverInk
 		public string? Name { get => Controller.Name; set => Controller.Name = value; }
 		public int RecordCount => Controller.RecordCount;
 		public NetServer? Server;
+		public string UUID { get; set; } = MakeUUID(UUIDType.Database);
 		public Dictionary<string, double> WordPercentages => Controller.WordPercentages;
 
 		public Database()
@@ -156,6 +157,9 @@ namespace SylverInk
 				return;
 
 			Controller.SerializeRecords();
+
+			if (DBFile.Contains(Path.Join(DocumentsSubfolders["Databases"])))
+				File.WriteAllText(Path.Join(DocumentsSubfolders["Databases"], Name, "uuid.dat"), UUID);
 		}
 
 		public void Sort(SortType type = SortType.ByIndex)

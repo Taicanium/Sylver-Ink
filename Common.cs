@@ -6,6 +6,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
@@ -84,10 +85,14 @@ namespace SylverInk
 			if ((db.Name ?? string.Empty).Equals(string.Empty))
 				db.Name = DefaultDatabase;
 
-			if (tabs.Where(item => item.Header.Equals(db.Name)).Any())
+			if (tabs.Where(item => ((Label)((StackPanel)item.Header).Children[0]).Content.Equals(db.Name)).Any())
 			{
 				var index = 1;
-				while (tabs.Where(item => item.Header.Equals($"{db.Name} ({index})")).Any())
+				Match match;
+				if ((match = Regex.Match(db.Name ?? string.Empty, @"\((\p{Nd}+)\)$")).Success)
+					index = int.Parse(match.Groups[1].Value);
+
+				while (tabs.Where(item => ((Label)((StackPanel)item.Header).Children[0]).Content.Equals($"{db.Name} ({index})")).Any())
 					index++;
 				db.Name = $"{db.Name} ({index})";
 			}
@@ -256,7 +261,37 @@ namespace SylverInk
 			return (TabControl)dbItem.Content;
 		}
 
-		public static string GetDatabasePath(Database db) => Path.Join(DocumentsSubfolders["Databases"], db.Name, $"{db.Name}.sidb");
+		public static string GetDatabasePath(Database db)
+		{
+			var index = 0;
+			Match match;
+			if ((match = Regex.Match(db.Name ?? string.Empty, @"\((\p{Nd}+)\)$")).Success)
+				index = int.Parse(match.Groups[1].Value);
+
+			var path = Path.Join(DocumentsSubfolders["Databases"], db.Name, $"{db.Name}.sidb");
+			var uuidFile = Path.Join(DocumentsSubfolders["Databases"], db.Name, "uuid.dat");
+
+			while (File.Exists(path))
+			{
+				if (File.Exists(uuidFile) && db.UUID.Equals(File.ReadAllText(uuidFile)))
+					return path;
+
+				if (!File.Exists(uuidFile))
+				{
+					Database tmpDB = new();
+					tmpDB.Load(path);
+					if (tmpDB.UUID.Equals(db.UUID))
+						return path;
+				}
+
+				index++;
+				db.Name = $"{db.Name} ({index})";
+				path = Path.Join(DocumentsSubfolders["Databases"], db.Name, $"{db.Name}.sidb");
+				uuidFile = Path.Join(DocumentsSubfolders["Databases"], db.Name, "uuid.dat");
+			}
+
+			return path;
+		}
 
 		public static Label GetRibbonHeader(int recordIndex)
 		{

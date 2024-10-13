@@ -391,6 +391,7 @@ namespace SylverInk
 					{
 						CurrentDatabase.DBFile = oldFile;
 						CurrentDatabase.Name = oldName;
+						currentTab.Header = CurrentDatabase.GetHeader();
 						return;
 					}
 					Directory.Delete(newPath, true);
@@ -410,6 +411,7 @@ namespace SylverInk
 					{
 						CurrentDatabase.DBFile = oldFile;
 						CurrentDatabase.Name = oldName;
+						currentTab.Header = CurrentDatabase.GetHeader();
 						return;
 					}
 					overwrite = true;
