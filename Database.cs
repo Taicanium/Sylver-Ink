@@ -124,17 +124,20 @@ namespace SylverInk
 			Label label;
 			if (HeaderPanel is not null)
 			{
-				label = (Label)HeaderPanel.Children[0];
+				HeaderPanel.Dispatcher.Invoke(() =>
+				{
+					label = (Label)HeaderPanel.Children[0];
 
-				headerContent = Name;
-				if (headerContent?.Length > 12)
-					headerContent = $"{headerContent[..10]}...";
+					headerContent = Name;
+					if (headerContent?.Length > 12)
+						headerContent = $"{headerContent[..10]}...";
 
-				label.Content = headerContent;
+					label.Content = headerContent;
 
-				HeaderPanel.Children.RemoveAt(1);
-				HeaderPanel.Children.Add((Client?.Active is true ? Client?.Indicator : Server?.Indicator) ?? new System.Windows.Shapes.Ellipse());
-				HeaderPanel.ToolTip = Name;
+					HeaderPanel.Children.RemoveAt(1);
+					HeaderPanel.Children.Add((Client?.Active is true ? Client?.Indicator : Server?.Indicator) ?? new System.Windows.Shapes.Ellipse());
+					HeaderPanel.ToolTip = Name;
+				});
 
 				return HeaderPanel;
 			}
@@ -238,7 +241,7 @@ namespace SylverInk
 			Controller.SerializeRecords();
 
 			if (DBFile.Contains(Path.Join(DocumentsSubfolders["Databases"])))
-				File.WriteAllText(Path.Join(DocumentsSubfolders["Databases"], Name, "uuid.dat"), UUID);
+				File.WriteAllText(Path.Join(Path.GetDirectoryName(DBFile), "uuid.dat"), UUID);
 		}
 
 		public void Sort(SortType type = SortType.ByIndex)

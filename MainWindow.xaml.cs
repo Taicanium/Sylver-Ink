@@ -63,11 +63,7 @@ namespace SylverInk
 
 		private void CodePopupClosed(object sender, EventArgs e) => Clipboard.SetText(CodeBox.Text);
 
-		private void CopyCode(object sender, RoutedEventArgs e)
-		{
-			Clipboard.SetData(DataFormats.UnicodeText, CodeBox.Text);
-			CodePopup.IsOpen = false;
-		}
+		private void CopyCode(object sender, RoutedEventArgs e) => CodePopup.IsOpen = false;
 
 		private void DatabaseBackup(object sender, RoutedEventArgs e) => CurrentDatabase.MakeBackup();
 
@@ -106,7 +102,11 @@ namespace SylverInk
 			DeferUpdateRecentNotes();
 		}
 
-		private void DatabaseDisconnect(object sender, RoutedEventArgs e) => RemoveDatabase(CurrentDatabase);
+		private void DatabaseDisconnect(object sender, RoutedEventArgs e)
+		{
+			CurrentDatabase.Client?.Disconnect();
+			CurrentDatabase.Changed = true;
+		}
 
 		private void DatabaseOpen(object sender, RoutedEventArgs e)
 		{
@@ -432,9 +432,12 @@ namespace SylverInk
 		{
 			ConnectAddress.IsOpen = false;
 
+			Database newDB = new();
+			AddDatabase(newDB);
+
 			var addr = AddressBox.Text;
 			BackgroundWorker worker = new();
-			worker.DoWork += (_, _) => CurrentDatabase.Client?.Connect(addr);
+			worker.DoWork += (_, _) => newDB.Client?.Connect(addr);
 			worker.RunWorkerAsync();
 		}
 

@@ -7,6 +7,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Windows;
+using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using static SylverInk.Common;
 using static SylverInk.Network;
@@ -20,7 +21,11 @@ namespace SylverInk
 		public string? AddressCode { get; set; }
 		public List<TcpClient> Clients { get; } = [];
 		private TcpListener DBServer { get; set; } = new(IPAddress.Any, TcpPort);
-		public static string DNSAddress { get; } = "http://checkip.dyndns.org";
+		public static string[] DNSAddresses { get; } = [
+			"http://checkip.dyndns.org",
+			"https://ifconfig.me/ip",
+			"https://icanhazip.com"
+		];
 		public byte? Flags;
 		public System.Windows.Shapes.Ellipse? Indicator { get; set; }
 		public BackgroundWorker ServerTask { get; set; } = new() { WorkerSupportsCancellation = true };
@@ -44,9 +49,6 @@ namespace SylverInk
 			{
 				foreach (var client in Clients)
 					client.Close();
-
-				foreach (var revision in Revisions)
-					revision.Key.Add(revision.Value);
 			};
 
 			WatchTask.DoWork += (sender, _) =>
@@ -60,8 +62,22 @@ namespace SylverInk
 						SpinWait.SpinUntil(() => client.Available != 0);
 						var stream = client.GetStream();
 						Flags = (byte)stream.ReadByte();
-						var data = DB.Controller?.SerializeRecords(true)?.ToArray();
-						stream.WriteAsync(data).AsTask().Wait();
+
+						var data = DB.Controller?.SerializeRecords(true);
+						int dataLength = data?.Count ?? 0;
+
+						data?.Insert(0, (byte)MessageType.DatabaseInit);
+						data?.InsertRange(1, [
+							0, 0, 0, 0,
+							(byte)((dataLength >> 24) & 0xFF),
+							(byte)((dataLength >> 16) & 0xFF),
+							(byte)((dataLength >> 8) & 0xFF),
+							(byte)(dataLength & 0xFF),
+						]);
+
+						if (dataLength > 0)
+							stream.WriteAsync(data?.ToArray()).AsTask().Wait();
+
 						Clients.Add(client);
 					}
 				}
@@ -86,9 +102,12 @@ namespace SylverInk
 		{
 			WatchTask.CancelAsync();
 			ServerTask.CancelAsync();
+			DBServer?.Stop();
+			DBServer?.Dispose();
 			Serving = false;
 			Active = false;
 			UpdateIndicator();
+			UpdateContextMenu();
 		}
 
 		private void ReadFromStream(TcpClient client, Database DB)
@@ -192,34 +211,67 @@ namespace SylverInk
 		public async void Serve(byte Flags)
 		{
 			Active = true;
-			IPAddress? address;
+			Address = IPAddress.Loopback;
 			Serving = false;
 			UpdateIndicator();
 
 			this.Flags = Math.Min((byte)15, Flags);
 
-			try
+			for (int i = 0; i < DNSAddresses.Length; i++)
 			{
-				if (!IPAddress.TryParse(await new HttpClient().GetStringAsync(DNSAddress), out address))
-					address = IPAddress.Loopback;
-			}
-			catch
-			{
-				MessageBox.Show("You are not connected to the internet.", "Sylver Ink: Error", MessageBoxButton.OK, MessageBoxImage.Error);
-				return;
+				try
+				{
+					var DNSAddress = DNSAddresses[i];
+					if (IPAddress.TryParse(await new HttpClient().GetStringAsync(DNSAddress), out var address))
+					{
+						AddressCode = CodeFromAddress(address, this.Flags);
+						Address = CodeToAddress(AddressCode, out this.Flags);
+						break;
+					}
+				}
+				catch { }
 			}
 
-			AddressCode = CodeFromAddress(address, this.Flags);
-			Address = CodeToAddress(AddressCode, out this.Flags);
+			if (Address.Equals(IPAddress.Loopback))
+			{
+				MessageBox.Show("Failed to connect to the DNS server. Please try again.", "Sylver Ink: Error", MessageBoxButton.OK, MessageBoxImage.Error);
+				Active = false;
+				Serving = false;
+				return;
+			}
 
 			DBServer = new(IPAddress.Any, TcpPort);
 			DBServer.Server.ReceiveBufferSize = int.MaxValue;
 			DBServer.Server.SendBufferSize = int.MaxValue;
-			DBServer.Start(512);
+
+			try
+			{
+				DBServer.Start(512);
+			}
+			catch
+			{
+				MessageBox.Show("Failed to open the database server on port 5192.", "Sylver Ink: Error", MessageBoxButton.OK, MessageBoxImage.Error);
+				Active = false;
+				Serving = false;
+				return;
+			}
+
 			Serving = true;
 
 			WatchTask.RunWorkerAsync();
 			UpdateIndicator();
+			UpdateContextMenu();
+
+			var codePopup = (Popup?)Application.Current.MainWindow.FindName("CodePopup");
+			if (codePopup is null)
+				return;
+
+			var codeBox = (System.Windows.Controls.TextBox)codePopup.FindName("CodeBox");
+			if (codeBox is null)
+				return;
+
+			codePopup.IsOpen = true;
+			codeBox.Text = AddressCode ?? "Vm000G";
 		}
 
 		public void UpdateIndicator()
@@ -227,12 +279,12 @@ namespace SylverInk
 			Indicator?.Dispatcher.Invoke(() =>
 			{
 				Indicator.Fill = Serving ? Brushes.MediumPurple : Brushes.Orange;
-				Indicator.Height = 15;
-				Indicator.Margin = new(4);
+				Indicator.Height = 12;
+				Indicator.Margin = new(2, 4, 3, 4);
 				Indicator.Stroke = Common.Settings.MenuForeground;
-				Indicator.Width = 15;
+				Indicator.Width = 12;
 				Indicator.InvalidateVisual();
-				DeferUpdateRecentNotes(true);
+				UpdateContextMenu();
 			});
 		}
 	}

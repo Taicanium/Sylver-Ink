@@ -37,7 +37,7 @@ namespace SylverInk
 				MeasureTask.DoWork += (_, _) => MeasureNotes();
 				MeasureTask.RunWorkerCompleted += (_, _) =>
 				{
-					Common.Settings.ImportData = $"Estimated new notes: {RunningCount}\nAverage length: {RunningAverage:N0} characters per note\n\nRemember to press Import to finalize your changes!";
+					Common.Settings.ImportData = $"Estimated new notes: {RunningCount:N0}\nAverage length: {RunningAverage:N0} characters per note\n\nRemember to press Import to finalize your changes!";
 					((Button)FindName("DoImport")).Content = "Import";
 					((Button)FindName("LTLess")).IsEnabled = true;
 					((Button)FindName("LTMore")).IsEnabled = true;

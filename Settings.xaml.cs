@@ -111,7 +111,7 @@ namespace SylverInk
 					break;
 			}
 			CustomColor.Fill = color;
-			CustomColorBox.Text = Common.BytesFromBrush(color, 3);
+			CustomColorBox.Text = BytesFromBrush(color, 3);
 		}
 
 		private void Drag(object sender, MouseButtonEventArgs e) => DragMove();
@@ -121,7 +121,7 @@ namespace SylverInk
 			if (MessageBox.Show("Are you sure you want to erase your notes and create a new database?", "Sylver Ink: Warning", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.No)
 				return;
 
-			Common.CurrentDatabase.Erase();
+			CurrentDatabase.Erase();
 		}
 
 		private void FontSizeChanged(object sender, RoutedEventArgs e)
@@ -131,7 +131,7 @@ namespace SylverInk
 				Common.Settings.MainFontSize -= 0.5;
 			else
 				Common.Settings.MainFontSize += 0.5;
-			Common.DeferUpdateRecentNotes();
+			DeferUpdateRecentNotes();
 		}
 
 		private void Hour_Selected(object sender, RoutedEventArgs e)
@@ -171,7 +171,7 @@ namespace SylverInk
 		{
 			var item = (ComboBoxItem)MenuFont.SelectedItem;
 			Common.Settings.MainFontFamily = item.FontFamily;
-			Common.DeferUpdateRecentNotes();
+			DeferUpdateRecentNotes();
 		}
 
 		private void Minute_Selected(object sender, RoutedEventArgs e)
@@ -184,7 +184,7 @@ namespace SylverInk
 		{
 			var box = (TextBox)sender;
 			var text = box.Text.StartsWith('#') ? box.Text[1..] : box.Text;
-			var brush = Common.BrushFromBytes(text);
+			var brush = BrushFromBytes(text);
 
 			CustomColor.Fill = brush ?? Brushes.Transparent;
 			LastColorSelection = brush;
@@ -201,12 +201,12 @@ namespace SylverInk
 			Common.Settings.MainFontSize = 11.0;
 			Common.Settings.MenuBackground = Brushes.Beige;
 			Common.Settings.MenuForeground = Brushes.Black;
-			Common.RecentEntriesSortMode = Common.SortType.ByChange;
-			Common.RibbonTabContent = Common.DisplayType.Content;
+			RecentEntriesSortMode = SortType.ByChange;
+			RibbonTabContent = DisplayType.Content;
 			Common.Settings.SearchResultsOnTop = false;
 			Common.Settings.SnapSearchResults = true;
 
-			Common.DeferUpdateRecentNotes(true);
+			DeferUpdateRecentNotes(true);
 		}
 
 		private void RestoreClick(object sender, RoutedEventArgs e)
@@ -225,7 +225,7 @@ namespace SylverInk
 			DateTime reversion = ReversionDate?.SelectedDate ?? DateTime.Now;
 			reversion = reversion.Date.AddHours(hourValue).AddMinutes(minuteValue);
 
-			Common.CurrentDatabase.Revert(reversion);
+			CurrentDatabase.Revert(reversion);
 		}
 
 		private void SelectedDateChanged(object sender, SelectionChangedEventArgs e) => RestoreButton.IsEnabled = ReversionDate.SelectedDate is not null;

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -16,13 +15,10 @@ namespace SylverInk
 {
 	public partial class NetClient
 	{
-		public static List<char> CodeValues { get; } = Enumerable.Range(48, 10).Concat(Enumerable.Range(65, 26)).Concat(Enumerable.Range(97, 26)).Concat([33, 35, 36, 37]).Select(c => (char)c).ToList();
-		public static Dictionary<int, int> ValueCodes { get; } = new(CodeValues.Select((c, i) => new KeyValuePair<int, int>(c, i)));
-
 		public bool Active { get; set; } = false;
 		public IPAddress? Address { get; set; }
 		public string? AddressCode { get; set; }
-		private BackgroundWorker ClientTask { get; set; } = new();
+		private BackgroundWorker ClientTask { get; set; } = new() { WorkerSupportsCancellation = true };
 		public bool Connected { get; private set; } = false;
 		public bool Connecting { get; private set; } = false;
 		public Database? DB { get; set; }
@@ -43,12 +39,6 @@ namespace SylverInk
 					if (DBClient.Available > 0)
 						ReadFromStream();
 			};
-
-			ClientTask.RunWorkerCompleted += (_, _) =>
-			{
-				foreach (var revision in Revisions)
-					revision.Key.Add(revision.Value);
-			};
 		}
 
 		public async Task Connect(string code)
@@ -64,6 +54,7 @@ namespace SylverInk
 			if (DBClient.Connected)
 				Disconnect();
 
+			Connecting = true;
 			UpdateIndicator();
 
 			DBClient = new()
@@ -79,32 +70,11 @@ namespace SylverInk
 			}
 			catch
 			{
-				MessageBox.Show("You are not connected to the internet.", "Sylver Ink: Error", MessageBoxButton.OK, MessageBoxImage.Error);
+				MessageBox.Show("Failed to connect to the database.", "Sylver Ink: Error", MessageBoxButton.OK, MessageBoxImage.Error);
 				return;
 			}
 
-			Connecting = true;
-			UpdateIndicator();
-
-			int oldData = 0;
-			bool dataFinished = false;
-			do
-			{
-				dataFinished = (DBClient.Available > 0 && DBClient.Available == oldData);
-				oldData = DBClient.Available;
-				SpinWait.SpinUntil(() => false, 100);
-			} while (!dataFinished);
-
-			byte[] data = new byte[DBClient.Available];
-			DBClient.GetStream().Read(data, 0, DBClient.Available);
-
-			DB?.Controller.DeserializeRecords([.. data]);
-
 			ClientTask.RunWorkerAsync();
-			Connecting = false;
-			Connected = true;
-
-			UpdateIndicator();
 		}
 
 		public async void Disconnect()
@@ -112,6 +82,7 @@ namespace SylverInk
 			ClientTask.CancelAsync();
 			DBClient?.Close();
 			await Task.Run(() => SpinWait.SpinUntil(() => !DBClient?.Connected is true));
+			DBClient?.Dispose();
 			Connected = false;
 			Active = false;
 			UpdateIndicator();
@@ -144,6 +115,27 @@ namespace SylverInk
 
 			switch (type)
 			{
+				case MessageType.DatabaseInit:
+					stream.Read(intBuffer, 0, 4);
+					textCount = (intBuffer[0] << 24)
+						+ (intBuffer[1] << 16)
+						+ (intBuffer[2] << 8)
+						+ intBuffer[3];
+
+					if (textCount > 0)
+					{
+						textBuffer = new byte[textCount];
+						stream.Read(textBuffer, 0, textCount);
+
+						DB?.Controller.DeserializeRecords(new(textBuffer));
+
+						Connecting = false;
+						Connected = true;
+						UpdateIndicator();
+						DB?.GetHeader();
+						Application.Current.Dispatcher.Invoke(() => DeferUpdateRecentNotes(true));
+					}
+					break;
 				case MessageType.RecordAdd:
 					stream.Read(intBuffer, 0, 4);
 					textCount = (intBuffer[0] << 24)
@@ -208,14 +200,13 @@ namespace SylverInk
 			Indicator?.Dispatcher.Invoke(() =>
 			{
 				Indicator.Fill = Connecting ? Brushes.Yellow : (DBClient?.Connected is true ? Brushes.Green : Brushes.Orange);
-				Indicator.Height = 15;
-				Indicator.Margin = new(4);
+				Indicator.Height = 12;
+				Indicator.Margin = new(2, 4, 3, 4);
 				Indicator.Stroke = Common.Settings.MenuForeground;
-				Indicator.Width = 15;
+				Indicator.Width = 12;
 				Indicator.InvalidateVisual();
 				DB?.GetHeader();
 				UpdateContextMenu();
-				DeferUpdateRecentNotes(true);
 			});
 		}
 	}

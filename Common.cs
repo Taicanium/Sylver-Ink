@@ -110,6 +110,8 @@ namespace SylverInk
 				Tag = db,
 			};
 
+			var newControl = (TabControl)item.Content;
+			newControl.Tag = _name;
 			item.MouseRightButtonDown += (_, _) => control.SelectedItem = item;
 			control.Items.Add(item);
 			control.SelectedItem = item;
@@ -166,19 +168,19 @@ namespace SylverInk
 			if (!CanResize)
 				return;
 
-			var panel = GetChildPanel("DatabasesPanel");
-			var RecentBox = (ListBox?)panel.FindName("RecentNotes");
-			var ChangesBox = (ListBox?)panel.FindName("ShortChanges");
-
-			if ((RecentBox ?? ChangesBox) is null)
-				return;
-
 			if (UpdateTask is null)
 			{
 				UpdateTask = new();
 				UpdateTask.DoWork += (_, _) => UpdateRecentNotes();
 				UpdateTask.RunWorkerCompleted += (_, _) =>
 				{
+					var panel = GetChildPanel("DatabasesPanel");
+					var RecentBox = (ListBox?)panel.FindName("RecentNotes");
+					var ChangesBox = (ListBox?)panel.FindName("ShortChanges");
+
+					if ((RecentBox ?? ChangesBox) is null)
+						return;
+
 					CurrentDatabase.Sort(RecentEntriesSortMode);
 					Settings.RecentNotes.Clear();
 					for (int i = 0; i < Math.Min(RecentEntries, CurrentDatabase.RecordCount); i++)
@@ -196,17 +198,27 @@ namespace SylverInk
 				MeasureTask = new();
 				MeasureTask.DoWork += (_, _) =>
 				{
-					SpinWait.SpinUntil(() => RecentBox?.IsMeasureValid ?? true, 1000);
-					WindowHeight = (RecentBox?.ActualHeight ?? Application.Current.MainWindow.ActualHeight) - 75.0;
-					WindowWidth = (RecentBox?.ActualWidth ?? Application.Current.MainWindow.ActualWidth) - 75.0;
+					var panel = GetChildPanel("DatabasesPanel");
+					var RecentBox = (ListBox?)panel.Dispatcher.Invoke(() => panel.FindName("RecentNotes"));
+					var ChangesBox = (ListBox?)panel.Dispatcher.Invoke(() => panel.FindName("ShortChanges"));
 
-					SpinWait.SpinUntil(() => !UpdateTask?.IsBusy ?? true, 200);
+					if ((RecentBox ?? ChangesBox) is null)
+						return;
+
+					SpinWait.SpinUntil(() => RecentBox?.IsMeasureValid ?? true, 1000);
+					WindowHeight = (RecentBox?.ActualHeight ?? Application.Current.MainWindow.ActualHeight) - 40.0;
+					WindowWidth = (RecentBox?.ActualWidth ?? Application.Current.MainWindow.ActualWidth) - 40.0;
+
+					SpinWait.SpinUntil(() => !UpdateTask?.IsBusy ?? true, 500);
 					if (UpdateTask?.IsBusy ?? false)
 						UpdateTask?.CancelAsync();
 
-					SpinWait.SpinUntil(() => !UpdateTask?.IsBusy ?? true, 200);
+					SpinWait.SpinUntil(() => !UpdateTask?.IsBusy ?? true, 500);
 					if (UpdateTask?.IsBusy ?? false)
+					{
 						UpdateTask?.Dispose();
+						UpdateTask = null;
+					}
 				};
 				MeasureTask.RunWorkerCompleted += (_, _) => UpdateTask?.RunWorkerAsync();
 			}
@@ -256,9 +268,11 @@ namespace SylverInk
 
 		public static TabControl GetChildPanel(string basePanel)
 		{
-			var db = (TabControl)Application.Current.MainWindow.FindName(basePanel);
-			var dbItem = (TabItem)db.SelectedItem;
-			return (TabControl)dbItem.Content;
+			return Application.Current.Dispatcher.Invoke(() => {
+				var db = (TabControl)Application.Current.MainWindow.FindName(basePanel);
+				var dbItem = (TabItem)db.SelectedItem;
+				return (TabControl)dbItem.Content;
+			});
 		}
 
 		public static string GetDatabasePath(Database db)
@@ -457,7 +471,7 @@ namespace SylverInk
 
 				RecentEntries++;
 				var height = MeasureTextHeight(record.Preview);
-				TextHeight += Math.Ceiling(height);
+				TextHeight += height * 1.25;
 			}
 
 			CurrentDatabase.Sort();
