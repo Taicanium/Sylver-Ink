@@ -4,11 +4,13 @@ using System.ComponentModel;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 using static SylverInk.Common;
+using static SylverInk.Network;
 
 namespace SylverInk
 {
@@ -44,7 +46,7 @@ namespace SylverInk
 
 			ClientTask.RunWorkerCompleted += (_, _) =>
 			{
-				foreach (var revision in Network.Revisions)
+				foreach (var revision in Revisions)
 					revision.Key.Add(revision.Value);
 			};
 		}
@@ -56,8 +58,8 @@ namespace SylverInk
 
 			Active = true;
 
-			Address = Network.CodeToAddress(code, out Flags);
-			AddressCode = Network.CodeFromAddress(Address, Flags);
+			Address = CodeToAddress(code, out Flags);
+			AddressCode = CodeFromAddress(Address, Flags);
 
 			if (DBClient.Connected)
 				Disconnect();
@@ -72,7 +74,7 @@ namespace SylverInk
 
 			try
 			{
-				await DBClient.ConnectAsync(Address, Network.TcpPort);
+				await DBClient.ConnectAsync(Address, TcpPort);
 				await DBClient.GetStream().WriteAsync(new List<byte>([Flags ?? 0]).ToArray());
 			}
 			catch
@@ -127,32 +129,70 @@ namespace SylverInk
 
 			var stream = DBClient.GetStream();
 
-			var type = (Network.MessageType)stream.ReadByte();
+			var type = (MessageType)stream.ReadByte();
+
 			var intBuffer = new byte[4];
 			var recordIndex = 0;
+			byte[] textBuffer;
+			var textCount = 0;
+
+			stream.Read(intBuffer, 0, 4);
+			recordIndex = (intBuffer[0] << 24)
+				+ (intBuffer[1] << 16)
+				+ (intBuffer[2] << 8)
+				+ intBuffer[3];
 
 			switch (type)
 			{
-				case Network.MessageType.RecordLock:
+				case MessageType.RecordAdd:
 					stream.Read(intBuffer, 0, 4);
-					recordIndex = (intBuffer[0] << 24)
+					textCount = (intBuffer[0] << 24)
 						+ (intBuffer[1] << 16)
 						+ (intBuffer[2] << 8)
 						+ intBuffer[3];
-					DB?.GetRecord(recordIndex).Lock();
+
+					if (textCount > 0)
+					{
+						textBuffer = new byte[textCount];
+						stream.Read(textBuffer, 0, textCount);
+
+						DB?.CreateRecord(Encoding.UTF8.GetString(textBuffer));
+						break;
+					}
+
+					DB?.CreateRecord(string.Empty);
 					break;
-				case Network.MessageType.RecordUnlock:
+				case MessageType.RecordLock:
+					DB?.Lock(recordIndex);
+					break;
+				case MessageType.RecordRemove:
+					DB?.DeleteRecord(recordIndex);
+					break;
+				case MessageType.RecordUnlock:
+					DB?.Unlock(recordIndex);
+					break;
+				case MessageType.TextInsert:
 					stream.Read(intBuffer, 0, 4);
-					recordIndex = (intBuffer[0] << 24)
+					textCount = (intBuffer[0] << 24)
 						+ (intBuffer[1] << 16)
 						+ (intBuffer[2] << 8)
 						+ intBuffer[3];
-					DB?.GetRecord(recordIndex).Unlock();
+
+					if (textCount > 0)
+					{
+						textBuffer = new byte[textCount];
+						stream.Read(textBuffer, 0, textCount);
+
+						DB?.CreateRevision(recordIndex, Encoding.UTF8.GetString(textBuffer));
+						break;
+					}
+
+					DB?.CreateRevision(recordIndex, string.Empty);
 					break;
 			}
 		}
 
-		public async void Send(Network.MessageType type = Network.MessageType.TextInsert, params byte[] data)
+		public async void Send(MessageType type, byte[] data)
 		{
 			if (!DBClient.Connected)
 				return;

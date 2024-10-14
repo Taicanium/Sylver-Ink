@@ -190,6 +190,8 @@ namespace SylverInk
 
 				tabPanel.SelectedIndex = 0;
 				tabPanel.Items.RemoveAt(tabIndex);
+
+				CurrentDatabase.Unlock(tag.Item2);
 			};
 
 			deleteButton.Click += (sender, _) =>
@@ -295,6 +297,8 @@ namespace SylverInk
 			Top = newCoords.Y;
 		}
 
+		public void Lock() => CurrentDatabase.Lock(ResultRecord);
+
 		private void Result_Closed(object sender, EventArgs e)
 		{
 			if (Edited)
@@ -326,6 +330,9 @@ namespace SylverInk
 				if ((int?)item.Tag == ResultRecord)
 					tabPanel.Items.RemoveAt(i);
 			}
+
+			if (CurrentDatabase.GetRecord(ResultRecord).Locked)
+				Lock();
 		}
 
 		private void ResultBlock_TextChanged(object sender, TextChangedEventArgs e)
@@ -440,6 +447,13 @@ namespace SylverInk
 			return Coords;
 		}
 
+		public void Unlock()
+		{
+			LastChangedLabel.Content = "Last modified: " + CurrentDatabase.GetRecord(ResultRecord).GetLastChange();
+			ResultBlock.IsEnabled = true;
+			CurrentDatabase.Unlock(ResultRecord);
+		}
+		
 		private void ViewClick(object sender, RoutedEventArgs e)
 		{
 			AddTabToRibbon();

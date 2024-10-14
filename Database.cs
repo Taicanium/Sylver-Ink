@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
+using System.Text;
 using System.Windows.Controls;
 using static SylverInk.Common;
 
@@ -47,13 +48,75 @@ namespace SylverInk
 			AddDatabase(db);
 		}
 
-		public int CreateRecord(string entry) => Controller.CreateRecord(entry);
-		
-		public void CreateRevision(int index, string newVersion) => Controller.CreateRevision(index, newVersion);
+		public int CreateRecord(string entry)
+		{
+			int index = Controller.CreateRecord(entry);
 
-		public void DeleteRecord(int index) => Controller.DeleteRecord(index);
+			if (Client?.Connected is true || Server?.Serving is true)
+			{
+				var outBuffer = new List<byte>([
+					(byte)((entry.Length >> 24) & 0xFF),
+					(byte)((entry.Length >> 16) & 0xFF),
+					(byte)((entry.Length >> 8) & 0xFF),
+					(byte)(entry.Length & 0xFF),
+				]);
 
-		public void Erase() => Controller.EraseDatabase();
+				if (entry.Length > 0)
+					outBuffer.AddRange(Encoding.UTF8.GetBytes(entry));
+
+				Transmit(Network.MessageType.RecordAdd, [.. outBuffer]);
+			}
+
+			return index;
+		}
+
+		public void CreateRevision(int index, string newVersion)
+		{
+			Controller.CreateRevision(index, newVersion);
+			if (Client?.Connected is true || Server?.Serving is true)
+			{
+				var outBuffer = new List<byte>([
+					(byte)((index >> 24) & 0xFF),
+					(byte)((index >> 16) & 0xFF),
+					(byte)((index >> 8) & 0xFF),
+					(byte)(index & 0xFF),
+					(byte)((newVersion.Length >> 24) & 0xFF),
+					(byte)((newVersion.Length >> 16) & 0xFF),
+					(byte)((newVersion.Length >> 8) & 0xFF),
+					(byte)(newVersion.Length & 0xFF)
+				]);
+
+				if (newVersion.Length > 0)
+					outBuffer.AddRange(Encoding.UTF8.GetBytes(newVersion));
+
+				Transmit(Network.MessageType.TextInsert, [.. outBuffer]);
+			}
+		}
+
+		public void DeleteRecord(int index)
+		{
+			Controller.DeleteRecord(index);
+
+			if (Client?.Connected is true || Server?.Serving is true)
+			{
+				byte[] outBuffer = [
+					(byte)((index >> 24) & 0xFF),
+					(byte)((index >> 16) & 0xFF),
+					(byte)((index >> 8) & 0xFF),
+					(byte)(index & 0xFF),
+				];
+
+				Transmit(Network.MessageType.RecordRemove, outBuffer);
+			}
+		}
+
+		public void Erase()
+		{
+			if (Client?.Connected is true || Server?.Serving is true)
+				return;
+
+			Controller.EraseDatabase();
+		}
 
 		public object GetHeader()
 		{
@@ -110,6 +173,22 @@ namespace SylverInk
 
 			if ((Name ?? string.Empty).Equals(string.Empty))
 				Name = Path.GetFileNameWithoutExtension(DBFile);
+		}
+
+		public void Lock(int index)
+		{
+			if (!Client?.Connected is true && !Server?.Serving is true)
+				return;
+
+			byte[] outBuffer = [
+				(byte)((index >> 24) & 0xFF),
+				(byte)((index >> 16) & 0xFF),
+				(byte)((index >> 8) & 0xFF),
+				(byte)(index & 0xFF),
+			];
+
+			Controller.GetRecord(index).Lock();
+			Transmit(Network.MessageType.RecordLock, outBuffer);
 		}
 
 		public void MakeBackup(bool auto = false)
@@ -169,13 +248,29 @@ namespace SylverInk
 			Controller.Sort(type);
 		}
 
-		public void Transmit(Network.MessageType type = Network.MessageType.TextInsert, params byte[] data)
+		public void Transmit(Network.MessageType type, byte[] data)
 		{
 			if (Client?.Connected is true)
 				Client?.Send(type, data);
 
 			if (Server?.Serving is true)
 				Server?.Broadcast(type, data);
+		}
+
+		public void Unlock(int index)
+		{
+			if (!Client?.Connected is true && !Server?.Serving is true)
+				return;
+
+			byte[] outBuffer = [
+				(byte)((index >> 24) & 0xFF),
+				(byte)((index >> 16) & 0xFF),
+				(byte)((index >> 8) & 0xFF),
+				(byte)(index & 0xFF),
+			];
+
+			Controller.GetRecord(index).Unlock();
+			Transmit(Network.MessageType.RecordUnlock, outBuffer);
 		}
 
 		public void UpdateWordPercentages() => Controller.UpdateWordPercentages();

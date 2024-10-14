@@ -4,10 +4,12 @@ using System.ComponentModel;
 using System.Net;
 using System.Net.Http;
 using System.Net.Sockets;
+using System.Text;
 using System.Threading;
 using System.Windows;
 using System.Windows.Media;
 using static SylverInk.Common;
+using static SylverInk.Network;
 
 namespace SylverInk
 {
@@ -17,7 +19,7 @@ namespace SylverInk
 		public IPAddress? Address { get; set; }
 		public string? AddressCode { get; set; }
 		public List<TcpClient> Clients { get; } = [];
-		private TcpListener DBServer { get; set; } = new(IPAddress.Any, Network.TcpPort);
+		private TcpListener DBServer { get; set; } = new(IPAddress.Any, TcpPort);
 		public static string DNSAddress { get; } = "http://checkip.dyndns.org";
 		public byte? Flags;
 		public System.Windows.Shapes.Ellipse? Indicator { get; set; }
@@ -35,7 +37,7 @@ namespace SylverInk
 				while (!task?.CancellationPending is true)
 					foreach (var client in Clients)
 						if (client.Available > 0)
-							ReadFromStream();
+							ReadFromStream(client, DB);
 			};
 
 			ServerTask.RunWorkerCompleted += (_, _) =>
@@ -43,7 +45,7 @@ namespace SylverInk
 				foreach (var client in Clients)
 					client.Close();
 
-				foreach (var revision in Network.Revisions)
+				foreach (var revision in Revisions)
 					revision.Key.Add(revision.Value);
 			};
 
@@ -66,7 +68,7 @@ namespace SylverInk
 			};
 		}
 
-		public async void Broadcast(Network.MessageType type = Network.MessageType.TextInsert, params byte[] data)
+		public async void Broadcast(MessageType type, byte[] data)
 		{
 			foreach (var client in Clients)
 			{
@@ -89,12 +91,94 @@ namespace SylverInk
 			UpdateIndicator();
 		}
 
-		private void ReadFromStream()
+		private void ReadFromStream(TcpClient client, Database DB)
 		{
+			int oldData = client.Available;
+			bool dataFinished = false;
+			do
+			{
+				dataFinished = !SpinWait.SpinUntil(() => client.Available != oldData, 200);
+				oldData = client.Available;
+			} while (!dataFinished);
 
+			var stream = client.GetStream();
+			var outBuffer = new List<byte>();
+
+			var type = (MessageType)stream.ReadByte();
+			outBuffer.Add((byte)type);
+
+			var intBuffer = new byte[4];
+			var recordIndex = 0;
+			byte[] textBuffer;
+			var textCount = 0;
+
+			stream.Read(intBuffer, 0, 4);
+			recordIndex = (intBuffer[0] << 24)
+				+ (intBuffer[1] << 16)
+				+ (intBuffer[2] << 8)
+				+ intBuffer[3];
+
+			outBuffer.AddRange(intBuffer);
+
+			switch (type)
+			{
+				case MessageType.RecordAdd:
+					stream.Read(intBuffer, 0, 4);
+					textCount = (intBuffer[0] << 24)
+						+ (intBuffer[1] << 16)
+						+ (intBuffer[2] << 8)
+						+ intBuffer[3];
+					outBuffer.AddRange(intBuffer);
+
+					if (textCount > 0)
+					{
+						textBuffer = new byte[textCount];
+						stream.Read(textBuffer, 0, textCount);
+						outBuffer.AddRange(textBuffer);
+
+						DB?.CreateRecord(Encoding.UTF8.GetString(textBuffer));
+						break;
+					}
+
+					DB?.CreateRecord(string.Empty);
+					break;
+				case MessageType.RecordLock:
+					DB?.Lock(recordIndex);
+					break;
+				case MessageType.RecordRemove:
+					DB?.DeleteRecord(recordIndex);
+					break;
+				case MessageType.RecordUnlock:
+					DB?.Unlock(recordIndex);
+					break;
+				case MessageType.TextInsert:
+					stream.Read(intBuffer, 0, 4);
+					textCount = (intBuffer[0] << 24)
+						+ (intBuffer[1] << 16)
+						+ (intBuffer[2] << 8)
+						+ intBuffer[3];
+					outBuffer.AddRange(intBuffer);
+
+					if (textCount > 0)
+					{
+						textBuffer = new byte[textCount];
+						stream.Read(textBuffer, 0, textCount);
+						outBuffer.AddRange(textBuffer);
+
+						DB?.CreateRevision(recordIndex, Encoding.UTF8.GetString(textBuffer));
+						break;
+					}
+
+					DB?.CreateRevision(recordIndex, string.Empty);
+					break;
+			}
+
+			foreach (var otherClient in Clients)
+				if (!otherClient.Equals(client))
+					otherClient.GetStream().Write(outBuffer.ToArray());
 		}
 
-		public async static void Send(TcpClient client, Network.MessageType type = Network.MessageType.TextInsert, params byte[] data)
+		public async static void Send(TcpClient client, MessageType type = MessageType.TextInsert, params byte[] data)
 		{
 			if (!client.Connected)
 				return;
@@ -125,10 +209,10 @@ namespace SylverInk
 				return;
 			}
 
-			AddressCode = Network.CodeFromAddress(address, this.Flags);
-			Address = Network.CodeToAddress(AddressCode, out this.Flags);
+			AddressCode = CodeFromAddress(address, this.Flags);
+			Address = CodeToAddress(AddressCode, out this.Flags);
 
-			DBServer = new(IPAddress.Any, Network.TcpPort);
+			DBServer = new(IPAddress.Any, TcpPort);
 			DBServer.Server.ReceiveBufferSize = int.MaxValue;
 			DBServer.Server.SendBufferSize = int.MaxValue;
 			DBServer.Start(512);

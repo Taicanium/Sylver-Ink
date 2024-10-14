@@ -17,7 +17,7 @@ namespace SylverInk
 	/// <summary>
 	/// Static helper functions serving multi- or general-purpose needs across the entire project.
 	/// </summary>
-	public static class Common
+	public static partial class Common
 	{
 		public enum DisplayType
 		{
@@ -89,7 +89,7 @@ namespace SylverInk
 			{
 				var index = 1;
 				Match match;
-				if ((match = Regex.Match(db.Name ?? string.Empty, @"\((\p{Nd}+)\)$")).Success)
+				if ((match = IndexDigits().Match(db.Name ?? string.Empty)).Success)
 					index = int.Parse(match.Groups[1].Value);
 
 				while (tabs.Where(item => ((Label)((StackPanel)item.Header).Children[0]).Content.Equals($"{db.Name} ({index})")).Any())
@@ -265,7 +265,7 @@ namespace SylverInk
 		{
 			var index = 0;
 			Match match;
-			if ((match = Regex.Match(db.Name ?? string.Empty, @"\((\p{Nd}+)\)$")).Success)
+			if ((match = IndexDigits().Match(db.Name ?? string.Empty)).Success)
 				index = int.Parse(match.Groups[1].Value);
 
 			var path = Path.Join(DocumentsSubfolders["Databases"], db.Name, $"{db.Name}.sidb");
@@ -489,5 +489,8 @@ namespace SylverInk
 				item.ToolTip = GetRibbonTooltip((int)tag);
 			}
 		}
+
+		[GeneratedRegex(@"\((\p{Nd}+)\)$")]
+		private static partial Regex IndexDigits();
 	}
 }

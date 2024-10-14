@@ -11,15 +11,11 @@ namespace SylverInk
 	{
 		public enum MessageType
 		{
-			CaratPosition,
-			Connect,
-			Disconnect,
 			RecordAdd,
 			RecordLock,
 			RecordRemove,
 			RecordUnlock,
-			TextInsert,
-			TextRemove
+			TextInsert
 		}
 
 		public static List<char> CodeValues { get; } = Enumerable.Range(48, 10).Concat(Enumerable.Range(65, 26)).Concat(Enumerable.Range(97, 26)).Concat([33, 35, 36, 37]).Select(c => (char)c).ToList();
