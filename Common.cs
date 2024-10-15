@@ -205,34 +205,17 @@ namespace SylverInk
 					if ((RecentBox ?? ChangesBox) is null)
 						return;
 
-					SpinWait.SpinUntil(() => RecentBox?.IsMeasureValid ?? true, 1000);
 					WindowHeight = (RecentBox?.ActualHeight ?? Application.Current.MainWindow.ActualHeight) - 40.0;
 					WindowWidth = (RecentBox?.ActualWidth ?? Application.Current.MainWindow.ActualWidth) - 40.0;
-
-					SpinWait.SpinUntil(() => !UpdateTask?.IsBusy ?? true, 500);
-					if (UpdateTask?.IsBusy ?? false)
-						UpdateTask?.CancelAsync();
-
-					SpinWait.SpinUntil(() => !UpdateTask?.IsBusy ?? true, 500);
-					if (UpdateTask?.IsBusy ?? false)
-					{
-						UpdateTask?.Dispose();
-						UpdateTask = null;
-					}
 				};
-				MeasureTask.RunWorkerCompleted += (_, _) => UpdateTask?.RunWorkerAsync();
+				MeasureTask.RunWorkerCompleted += (_, _) => { if (!UpdateTask?.IsBusy is true) UpdateTask?.RunWorkerAsync(); };
 			}
 
 			if (!MeasureTask.IsBusy)
 				MeasureTask.RunWorkerAsync();
 
 			if (RepeatUpdate)
-			{
-				var RepeatTask = new BackgroundWorker();
-				RepeatTask.DoWork += (_, _) => SpinWait.SpinUntil(() => !MeasureTask.IsBusy, 1500);
-				RepeatTask.RunWorkerCompleted += (_, _) => DeferUpdateRecentNotes();
-				RepeatTask.RunWorkerAsync();
-			}
+				DeferUpdateRecentNotes();
 		}
 
 		public static string DialogFileSelect(bool outgoing = false, int filterIndex = 3, string? defaultName = null)
