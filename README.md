@@ -8,7 +8,7 @@ Sylver Ink is designed to streamline and simplify the ADHD brain process, a Sisy
 
 ## Usage
 
-Upon running Sylver Ink for the first time, the user will be informed that the default database does not exist, and it will be automatically created in the user's My Documents folder. An option is currently provided to populate the database with placeholder data.
+Upon running Sylver Ink for the first time, the default database will be automatically created in the user's My Documents folder, blank and ready to be impregnated.
 
 ### Introduction
 
@@ -16,13 +16,13 @@ The most prominent feature of the main window is the Recent Notes box. This list
 
 New notes can be created by entering them in the New Notes textbox near the bottom of the screen.
 
-At the top of the screen are two ribbons: The top displays the user's currently open databases; the bottom displays the user's open notes. The user may right-click anywhere on the ribbons or in the main window to display a context menu with options for manipulating the database, deleting the database, or creating a new database.
+At the top of the screen are two ribbons: The top displays the user's currently open databases; the bottom displays the user's open notes in the current database. The user may right-click anywhere on the ribbons or in the main window to display a context menu with options for manipulating the database, deleting the database, or creating a new database.
 
 Opening a note will create a tiny sticky note window from which the note can be quickly viewed or edited. These note windows snap to each other for easy organization, and also provide a "View" button that will open the note in a larger tab within the main window. This tab provides access to previous versions of the note, which Sylver Ink saves along with the current version.
 
 ### "Import"
 
-The Import window allows the user to import multiple notes from plaintext files. Sylver Ink divides newly imported notes based on the number of empty lines between paragraphs in the text file. The Import window may also be used to import existing Sylver Ink databases, allowing the user to overwrite their currently open database.
+The Import window allows the user to import multiple notes from plaintext files. Sylver Ink divides newly imported notes based on the number of empty lines between paragraphs in the text file. The Import window may also be used to import existing Sylver Ink databases, allowing the user to overwrite their currently open database or merge the two.
 
 ### "Replace"
 
@@ -30,11 +30,11 @@ The Replace window allows the user to mass-replace occurrences of a text string 
 
 ### "Search"
 
-The Search window allows the user to search for occurrences of a text string across the database, and display the results in a list. Sylver Ink uses a tagging system to sort search results: Notes are prioritized if they match words in the search query with a low occurrence rate in the database.
+The Search window allows the user to search for occurrences of a text string across the database, and display the results in a list. Sylver Ink uses a tagging system to sort search results: Notes are prioritized if they match words in the search query with an overall low occurrence rate in the database at large.
 
 ### "Settings"
 
-The Settings window provides options for customizing the user's experience; placing sticky notes always on top, sorting note entries, reverting the database to its state at a previous date and time, and emptying the database are all options provided in this window.
+The Settings window provides options for customizing the user's experience; placing sticky notes always on top, sorting note entries, reverting the database to its state at a previous date and time, and emptying the database are all options provided in this window. The user may also customize the colors and visual style of the Sylver Ink interface.
 
 ## Contributions
 
