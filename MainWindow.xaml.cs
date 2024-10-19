@@ -293,6 +293,7 @@ namespace SylverInk
 			worker.RunWorkerCompleted += (_, _) =>
 			{
 				CanResize = true;
+				ResizeMode = ResizeMode.CanResize;
 				Common.Settings.MainTypeFace = new(Common.Settings.MainFontFamily, FontStyles.Normal, FontWeights.Normal, FontStretches.Normal);
 				PPD = VisualTreeHelper.GetDpi(this).PixelsPerDip;
 				DeferUpdateRecentNotes(true);

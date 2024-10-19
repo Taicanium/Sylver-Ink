@@ -40,9 +40,20 @@ namespace SylverInk
 			{
 				var task = (BackgroundWorker?)sender;
 				while (!task?.CancellationPending is true)
+				{
 					foreach (var client in Clients)
-						if (client.Available > 0)
-							ReadFromStream(client, DB);
+					{
+						try
+						{
+							if (client.Available > 0)
+								Application.Current.Dispatcher.Invoke(() => ReadFromStream(client, DB));
+						}
+						catch
+						{
+							Application.Current.Dispatcher.Invoke(() => Close());
+						}
+					}
+				}
 			};
 
 			ServerTask.RunWorkerCompleted += (_, _) =>

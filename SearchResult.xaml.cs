@@ -271,8 +271,8 @@ namespace SylverInk
 				if (result == MessageBoxResult.Cancel)
 					return;
 
-				if (result == MessageBoxResult.Yes)
-					SaveRecord();
+				if (result == MessageBoxResult.No)
+					Edited = false;
 			}
 
 			Close();
@@ -304,6 +304,8 @@ namespace SylverInk
 			if (Edited)
 				SaveRecord();
 
+			Unlock();
+
 			foreach (SearchResult result in OpenQueries)
 			{
 				if (result.ResultRecord == ResultRecord)
@@ -331,7 +333,7 @@ namespace SylverInk
 					tabPanel.Items.RemoveAt(i);
 			}
 
-			if (CurrentDatabase.GetRecord(ResultRecord).Locked)
+			if (!CurrentDatabase.GetRecord(ResultRecord).Locked)
 				Lock();
 		}
 

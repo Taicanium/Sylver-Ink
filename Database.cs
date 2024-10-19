@@ -70,10 +70,10 @@ namespace SylverInk
 			return index;
 		}
 
-		public void CreateRevision(int index, string newVersion)
+		public void CreateRevision(int index, string newVersion, bool inhibitNetwork = false)
 		{
 			Controller.CreateRevision(index, newVersion);
-			if (Client?.Connected is true || Server?.Serving is true)
+			if (!inhibitNetwork)
 			{
 				var outBuffer = new List<byte>([
 					(byte)((index >> 24) & 0xFF),
@@ -91,6 +91,7 @@ namespace SylverInk
 
 				Transmit(Network.MessageType.TextInsert, [.. outBuffer]);
 			}
+			DeferUpdateRecentNotes(true);
 		}
 
 		public void DeleteRecord(int index)

@@ -6,7 +6,7 @@
 		xmlns:local="clr-namespace:SylverInk"
 		mc:Ignorable="d"
 		d:DataContext="{d:DesignInstance Type=local:ContextSettings}"
-		Background="{Binding MenuBackground}" Closing="MainWindow_Closing" Foreground="{Binding MenuForeground}" Height="625" Loaded="MainWindow_Loaded" MinHeight="450" MinWidth="400" MouseLeftButtonDown="Drag" ResizeMode="CanResize" SizeChanged="MainWindow_SizeChanged" Title="Sylver Ink" Width="450">
+		Background="{Binding MenuBackground}" Closing="MainWindow_Closing" Foreground="{Binding MenuForeground}" Height="625" Loaded="MainWindow_Loaded" MinHeight="450" MinWidth="400" MouseLeftButtonDown="Drag" ResizeMode="NoResize" SizeChanged="MainWindow_SizeChanged" Title="Sylver Ink" Width="450">
 	<Window.Resources>
 		<ResourceDictionary>
 			<ContextMenu x:Key="DatabaseContextMenu">

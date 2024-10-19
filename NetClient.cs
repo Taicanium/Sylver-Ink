@@ -36,8 +36,17 @@ namespace SylverInk
 			{
 				var task = (BackgroundWorker?)sender;
 				while (!task?.CancellationPending is true)
-					if (DBClient.Available > 0)
-						ReadFromStream();
+				{
+					try
+					{
+						if (DBClient.Available > 0)
+							Application.Current.Dispatcher.Invoke(() => ReadFromStream());
+					}
+					catch
+					{
+						Application.Current.Dispatcher.Invoke(() => Disconnect());
+					}
+				}
 			};
 		}
 
@@ -175,11 +184,11 @@ namespace SylverInk
 						textBuffer = new byte[textCount];
 						stream.Read(textBuffer, 0, textCount);
 
-						DB?.CreateRevision(recordIndex, Encoding.UTF8.GetString(textBuffer));
+						DB?.CreateRevision(recordIndex, Encoding.UTF8.GetString(textBuffer), true);
 						break;
 					}
 
-					DB?.CreateRevision(recordIndex, string.Empty);
+					DB?.CreateRevision(recordIndex, string.Empty, true);
 					break;
 			}
 		}

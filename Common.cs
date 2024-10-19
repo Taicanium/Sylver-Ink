@@ -7,7 +7,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -208,11 +207,11 @@ namespace SylverInk
 					WindowHeight = (RecentBox?.ActualHeight ?? Application.Current.MainWindow.ActualHeight) - 40.0;
 					WindowWidth = (RecentBox?.ActualWidth ?? Application.Current.MainWindow.ActualWidth) - 40.0;
 				};
-				MeasureTask.RunWorkerCompleted += (_, _) => { if (!UpdateTask?.IsBusy is true) UpdateTask?.RunWorkerAsync(); };
+				MeasureTask.RunWorkerCompleted += (_, _) => UpdateTask?.RunWorkerAsync();
 			}
 
-			if (!MeasureTask.IsBusy)
-				MeasureTask.RunWorkerAsync();
+			if (MeasureTask?.IsBusy is false && UpdateTask?.IsBusy is false)
+				MeasureTask?.RunWorkerAsync();
 
 			if (RepeatUpdate)
 				DeferUpdateRecentNotes();
@@ -414,27 +413,20 @@ namespace SylverInk
 			foreach (DependencyObject mItem in menu.Items)
 			{
 				var tag = mItem.GetValue(FrameworkElement.TagProperty) ?? string.Empty;
+				if (tag.Equals("Always"))
+					continue;
 
-				switch (tag)
+				var enable = tag switch
 				{
-					case "Always":
-						continue;
-					case "Connected":
-						mItem.SetValue(UIElement.IsEnabledProperty, CurrentDatabase.Client?.Active is true && !CurrentDatabase.Server?.Active is true);
-						break;
-					case "NotConnected":
-						mItem.SetValue(UIElement.IsEnabledProperty, !CurrentDatabase.Client?.Active is true && !CurrentDatabase.Server?.Active is true);
-						break;
-					case "NotServing":
-						mItem.SetValue(UIElement.IsEnabledProperty, !CurrentDatabase.Client?.Active is true && !CurrentDatabase.Server?.Active is true);
-						break;
-					case "Serving":
-						mItem.SetValue(UIElement.IsEnabledProperty, !CurrentDatabase.Client?.Active is true && CurrentDatabase.Server?.Active is true);
-						break;
-					default:
-						mItem.SetValue(UIElement.IsEnabledProperty, control.Items.Count != 1);
-						break;
-				}
+					"Connected" => CurrentDatabase.Client?.Active is true && !CurrentDatabase.Server?.Active is true,
+					"NotConnected" => !CurrentDatabase.Client?.Active is true && !CurrentDatabase.Server?.Active is true,
+					"NotServing" => !CurrentDatabase.Client?.Active is true && !CurrentDatabase.Server?.Active is true,
+					"Serving" => !CurrentDatabase.Client?.Active is true && CurrentDatabase.Server?.Active is true,
+					_ => control.Items.Count != 1
+				};
+
+				mItem.SetValue(UIElement.IsEnabledProperty, enable);
+				mItem.SetValue(UIElement.VisibilityProperty, enable ? Visibility.Visible : Visibility.Collapsed);
 			}
 		}
 
