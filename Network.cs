@@ -22,7 +22,7 @@ namespace SylverInk
 
 		public static List<char> CodeValues { get; } = Enumerable.Range(48, 10).Concat(Enumerable.Range(65, 26)).Concat(Enumerable.Range(97, 26)).Concat([33, 35, 36, 37]).Select(c => (char)c).ToList();
 		public static Dictionary<int, int> ValueCodes { get; } = new(CodeValues.Select((c, i) => new KeyValuePair<int, int>(c, i)));
-		public static int TcpPort { get; } = 80;
+		public static int TcpPort { get; } = 5192;
 
 		public static string CodeFromAddress(IPAddress? Address, byte? Flags)
 		{
