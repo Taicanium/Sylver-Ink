@@ -303,14 +303,14 @@ namespace SylverInk
 
 		private void MainWindow_SizeChanged(object sender, SizeChangedEventArgs e) => DeferUpdateRecentNotes(true);
 
-		private void NewNote(object sender, KeyEventArgs e)
+		private void NewNote_Keydown(object sender, KeyEventArgs e)
 		{
 			if (e.Key == Key.Enter)
 			{
 				var box = (TextBox)sender;
 				CurrentDatabase.CreateRecord(box.Text);
-				DeferUpdateRecentNotes();
 				box.Text = string.Empty;
+				DeferUpdateRecentNotes();
 			}
 		}
 

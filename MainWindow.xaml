@@ -89,7 +89,7 @@
 								<Label Content="New note" FontStyle="Italic"/>
 								<Label Content="(?)" Foreground="{Binding AccentForeground}" ToolTip="Write a line of text and press Enter to create a new entry."/>
 							</StackPanel>
-							<TextBox KeyDown="NewNote" Margin="5" Grid.Row="2" VerticalAlignment="Top"/>
+							<TextBox KeyDown="NewNote_Keydown" Margin="5" Grid.Row="2" VerticalAlignment="Top"/>
 							<Grid Margin="0,10" Grid.Row="3">
 								<Grid.ColumnDefinitions>
 									<ColumnDefinition Width="*"/>
@@ -104,7 +104,7 @@
 									<RowDefinition Height="*"/>
 								</Grid.RowDefinitions>
 								<Button Click="Button_Click" Grid.Column="1" Content="Search"/>
-								<Button Click="Button_Click" Grid.Column="3" Content="Replace" Grid.Row="2"/>
+								<Button Click="Button_Click" Grid.Column="3" Content="Replace" Grid.Row="2" x:Name="ReplaceButton"/>
 								<Button Click="Button_Click" Grid.Column="3" Content="Import"/>
 								<Button Click="Button_Click" Grid.Column="1" Content="Settings" Grid.Row="2"/>
 								<Button Background="{Binding AccentBackground}" Click="Button_Click" Grid.Column="2" Content="Exit" Foreground="{Binding AccentForeground}" Grid.Row="1"/>

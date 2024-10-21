@@ -7,6 +7,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using static SylverInk.Common;
@@ -41,18 +42,26 @@ namespace SylverInk
 				var task = (BackgroundWorker?)sender;
 				while (!task?.CancellationPending is true)
 				{
-					foreach (var client in Clients)
+					Concurrent(() =>
 					{
-						try
+						for (int i = Clients.Count - 1; i > -1; i--)
 						{
-							if (client.Available > 0)
-								Application.Current.Dispatcher.Invoke(() => ReadFromStream(client, DB));
+							try
+							{
+								var client = Clients[i];
+
+								if (client.Available > 0)
+									ReadFromStream(client, DB);
+
+								if (!client.Connected || !client.GetStream().Socket.Connected)
+									Clients.RemoveAt(i);
+							}
+							catch
+							{
+								Close();
+							}
 						}
-						catch
-						{
-							Application.Current.Dispatcher.Invoke(() => Close());
-						}
-					}
+					});
 				}
 			};
 
@@ -166,17 +175,50 @@ namespace SylverInk
 						stream.Read(textBuffer, 0, textCount);
 						outBuffer.AddRange(textBuffer);
 
-						DB?.CreateRecord(Encoding.UTF8.GetString(textBuffer));
+						DB?.CreateRecord(Encoding.UTF8.GetString(textBuffer), false);
+						Concurrent(() => DeferUpdateRecentNotes());
 						break;
 					}
 
-					DB?.CreateRecord(string.Empty);
+					DB?.CreateRecord(string.Empty, false);
+					Concurrent(() => DeferUpdateRecentNotes());
 					break;
 				case MessageType.RecordLock:
 					DB?.Lock(recordIndex);
 					break;
 				case MessageType.RecordRemove:
-					DB?.DeleteRecord(recordIndex);
+					DB?.DeleteRecord(recordIndex, false);
+					Concurrent(() => DeferUpdateRecentNotes());
+					break;
+				case MessageType.RecordReplace:
+					stream.Read(intBuffer, 0, 4);
+					textCount = (intBuffer[0] << 24)
+						+ (intBuffer[1] << 16)
+						+ (intBuffer[2] << 8)
+						+ intBuffer[3];
+
+					if (textCount > 0)
+					{
+						textBuffer = new byte[textCount];
+						stream.Read(textBuffer, 0, textCount);
+						var oldText = Encoding.UTF8.GetString(textBuffer);
+
+						stream.Read(intBuffer, 0, 4);
+						textCount = (intBuffer[0] << 24)
+							+ (intBuffer[1] << 16)
+							+ (intBuffer[2] << 8)
+							+ intBuffer[3];
+
+						if (textCount > 0)
+						{
+							textBuffer = new byte[textCount];
+							stream.Read(textBuffer, 0, textCount);
+							var newText = Encoding.UTF8.GetString(textBuffer);
+
+							DB?.Replace(oldText, newText, false);
+							Concurrent(() => DeferUpdateRecentNotes());
+						}
+					}
 					break;
 				case MessageType.RecordUnlock:
 					DB?.Unlock(recordIndex);
@@ -195,17 +237,30 @@ namespace SylverInk
 						stream.Read(textBuffer, 0, textCount);
 						outBuffer.AddRange(textBuffer);
 
-						DB?.CreateRevision(recordIndex, Encoding.UTF8.GetString(textBuffer));
+						DB?.CreateRevision(recordIndex, Encoding.UTF8.GetString(textBuffer), false);
+						Concurrent(() => DeferUpdateRecentNotes());
 						break;
 					}
 
-					DB?.CreateRevision(recordIndex, string.Empty);
+					DB?.CreateRevision(recordIndex, string.Empty, false);
+					Concurrent(() => DeferUpdateRecentNotes());
 					break;
 			}
 
 			foreach (var otherClient in Clients)
+			{
 				if (!otherClient.Equals(client))
-					otherClient.GetStream().Write(outBuffer.ToArray());
+				{
+					try
+					{
+						otherClient.GetStream().Write(outBuffer.ToArray());
+					}
+					catch
+					{
+						otherClient.Close();
+					}
+				}
+			}
 		}
 
 		public async static void Send(TcpClient client, MessageType type = MessageType.TextInsert, params byte[] data)
@@ -216,7 +271,14 @@ namespace SylverInk
 			byte[] id = [(byte)type];
 			byte[] streamData = [.. id, .. data];
 
-			await client.GetStream().WriteAsync(streamData);
+			try
+			{
+				await client.GetStream().WriteAsync(streamData);
+			}
+			catch
+			{
+				client.Close();
+			}
 		}
 
 		public async void Serve(byte Flags)
@@ -257,11 +319,11 @@ namespace SylverInk
 
 			try
 			{
-				DBServer.Start(512);
+				DBServer.Start(256);
 			}
 			catch
 			{
-				MessageBox.Show("Failed to open the database server on port 5192.", "Sylver Ink: Error", MessageBoxButton.OK, MessageBoxImage.Error);
+				MessageBox.Show($"Failed to open the database server on port {TcpPort}.", "Sylver Ink: Error", MessageBoxButton.OK, MessageBoxImage.Error);
 				Active = false;
 				Serving = false;
 				return;
@@ -270,6 +332,7 @@ namespace SylverInk
 			Serving = true;
 
 			WatchTask.RunWorkerAsync();
+			ServerTask.RunWorkerAsync();
 			UpdateIndicator();
 			UpdateContextMenu();
 
@@ -277,7 +340,7 @@ namespace SylverInk
 			if (codePopup is null)
 				return;
 
-			var codeBox = (System.Windows.Controls.TextBox)codePopup.FindName("CodeBox");
+			var codeBox = (TextBox)codePopup.FindName("CodeBox");
 			if (codeBox is null)
 				return;
 

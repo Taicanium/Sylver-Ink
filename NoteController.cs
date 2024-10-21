@@ -30,6 +30,7 @@ namespace SylverInk
 		public string? Name;
 		public int RecordCount => Records.Count;
 		private List<NoteRecord> Records { get; } = [];
+		public string? UUID { get; set; } = MakeUUID(UUIDType.Database);
 		public Dictionary<string, double> WordPercentages { get; } = [];
 
 		private int NextIndex
@@ -100,14 +101,13 @@ namespace SylverInk
 				StartIndex = i + 1;
 			}
 
+			Changed = true;
 			Records[index].Add(new()
 			{
 				_created = DateTime.UtcNow.ToBinary(),
 				_startIndex = StartIndex,
 				_substring = StartIndex >= NewVersion.Length ? string.Empty : NewVersion[StartIndex..]
 			});
-
-			Changed = true;
 		}
 
 		public void DeleteRecord(int index)
@@ -146,6 +146,12 @@ namespace SylverInk
 
 			if (inMemory is not null)
 				_serializer?.OpenRead(string.Empty, inMemory);
+
+			if (_serializer?.DatabaseFormat >= 7)
+			{
+				string? _uuid = string.Empty;
+				UUID = _serializer?.ReadString(ref _uuid);
+			}
 
 			if (!_serializer?.Headless is true)
 			{
@@ -243,13 +249,10 @@ namespace SylverInk
 		public void ReloadSerializer()
 		{
 			_serializer?.Close();
-			_serializer = new()
-			{
-				DatabaseFormat = 6
-			};
+			_serializer = new() { DatabaseFormat = 8 };
 
 			if (_canCompress == -1 || (_canCompress == 0 && !TestCanCompress()))
-				_serializer.DatabaseFormat = 5;
+				_serializer.DatabaseFormat = 7;
 		}
 
 		public (int, int) Replace(string oldText, string newText)
@@ -269,7 +272,6 @@ namespace SylverInk
 			}
 
 			Changed = Changed || ReplaceCount > 0;
-			PropagateIndices();
 			return (ReplaceCount, NoteCount);
 		}
 
@@ -311,13 +313,15 @@ namespace SylverInk
 				_serializer?.OpenWrite(string.Empty, true);
 			}
 
+			if (_serializer?.DatabaseFormat >= 7)
+				_serializer?.WriteString(UUID);
+
 			if (!_serializer?.Headless is true)
 				_serializer?.WriteString(Name);
 
 			_serializer?.WriteInt32(Records.Count);
 			for (int i = 0; i < Records.Count; i++)
 				Records[i].Serialize(_serializer);
-			_serializer?.WriteString(Name);
 
 			if (inMemory)
 				return _serializer?.GetStream();

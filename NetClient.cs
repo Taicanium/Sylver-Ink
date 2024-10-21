@@ -40,11 +40,14 @@ namespace SylverInk
 					try
 					{
 						if (DBClient.Available > 0)
-							Application.Current.Dispatcher.Invoke(() => ReadFromStream());
+							Concurrent(() => ReadFromStream());
+
+						if (!DBClient.Connected || !DBClient.GetStream().Socket.Connected)
+							Concurrent(() => Disconnect());
 					}
 					catch
 					{
-						Application.Current.Dispatcher.Invoke(() => Disconnect());
+						Concurrent(() => Disconnect());
 					}
 				}
 			};
@@ -142,7 +145,7 @@ namespace SylverInk
 						Connected = true;
 						UpdateIndicator();
 						DB?.GetHeader();
-						Application.Current.Dispatcher.Invoke(() => DeferUpdateRecentNotes(true));
+						Concurrent(() => DeferUpdateRecentNotes(true));
 					}
 					break;
 				case MessageType.RecordAdd:
@@ -157,17 +160,50 @@ namespace SylverInk
 						textBuffer = new byte[textCount];
 						stream.Read(textBuffer, 0, textCount);
 
-						DB?.CreateRecord(Encoding.UTF8.GetString(textBuffer));
+						DB?.CreateRecord(Encoding.UTF8.GetString(textBuffer), false);
+						Concurrent(() => DeferUpdateRecentNotes());
 						break;
 					}
 
-					DB?.CreateRecord(string.Empty);
+					DB?.CreateRecord(string.Empty, false);
+					Concurrent(() => DeferUpdateRecentNotes());
 					break;
 				case MessageType.RecordLock:
 					DB?.Lock(recordIndex);
 					break;
 				case MessageType.RecordRemove:
-					DB?.DeleteRecord(recordIndex);
+					DB?.DeleteRecord(recordIndex, false);
+					Concurrent(() => DeferUpdateRecentNotes());
+					break;
+				case MessageType.RecordReplace:
+					stream.Read(intBuffer, 0, 4);
+					textCount = (intBuffer[0] << 24)
+						+ (intBuffer[1] << 16)
+						+ (intBuffer[2] << 8)
+						+ intBuffer[3];
+
+					if (textCount > 0)
+					{
+						textBuffer = new byte[textCount];
+						stream.Read(textBuffer, 0, textCount);
+						var oldText = Encoding.UTF8.GetString(textBuffer);
+
+						stream.Read(intBuffer, 0, 4);
+						textCount = (intBuffer[0] << 24)
+							+ (intBuffer[1] << 16)
+							+ (intBuffer[2] << 8)
+							+ intBuffer[3];
+
+						if (textCount > 0)
+						{
+							textBuffer = new byte[textCount];
+							stream.Read(textBuffer, 0, textCount);
+							var newText = Encoding.UTF8.GetString(textBuffer);
+
+							DB?.Replace(oldText, newText, false);
+							Concurrent(() => DeferUpdateRecentNotes());
+						}
+					}
 					break;
 				case MessageType.RecordUnlock:
 					DB?.Unlock(recordIndex);
@@ -184,11 +220,13 @@ namespace SylverInk
 						textBuffer = new byte[textCount];
 						stream.Read(textBuffer, 0, textCount);
 
-						DB?.CreateRevision(recordIndex, Encoding.UTF8.GetString(textBuffer), true);
+						DB?.CreateRevision(recordIndex, Encoding.UTF8.GetString(textBuffer), false);
+						Concurrent(() => DeferUpdateRecentNotes());
 						break;
 					}
 
-					DB?.CreateRevision(recordIndex, string.Empty, true);
+					DB?.CreateRevision(recordIndex, string.Empty, false);
+					Concurrent(() => DeferUpdateRecentNotes());
 					break;
 			}
 		}
@@ -201,7 +239,14 @@ namespace SylverInk
 			byte[] id = [(byte)type];
 			byte[] streamData = [.. id, .. data];
 
-			await DBClient.GetStream().WriteAsync(streamData);
+			try
+			{
+				await DBClient.GetStream().WriteAsync(streamData);
+			}
+			catch
+			{
+				Disconnect();
+			}
 		}
 
 		public void UpdateIndicator()

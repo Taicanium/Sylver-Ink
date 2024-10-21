@@ -7,6 +7,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -118,7 +119,7 @@ namespace SylverInk
 			Databases.Add(db);
 			CurrentDatabase = db;
 
-			DeferUpdateRecentNotes(true);
+			DeferUpdateRecentNotes();
 		}
 
 		public static SolidColorBrush? BrushFromBytes(string data)
@@ -162,6 +163,10 @@ namespace SylverInk
 			return string.Format("{0:X2}{1:X2}{2:X2}", data?.Color.R, data?.Color.G, data?.Color.B);
 		}
 
+		public static void Concurrent(Action callback) => Application.Current.Dispatcher.Invoke(callback);
+
+		public static T Concurrent<T>(Func<T> callback) => Application.Current.Dispatcher.Invoke(callback);
+
 		public static void DeferUpdateRecentNotes(bool RepeatUpdate = false)
 		{
 			if (!CanResize)
@@ -174,8 +179,8 @@ namespace SylverInk
 				UpdateTask.RunWorkerCompleted += (_, _) =>
 				{
 					var panel = GetChildPanel("DatabasesPanel");
-					var RecentBox = (ListBox?)panel.FindName("RecentNotes");
-					var ChangesBox = (ListBox?)panel.FindName("ShortChanges");
+					var RecentBox = (ListBox?)panel.Dispatcher.Invoke(() => panel.FindName("RecentNotes"));
+					var ChangesBox = (ListBox?)panel.Dispatcher.Invoke(() => panel.FindName("ShortChanges"));
 
 					if ((RecentBox ?? ChangesBox) is null)
 						return;
@@ -210,11 +215,20 @@ namespace SylverInk
 				MeasureTask.RunWorkerCompleted += (_, _) => UpdateTask?.RunWorkerAsync();
 			}
 
-			if (MeasureTask?.IsBusy is false && UpdateTask?.IsBusy is false)
-				MeasureTask?.RunWorkerAsync();
+			Concurrent(() =>
+			{
+				BackgroundWorker deferUpdateTask = new();
+				deferUpdateTask.DoWork += (_, _) => SpinWait.SpinUntil(() => !MeasureTask?.IsBusy is true && !UpdateTask?.IsBusy is true, 1200);
+				deferUpdateTask.RunWorkerCompleted += (_, _) =>
+				{
+					if (MeasureTask?.IsBusy is false && UpdateTask?.IsBusy is false)
+						MeasureTask?.RunWorkerAsync();
 
-			if (RepeatUpdate)
-				DeferUpdateRecentNotes();
+					if (RepeatUpdate)
+						DeferUpdateRecentNotes();
+				};
+				deferUpdateTask.RunWorkerAsync();
+			});
 		}
 
 		public static string DialogFileSelect(bool outgoing = false, int filterIndex = 3, string? defaultName = null)
@@ -250,7 +264,7 @@ namespace SylverInk
 
 		public static TabControl GetChildPanel(string basePanel)
 		{
-			return Application.Current.Dispatcher.Invoke(() => {
+			return Concurrent(() => {
 				var db = (TabControl)Application.Current.MainWindow.FindName(basePanel);
 				var dbItem = (TabItem)db.SelectedItem;
 				return (TabControl)dbItem.Content;
@@ -269,14 +283,14 @@ namespace SylverInk
 
 			while (File.Exists(path))
 			{
-				if (File.Exists(uuidFile) && db.UUID.Equals(File.ReadAllText(uuidFile)))
+				if (File.Exists(uuidFile) && File.ReadAllText(uuidFile).Equals(db.UUID))
 					return path;
 
 				if (!File.Exists(uuidFile))
 				{
 					Database tmpDB = new();
 					tmpDB.Load(path);
-					if (tmpDB.UUID.Equals(db.UUID))
+					if (tmpDB.UUID?.Equals(db.UUID) is true)
 						return path;
 				}
 

@@ -18,7 +18,7 @@ namespace SylverInk
 		/// <summary>
 		/// See SIDB.md for a file format description.
 		/// </summary>
-		public byte DatabaseFormat { get; set; } = 6;
+		public byte DatabaseFormat { get; set; } = 8;
 		public bool Headless { get; private set; } = false;
 		public bool UseLZW { get; private set; } = false;
 
@@ -103,11 +103,13 @@ namespace SylverInk
 					break;
 				case 3:
 				case 5:
+				case 7:
 					Headless = false;
 					UseLZW = false;
 					break;
 				case 4:
 				case 6:
+				case 8:
 					Headless = false;
 					UseLZW = true;
 					break;

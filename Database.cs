@@ -20,7 +20,7 @@ namespace SylverInk
 		public string? Name { get => Controller.Name; set => Controller.Name = value; }
 		public int RecordCount => Controller.RecordCount;
 		public NetServer? Server;
-		public string UUID { get; set; } = MakeUUID(UUIDType.Database);
+		public string? UUID { get => Controller.UUID; set => Controller.UUID = value; }
 		public Dictionary<string, double> WordPercentages => Controller.WordPercentages;
 
 		public Database()
@@ -48,13 +48,14 @@ namespace SylverInk
 			AddDatabase(db);
 		}
 
-		public int CreateRecord(string entry)
+		public int CreateRecord(string entry, bool local = true)
 		{
 			int index = Controller.CreateRecord(entry);
 
-			if (Client?.Connected is true || Server?.Serving is true)
+			if (local)
 			{
 				var outBuffer = new List<byte>([
+					0, 0, 0, 0,
 					(byte)((entry.Length >> 24) & 0xFF),
 					(byte)((entry.Length >> 16) & 0xFF),
 					(byte)((entry.Length >> 8) & 0xFF),
@@ -70,10 +71,10 @@ namespace SylverInk
 			return index;
 		}
 
-		public void CreateRevision(int index, string newVersion, bool inhibitNetwork = false)
+		public void CreateRevision(int index, string newVersion, bool local = true)
 		{
 			Controller.CreateRevision(index, newVersion);
-			if (!inhibitNetwork)
+			if (local)
 			{
 				var outBuffer = new List<byte>([
 					(byte)((index >> 24) & 0xFF),
@@ -91,14 +92,13 @@ namespace SylverInk
 
 				Transmit(Network.MessageType.TextInsert, [.. outBuffer]);
 			}
-			DeferUpdateRecentNotes(true);
 		}
 
-		public void DeleteRecord(int index)
+		public void DeleteRecord(int index, bool local = true)
 		{
 			Controller.DeleteRecord(index);
 
-			if (Client?.Connected is true || Server?.Serving is true)
+			if (local)
 			{
 				byte[] outBuffer = [
 					(byte)((index >> 24) & 0xFF),
@@ -106,7 +106,7 @@ namespace SylverInk
 					(byte)((index >> 8) & 0xFF),
 					(byte)(index & 0xFF),
 				];
-
+				
 				Transmit(Network.MessageType.RecordRemove, outBuffer);
 			}
 		}
@@ -181,18 +181,7 @@ namespace SylverInk
 
 		public void Lock(int index)
 		{
-			if (!Client?.Connected is true && !Server?.Serving is true)
-				return;
-
-			byte[] outBuffer = [
-				(byte)((index >> 24) & 0xFF),
-				(byte)((index >> 16) & 0xFF),
-				(byte)((index >> 8) & 0xFF),
-				(byte)(index & 0xFF),
-			];
-
 			Controller.GetRecord(index).Lock();
-			Transmit(Network.MessageType.RecordLock, outBuffer);
 		}
 
 		public void MakeBackup(bool auto = false)
@@ -219,7 +208,33 @@ namespace SylverInk
 
 		public bool Open(string path, bool writing = false) => Controller.Open(path, writing);
 
-		public (int, int) Replace(string oldText, string newText) => Controller.Replace(oldText, newText);
+		public (int, int) Replace(string oldText, string newText, bool local = true)
+		{
+			if (local)
+			{
+				var oldLength = oldText.Length;
+				var newLength = newText.Length;
+
+				List<byte> outBuffer = [
+					0, 0, 0, 0,
+					(byte)((oldLength >> 24) & 0xFF),
+					(byte)((oldLength >> 16) & 0xFF),
+					(byte)((oldLength >> 8) & 0xFF),
+					(byte)(oldLength & 0xFF),
+					(byte)((newLength >> 24) & 0xFF),
+					(byte)((newLength >> 16) & 0xFF),
+					(byte)((newLength >> 8) & 0xFF),
+					(byte)(newLength & 0xFF),
+				];
+
+				outBuffer.InsertRange(8, Encoding.UTF8.GetBytes(oldText));
+				outBuffer.AddRange(Encoding.UTF8.GetBytes(newText));
+
+				Transmit(Network.MessageType.RecordReplace, [.. outBuffer]);
+			}
+
+			return Controller.Replace(oldText, newText);
+		}
 
 		public void Revert(DateTime targetDate) => Controller.Revert(targetDate);
 
@@ -263,18 +278,7 @@ namespace SylverInk
 
 		public void Unlock(int index)
 		{
-			if (!Client?.Connected is true && !Server?.Serving is true)
-				return;
-
-			byte[] outBuffer = [
-				(byte)((index >> 24) & 0xFF),
-				(byte)((index >> 16) & 0xFF),
-				(byte)((index >> 8) & 0xFF),
-				(byte)(index & 0xFF),
-			];
-
 			Controller.GetRecord(index).Unlock();
-			Transmit(Network.MessageType.RecordUnlock, outBuffer);
 		}
 
 		public void UpdateWordPercentages() => Controller.UpdateWordPercentages();

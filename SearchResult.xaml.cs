@@ -41,12 +41,12 @@ namespace SylverInk
 				}
 			}
 
-			TabItem newTab = new() { Header = GetRibbonHeader(ResultRecord) };
+			TabItem newTab = new() { Header = GetRibbonHeader(ResultRecord), Tag = ResultRecord };
 
 			control.SelectedIndex = ResultDatabase;
 			tabPanel.SelectedIndex = tabPanel.Items.Add(newTab);
 
-			Grid grid = new() { Margin = new(2.0, 2.0, 2.0, 2.0), };
+			Grid grid = new() { Margin = new(2.0, 2.0, 2.0, 2.0) };
 
 			grid.RowDefinitions.Add(new() { Height = GridLength.Auto, });
 			grid.RowDefinitions.Add(new() { Height = new(1.0, GridUnitType.Star) });
@@ -58,6 +58,7 @@ namespace SylverInk
 				FontStyle = FontStyles.Italic,
 				HorizontalAlignment = HorizontalAlignment.Right,
 				Margin = new(0.0, 0.0, 10.0, 0.0),
+				Tag = ResultRecord,
 				VerticalAlignment = VerticalAlignment.Bottom
 			};
 
@@ -188,10 +189,16 @@ namespace SylverInk
 					}
 				}
 
+				byte[] outBuffer = [
+					(byte)((tag.Item2 >> 24) & 0xFF),
+					(byte)((tag.Item2 >> 16) & 0xFF),
+					(byte)((tag.Item2 >> 8) & 0xFF),
+					(byte)(tag.Item2 & 0xFF),
+				];
+				CurrentDatabase.Transmit(Network.MessageType.RecordUnlock, outBuffer);
+
 				tabPanel.SelectedIndex = 0;
 				tabPanel.Items.RemoveAt(tabIndex);
-
-				CurrentDatabase.Unlock(tag.Item2);
 			};
 
 			deleteButton.Click += (sender, _) =>
@@ -259,6 +266,12 @@ namespace SylverInk
 			Grid.SetRow(noteBox, 1);
 			Grid.SetRow(buttonGrid, 2);
 
+			if (CurrentDatabase.GetRecord(ResultRecord).Locked)
+			{
+				noteBox.IsEnabled = false;
+				revisionLabel.Content = "Note locked by another user";
+			}
+
 			newTab.Content = grid;
 		}
 
@@ -297,14 +310,18 @@ namespace SylverInk
 			Top = newCoords.Y;
 		}
 
-		public void Lock() => CurrentDatabase.Lock(ResultRecord);
-
 		private void Result_Closed(object sender, EventArgs e)
 		{
 			if (Edited)
 				SaveRecord();
 
-			Unlock();
+			byte[] outBuffer = [
+				(byte)((ResultRecord >> 24) & 0xFF),
+				(byte)((ResultRecord >> 16) & 0xFF),
+				(byte)((ResultRecord >> 8) & 0xFF),
+				(byte)(ResultRecord & 0xFF),
+			];
+			CurrentDatabase.Transmit(Network.MessageType.RecordUnlock, outBuffer);
 
 			foreach (SearchResult result in OpenQueries)
 			{
@@ -318,9 +335,27 @@ namespace SylverInk
 
 		private void Result_Loaded(object sender, RoutedEventArgs e)
 		{
-			LastChangedLabel.Content = "Last modified: " + CurrentDatabase.GetRecord(ResultRecord).GetLastChange();
+			if (CurrentDatabase.GetRecord(ResultRecord).Locked)
+			{
+				LastChangedLabel.Content = "Note locked by another user";
+				ResultBlock.IsEnabled = false;
+			}
+			else
+			{
+				LastChangedLabel.Content = "Last modified: " + CurrentDatabase.GetRecord(ResultRecord).GetLastChange();
+
+				byte[] outBuffer = [
+					(byte)((ResultRecord >> 24) & 0xFF),
+					(byte)((ResultRecord >> 16) & 0xFF),
+					(byte)((ResultRecord >> 8) & 0xFF),
+					(byte)(ResultRecord & 0xFF),
+				];
+				CurrentDatabase.Transmit(Network.MessageType.RecordLock, outBuffer);
+			}
+
 			if (ResultText.Equals(string.Empty))
 				ResultText = CurrentDatabase.GetRecord(ResultRecord).ToString();
+			
 			ResultBlock.Text = ResultText;
 			Edited = false;
 
@@ -332,9 +367,6 @@ namespace SylverInk
 				if ((int?)item.Tag == ResultRecord)
 					tabPanel.Items.RemoveAt(i);
 			}
-
-			if (!CurrentDatabase.GetRecord(ResultRecord).Locked)
-				Lock();
 		}
 
 		private void ResultBlock_TextChanged(object sender, TextChangedEventArgs e)
@@ -356,6 +388,7 @@ namespace SylverInk
 		{
 			CurrentDatabase.CreateRevision(ResultRecord, ResultText);
 			LastChangedLabel.Content = "Last modified: " + CurrentDatabase.GetRecord(ResultRecord).GetLastChange();
+			DeferUpdateRecentNotes();
 		}
 
 		private Point Snap(ref Point Coords)
@@ -449,13 +482,6 @@ namespace SylverInk
 			return Coords;
 		}
 
-		public void Unlock()
-		{
-			LastChangedLabel.Content = "Last modified: " + CurrentDatabase.GetRecord(ResultRecord).GetLastChange();
-			ResultBlock.IsEnabled = true;
-			CurrentDatabase.Unlock(ResultRecord);
-		}
-		
 		private void ViewClick(object sender, RoutedEventArgs e)
 		{
 			AddTabToRibbon();

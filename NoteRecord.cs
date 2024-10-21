@@ -1,16 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using System.Windows;
 using System.Windows.Controls;
 using static SylverInk.Common;
 
 namespace SylverInk
 {
-	public struct NoteRevision(long _created = -1, int _startIndex = -1, string? _substring = null)
+	public struct NoteRevision(long _created = -1, int _startIndex = -1, string? _substring = null, string? _uuid = null)
 	{
 		public long _created = _created;
 		public int _startIndex = _startIndex;
 		public string? _substring = _substring;
+		public string? _uuid = _uuid ?? MakeUUID(UUIDType.Revision);
 	}
 
 	public partial class NoteRecord
@@ -156,6 +158,8 @@ namespace SylverInk
 			for (int i = 0; i < RevisionsCount; i++)
 			{
 				NoteRevision _revision = new();
+				if (_serializer?.DatabaseFormat >= 7)
+					_serializer?.ReadString(ref _revision._uuid);
 				_serializer?.ReadLong(ref _revision._created);
 				_serializer?.ReadInt32(ref _revision._startIndex);
 				_serializer?.ReadString(ref _revision._substring);
@@ -225,30 +229,7 @@ namespace SylverInk
 
 		public void Lock()
 		{
-			if (Locked)
-				return;
-
 			Locked = true;
-
-			foreach (var query in OpenQueries)
-			{
-				if (query.ResultRecord.Equals(Index))
-				{
-					query.LastChangedLabel.Content = "Note locked by another user";
-					query.ResultBlock.IsEnabled = false;
-				}
-			}
-
-			var panel = GetChildPanel("DatabasesPanel");
-
-			foreach (TabItem item in panel.Items)
-			{
-				if (Index == (int)(item.Tag ?? -1))
-				{
-					var grid = (Grid)item.Content;
-					grid.IsEnabled = false;
-				}
-			}
 		}
 
 		public int MatchTags(string text)
@@ -303,17 +284,18 @@ namespace SylverInk
 			_serializer?.WriteInt32(Revisions.Count);
 			for (int i = 0; i < Revisions.Count; i++)
 			{
+				if (_serializer?.DatabaseFormat >= 7)
+					_serializer?.WriteString(Revisions[i]._uuid);
 				_serializer?.WriteLong(Revisions[i]._created);
 				_serializer?.WriteInt32(Revisions[i]._startIndex);
 				_serializer?.WriteString(Revisions[i]._substring);
 			}
 		}
 
+		public override string ToString() => Reconstruct();
+
 		public void Unlock()
 		{
-			if (!Locked)
-				return;
-
 			Locked = false;
 
 			foreach (var query in OpenQueries)
@@ -332,12 +314,15 @@ namespace SylverInk
 				if (Index == (int)(item.Tag ?? -1))
 				{
 					var grid = (Grid)item.Content;
-					grid.IsEnabled = true;
+					foreach (UIElement child in grid.Children)
+					{
+						child.SetValue(UIElement.IsEnabledProperty, true);
+						if (child.GetType().Equals(typeof(Label)))
+							((Label)child).Content = "Entry last modified: " + GetLastChange();
+					}
 				}
 			}
 		}
-
-		public override string ToString() => Reconstruct();
 
 		[GeneratedRegex(@"(\p{Ll}+)")]
 		private static partial Regex Lowercase();
