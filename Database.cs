@@ -54,13 +54,7 @@ namespace SylverInk
 
 			if (local)
 			{
-				var outBuffer = new List<byte>([
-					0, 0, 0, 0,
-					(byte)((entry.Length >> 24) & 0xFF),
-					(byte)((entry.Length >> 16) & 0xFF),
-					(byte)((entry.Length >> 8) & 0xFF),
-					(byte)(entry.Length & 0xFF),
-				]);
+				var outBuffer = new List<byte>([0, 0, 0, 0, .. IntToBytes(entry.Length)]);
 
 				if (entry.Length > 0)
 					outBuffer.AddRange(Encoding.UTF8.GetBytes(entry));
@@ -77,14 +71,8 @@ namespace SylverInk
 			if (local)
 			{
 				var outBuffer = new List<byte>([
-					(byte)((index >> 24) & 0xFF),
-					(byte)((index >> 16) & 0xFF),
-					(byte)((index >> 8) & 0xFF),
-					(byte)(index & 0xFF),
-					(byte)((newVersion.Length >> 24) & 0xFF),
-					(byte)((newVersion.Length >> 16) & 0xFF),
-					(byte)((newVersion.Length >> 8) & 0xFF),
-					(byte)(newVersion.Length & 0xFF)
+					.. IntToBytes(index),
+					.. IntToBytes(newVersion.Length)
 				]);
 
 				if (newVersion.Length > 0)
@@ -99,16 +87,7 @@ namespace SylverInk
 			Controller.DeleteRecord(index);
 
 			if (local)
-			{
-				byte[] outBuffer = [
-					(byte)((index >> 24) & 0xFF),
-					(byte)((index >> 16) & 0xFF),
-					(byte)((index >> 8) & 0xFF),
-					(byte)(index & 0xFF),
-				];
-				
-				Transmit(Network.MessageType.RecordRemove, outBuffer);
-			}
+				Transmit(Network.MessageType.RecordRemove, IntToBytes(index));
 		}
 
 		public void Erase()
@@ -217,14 +196,8 @@ namespace SylverInk
 
 				List<byte> outBuffer = [
 					0, 0, 0, 0,
-					(byte)((oldLength >> 24) & 0xFF),
-					(byte)((oldLength >> 16) & 0xFF),
-					(byte)((oldLength >> 8) & 0xFF),
-					(byte)(oldLength & 0xFF),
-					(byte)((newLength >> 24) & 0xFF),
-					(byte)((newLength >> 16) & 0xFF),
-					(byte)((newLength >> 8) & 0xFF),
-					(byte)(newLength & 0xFF),
+					.. IntToBytes(oldLength),
+					.. IntToBytes(newLength),
 				];
 
 				outBuffer.InsertRange(8, Encoding.UTF8.GetBytes(oldText));

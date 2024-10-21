@@ -89,10 +89,7 @@ namespace SylverInk
 						data?.Insert(0, (byte)MessageType.DatabaseInit);
 						data?.InsertRange(1, [
 							0, 0, 0, 0,
-							(byte)((dataLength >> 24) & 0xFF),
-							(byte)((dataLength >> 16) & 0xFF),
-							(byte)((dataLength >> 8) & 0xFF),
-							(byte)(dataLength & 0xFF),
+							.. IntToBytes(dataLength)
 						]);
 
 						if (dataLength > 0)
@@ -152,21 +149,14 @@ namespace SylverInk
 			var textCount = 0;
 
 			stream.Read(intBuffer, 0, 4);
-			recordIndex = (intBuffer[0] << 24)
-				+ (intBuffer[1] << 16)
-				+ (intBuffer[2] << 8)
-				+ intBuffer[3];
-
+			recordIndex = IntFromBytes(intBuffer);
 			outBuffer.AddRange(intBuffer);
 
 			switch (type)
 			{
 				case MessageType.RecordAdd:
 					stream.Read(intBuffer, 0, 4);
-					textCount = (intBuffer[0] << 24)
-						+ (intBuffer[1] << 16)
-						+ (intBuffer[2] << 8)
-						+ intBuffer[3];
+					textCount = IntFromBytes(intBuffer);
 					outBuffer.AddRange(intBuffer);
 
 					if (textCount > 0)
@@ -192,10 +182,7 @@ namespace SylverInk
 					break;
 				case MessageType.RecordReplace:
 					stream.Read(intBuffer, 0, 4);
-					textCount = (intBuffer[0] << 24)
-						+ (intBuffer[1] << 16)
-						+ (intBuffer[2] << 8)
-						+ intBuffer[3];
+					textCount = IntFromBytes(intBuffer);
 
 					if (textCount > 0)
 					{
@@ -204,10 +191,7 @@ namespace SylverInk
 						var oldText = Encoding.UTF8.GetString(textBuffer);
 
 						stream.Read(intBuffer, 0, 4);
-						textCount = (intBuffer[0] << 24)
-							+ (intBuffer[1] << 16)
-							+ (intBuffer[2] << 8)
-							+ intBuffer[3];
+						textCount = IntFromBytes(intBuffer);
 
 						if (textCount > 0)
 						{
@@ -225,10 +209,7 @@ namespace SylverInk
 					break;
 				case MessageType.TextInsert:
 					stream.Read(intBuffer, 0, 4);
-					textCount = (intBuffer[0] << 24)
-						+ (intBuffer[1] << 16)
-						+ (intBuffer[2] << 8)
-						+ intBuffer[3];
+					textCount = IntFromBytes(intBuffer);
 					outBuffer.AddRange(intBuffer);
 
 					if (textCount > 0)

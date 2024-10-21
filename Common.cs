@@ -324,25 +324,15 @@ namespace SylverInk
 
 		private static string GetRibbonTooltip(int recordIndex)
 		{
-			string content = string.Empty;
 			var record = CurrentDatabase.GetRecord(recordIndex);
-			switch (RibbonTabContent)
+			return RibbonTabContent switch
 			{
-				case DisplayType.Creation:
-					content = $"{record.GetCreated()} — {record.Preview}";
-					break;
-				case DisplayType.Change:
-					content = $"{record.ShortChange} — {record.Preview}";
-					break;
-				case DisplayType.Content:
-					content = record.Preview;
-					break;
-				case DisplayType.Index:
-					content = $"Note #{recordIndex + 1:N0} — {record.Preview}";
-					break;
-			}
-
-			return content;
+				DisplayType.Change => $"{record.ShortChange} — {record.Preview}",
+				DisplayType.Content => record.Preview,
+				DisplayType.Creation => $"{record.GetCreated()} — {record.Preview}",
+				DisplayType.Index => $"Note #{recordIndex + 1:N0} — {record.Preview}",
+				_ => record.Preview
+			};
 		}
 
 		public static string MakeUUID(UUIDType type = UUIDType.Record)
@@ -356,9 +346,7 @@ namespace SylverInk
 			for (double i = 1.2; i < 2.0; i += 0.1)
 				mac -= Math.Sign(mac) * (long)Math.Floor(mac / (new Random().NextDouble() + i));
 
-			var uuid = string.Format("{0:X8}-{1:X4}-{2:X4}-{3:X2}{4:X2}-{5:X12}", (binary >> 32) & 0xFFFFFFFF, (binary >> 16) & 0xFFFF, binary & 0xFFFF, (nano & 0x3FC) >> 2, (byte)type, mac & 0xFFFFFFFFFFFF);
-
-			return uuid;
+			return string.Format("{0:X8}-{1:X4}-{2:X4}-{3:X2}{4:X2}-{5:X12}", (binary >> 32) & 0xFFFFFFFF, (binary >> 16) & 0xFFFF, binary & 0xFFFF, (nano & 0x3FC) >> 2, (byte)type, mac & 0xFFFFFFFFFFFF);
 		}
 
 		private static double MeasureTextHeight(string text)
@@ -419,6 +407,19 @@ namespace SylverInk
 			UpdateContextMenu();
 		}
 
+		public static int IntFromBytes(byte[] data) =>
+			(data[0] << 24)
+			+ (data[1] << 16)
+			+ (data[2] << 8)
+			+ data[3];
+
+		public static byte[] IntToBytes(int data) => [
+			(byte)((data >> 24) & 0xFF),
+			(byte)((data >> 16) & 0xFF),
+			(byte)((data >> 8) & 0xFF),
+			(byte)(data & 0xFF)
+		];
+
 		public static void UpdateContextMenu()
 		{
 			var control = (TabControl)Application.Current.MainWindow.FindName("DatabasesPanel");
@@ -459,8 +460,7 @@ namespace SylverInk
 				record.Preview = $"{WindowWidth}";
 
 				RecentEntries++;
-				var height = MeasureTextHeight(record.Preview);
-				TextHeight += height * 1.25;
+				TextHeight += MeasureTextHeight(record.Preview) * 1.25;
 			}
 
 			CurrentDatabase.Sort();

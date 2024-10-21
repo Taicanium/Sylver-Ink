@@ -175,19 +175,6 @@ namespace SylverInk
 			return true;
 		}
 
-		private byte ReadByte()
-		{
-			if (UseLZW)
-			{
-				var b = _lzw.Decompress();
-				if (b.Length > 0)
-					return b[0];
-				return 0;
-			}
-
-			return (byte)(_fileStream?.ReadByte() ?? 0);
-		}
-
 		private byte[] ReadBytes(int byteCount)
 		{
 			if (UseLZW)
@@ -275,13 +262,7 @@ namespace SylverInk
 			}
 		}
 
-		private uint ReadUInt32()
-		{
-			return ReadByte() * 16777216U
-			+ ReadByte() * 65536U
-			+ ReadByte() * 256U
-			+ ReadByte();
-		}
+		private uint ReadUInt32() => (uint)Common.IntFromBytes(ReadBytes(4));
 
 		private void WriteBytes(byte[] data)
 		{
@@ -329,14 +310,6 @@ namespace SylverInk
 			WriteBytes(_buffer);
 		}
 
-		private void WriteUInt32(uint data)
-		{
-			WriteBytes([
-				(byte)((data >> 24) & 0xFF),
-				(byte)((data >> 16) & 0xFF),
-				(byte)((data >> 8) & 0xFF),
-				(byte)(data & 0xFF)
-			]);
-		}
+		private void WriteUInt32(uint data) => WriteBytes(Common.IntToBytes((int)data));
 	}
 }

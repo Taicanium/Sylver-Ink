@@ -188,14 +188,7 @@ namespace SylverInk
 							break;
 					}
 				}
-
-				byte[] outBuffer = [
-					(byte)((tag.Item2 >> 24) & 0xFF),
-					(byte)((tag.Item2 >> 16) & 0xFF),
-					(byte)((tag.Item2 >> 8) & 0xFF),
-					(byte)(tag.Item2 & 0xFF),
-				];
-				CurrentDatabase.Transmit(Network.MessageType.RecordUnlock, outBuffer);
+				CurrentDatabase.Transmit(Network.MessageType.RecordUnlock, IntToBytes(tag.Item2));
 
 				tabPanel.SelectedIndex = 0;
 				tabPanel.Items.RemoveAt(tabIndex);
@@ -315,13 +308,7 @@ namespace SylverInk
 			if (Edited)
 				SaveRecord();
 
-			byte[] outBuffer = [
-				(byte)((ResultRecord >> 24) & 0xFF),
-				(byte)((ResultRecord >> 16) & 0xFF),
-				(byte)((ResultRecord >> 8) & 0xFF),
-				(byte)(ResultRecord & 0xFF),
-			];
-			CurrentDatabase.Transmit(Network.MessageType.RecordUnlock, outBuffer);
+			CurrentDatabase.Transmit(Network.MessageType.RecordUnlock, IntToBytes(ResultRecord));
 
 			foreach (SearchResult result in OpenQueries)
 			{
@@ -343,14 +330,7 @@ namespace SylverInk
 			else
 			{
 				LastChangedLabel.Content = "Last modified: " + CurrentDatabase.GetRecord(ResultRecord).GetLastChange();
-
-				byte[] outBuffer = [
-					(byte)((ResultRecord >> 24) & 0xFF),
-					(byte)((ResultRecord >> 16) & 0xFF),
-					(byte)((ResultRecord >> 8) & 0xFF),
-					(byte)(ResultRecord & 0xFF),
-				];
-				CurrentDatabase.Transmit(Network.MessageType.RecordLock, outBuffer);
+				CurrentDatabase.Transmit(Network.MessageType.RecordUnlock, IntToBytes(ResultRecord));
 			}
 
 			if (ResultText.Equals(string.Empty))
