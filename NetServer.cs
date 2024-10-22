@@ -79,7 +79,7 @@ namespace SylverInk
 					if (DBServer.Pending())
 					{
 						var client = DBServer.AcceptTcpClient();
-						SpinWait.SpinUntil(() => client.Available != 0);
+						SpinWait.SpinUntil(new(() => client.Available != 0));
 						var stream = client.GetStream();
 						Flags = (byte)stream.ReadByte();
 
@@ -133,7 +133,7 @@ namespace SylverInk
 			bool dataFinished = false;
 			do
 			{
-				dataFinished = !SpinWait.SpinUntil(() => client.Available != oldData, 200);
+				dataFinished = !SpinWait.SpinUntil(new(() => client.Available != oldData), 200);
 				oldData = client.Available;
 			} while (!dataFinished);
 

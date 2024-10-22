@@ -93,7 +93,7 @@ namespace SylverInk
 		{
 			ClientTask.CancelAsync();
 			DBClient?.Close();
-			await Task.Run(() => SpinWait.SpinUntil(() => !DBClient?.Connected is true));
+			await Task.Run(() => SpinWait.SpinUntil(new(() => !DBClient?.Connected is true)));
 			DBClient?.Dispose();
 			Connected = false;
 			Active = false;
@@ -106,7 +106,7 @@ namespace SylverInk
 			bool dataFinished = false;
 			do
 			{
-				dataFinished = !SpinWait.SpinUntil(() => DBClient.Available != oldData, 200);
+				dataFinished = !SpinWait.SpinUntil(new(() => DBClient.Available != oldData), 200);
 				oldData = DBClient.Available;
 			} while (!dataFinished);
 

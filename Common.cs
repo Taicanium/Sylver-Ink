@@ -215,20 +215,18 @@ namespace SylverInk
 				MeasureTask.RunWorkerCompleted += (_, _) => UpdateTask?.RunWorkerAsync();
 			}
 
-			Concurrent(() =>
+			BackgroundWorker deferUpdateTask = new();
+			deferUpdateTask.DoWork += (_, _) => SpinWait.SpinUntil(new(() => !MeasureTask?.IsBusy is true && !UpdateTask?.IsBusy is true), 1000);
+			deferUpdateTask.RunWorkerCompleted += (_, _) =>
 			{
-				BackgroundWorker deferUpdateTask = new();
-				deferUpdateTask.DoWork += (_, _) => SpinWait.SpinUntil(() => !MeasureTask?.IsBusy is true && !UpdateTask?.IsBusy is true, 150);
-				deferUpdateTask.RunWorkerCompleted += (_, _) =>
-				{
-					if (MeasureTask?.IsBusy is false && UpdateTask?.IsBusy is false)
-						MeasureTask?.RunWorkerAsync();
+				if (MeasureTask?.IsBusy is false && UpdateTask?.IsBusy is false)
+					MeasureTask?.RunWorkerAsync();
 
-					if (RepeatUpdate)
-						DeferUpdateRecentNotes();
-				};
-				deferUpdateTask.RunWorkerAsync();
-			});
+				if (RepeatUpdate)
+					DeferUpdateRecentNotes();
+			};
+
+			Concurrent(deferUpdateTask.RunWorkerAsync);
 		}
 
 		public static string DialogFileSelect(bool outgoing = false, int filterIndex = 3, string? defaultName = null)

@@ -289,7 +289,7 @@ namespace SylverInk
 			DatabasesPanel.SelectedIndex = 0;
 
 			BackgroundWorker worker = new();
-			worker.DoWork += (_, _) => SpinWait.SpinUntil(() => Databases.Count > 0);
+			worker.DoWork += (_, _) => SpinWait.SpinUntil(new(() => Databases.Count > 0));
 			worker.RunWorkerCompleted += (_, _) =>
 			{
 				CanResize = true;
