@@ -40,14 +40,14 @@ namespace SylverInk
 					try
 					{
 						if (DBClient.Available > 0)
-							Concurrent(() => ReadFromStream());
+							Concurrent(ReadFromStream);
 
 						if (!DBClient.Connected || !DBClient.GetStream().Socket.Connected)
-							Concurrent(() => Disconnect());
+							Concurrent(Disconnect);
 					}
 					catch
 					{
-						Concurrent(() => Disconnect());
+						Concurrent(Disconnect);
 					}
 				}
 			};

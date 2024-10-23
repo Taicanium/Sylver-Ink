@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows;
-using System.Windows.Controls;
 using static SylverInk.Common;
 
 namespace SylverInk
@@ -115,25 +114,6 @@ namespace SylverInk
 			var recordIndex = Records.FindIndex(new(record => record.Index == index));
 			Records[recordIndex].Delete();
 			Records.RemoveAt(recordIndex);
-
-			var tabControl = GetChildPanel("DatabasesPanel");
-			for (int i = tabControl.Items.Count; i > 1; i--)
-			{
-				var item = (TabItem)tabControl.Items[i - 1];
-				
-				if (item.Tag is null)
-					continue;
-
-				if ((int)item.Tag == index)
-				{
-					if (tabControl.SelectedIndex == i - 1)
-						tabControl.SelectedIndex = 0;
-
-					tabControl.Items.RemoveAt(i - 1);
-				}
-				else if ((int)item.Tag > index)
-					item.Tag = (int)item.Tag - 1;
-			}
 
 			PropagateIndices();
 			Changed = true;

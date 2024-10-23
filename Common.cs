@@ -61,6 +61,7 @@ namespace SylverInk
 		public static Import? ImportWindow { get => _import; set { _import?.Close(); _import = value; _import?.Show(); } }
 		private static BackgroundWorker? MeasureTask { get; set; }
 		public static List<SearchResult> OpenQueries { get; } = [];
+		public static List<NoteTab> OpenTabs { get; } = [];
 		public static double PPD { get; set; } = 1.0;
 		private static int RecentEntries { get; set; } = 10;
 		public static SortType RecentEntriesSortMode { get; set; } = SortType.ByChange;
@@ -78,7 +79,6 @@ namespace SylverInk
 		public static void AddDatabase(Database db)
 		{
 			var template = (DataTemplate)Application.Current.MainWindow.TryFindResource("DatabaseContentTemplate");
-			var menu = (ContextMenu)Application.Current.MainWindow.TryFindResource("DatabaseContextMenu");
 			var control = (TabControl)Application.Current.MainWindow.FindName("DatabasesPanel");
 			var tabs = control.Items.Cast<TabItem>();
 
@@ -105,7 +105,6 @@ namespace SylverInk
 			TabItem item = new()
 			{
 				Content = template.LoadContent(),
-				ContextMenu = menu,
 				Header = db.GetHeader(),
 				Tag = db,
 			};
@@ -476,18 +475,14 @@ namespace SylverInk
 		public static void UpdateRibbonTabs(DisplayType protocol)
 		{
 			RibbonTabContent = protocol;
-			var control = GetChildPanel("DatabasesPanel");
-			if (control is null)
-				return;
 
-			foreach (TabItem item in control.Items)
+			foreach (var item in OpenTabs)
 			{
-				var tag = item.Tag;
+				var tag = item.Tab.Tag;
 				if (tag is null)
 					continue;
 
-				item.Header = GetRibbonHeader((int)tag);
-				item.ToolTip = GetRibbonTooltip((int)tag);
+				item.Tab.Header = GetRibbonHeader((int)tag);
 			}
 		}
 

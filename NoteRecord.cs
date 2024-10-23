@@ -292,7 +292,7 @@ namespace SylverInk
 			}
 		}
 
-		public override string ToString() => Reconstruct();
+		public override string ToString() => Reconstruct(0U);
 
 		public void Unlock()
 		{
@@ -307,19 +307,17 @@ namespace SylverInk
 				}
 			}
 
-			var panel = GetChildPanel("DatabasesPanel");
-
-			foreach (TabItem item in panel.Items)
+			foreach (var item in OpenTabs)
 			{
-				if (Index == (int)(item.Tag ?? -1))
+				if (Index != (int)(item.Tab.Tag ?? -1))
+					continue;
+
+				var grid = (Grid)item.Tab.Content;
+				foreach (UIElement child in grid.Children)
 				{
-					var grid = (Grid)item.Content;
-					foreach (UIElement child in grid.Children)
-					{
-						child.SetValue(UIElement.IsEnabledProperty, true);
-						if (child.GetType().Equals(typeof(Label)))
-							((Label)child).Content = "Entry last modified: " + GetLastChange();
-					}
+					child.SetValue(UIElement.IsEnabledProperty, true);
+					if (child.GetType().Equals(typeof(Label)))
+						((Label)child).Content = "Entry last modified: " + GetLastChange();
 				}
 			}
 		}

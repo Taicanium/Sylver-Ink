@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Text;
+using System.Windows;
 using System.Windows.Controls;
 using static SylverInk.Common;
 
@@ -134,6 +135,7 @@ namespace SylverInk
 
 			HeaderPanel = new StackPanel()
 			{
+				ContextMenu = (ContextMenu)Application.Current.MainWindow.TryFindResource("DatabaseContextMenu"),
 				Margin = new(0),
 				Orientation = Orientation.Horizontal,
 				ToolTip = Name,
