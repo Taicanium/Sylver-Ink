@@ -118,9 +118,10 @@ namespace SylverInk
 
 		private static uint HSVFromRGB(SolidColorBrush brush)
 		{
-			double r_ = brush.Color.R * 0.0039215686;
-			double g_ = brush.Color.G * 0.0039215686;
-			double b_ = brush.Color.B * 0.0039215686;
+			const double fInv = 1.0 / 255.0;
+			double r_ = brush.Color.R * fInv;
+			double g_ = brush.Color.G * fInv;
+			double b_ = brush.Color.B * fInv;
 			var Cmax = Math.Max(r_, Math.Max(g_, b_));
 			var Cmin = Math.Min(r_, Math.Min(g_, b_));
 			var delta = Cmax - Cmin;

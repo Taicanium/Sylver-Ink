@@ -128,7 +128,9 @@ namespace SylverInk
 			if (inMemory is not null)
 				_serializer?.OpenRead(string.Empty, inMemory);
 
-			if (_serializer?.DatabaseFormat >= 7)
+			Format = _serializer?.DatabaseFormat ?? HighestFormat;
+
+			if (Format >= 7)
 			{
 				string? _uuid = string.Empty;
 				UUID = _serializer?.ReadString(ref _uuid);
@@ -230,7 +232,7 @@ namespace SylverInk
 		public void ReloadSerializer()
 		{
 			_serializer?.Close();
-			_serializer = new() { DatabaseFormat = (byte)HighestFormat };
+			_serializer = new() { DatabaseFormat = (byte)Format };
 
 			if (_canCompress == -1 || (_canCompress == 0 && !TestCanCompress()))
 				_serializer.DatabaseFormat--;

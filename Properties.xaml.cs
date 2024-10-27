@@ -51,31 +51,27 @@ namespace SylverInk
 		{
 			DBNameLabel.ToolTip = DBNameLabel.Text = DB?.Name;
 			DBCreatedLabel.Content = DB?.GetCreated();
-			DBNotesLabel.Content = $"{DB?.RecordCount}";
+			DBFormatLabel.Content = $"SIDB v.{DB?.Controller.Format}";
+			DBNotesLabel.Content = $"{DB?.RecordCount:N0} notes";
 
 			double noteAvg = 0.0;
 			int noteLongest = 0;
 			int noteShortest = int.MaxValue;
+			int noteTotal = 0;
 			for (int i = 0; i < DB?.RecordCount; i++)
 			{
 				var length = DB?.GetRecord(i).ToString().Length ?? 0;
 				noteAvg += length;
 				noteLongest = Math.Max(noteLongest, length);
 				noteShortest = Math.Min(noteLongest, length);
+				noteTotal += length;
 			}
 			noteAvg /= DB?.RecordCount ?? 1.0;
 
 			DBAvgLabel.Content = $"{noteAvg:N1} characters";
-			DBLongestLabel.Content = $"{noteLongest} characters";
-			DBShortestLabel.Content = $"{noteShortest} characters";
-
-			DBFormatBox.Items.Clear();
-			for (int i = 2; i <= HighestFormat; i += 2)
-			{
-				DBFormatBox.Items.Add(new ComboBoxItem() { Content = $"SIDB v.{i}" });
-				if (DB?.Controller.Format == i || DB?.Controller.Format == i - 1)
-					DBFormatBox.SelectedIndex = DBFormatBox.Items.Count - 1;
-			}
+			DBLongestLabel.Content = $"{noteLongest:N0} characters";
+			DBShortestLabel.Content = $"{noteShortest:N0} characters";
+			DBTotalLabel.Content = $"{noteTotal:N0} characters";
 		}
 
 		private void Minute_Selected(object sender, RoutedEventArgs e)

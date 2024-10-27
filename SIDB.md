@@ -32,6 +32,8 @@ The dictionary is not reset when its width limit is reached. This results in exp
 
 - Format 3/4
 
+Add database name to front of data.
+
 ```
 Database name -- [4 bytes: big-endian unsigned int, length of following string][_n_ bytes: string]
 Record count -- [4 bytes: big-endian unsigned int]
@@ -46,6 +48,8 @@ Record count -- [4 bytes: big-endian unsigned int]
 ```
 
 - Format 5/6
+
+Add record UUID to front of record data.
 
 ```
 Database name -- [4 bytes: big-endian unsigned int, length of following string][_n_ bytes: string]
@@ -62,6 +66,8 @@ Record count -- [4 bytes: big-endian unsigned int]
 ```
 
 - Format 7/8
+
+Add database UUID to front of database data. Add revision UUID to front of revision data.
 
 ```
 Database UUID -- [4 bytes][_n_ bytes: string]
