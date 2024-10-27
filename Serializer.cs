@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using System.Text;
+using static SylverInk.Common;
 
 namespace SylverInk
 {
@@ -18,7 +19,7 @@ namespace SylverInk
 		/// <summary>
 		/// See SIDB.md for a file format description.
 		/// </summary>
-		public byte DatabaseFormat { get; set; } = 8;
+		public byte DatabaseFormat { get; set; } = (byte)HighestFormat;
 		public bool Headless { get; private set; } = false;
 		public bool UseLZW { get; private set; } = false;
 

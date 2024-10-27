@@ -58,6 +58,7 @@ namespace SylverInk
 			new("Databases", Path.Join(DocumentsFolder, "Databases"))
 			]);
 		public static bool ForceClose { get; set; } = false;
+		public static int HighestFormat { get; } = 8;
 		public static Import? ImportWindow { get => _import; set { _import?.Close(); _import = value; _import?.Show(); } }
 		private static BackgroundWorker? MeasureTask { get; set; }
 		public static List<SearchResult> OpenQueries { get; } = [];
@@ -332,6 +333,19 @@ namespace SylverInk
 			};
 		}
 
+		public static int IntFromBytes(byte[] data) =>
+			(data[0] << 24)
+			+ (data[1] << 16)
+			+ (data[2] << 8)
+			+ data[3];
+
+		public static byte[] IntToBytes(int data) => [
+			(byte)((data >> 24) & 0xFF),
+			(byte)((data >> 16) & 0xFF),
+			(byte)((data >> 8) & 0xFF),
+			(byte)(data & 0xFF)
+		];
+
 		public static string MakeUUID(UUIDType type = UUIDType.Record)
 		{
 			var time = DateTime.UtcNow;
@@ -403,19 +417,6 @@ namespace SylverInk
 
 			UpdateContextMenu();
 		}
-
-		public static int IntFromBytes(byte[] data) =>
-			(data[0] << 24)
-			+ (data[1] << 16)
-			+ (data[2] << 8)
-			+ data[3];
-
-		public static byte[] IntToBytes(int data) => [
-			(byte)((data >> 24) & 0xFF),
-			(byte)((data >> 16) & 0xFF),
-			(byte)((data >> 8) & 0xFF),
-			(byte)(data & 0xFF)
-		];
 
 		public static void UpdateContextMenu()
 		{

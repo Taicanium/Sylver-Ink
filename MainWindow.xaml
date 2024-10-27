@@ -23,6 +23,7 @@
 				<MenuItem Click="DatabaseClose" Header="Close" IsEnabled="False"/>
 				<MenuItem Click="DatabaseCreate" Header="Create" Tag="Always"/>
 				<MenuItem Click="DatabaseRename" Header="Rename" Tag="Always"/>
+				<MenuItem Click="DatabaseProperties" Header="Properties" Tag="Always"/>
 				<Separator Focusable="False" Margin="0,10,0,5" Tag="Always" Visibility="Hidden"/>
 				<MenuItem Header="Networking" Focusable="False" IsEnabled="False" Tag="Always"/>
 				<Separator Focusable="False" Margin="0,5" Tag="Always"/>

@@ -134,6 +134,12 @@ namespace SylverInk
 			DeferUpdateRecentNotes();
 		}
 
+		private void DatabaseProperties(object sender, RoutedEventArgs e)
+		{
+			Properties window = new() { DB = CurrentDatabase };
+			window.Show();
+		}
+
 		private void DatabaseRename(object sender, RoutedEventArgs e)
 		{
 			RenameDatabase.IsOpen = true;

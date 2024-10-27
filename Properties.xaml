@@ -1,0 +1,88 @@
+﻿<Window x:Class="SylverInk.Properties"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:SylverInk"
+        mc:Ignorable="d"
+		d:DataContext="{d:DesignInstance Type=local:ContextSettings}"
+        Title="Sylver Ink: Properties" Height="525" Width="300" Loaded="Properties_Loaded" MouseLeftButtonDown="Drag">
+	<Grid Background="{Binding MenuBackground}">
+		<Grid.RowDefinitions>
+			<RowDefinition Height="*"/>
+			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="Auto"/>
+		</Grid.RowDefinitions>
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition Width="*"/>
+			<ColumnDefinition Width="*"/>
+		</Grid.ColumnDefinitions>
+
+		<Popup Height="25" Placement="Mouse" StaysOpen="False" Width="90" x:Name="TimeSelector">
+			<Border BorderBrush="{Binding MenuForeground}" BorderThickness="1">
+				<Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="*"/>
+						<ColumnDefinition Width="*"/>
+					</Grid.ColumnDefinitions>
+					<ComboBox Name="Hour" SelectionChanged="Hour_Selected"/>
+					<ComboBox Grid.Column="1" Name="Minute" SelectionChanged="Minute_Selected"/>
+				</Grid>
+			</Border>
+		</Popup>
+
+		<Grid Grid.ColumnSpan="2" Margin="0,5">
+			<Grid.RowDefinitions>
+				<RowDefinition Height="*"/>
+				<RowDefinition Height="*"/>
+				<RowDefinition Height="*"/>
+				<RowDefinition Height="*"/>
+				<RowDefinition Height="*"/>
+				<RowDefinition Height="*"/>
+				<RowDefinition Height="*"/>
+				<RowDefinition Height="*"/>
+			</Grid.RowDefinitions>
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="*"/>
+				<ColumnDefinition Width="*"/>
+			</Grid.ColumnDefinitions>
+
+			<Label Content="Database name:" Grid.Row="0"/>
+			<Label Content="Created:" Grid.Row="1"/>
+			<Label Content="Format:" Grid.Row="2"/>
+			<Separator Grid.ColumnSpan="2" Grid.Row="3"/>
+			<Label Content="Number of notes:" Grid.Row="4"/>
+			<Label Content="Average note length:" Grid.Row="5"/>
+			<Label Content="Longest note:" Grid.Row="6"/>
+			<Label Content="Shortest note:" Grid.Row="7"/>
+
+			<TextBlock Grid.Column="1" FontFamily="{Binding MainFontFamily}" FontSize="{Binding MainFontSize}" Foreground="{Binding MenuForeground}" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="WrapWithOverflow" VerticalAlignment="Center" x:Name="DBNameLabel"/>
+			<Label Grid.Column="1" Grid.Row="1" x:Name="DBCreatedLabel"/>
+			<ComboBox Grid.Column="1" Height="20" IsEnabled="False" Grid.Row="2" Width="90" x:Name="DBFormatBox"/>
+			<Label Grid.Column="1" Grid.Row="4" x:Name="DBNotesLabel"/>
+			<Label Grid.Column="1" Grid.Row="5" x:Name="DBAvgLabel"/>
+			<Label Grid.Column="1" Grid.Row="6" x:Name="DBLongestLabel"/>
+			<Label Grid.Column="1" Grid.Row="7" x:Name="DBShortestLabel"/>
+		</Grid>
+		<Separator Grid.ColumnSpan="2" Grid.Row="1"/>
+		<Grid Margin="0,5" Grid.ColumnSpan="2" Grid.Row="2">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="*"/>
+				<ColumnDefinition Width="*"/>
+			</Grid.ColumnDefinitions>
+			<Label FontStyle="Italic" HorizontalAlignment="Right" Margin="10" VerticalAlignment="Center">
+				<TextBlock>Restore the database<LineBreak/>to a previous state</TextBlock>
+			</Label>
+
+			<StackPanel Grid.Column="1" Margin="0,10,0,0" VerticalAlignment="Center">
+				<DatePicker MaxWidth="120" SelectedDateChanged="SelectedDateChanged" x:Name="ReversionDate"/>
+				<Button Click="SelectTime" Content="12:00 AM" FontStyle="Normal" Margin="0,5" Width="70" x:Name="SelectedTime"/>
+				<Button Click="RestoreClick" Content="Restore" IsEnabled="False" Margin="0,10" x:Name="RestoreButton"/>
+			</StackPanel>
+		</Grid>
+		<Separator Grid.ColumnSpan="2" Grid.Row="3"/>
+		<Button Click="CloseClick" Content="Close" Margin="0,20" Grid.ColumnSpan="2" Grid.Row="4"/>
+	</Grid>
+</Window>

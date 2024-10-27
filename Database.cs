@@ -17,6 +17,7 @@ namespace SylverInk
 
 		public bool Changed { get => Controller.Changed; set => Controller.Changed = value; }
 		public NetClient? Client;
+		public long? Created;
 		private StackPanel? HeaderPanel;
 		public string? Name { get => Controller.Name; set => Controller.Name = value; }
 		public int RecordCount => Controller.RecordCount;
@@ -99,6 +100,23 @@ namespace SylverInk
 			Controller.EraseDatabase();
 		}
 
+		public string GetCreated()
+		{
+			if (Created is not null)
+				return DateTime.FromBinary((long)Created).ToString("yyyy-MM-dd HH:mm:ss");
+
+			var CreatedObject = DateTime.UtcNow;
+			for (int i = 0; i < RecordCount; i++)
+			{
+				var other = Controller.GetRecord(i).GetCreatedObject();
+				if (CreatedObject.CompareTo(other) > 0)
+					CreatedObject = other;
+			}
+
+			Created = CreatedObject.ToBinary();
+			return CreatedObject.ToString("yyyy-MM-dd HH:mm:ss");
+		}
+
 		public object GetHeader()
 		{
 			string? headerContent;
@@ -160,10 +178,7 @@ namespace SylverInk
 				Name = Path.GetFileNameWithoutExtension(DBFile);
 		}
 
-		public void Lock(int index)
-		{
-			Controller.GetRecord(index).Lock();
-		}
+		public void Lock(int index) => Controller.GetRecord(index).Lock();
 
 		public void MakeBackup(bool auto = false)
 		{
@@ -251,10 +266,7 @@ namespace SylverInk
 				Server?.Broadcast(type, data);
 		}
 
-		public void Unlock(int index)
-		{
-			Controller.GetRecord(index).Unlock();
-		}
+		public void Unlock(int index) => Controller.GetRecord(index).Unlock();
 
 		public void UpdateWordPercentages() => Controller.UpdateWordPercentages();
 	}

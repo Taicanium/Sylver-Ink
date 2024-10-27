@@ -10,8 +10,8 @@
 	<Grid>
 		<Grid.RowDefinitions>
 			<RowDefinition Height="Auto"/>
-			<RowDefinition Height="*"/>
 			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="*"/>
 			<RowDefinition Height="Auto"/>
 			<RowDefinition Height="Auto"/>
 		</Grid.RowDefinitions>
@@ -41,130 +41,90 @@
 			</Border>
 		</Popup>
 
-		<Popup Height="25" Placement="Mouse" StaysOpen="False" Width="90" x:Name="TimeSelector">
-			<Border BorderBrush="{Binding MenuForeground}" BorderThickness="1">
-				<Grid Background="{Binding MenuBackground}" HorizontalAlignment="Center" VerticalAlignment="Center">
-					<Grid.ColumnDefinitions>
-						<ColumnDefinition Width="*"/>
-						<ColumnDefinition Width="*"/>
-					</Grid.ColumnDefinitions>
-					<ComboBox Name="Hour" SelectionChanged="Hour_Selected"/>
-					<ComboBox Grid.Column="1" Name="Minute" SelectionChanged="Minute_Selected"/>
-				</Grid>
-			</Border>
-		</Popup>
+		<Grid Background="{Binding MenuBackground}" Grid.ColumnSpan="2" Margin="0,5">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="*"/>
+				<ColumnDefinition Width="*"/>
+			</Grid.ColumnDefinitions>
+			<Grid.RowDefinitions>
+				<RowDefinition Height="*"/>
+				<RowDefinition Height="*"/>
+				<RowDefinition Height="*"/>
+			</Grid.RowDefinitions>
+			<Label Content="Ribbon tabs display..." FontStyle="Italic" Foreground="{Binding MenuForeground}" HorizontalAlignment="Right" Margin="10,0"/>
+			<Label Content="Recent notes sort by..." FontStyle="Italic" Foreground="{Binding MenuForeground}" HorizontalAlignment="Right" Margin="10,0" Grid.Row="1"/>
+			<Label Content="Sticky notes stay on top" FontStyle="Italic" Foreground="{Binding MenuForeground}" HorizontalAlignment="Right" Margin="10,0" Grid.Row="2"/>
+			<ComboBox Grid.Column="1" Margin="0,10" SelectionChanged="StickyRibbonChanged" Width="150" x:Name="RibbonBox">
+				<ComboBoxItem Content="Content preview" Tag="Content"/>
+				<ComboBoxItem Content="Last changed date" Tag="Changed"/>
+				<ComboBoxItem Content="Created date" Tag="Creation"/>
+				<ComboBoxItem Content="Index number" Tag="Index"/>
+			</ComboBox>
+			<ComboBox Grid.Column="1" Margin="0,10" Grid.Row="1" SelectionChanged="SortRibbonChanged" Width="150" x:Name="SortBox">
+				<ComboBoxItem Content="Created date" Tag="ByCreation"/>
+				<ComboBoxItem Content="Last changed date" Tag="ByChange"/>
+			</ComboBox>
+			<CheckBox Grid.Column="1" IsChecked="{Binding SearchResultsOnTop}" Margin="20,0" Grid.Row="2"/>
+		</Grid>
+		<Separator Grid.ColumnSpan="2" Grid.Row="1"/>
+		<Grid Background="{Binding MenuBackground}" Grid.ColumnSpan="2" Grid.Row="2">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="*"/>
+				<ColumnDefinition Width="*"/>
+			</Grid.ColumnDefinitions>
+			<Grid.RowDefinitions>
+				<RowDefinition Height="*"/>
+				<RowDefinition Height="*"/>
+				<RowDefinition Height="*"/>
+				<RowDefinition Height="*"/>
+				<RowDefinition Height="*"/>
+			</Grid.RowDefinitions>
 
-		<Border BorderBrush="{Binding AccentBackground}" BorderThickness="0,0,0,1" Grid.ColumnSpan="2">
-			<Grid Background="{Binding MenuBackground}" Margin="0,5">
-				<Grid.ColumnDefinitions>
-					<ColumnDefinition Width="*"/>
-					<ColumnDefinition Width="*"/>
-				</Grid.ColumnDefinitions>
-				<Grid.RowDefinitions>
-					<RowDefinition Height="*"/>
-					<RowDefinition Height="*"/>
-					<RowDefinition Height="*"/>
-				</Grid.RowDefinitions>
-				<Label Content="Ribbon tabs display..." FontStyle="Italic" Foreground="{Binding MenuForeground}" HorizontalAlignment="Right" Margin="10,0"/>
-				<Label Content="Recent notes sort by..." FontStyle="Italic" Foreground="{Binding MenuForeground}" HorizontalAlignment="Right" Margin="10,0" Grid.Row="1"/>
-				<Label Content="Sticky notes stay on top" FontStyle="Italic" Foreground="{Binding MenuForeground}" HorizontalAlignment="Right" Margin="10,0" Grid.Row="2"/>
-				<ComboBox Grid.Column="1" Margin="0,10" SelectionChanged="StickyRibbonChanged" Width="150" x:Name="RibbonBox">
-					<ComboBoxItem Content="Content preview" Tag="Content"/>
-					<ComboBoxItem Content="Last changed date" Tag="Changed"/>
-					<ComboBoxItem Content="Created date" Tag="Creation"/>
-					<ComboBoxItem Content="Index number" Tag="Index"/>
-				</ComboBox>
-				<ComboBox Grid.Column="1" Margin="0,10" Grid.Row="1" SelectionChanged="SortRibbonChanged" Width="150" x:Name="SortBox">
-					<ComboBoxItem Content="Created date" Tag="ByCreation"/>
-					<ComboBoxItem Content="Last changed date" Tag="ByChange"/>
-				</ComboBox>
-				<CheckBox Grid.Column="1" IsChecked="{Binding SearchResultsOnTop}" Margin="20,0" Grid.Row="2"/>
-			</Grid>
-		</Border>
+			<Label Content="Display Font" FontStyle="Italic" HorizontalAlignment="Right" Margin="10,0"/>
+			<Label Content="Font Size" FontStyle="Italic" HorizontalAlignment="Right" Margin="10,0" Grid.Row="1"/>
+			<Label Content="Menu Colors" FontStyle="Italic" HorizontalAlignment="Right" Margin="10,0" Grid.Row="2"/>
+			<Label Content="Text Colors" FontStyle="Italic" HorizontalAlignment="Right" Margin="10,0" Grid.Row="3"/>
+			<Label Content="Accent Colors" FontStyle="Italic" HorizontalAlignment="Right" Margin="10,0" Grid.Row="4"/>
 
-		<Border BorderBrush="{Binding AccentBackground}" BorderThickness="0,0,0,1" Grid.ColumnSpan="2" Grid.Row="1">
-			<Grid Background="{Binding MenuBackground}">
-				<Grid.ColumnDefinitions>
-					<ColumnDefinition Width="*"/>
-					<ColumnDefinition Width="*"/>
-				</Grid.ColumnDefinitions>
-				<Grid.RowDefinitions>
-					<RowDefinition Height="*"/>
-					<RowDefinition Height="*"/>
-					<RowDefinition Height="*"/>
-					<RowDefinition Height="*"/>
-					<RowDefinition Height="*"/>
-				</Grid.RowDefinitions>
-
-				<Label Content="Display Font" FontStyle="Italic" HorizontalAlignment="Right" Margin="10,0"/>
-				<Label Content="Font Size" FontStyle="Italic" HorizontalAlignment="Right" Margin="10,0" Grid.Row="1"/>
-				<Label Content="Menu Colors" FontStyle="Italic" HorizontalAlignment="Right" Margin="10,0" Grid.Row="2"/>
-				<Label Content="Text Colors" FontStyle="Italic" HorizontalAlignment="Right" Margin="10,0" Grid.Row="3"/>
-				<Label Content="Accent Colors" FontStyle="Italic" HorizontalAlignment="Right" Margin="10,0" Grid.Row="4"/>
-
-				<ComboBox Grid.Column="1" Foreground="Black" HorizontalAlignment="Center" SelectionChanged="MenuFontChanged" VerticalAlignment="Center" Width="150" x:Name="MenuFont"/>
-				<StackPanel Grid.Column="1" HorizontalAlignment="Center" Orientation="Horizontal" Grid.Row="1" VerticalAlignment="Center">
-					<Button Click="FontSizeChanged" Content="-" Width="20"/>
-					<TextBox HorizontalContentAlignment="Center" IsReadOnly="True" Text="{Binding MainFontSize}" Width="40"/>
-					<Button Click="FontSizeChanged" Content="+" Width="20"/>
-				</StackPanel>
-				<StackPanel Grid.Column="1" HorizontalAlignment="Center" Orientation="Horizontal" Grid.Row="2" VerticalAlignment="Center">
-					<Button BorderBrush="Black" BorderThickness="1" Click="ColorPopup" Margin="20,0" Tag="P1B" Width="20">
-						<Rectangle Fill="{Binding MenuBackground}" Margin="-1" Stretch="UniformToFill"/>
-					</Button>
-					<Button BorderBrush="Black" BorderThickness="1" Click="ColorPopup" Margin="20,0" Tag="P1F" Width="20">
-						<Rectangle Fill="{Binding MenuForeground}" Margin="-1" Stretch="UniformToFill"/>
-					</Button>
-				</StackPanel>
-				<StackPanel Grid.Column="1" HorizontalAlignment="Center" Orientation="Horizontal" Grid.Row="3" VerticalAlignment="Center">
-					<Button BorderBrush="Black" BorderThickness="1" Click="ColorPopup" Margin="20,0" Tag="P2B" Width="20">
-						<Rectangle Fill="{Binding ListBackground}" Margin="-1" Stretch="UniformToFill"/>
-					</Button>
-					<Button BorderBrush="Black" BorderThickness="1" Click="ColorPopup" Margin="20,0" Tag="P2F" Width="20">
-						<Rectangle Fill="{Binding ListForeground}" Margin="-1" Stretch="UniformToFill"/>
-					</Button>
-				</StackPanel>
-				<StackPanel Grid.Column="1" HorizontalAlignment="Center" Orientation="Horizontal" Grid.Row="4" VerticalAlignment="Center">
-					<Button BorderBrush="Black" BorderThickness="1" Click="ColorPopup" Margin="20,0" Tag="P3B" Width="20">
-						<Rectangle Fill="{Binding AccentBackground}" Margin="-1" Stretch="UniformToFill"/>
-					</Button>
-					<Button BorderBrush="Black" BorderThickness="1" Click="ColorPopup" Margin="20,0" Tag="P3F" Width="20">
-						<Rectangle Fill="{Binding AccentForeground}" Margin="-1" Stretch="UniformToFill"/>
-					</Button>
-				</StackPanel>
-			</Grid>
-		</Border>
-
-		<Border BorderBrush="{Binding AccentBackground}" BorderThickness="0,0,0,1" Grid.ColumnSpan="2" Grid.Row="2">
-			<Grid Background="{Binding MenuBackground}" Margin="0,5">
-				<Grid.ColumnDefinitions>
-					<ColumnDefinition Width="*"/>
-					<ColumnDefinition Width="*"/>
-				</Grid.ColumnDefinitions>
-				<Label FontStyle="Italic" HorizontalAlignment="Right" Margin="10" VerticalAlignment="Center">
-					<TextBlock>
-				Restore the database<LineBreak/>
-				to a previous state
-					</TextBlock>
-				</Label>
-
-				<StackPanel Grid.Column="1" Margin="0,10,0,0" VerticalAlignment="Center">
-					<DatePicker MaxWidth="120" SelectedDateChanged="SelectedDateChanged" x:Name="ReversionDate"/>
-					<Button Click="SelectTime" Content="12:00 AM" FontStyle="Normal" Margin="0,5" Width="70" x:Name="SelectedTime"/>
-					<Button Click="RestoreClick" Content="Restore" IsEnabled="False" Margin="0,10" x:Name="RestoreButton"/>
-				</StackPanel>
-			</Grid>
-		</Border>
-
-		<Border BorderBrush="{Binding AccentBackground}" BorderThickness="0" Grid.ColumnSpan="2" Grid.Row="4">
-			<Grid Background="{Binding MenuBackground}" Margin="0,20">
-				<Grid.ColumnDefinitions>
-					<ColumnDefinition Width="*"/>
-					<ColumnDefinition Width="*"/>
-				</Grid.ColumnDefinitions>
-				<Button Click="ResetClick" Content="Reset" HorizontalAlignment="Right" Margin="10,0"/>
-				<Button Click="CloseClick" Grid.Column="1" Content="Close" HorizontalAlignment="Left" Margin="10,0"/>
-			</Grid>
-		</Border>
+			<ComboBox Grid.Column="1" Foreground="Black" HorizontalAlignment="Center" SelectionChanged="MenuFontChanged" VerticalAlignment="Center" Width="150" x:Name="MenuFont"/>
+			<StackPanel Grid.Column="1" HorizontalAlignment="Center" Orientation="Horizontal" Grid.Row="1" VerticalAlignment="Center">
+				<Button Click="FontSizeChanged" Content="-" Width="20"/>
+				<TextBox HorizontalContentAlignment="Center" IsReadOnly="True" Text="{Binding MainFontSize}" Width="40"/>
+				<Button Click="FontSizeChanged" Content="+" Width="20"/>
+			</StackPanel>
+			<StackPanel Grid.Column="1" HorizontalAlignment="Center" Orientation="Horizontal" Grid.Row="2" VerticalAlignment="Center">
+				<Button BorderBrush="Black" BorderThickness="1" Click="ColorPopup" Margin="20,0" Tag="P1B" Width="20">
+					<Rectangle Fill="{Binding MenuBackground}" Margin="-1" Stretch="UniformToFill" ToolTip="Background"/>
+				</Button>
+				<Button BorderBrush="Black" BorderThickness="1" Click="ColorPopup" Margin="20,0" Tag="P1F" Width="20">
+					<Rectangle Fill="{Binding MenuForeground}" Margin="-1" Stretch="UniformToFill" ToolTip="Foreground"/>
+				</Button>
+			</StackPanel>
+			<StackPanel Grid.Column="1" HorizontalAlignment="Center" Orientation="Horizontal" Grid.Row="3" VerticalAlignment="Center">
+				<Button BorderBrush="Black" BorderThickness="1" Click="ColorPopup" Margin="20,0" Tag="P2B" Width="20">
+					<Rectangle Fill="{Binding ListBackground}" Margin="-1" Stretch="UniformToFill" ToolTip="Background"/>
+				</Button>
+				<Button BorderBrush="Black" BorderThickness="1" Click="ColorPopup" Margin="20,0" Tag="P2F" Width="20">
+					<Rectangle Fill="{Binding ListForeground}" Margin="-1" Stretch="UniformToFill" ToolTip="Foreground"/>
+				</Button>
+			</StackPanel>
+			<StackPanel Grid.Column="1" HorizontalAlignment="Center" Orientation="Horizontal" Grid.Row="4" VerticalAlignment="Center">
+				<Button BorderBrush="Black" BorderThickness="1" Click="ColorPopup" Margin="20,0" Tag="P3B" Width="20">
+					<Rectangle Fill="{Binding AccentBackground}" Margin="-1" Stretch="UniformToFill" ToolTip="Background"/>
+				</Button>
+				<Button BorderBrush="Black" BorderThickness="1" Click="ColorPopup" Margin="20,0" Tag="P3F" Width="20">
+					<Rectangle Fill="{Binding AccentForeground}" Margin="-1" Stretch="UniformToFill" ToolTip="Foreground"/>
+				</Button>
+			</StackPanel>
+		</Grid>
+		<Separator Grid.ColumnSpan="2" Grid.Row="3"/>
+		<Grid Background="{Binding MenuBackground}" Margin="0,20" Grid.ColumnSpan="2" Grid.Row="4">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="*"/>
+				<ColumnDefinition Width="*"/>
+			</Grid.ColumnDefinitions>
+			<Button Click="ResetClick" Content="Reset" HorizontalAlignment="Right" Margin="10,0"/>
+			<Button Click="CloseClick" Grid.Column="1" Content="Close" HorizontalAlignment="Left" Margin="10,0"/>
+		</Grid>
 	</Grid>
 </Window>

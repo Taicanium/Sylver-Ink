@@ -25,6 +25,7 @@ namespace SylverInk
 			}
 		}
 
+		public int Format = HighestFormat;
 		public bool Loaded = false;
 		public string? Name;
 		public int RecordCount => Records.Count;
@@ -229,10 +230,10 @@ namespace SylverInk
 		public void ReloadSerializer()
 		{
 			_serializer?.Close();
-			_serializer = new() { DatabaseFormat = 8 };
+			_serializer = new() { DatabaseFormat = (byte)HighestFormat };
 
 			if (_canCompress == -1 || (_canCompress == 0 && !TestCanCompress()))
-				_serializer.DatabaseFormat = 7;
+				_serializer.DatabaseFormat--;
 		}
 
 		public (int, int) Replace(string oldText, string newText)
