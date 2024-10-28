@@ -153,9 +153,14 @@ namespace SylverInk
 			var newPath = DialogFileSelect(true, 2, CurrentDatabase.Name);
 			if (!newPath.Equals(string.Empty))
 				CurrentDatabase.DBFile = newPath;
+			CurrentDatabase.Controller.Format = HighestFormat;
 		}
 
-		private void DatabaseSaveLocal(object sender, RoutedEventArgs e) => CurrentDatabase.DBFile = Path.Join(DocumentsSubfolders["Databases"], Path.GetFileNameWithoutExtension(CurrentDatabase.DBFile), Path.GetFileName(CurrentDatabase.DBFile));
+		private void DatabaseSaveLocal(object sender, RoutedEventArgs e)
+		{
+			CurrentDatabase.DBFile = Path.Join(DocumentsSubfolders["Databases"], Path.GetFileNameWithoutExtension(CurrentDatabase.DBFile), Path.GetFileName(CurrentDatabase.DBFile));
+			CurrentDatabase.Controller.Format = HighestFormat;
+		}
 
 		private void DatabaseServe(object sender, RoutedEventArgs e) => CurrentDatabase.Server?.Serve(0);
 

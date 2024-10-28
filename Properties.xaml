@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:SylverInk"
         mc:Ignorable="d"
 		d:DataContext="{d:DesignInstance Type=local:ContextSettings}"
-        Title="Sylver Ink: Properties" Height="525" Width="300" Loaded="Properties_Loaded" MouseLeftButtonDown="Drag">
+        Title="Sylver Ink: Properties" Height="575" Width="350" Loaded="Properties_Loaded" MouseLeftButtonDown="Drag">
 	<Grid Background="{Binding MenuBackground}">
 		<Grid.RowDefinitions>
 			<RowDefinition Height="*"/>
@@ -40,6 +40,7 @@
 				<RowDefinition Height="*"/>
 				<RowDefinition Height="*"/>
 				<RowDefinition Height="*"/>
+				<RowDefinition Height="2*"/>
 				<RowDefinition Height="*"/>
 				<RowDefinition Height="*"/>
 				<RowDefinition Height="*"/>
@@ -48,28 +49,30 @@
 				<RowDefinition Height="*"/>
 			</Grid.RowDefinitions>
 			<Grid.ColumnDefinitions>
-				<ColumnDefinition Width="*"/>
-				<ColumnDefinition Width="*"/>
+				<ColumnDefinition Width="2*"/>
+				<ColumnDefinition Width="3*"/>
 			</Grid.ColumnDefinitions>
 
-			<Label Content="Database name:" FontWeight="Bold" HorizontalAlignment="Right" Margin="5,0" Grid.Row="1"/>
+			<Separator Grid.ColumnSpan="2" Grid.Row="2"/>
 			<Label Content="Created:" FontWeight="Bold" HorizontalAlignment="Right" Margin="5,0" Grid.Row="3"/>
 			<Label Content="Format:" FontWeight="Bold" HorizontalAlignment="Right" Margin="5,0" Grid.Row="4"/>
-			<Separator Grid.ColumnSpan="2" FontWeight="Bold" HorizontalAlignment="Right" Margin="5,0" Grid.Row="5"/>
-			<Label Content="Number of notes:" FontWeight="Bold" HorizontalAlignment="Right" Margin="5,0" Grid.Row="6"/>
-			<Label Content="Average note length:" FontWeight="Bold" HorizontalAlignment="Right" Margin="5,0" Grid.Row="7"/>
-			<Label Content="Total length:" FontWeight="Bold" HorizontalAlignment="Right" Margin="5,0" Grid.Row="8"/>
-			<Label Content="Longest note:" FontWeight="Bold" HorizontalAlignment="Right" Margin="5,0" Grid.Row="9"/>
-			<Label Content="Shortest note:" FontWeight="Bold" HorizontalAlignment="Right" Margin="5,0" Grid.Row="10"/>
+			<Label Content="Path:" FontWeight="Bold" HorizontalAlignment="Right" Margin="5,0" Grid.Row="5"/>
+			<Separator Grid.ColumnSpan="2" Grid.Row="6"/>
+			<Label Content="Number of notes:" FontWeight="Bold" HorizontalAlignment="Right" Margin="5,0" Grid.Row="7"/>
+			<Label Content="Average note length:" FontWeight="Bold" HorizontalAlignment="Right" Margin="5,0" Grid.Row="8"/>
+			<Label Content="Total length:" FontWeight="Bold" HorizontalAlignment="Right" Margin="5,0" Grid.Row="9"/>
+			<Label Content="Longest note:" FontWeight="Bold" HorizontalAlignment="Right" Margin="5,0" Grid.Row="10"/>
+			<Label Content="Shortest note:" FontWeight="Bold" HorizontalAlignment="Right" Margin="5,0" Grid.Row="11"/>
 
-			<TextBlock Grid.Column="1" FontFamily="{Binding MainFontFamily}" FontSize="{Binding MainFontSize}" Foreground="{Binding MenuForeground}" HorizontalAlignment="Left" Margin="5,0" Grid.Row="1" TextAlignment="Center" TextWrapping="WrapWithOverflow" VerticalAlignment="Center" x:Name="DBNameLabel"/>
+			<TextBlock Grid.ColumnSpan="2" FontFamily="{Binding MainFontFamily}" FontSize="{Binding HeaderFontSize}" FontWeight="Bold" Foreground="{Binding MenuForeground}" Margin="5,0" Grid.Row="1" TextAlignment="Center" TextWrapping="WrapWithOverflow" VerticalAlignment="Center" x:Name="DBNameLabel"/>
 			<Label Grid.Column="1" HorizontalAlignment="Left" Grid.Row="3" x:Name="DBCreatedLabel"/>
 			<Label Grid.Column="1" HorizontalAlignment="Left" Grid.Row="4" x:Name="DBFormatLabel"/>
-			<Label Grid.Column="1" HorizontalAlignment="Left" Grid.Row="6" x:Name="DBNotesLabel"/>
-			<Label Grid.Column="1" HorizontalAlignment="Left" Grid.Row="7" x:Name="DBAvgLabel"/>
-			<Label Grid.Column="1" HorizontalAlignment="Left" Grid.Row="8" x:Name="DBTotalLabel"/>
-			<Label Grid.Column="1" HorizontalAlignment="Left" Grid.Row="9" x:Name="DBLongestLabel"/>
-			<Label Grid.Column="1" HorizontalAlignment="Left" Grid.Row="10" x:Name="DBShortestLabel"/>
+			<TextBlock Grid.Column="1" FontFamily="{Binding MainFontFamily}" FontSize="{Binding MainFontSize}" Foreground="{Binding MenuForeground}" HorizontalAlignment="Left" Margin="5,0" Grid.Row="5" TextAlignment="Center" TextWrapping="Wrap" VerticalAlignment="Center" x:Name="DBPathLabel"/>
+			<Label Grid.Column="1" HorizontalAlignment="Left" Grid.Row="7" x:Name="DBNotesLabel"/>
+			<Label Grid.Column="1" HorizontalAlignment="Left" Grid.Row="8" x:Name="DBAvgLabel"/>
+			<Label Grid.Column="1" HorizontalAlignment="Left" Grid.Row="9" x:Name="DBTotalLabel"/>
+			<Label Grid.Column="1" HorizontalAlignment="Left" Grid.Row="10" x:Name="DBLongestLabel"/>
+			<Label Grid.Column="1" HorizontalAlignment="Left" Grid.Row="11" x:Name="DBShortestLabel"/>
 		</Grid>
 		<Separator Grid.ColumnSpan="2" Grid.Row="1"/>
 		<Grid Margin="0,5" Grid.ColumnSpan="2" Grid.Row="2">

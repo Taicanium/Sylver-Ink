@@ -13,6 +13,7 @@ namespace SylverInk
 	{
 		private Brush? _accentBackgound = Brushes.Khaki;
 		private Brush? _accentForegound = Brushes.Blue;
+		private double _headerFontSize = 12.5;
 		private string _importData = string.Empty;
 		private string _importTarget = string.Empty;
 		private int _lineTolerance = 2;
@@ -35,13 +36,14 @@ namespace SylverInk
 
 		public Brush? AccentBackground { get => _accentBackgound; set { _accentBackgound = value; OnPropertyChanged(); } }
 		public Brush? AccentForeground { get => _accentForegound; set { _accentForegound = value; OnPropertyChanged(); } }
+		public double HeaderFontSize { get => _headerFontSize; set { _headerFontSize = value; OnPropertyChanged(); } }
 		public string ImportData { get => _importData; set { _importData = value; OnPropertyChanged(); } }
 		public string ImportTarget { get => _importTarget; set { _importTarget = value; OnPropertyChanged(); } }
 		public int LineTolerance { get => _lineTolerance; set { _lineTolerance = Math.Min(36, Math.Max(0, value)); OnPropertyChanged(); } }
 		public Brush? ListBackground { get => _listBackgound; set { _listBackgound = value; OnPropertyChanged(); } }
 		public Brush? ListForeground { get => _listForegound; set { _listForegound = value; OnPropertyChanged(); } }
 		public FontFamily? MainFontFamily { get => _mainFontFamily; set { _mainFontFamily = value; _mainTypeFace = new(value, FontStyles.Normal, FontWeights.Normal, FontStretches.Normal); OnPropertyChanged(); } }
-		public double MainFontSize { get => _mainFontSize; set { _mainFontSize = Math.Min(24.0, Math.Max(10.0, value)); OnPropertyChanged(); } }
+		public double MainFontSize { get => _mainFontSize; set { _mainFontSize = Math.Min(24.0, Math.Max(10.0, value)); HeaderFontSize = _mainFontSize + 1.5; OnPropertyChanged(); } }
 		public Typeface? MainTypeFace { get => _mainTypeFace; set { _mainTypeFace = value; OnPropertyChanged(); } }
 		public Brush? MenuBackground { get => _menuBackgound; set { _menuBackgound = value; OnPropertyChanged(); } }
 		public Brush? MenuForeground { get => _menuForegound; set { _menuForegound = value; OnPropertyChanged(); } }

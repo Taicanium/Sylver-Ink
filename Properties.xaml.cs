@@ -52,6 +52,7 @@ namespace SylverInk
 			DBNameLabel.ToolTip = DBNameLabel.Text = DB?.Name;
 			DBCreatedLabel.Content = DB?.GetCreated();
 			DBFormatLabel.Content = $"SIDB v.{DB?.Controller.Format}";
+			DBPathLabel.ToolTip = DBPathLabel.Text = $"{DB?.DBFile}";
 			DBNotesLabel.Content = $"{DB?.RecordCount:N0} notes";
 
 			double noteAvg = 0.0;
