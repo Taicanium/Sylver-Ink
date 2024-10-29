@@ -142,15 +142,15 @@
 
 		<Menu Background="{Binding MenuBackground}" x:Name="DatabaseContextMenu">
 			<MenuItem Header="File" Height="25">
-				<MenuItem Click="DatabaseBackup" Header="Backup..." Tag="Always"/>
-				<MenuItem Click="DatabaseDelete" Header="Delete" IsEnabled="False"/>
+				<MenuItem Click="DatabaseCreate" Header="New" Tag="Always"/>
 				<MenuItem Click="DatabaseOpen" Header="Open..." Tag="Always"/>
 				<MenuItem Click="DatabaseSaveAs" Header="Save as..." Tag="Always"/>
 				<MenuItem Click="DatabaseSaveLocal" Header="Save to Documents" Tag="Always"/>
+				<MenuItem Click="DatabaseDelete" Header="Delete" IsEnabled="False"/>
 			</MenuItem>
 			<MenuItem Header="Database" Height="25">
 				<MenuItem Click="DatabaseClose" Header="Close" IsEnabled="False"/>
-				<MenuItem Click="DatabaseCreate" Header="Create" Tag="Always"/>
+				<MenuItem Click="DatabaseBackup" Header="Backup..." Tag="Always"/>
 				<MenuItem Click="DatabaseRename" Header="Rename" Tag="Always"/>
 				<MenuItem Click="DatabaseProperties" Header="Properties" Tag="Always"/>
 			</MenuItem>

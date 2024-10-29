@@ -69,6 +69,15 @@ namespace SylverInk
 
 		private void DatabaseClose(object sender, RoutedEventArgs e)
 		{
+			if (CurrentDatabase.Changed)
+			{
+				var res = MessageBox.Show("Do you want to save your changes?", "Sylver Ink: Warning", MessageBoxButton.YesNoCancel, MessageBoxImage.Warning);
+				if (res == MessageBoxResult.Cancel)
+					return;
+				if (res == MessageBoxResult.Yes)
+					CurrentDatabase.Save();
+			}
+
 			RemoveDatabase(CurrentDatabase);
 			DeferUpdateRecentNotes();
 		}

@@ -57,21 +57,18 @@ namespace SylverInk
 
 			double noteAvg = 0.0;
 			int noteLongest = 0;
-			int noteShortest = int.MaxValue;
 			int noteTotal = 0;
 			for (int i = 0; i < DB?.RecordCount; i++)
 			{
 				var length = DB?.GetRecord(i).ToString().Length ?? 0;
 				noteAvg += length;
 				noteLongest = Math.Max(noteLongest, length);
-				noteShortest = Math.Min(noteLongest, length);
 				noteTotal += length;
 			}
 			noteAvg /= DB?.RecordCount ?? 1.0;
 
 			DBAvgLabel.Content = $"{noteAvg:N1} characters";
 			DBLongestLabel.Content = $"{noteLongest:N0} characters";
-			DBShortestLabel.Content = $"{noteShortest:N0} characters";
 			DBTotalLabel.Content = $"{noteTotal:N0} characters";
 		}
 
