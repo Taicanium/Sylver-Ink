@@ -35,6 +35,35 @@
 				<Setter Property="VerticalContentAlignment" Value="Center"/>
 				<Setter Property="Width" Value="75"/>
 			</Style>
+			<Style TargetType="{x:Type Button}" x:Key="ToolbarButton">
+				<Setter Property="FontFamily" Value="{Binding MainFontFamily}"/>
+				<Setter Property="FontSize" Value="{Binding MainFontSize}"/>
+				<Setter Property="FontStyle" Value="Italic"/>
+				<Setter Property="Foreground" Value="{Binding MenuForeground}"/>
+				<Setter Property="Height" Value="20"/>
+				<Setter Property="HorizontalContentAlignment" Value="Center"/>
+				<Setter Property="Template">
+					<Setter.Value>
+						<ControlTemplate TargetType="{x:Type Button}">
+							<Border x:Name="Border" Background="{Binding MenuBackground}" BorderBrush="{Binding MenuBackground}" BorderThickness="1">
+								<ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+							</Border>
+							<ControlTemplate.Triggers>
+								<Trigger Property="IsEnabled" Value="False">
+									<Setter Property="Background" TargetName="Border" Value="LightGray"/>
+									<Setter Property="Foreground" Value="DimGray"/>
+								</Trigger>
+								<Trigger Property="IsMouseOver" Value="True">
+									<Setter Property="Background" TargetName="Border" Value="{Binding ListBackground}"/>
+									<Setter Property="Foreground" Value="{Binding ListForeground}"/>
+								</Trigger>
+							</ControlTemplate.Triggers>
+						</ControlTemplate>
+					</Setter.Value>
+				</Setter>
+				<Setter Property="VerticalContentAlignment" Value="Center"/>
+				<Setter Property="Width" Value="75"/>
+			</Style>
 			<Style TargetType="{x:Type CheckBox}">
 				<Setter Property="VerticalAlignment" Value="Center"/>
 			</Style>

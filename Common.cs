@@ -110,15 +110,16 @@ namespace SylverInk
 				Tag = db,
 			};
 
+			Databases.Add(db);
+			CurrentDatabase = db;
+
 			var newControl = (TabControl)item.Content;
 			newControl.Tag = _name;
 			item.MouseRightButtonDown += (_, _) => control.SelectedItem = item;
 			control.Items.Add(item);
 			control.SelectedItem = item;
 
-			Databases.Add(db);
-			CurrentDatabase = db;
-
+			UpdateContextMenu();
 			DeferUpdateRecentNotes();
 		}
 
@@ -174,7 +175,7 @@ namespace SylverInk
 
 			if (UpdateTask is null)
 			{
-				UpdateTask = new();
+				UpdateTask = new() { WorkerSupportsCancellation = true };
 				UpdateTask.DoWork += (_, _) => UpdateRecentNotes();
 				UpdateTask.RunWorkerCompleted += (_, _) =>
 				{
@@ -194,7 +195,6 @@ namespace SylverInk
 					ChangesBox?.Items.Refresh();
 					UpdateRibbonTabs(RibbonTabContent);
 				};
-				UpdateTask.WorkerSupportsCancellation = true;
 			}
 
 			if (MeasureTask is null)
@@ -209,7 +209,7 @@ namespace SylverInk
 					if ((RecentBox ?? ChangesBox) is null)
 						return;
 
-					WindowHeight = (RecentBox?.ActualHeight ?? Application.Current.MainWindow.ActualHeight) - 40.0;
+					WindowHeight = (RecentBox?.ActualHeight ?? Application.Current.MainWindow.ActualHeight) - 35.0;
 					WindowWidth = (RecentBox?.ActualWidth ?? Application.Current.MainWindow.ActualWidth) - 40.0;
 				};
 				MeasureTask.RunWorkerCompleted += (_, _) => UpdateTask?.RunWorkerAsync();
@@ -401,13 +401,13 @@ namespace SylverInk
 		{
 			var control = (TabControl)Application.Current.MainWindow.FindName("DatabasesPanel");
 
-			for (int i = OpenQueries.Count; i > 0; i--)
-				if (OpenQueries[i - 1].ResultDatabase == control.SelectedIndex)
-					OpenQueries[i - 1].Close();
+			for (int i = OpenQueries.Count - 1; i > -1; i--)
+				if (OpenQueries[i].ResultDatabase == control.SelectedIndex)
+					OpenQueries[i].Close();
 
-			for (int i = Databases.Count; i > 0; i--)
-				if ((Databases[i - 1].Name ?? string.Empty).Equals(db.Name))
-					Databases.RemoveAt(i - 1);
+			for (int i = Databases.Count - 1; i > -1; i--)
+				if ((Databases[i].Name ?? string.Empty).Equals(db.Name))
+					Databases.RemoveAt(i);
 
 			if (control.Items.Count == 1)
 				AddDatabase(new());
@@ -421,25 +421,31 @@ namespace SylverInk
 		public static void UpdateContextMenu()
 		{
 			var control = (TabControl)Application.Current.MainWindow.FindName("DatabasesPanel");
-			var menu = (ContextMenu)Application.Current.MainWindow.TryFindResource("DatabaseContextMenu");
+			var menu = (Menu)Application.Current.MainWindow.FindName("DatabaseContextMenu");
 
-			foreach (DependencyObject mItem in menu.Items)
+			foreach (MenuItem tab in menu.Items)
 			{
-				var tag = mItem.GetValue(FrameworkElement.TagProperty) ?? string.Empty;
-				if (tag.Equals("Always"))
-					continue;
-
-				var enable = tag switch
+				foreach (MenuItem mItem in tab.Items)
 				{
-					"Connected" => CurrentDatabase.Client?.Active is true && !CurrentDatabase.Server?.Active is true,
-					"NotConnected" => !CurrentDatabase.Client?.Active is true && !CurrentDatabase.Server?.Active is true,
-					"NotServing" => !CurrentDatabase.Client?.Active is true && !CurrentDatabase.Server?.Active is true,
-					"Serving" => !CurrentDatabase.Client?.Active is true && CurrentDatabase.Server?.Active is true,
-					_ => control.Items.Count != 1
-				};
+					var tag = mItem.GetValue(FrameworkElement.TagProperty) ?? string.Empty;
+					if (tag.Equals("Always"))
+						continue;
 
-				mItem.SetValue(UIElement.IsEnabledProperty, enable);
-				mItem.SetValue(UIElement.VisibilityProperty, enable ? Visibility.Visible : Visibility.Collapsed);
+					var client = CurrentDatabase.Client?.Active is true;
+					var server = CurrentDatabase.Server?.Active is true;
+
+					var enable = tag switch
+					{
+						"Connected" => client && !server,
+						"NotConnected" => !client && !server,
+						"NotServing" => !client && !server,
+						"Serving" => !client && server,
+						_ => control.Items.Count != 1
+					};
+
+					mItem.SetValue(UIElement.IsEnabledProperty, enable);
+					mItem.SetValue(UIElement.VisibilityProperty, enable ? Visibility.Visible : Visibility.Collapsed);
+				}
 			}
 		}
 
