@@ -53,7 +53,7 @@ namespace SylverInk
 		{
 			ReloadSerializer();
 
-			if (!File.Exists(dbFile) || _serializer?.OpenRead(dbFile) is true)
+			if (!File.Exists(dbFile) || !_serializer?.OpenRead(dbFile) is true)
 			{
 				string backup = FindBackup(dbFile);
 				if (!backup.Equals(string.Empty))
