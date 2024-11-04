@@ -277,6 +277,8 @@ namespace SylverInk
 					ColorChanged();
 				};
 
+				colorRect.SetValue(ToolTipService.InitialShowDelayProperty, 250);
+
 				ColorGrid.Children.Add(option);
 
 				Grid.SetColumn(option, column);
