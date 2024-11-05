@@ -92,29 +92,8 @@ namespace SylverInk
 		private void HandleFormat(int format = 0)
 		{
 			format = format < 1 ? DatabaseFormat : format;
-			switch (format)
-			{
-				case 1:
-					Headless = true;
-					UseLZW = false;
-					break;
-				case 2:
-					Headless = true;
-					UseLZW = true;
-					break;
-				case 3:
-				case 5:
-				case 7:
-					Headless = false;
-					UseLZW = false;
-					break;
-				case 4:
-				case 6:
-				case 8:
-					Headless = false;
-					UseLZW = true;
-					break;
-			}
+			Headless = format < 3;
+			UseLZW = format % 2 == 0;
 
 			if (UseLZW)
 			{

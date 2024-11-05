@@ -474,14 +474,12 @@ namespace SylverInk
 
 		private static void SaveUserSettings()
 		{
-			var files = DatabaseFiles.Distinct().Where(File.Exists);
-
 			string[] settings = [
 				$"AccentBackground:{BytesFromBrush(Common.Settings.AccentBackground)}",
 				$"AccentForeground:{BytesFromBrush(Common.Settings.AccentForeground)}",
 				$"FontFamily:{Common.Settings.MainFontFamily?.Source}",
 				$"FontSize:{Common.Settings.MainFontSize}",
-				$"LastDatabases:{string.Join(';', files)}",
+				$"LastDatabases:{string.Join(';', DatabaseFiles.Distinct().Where(File.Exists))}",
 				$"ListBackground:{BytesFromBrush(Common.Settings.ListBackground)}",
 				$"ListForeground:{BytesFromBrush(Common.Settings.ListForeground)}",
 				$"MenuBackground:{BytesFromBrush(Common.Settings.MenuBackground)}",

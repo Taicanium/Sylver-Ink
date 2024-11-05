@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System;
+using System.Windows;
 using System.Windows.Controls;
 using static SylverInk.Common;
 
@@ -246,9 +247,6 @@ namespace SylverInk
 		{
 			var ChildPanel = GetChildPanel("DatabasesPanel");
 
-			// OpenTabs has a count of 0 after removing 2 of 3 open tabs.
-			// Possibly related to note indexes.
-
 			for (int i = OpenTabs.Count - 1; i > -1; i--)
 			{
 				var tab = OpenTabs[i];
@@ -271,7 +269,7 @@ namespace SylverInk
 				if ((int)item.Tag == NoteIndex)
 				{
 					if (ChildPanel.SelectedIndex == i)
-						ChildPanel.SelectedIndex = 0;
+						ChildPanel.SelectedIndex = Math.Max(0, Math.Min(i - 1, ChildPanel.Items.Count - 1));
 
 					ChildPanel.Items.RemoveAt(i);
 				}
