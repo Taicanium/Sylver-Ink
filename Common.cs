@@ -301,9 +301,9 @@ namespace SylverInk
 			return path;
 		}
 
-		public static Label GetRibbonHeader(int recordIndex)
+		public static Label GetRibbonHeader(NoteRecord record)
 		{
-			var tooltip = GetRibbonTooltip(recordIndex);
+			var tooltip = GetRibbonTooltip(record);
 			var content = tooltip;
 
 			if (content.Contains('\n'))
@@ -320,15 +320,14 @@ namespace SylverInk
 			};
 		}
 
-		private static string GetRibbonTooltip(int recordIndex)
+		private static string GetRibbonTooltip(NoteRecord record)
 		{
-			var record = CurrentDatabase.GetRecord(recordIndex);
 			return RibbonTabContent switch
 			{
 				DisplayType.Change => $"{record.ShortChange} — {record.Preview}",
 				DisplayType.Content => record.Preview,
 				DisplayType.Creation => $"{record.GetCreated()} — {record.Preview}",
-				DisplayType.Index => $"Note #{recordIndex + 1:N0} — {record.Preview}",
+				DisplayType.Index => $"Note #{record.Index + 1:N0} — {record.Preview}",
 				_ => record.Preview
 			};
 		}
@@ -375,7 +374,7 @@ namespace SylverInk
 		public static SearchResult OpenQuery(NoteRecord record, bool show = true)
 		{
 			foreach (SearchResult result in OpenQueries)
-				if (result.ResultRecord == record.Index)
+				if (result.ResultRecord?.Equals(record) is true)
 					return result;
 
 			var control = (TabControl)Application.Current.MainWindow.FindName("DatabasesPanel");
@@ -384,7 +383,7 @@ namespace SylverInk
 			{
 				Query = record.ToString(),
 				ResultDatabase = control.SelectedIndex,
-				ResultRecord = record.Index,
+				ResultRecord = record,
 				ResultText = CurrentDatabase.GetRecord(record.Index).ToString()
 			};
 
@@ -489,7 +488,7 @@ namespace SylverInk
 				if (tag is null)
 					continue;
 
-				item.Tab.Header = GetRibbonHeader((int)tag);
+				item.Tab.Header = GetRibbonHeader((NoteRecord)tag);
 			}
 		}
 

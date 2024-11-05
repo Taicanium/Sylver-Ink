@@ -300,7 +300,7 @@ namespace SylverInk
 
 			foreach (var query in OpenQueries)
 			{
-				if (query.ResultRecord.Equals(Index))
+				if (query.ResultRecord?.Equals(Index) is true)
 				{
 					query.LastChangedLabel.Content = "Last modified: " + CurrentDatabase.GetRecord(Index).GetLastChange();
 					query.ResultBlock.IsEnabled = true;

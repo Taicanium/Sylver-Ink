@@ -110,6 +110,30 @@ namespace SylverInk
 			});
 		}
 
+		public void CreateRevision(NoteRecord record, string NewVersion)
+		{
+			string Current = record.ToString();
+			int StartIndex = 0;
+
+			if (NewVersion.Equals(Current))
+				return;
+
+			for (int i = 0; i < Math.Min(Current.Length, NewVersion.Length); i++)
+			{
+				if (!Current[i].Equals(NewVersion[i]))
+					break;
+				StartIndex = i + 1;
+			}
+
+			Changed = true;
+			record.Add(new()
+			{
+				_created = DateTime.UtcNow.ToBinary(),
+				_startIndex = StartIndex,
+				_substring = StartIndex >= NewVersion.Length ? string.Empty : NewVersion[StartIndex..]
+			});
+		}
+
 		public void DeleteRecord(int index)
 		{
 			var recordIndex = Records.FindIndex(new(record => record.Index == index));

@@ -16,7 +16,7 @@ namespace SylverInk
 		private bool Edited = false;
 		public string Query = string.Empty;
 		public int ResultDatabase = 0;
-		public int ResultRecord = -1;
+		public NoteRecord? ResultRecord;
 		public string ResultText = string.Empty;
 		private readonly double SnapTolerance = 20.0;
 
@@ -28,7 +28,7 @@ namespace SylverInk
 
 		public void AddTabToRibbon()
 		{
-			NoteTab newTab = new(ResultRecord, ResultText);
+			NoteTab newTab = new(ResultRecord ?? new(), ResultText);
 			newTab.Construct();
 			Close();
 		}
@@ -73,7 +73,7 @@ namespace SylverInk
 			if (Edited)
 				SaveRecord();
 
-			CurrentDatabase.Transmit(Network.MessageType.RecordUnlock, IntToBytes(ResultRecord));
+			CurrentDatabase.Transmit(Network.MessageType.RecordUnlock, IntToBytes(ResultRecord?.Index ?? 0));
 
 			foreach (SearchResult result in OpenQueries)
 			{
@@ -87,19 +87,19 @@ namespace SylverInk
 
 		private void Result_Loaded(object sender, RoutedEventArgs e)
 		{
-			if (CurrentDatabase.GetRecord(ResultRecord).Locked)
+			if (ResultRecord?.Locked is true)
 			{
 				LastChangedLabel.Content = "Note locked by another user";
 				ResultBlock.IsEnabled = false;
 			}
 			else
 			{
-				LastChangedLabel.Content = "Last modified: " + CurrentDatabase.GetRecord(ResultRecord).GetLastChange();
-				CurrentDatabase.Transmit(Network.MessageType.RecordUnlock, IntToBytes(ResultRecord));
+				LastChangedLabel.Content = "Last modified: " + ResultRecord?.GetLastChange();
+				CurrentDatabase.Transmit(Network.MessageType.RecordUnlock, IntToBytes(ResultRecord?.Index ?? 0));
 			}
 
 			if (ResultText.Equals(string.Empty))
-				ResultText = CurrentDatabase.GetRecord(ResultRecord).ToString();
+				ResultText = ResultRecord?.ToString() ?? string.Empty;
 			
 			ResultBlock.Text = ResultText;
 			Edited = false;
@@ -109,7 +109,7 @@ namespace SylverInk
 			{
 				var item = (TabItem)tabPanel.Items[i];
 
-				if ((int?)item.Tag == ResultRecord)
+				if (((NoteRecord?)item.Tag)?.Equals(ResultRecord) is true)
 					tabPanel.Items.RemoveAt(i);
 			}
 		}
@@ -118,7 +118,7 @@ namespace SylverInk
 		{
 			var senderObject = sender as TextBox;
 			ResultText = senderObject?.Text ?? string.Empty;
-			Edited = !ResultText.Equals(CurrentDatabase.GetRecord(ResultRecord).ToString());
+			Edited = !ResultText.Equals(ResultRecord?.ToString());
 		}
 
 		private void SaveClick(object sender, RoutedEventArgs e)
@@ -131,8 +131,11 @@ namespace SylverInk
 
 		private void SaveRecord()
 		{
+			if (ResultRecord is null)
+				return;
+
 			CurrentDatabase.CreateRevision(ResultRecord, ResultText);
-			LastChangedLabel.Content = "Last modified: " + CurrentDatabase.GetRecord(ResultRecord).GetLastChange();
+			LastChangedLabel.Content = "Last modified: " + ResultRecord?.GetLastChange();
 			DeferUpdateRecentNotes();
 		}
 

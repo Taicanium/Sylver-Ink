@@ -12,22 +12,22 @@ namespace SylverInk
 		private readonly Grid MainGrid;
 		private readonly Button NextButton;
 		private readonly TextBox NoteBox;
-		private int NoteIndex = default;
+		private readonly NoteRecord Record;
 		private readonly Button PreviousButton;
 		private readonly Button ReturnButton;
 		private readonly Label RevisionLabel;
 		private readonly Button SaveButton;
 		public TabItem Tab;
 
-		public NoteTab(int noteIndex, string? content = null)
+		public NoteTab(NoteRecord Record, string? content = null)
 		{
-			NoteIndex = noteIndex;
+			this.Record = Record;
 			var ChildPanel = GetChildPanel("DatabasesPanel");
 
 			for (int i = OpenTabs.Count - 1; i > -1; i--)
 			{
 				var tab = OpenTabs[i];
-				if (tab.NoteIndex == NoteIndex)
+				if (tab.Record.Equals(Record))
 				{
 					OpenTabs.RemoveAt(i);
 					tab.Deconstruct();
@@ -57,7 +57,7 @@ namespace SylverInk
 				AcceptsReturn = true,
 				Height = double.NaN,
 				Margin = new(5),
-				Tag = (0U, NoteIndex),
+				Tag = (0U, Record),
 				Text = content ?? string.Empty,
 				TextWrapping = TextWrapping.WrapWithOverflow,
 				VerticalContentAlignment = VerticalAlignment.Top,
@@ -77,18 +77,18 @@ namespace SylverInk
 			};
 			RevisionLabel = new()
 			{
-				Content = "Entry last modified: " + CurrentDatabase.GetRecord(NoteIndex).GetLastChange(),
+				Content = "Entry last modified: " + Record.GetLastChange(),
 				FontStyle = FontStyles.Italic,
 				HorizontalAlignment = HorizontalAlignment.Right,
 				Margin = new(0, 0, 10, 0),
-				Tag = NoteIndex,
+				Tag = Record,
 				VerticalAlignment = VerticalAlignment.Bottom
 			};
 			SaveButton = new() { Content = "Save" };
 			Tab = new() {
 				Content = MainGrid,
-				Header = GetRibbonHeader(NoteIndex),
-				Tag = NoteIndex
+				Header = GetRibbonHeader(Record),
+				Tag = Record
 			};
 
 			ChildPanel.SelectedIndex = ChildPanel.Items.Add(Tab);
@@ -103,65 +103,62 @@ namespace SylverInk
 			MainGrid.RowDefinitions.Add(new() { Height = GridLength.Auto, });
 
 			NextButton.IsEnabled = false;
-			PreviousButton.IsEnabled = CurrentDatabase.GetRecord(NoteIndex).GetNumRevisions() > 0;
+			PreviousButton.IsEnabled = Record.GetNumRevisions() > 0;
 			SaveButton.IsEnabled = false;
 
 			NoteBox.TextChanged += (sender, e) =>
 			{
 				var senderObject = (TextBox)sender;
-				var tag = ((uint, int))senderObject.Tag;
-				var record = CurrentDatabase.GetRecord(tag.Item2);
-				SaveButton.IsEnabled = !senderObject.Text.Equals(record.ToString());
+				var tag = ((uint, NoteRecord))senderObject.Tag;
+				SaveButton.IsEnabled = !senderObject.Text.Equals(tag.Item2.ToString());
 			};
 
 			NextButton.Click += (sender, _) =>
 			{
-				var tag = ((uint, int))NoteBox.Tag;
-				var record = CurrentDatabase.GetRecord(tag.Item2);
-				string revisionTime = record.GetCreated();
+				var tag = ((uint, NoteRecord))NoteBox.Tag;
+				string revisionTime = tag.Item2.GetCreated();
 
 				tag.Item1 -= 1U;
 				if (tag.Item1 == 0U)
-					revisionTime = record.GetLastChange();
+					revisionTime = tag.Item2.GetLastChange();
 				else
-					revisionTime = record.GetRevisionTime(tag.Item1);
+					revisionTime = tag.Item2.GetRevisionTime(tag.Item1);
 
 				NoteBox.Tag = (tag.Item1, tag.Item2);
-				NoteBox.Text = record.Reconstruct(tag.Item1);
+				NoteBox.Text = tag.Item2.Reconstruct(tag.Item1);
 				NoteBox.IsReadOnly = tag.Item1 != 0;
 				((Button)sender).IsEnabled = tag.Item1 > 0;
-				PreviousButton.IsEnabled = tag.Item1 < record.GetNumRevisions();
-				RevisionLabel.Content = (tag.Item1 == 0U ? "Entry last modified: " : $"Revision {record.GetNumRevisions() - tag.Item1} from ") + revisionTime;
+				PreviousButton.IsEnabled = tag.Item1 < tag.Item2.GetNumRevisions();
+				RevisionLabel.Content = (tag.Item1 == 0U ? "Entry last modified: " : $"Revision {tag.Item2.GetNumRevisions() - tag.Item1} from ") + revisionTime;
 				SaveButton.Content = tag.Item1 == 0 ? "Save" : "Restore";
-				SaveButton.IsEnabled = !record.ToString().Equals(NoteBox.Text);
+				SaveButton.IsEnabled = !tag.Item2.ToString().Equals(NoteBox.Text);
 			};
 
 			PreviousButton.Click += (sender, _) =>
 			{
-				var tag = ((uint, int))NoteBox.Tag;
-				var record = CurrentDatabase.GetRecord(tag.Item2);
-				string revisionTime = record.GetLastChange();
+				var tag = ((uint, NoteRecord))NoteBox.Tag;
+				string revisionTime = tag.Item2.GetLastChange();
 
 				tag.Item1 += 1U;
-				if (tag.Item1 == record.GetNumRevisions())
-					revisionTime = record.GetCreated();
+				if (tag.Item1 == tag.Item2.GetNumRevisions())
+					revisionTime = tag.Item2.GetCreated();
 				else
-					revisionTime = record.GetRevisionTime(tag.Item1);
+					revisionTime = tag.Item2.GetRevisionTime(tag.Item1);
 
 				NoteBox.Tag = (tag.Item1, tag.Item2);
-				NoteBox.Text = record.Reconstruct(tag.Item1);
+				NoteBox.Text = tag.Item2.Reconstruct(tag.Item1);
 				NoteBox.IsReadOnly = tag.Item1 != 0;
-				((Button)sender).IsEnabled = tag.Item1 + 1 <= record.GetNumRevisions();
-				RevisionLabel.Content = (tag.Item1 == record.GetNumRevisions() ? "Entry created " : $"Revision {record.GetNumRevisions() - tag.Item1} from ") + revisionTime;
+				((Button)sender).IsEnabled = tag.Item1 + 1 <= tag.Item2.GetNumRevisions();
+				RevisionLabel.Content = (tag.Item1 == tag.Item2.GetNumRevisions() ? "Entry created " : $"Revision {tag.Item2.GetNumRevisions() - tag.Item1} from ") + revisionTime;
 				NextButton.IsEnabled = tag.Item1 > 0;
 				SaveButton.Content = "Restore";
-				var latestText = record.ToString();
+				var latestText = tag.Item2.ToString();
 				SaveButton.IsEnabled = !latestText.Equals(NoteBox.Text);
 			};
 
 			ReturnButton.Click += (sender, _) =>
 			{
-				var tag = ((uint, int))NoteBox.Tag;
+				var tag = ((uint, NoteRecord))NoteBox.Tag;
 
 				if (SaveButton.IsEnabled && SaveButton.Content.Equals("Save"))
 				{
@@ -175,7 +172,7 @@ namespace SylverInk
 							break;
 					}
 				}
-				CurrentDatabase.Transmit(Network.MessageType.RecordUnlock, IntToBytes(tag.Item2));
+				CurrentDatabase.Transmit(Network.MessageType.RecordUnlock, IntToBytes(tag.Item2.Index));
 				Deconstruct();
 			};
 
@@ -184,15 +181,15 @@ namespace SylverInk
 				if (MessageBox.Show("Are you sure you want to permanently delete this note?", "Sylver Ink: Notification", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.No)
 					return;
 
-				var tag = ((uint, int))NoteBox.Tag;
+				var tag = ((uint, NoteRecord))NoteBox.Tag;
 				CurrentDatabase.DeleteRecord(tag.Item2);
-				Deconstruct(true);
+				Deconstruct();
 				DeferUpdateRecentNotes();
 			};
 
 			SaveButton.Click += (sender, _) =>
 			{
-				var tag = ((uint, int))NoteBox.Tag;
+				var tag = ((uint, NoteRecord))NoteBox.Tag;
 
 				CurrentDatabase.CreateRevision(tag.Item2, NoteBox.Text);
 				DeferUpdateRecentNotes();
@@ -201,7 +198,7 @@ namespace SylverInk
 				NoteBox.IsEnabled = true;
 				PreviousButton.IsEnabled = true;
 				NextButton.IsEnabled = false;
-				RevisionLabel.Content = "Entry last modified: " + CurrentDatabase.GetRecord(tag.Item2).GetLastChange();
+				RevisionLabel.Content = "Entry last modified: " + tag.Item2.GetLastChange();
 				((Button)sender).IsEnabled = false;
 			};
 
@@ -234,7 +231,7 @@ namespace SylverInk
 			Grid.SetRow(NoteBox, 1);
 			Grid.SetRow(ButtonGrid, 2);
 
-			if (CurrentDatabase.GetRecord(NoteIndex).Locked)
+			if (Record.Locked)
 			{
 				NoteBox.IsEnabled = false;
 				RevisionLabel.Content = "Note locked by another user";
@@ -243,20 +240,18 @@ namespace SylverInk
 			OpenTabs.Add(this);
 		}
 
-		public void Deconstruct(bool delete = false)
+		public void Deconstruct()
 		{
 			var ChildPanel = GetChildPanel("DatabasesPanel");
 
 			for (int i = OpenTabs.Count - 1; i > -1; i--)
 			{
 				var tab = OpenTabs[i];
-				if (tab.NoteIndex == NoteIndex)
+				if (tab.Record.Equals(Record))
 				{
 					OpenTabs.RemoveAt(i);
 					tab.Deconstruct();
 				}
-				else if (delete && tab.NoteIndex > NoteIndex)
-					tab.NoteIndex--;
 			}
 
 			for (int i = ChildPanel.Items.Count - 1; i > 0; i--)
@@ -266,15 +261,13 @@ namespace SylverInk
 				if (item.Tag is null)
 					continue;
 
-				if ((int)item.Tag == NoteIndex)
+				if (((NoteRecord)item.Tag).Equals(Record))
 				{
 					if (ChildPanel.SelectedIndex == i)
 						ChildPanel.SelectedIndex = Math.Max(0, Math.Min(i - 1, ChildPanel.Items.Count - 1));
 
 					ChildPanel.Items.RemoveAt(i);
 				}
-				else if (delete && (int)item.Tag > NoteIndex)
-					item.Tag = (int)item.Tag - 1;
 			}
 		}
 	}
