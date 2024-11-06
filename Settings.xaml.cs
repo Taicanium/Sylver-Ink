@@ -127,6 +127,7 @@ namespace SylverInk
 			var delta = Cmax - Cmin;
 			var _h = 0.0;
 			var _s = Cmax == 0.0 ? 0.0 : (delta / Cmax);
+			var _v = Cmax;
 			if (delta != 0.0)
 			{
 				delta = 60.0 / delta;
@@ -137,7 +138,6 @@ namespace SylverInk
 				if (Cmax == b_)
 					_h = (delta * (r_ - g_) + 240.0) % 360.0;
 			}
-			var _v = Cmax;
 			var H = (uint)(_h * 0.7083333333);
 			var S = (uint)(_s * 255.0);
 			var V = (uint)(_v * 255.0);

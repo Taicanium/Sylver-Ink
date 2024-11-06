@@ -267,6 +267,9 @@ namespace SylverInk
 			if (DBFile.Equals(string.Empty))
 				DBFile = GetDatabasePath(this);
 
+			if (UUID is null || UUID.Equals(string.Empty))
+				UUID = MakeUUID(UUIDType.Database);
+
 			MakeBackup(true);
 			
 			if (!Directory.Exists(Path.GetDirectoryName(DBFile)))
@@ -277,7 +280,7 @@ namespace SylverInk
 
 			Controller.SerializeRecords();
 
-			if (DBFile.Contains(Path.Join(DocumentsSubfolders["Databases"])))
+			if (DBFile.Contains(DocumentsSubfolders["Databases"]))
 				File.WriteAllText(Path.Join(Path.GetDirectoryName(DBFile), "uuid.dat"), UUID);
 		}
 

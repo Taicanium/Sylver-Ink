@@ -57,7 +57,6 @@ namespace SylverInk
 			new("Main", DocumentsFolder),
 			new("Databases", Path.Join(DocumentsFolder, "Databases"))
 			]);
-		public static bool ForceClose { get; set; } = false;
 		public static int HighestFormat { get; } = 8;
 		public static Import? ImportWindow { get => _import; set { _import?.Close(); _import = value; _import?.Show(); } }
 		private static BackgroundWorker? MeasureTask { get; set; }

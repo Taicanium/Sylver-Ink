@@ -16,7 +16,6 @@ namespace SylverInk
 	/// </summary>
 	public partial class MainWindow : Window
 	{
-		private bool CloseOnce = false;
 		private static bool FirstRun = true;
 		private NoteRecord RecentSelection = new();
 
@@ -128,14 +127,12 @@ namespace SylverInk
 			if (DatabaseFiles.Contains(path))
 			{
 				var items = DatabasesPanel.Items.Cast<TabItem>().ToList();
-				var predicate = new Predicate<TabItem>(item => {
+				var db = items?.FindIndex(new(item => {
 					var innerDB = (Database)item.Tag;
 					return Path.GetFullPath(innerDB.DBFile).Equals(path);
-				});
+				}));
 
-				var db = items?.FindIndex(predicate);
 				DatabasesPanel.SelectedIndex = db ?? DatabasesPanel.SelectedIndex;
-				
 				return;
 			}
 
@@ -179,13 +176,10 @@ namespace SylverInk
 
 		private void ExitComplete(object? sender, RunWorkerCompletedEventArgs e)
 		{
-			CloseOnce = false;
 			DatabaseChanged = false;
 			MainGrid.IsEnabled = true;
 			SaveUserSettings();
-
-			if (ForceClose)
-				Application.Current.Shutdown();
+			Application.Current.Shutdown();
 		}
 
 		private static void LoadUserSettings()
@@ -257,38 +251,23 @@ namespace SylverInk
 
 		private void MainWindow_Closing(object sender, CancelEventArgs e)
 		{
-			if (!ForceClose)
-			{
-				if (CloseOnce)
-					return;
-
-				if (DatabaseChanged)
-				{
-					switch (MessageBox.Show("Do you want to save your work before exiting?", "Sylver Ink: Notification", MessageBoxButton.YesNoCancel, MessageBoxImage.Question))
-					{
-						case MessageBoxResult.Cancel:
-							e.Cancel = true;
-							return;
-						case MessageBoxResult.No:
-							DatabaseChanged = false;
-							break;
-					}
-				}
-			}
-
-			CloseOnce = true;
-
 			if (DatabaseChanged)
 			{
-				e.Cancel = true;
-				MainGrid.IsEnabled = false;
+				switch (MessageBox.Show("Do you want to save your work before exiting?", "Sylver Ink: Notification", MessageBoxButton.YesNoCancel, MessageBoxImage.Question))
+				{
+					case MessageBoxResult.Cancel:
+						e.Cancel = true;
+						return;
+					case MessageBoxResult.Yes:
+						e.Cancel = true;
+						MainGrid.IsEnabled = false;
 
-				BackgroundWorker exitTask = new();
-				exitTask.DoWork += SaveDatabases;
-				exitTask.RunWorkerCompleted += ExitComplete;
-				exitTask.RunWorkerAsync();
-
-				return;
+						BackgroundWorker exitTask = new();
+						exitTask.DoWork += SaveDatabases;
+						exitTask.RunWorkerCompleted += ExitComplete;
+						exitTask.RunWorkerAsync();
+						return;
+				}
 			}
 
 			SaveUserSettings();
@@ -466,8 +445,6 @@ namespace SylverInk
 		{
 			foreach (Database db in Databases)
 				db.Save();
-
-			ForceClose = true;
 		}
 
 		private void SaveNewName(object? sender, RoutedEventArgs e) => RenameDatabase.IsOpen = false;
@@ -500,8 +477,7 @@ namespace SylverInk
 			RecentSelection = (NoteRecord)box.SelectedItem;
 
 			foreach (ListBox item in grid.Children)
-				if (item.SelectedIndex != box.SelectedIndex)
-					item.SelectedIndex = box.SelectedIndex;
+				item.SelectedIndex = box.SelectedIndex;
 		}
 
 		private void SublistOpen(object sender, RoutedEventArgs e)
