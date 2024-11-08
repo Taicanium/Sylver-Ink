@@ -106,7 +106,7 @@
 			</Border>
 		</Popup>
 
-		<Popup Height="75" IsOpen="False" Placement="Mouse" PopupAnimation="Fade" StaysOpen="False" Width="275" x:Name="ConnectAddress">
+		<Popup Height="75" IsOpen="False" KeyDown="AddressKeyDown" Placement="Mouse" PopupAnimation="Fade" StaysOpen="False" Width="275" x:Name="ConnectAddress">
 			<Border BorderBrush="{Binding MenuForeground}" BorderThickness="1">
 				<Grid Background="{Binding MenuBackground}">
 					<Grid.RowDefinitions>

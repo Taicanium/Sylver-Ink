@@ -244,24 +244,6 @@ namespace SylverInk
 			}
 		}
 
-		public async static void Send(TcpClient client, MessageType type = MessageType.TextInsert, params byte[] data)
-		{
-			if (!client.Connected)
-				return;
-
-			byte[] id = [(byte)type];
-			byte[] streamData = [.. id, .. data];
-
-			try
-			{
-				await client.GetStream().WriteAsync(streamData);
-			}
-			catch
-			{
-				client.Close();
-			}
-		}
-
 		public async void Serve(byte Flags)
 		{
 			Active = true;

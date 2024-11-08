@@ -313,38 +313,6 @@ namespace SylverInk
 			}
 		}
 
-		private void NoteDelete(object sender, RoutedEventArgs e)
-		{
-			var item = (MenuItem)sender;
-			var menu = (ContextMenu)item.Parent;
-			
-			if (menu.DataContext.GetType() == typeof(NoteRecord))
-			{
-				var record = (NoteRecord)menu.DataContext;
-				CurrentDatabase.DeleteRecord(record.Index);
-			}
-			else
-				CurrentDatabase.DeleteRecord(RecentSelection.Index);
-
-			DeferUpdateRecentNotes();
-		}
-
-		private void NoteOpen(object sender, RoutedEventArgs e)
-		{
-			var item = (MenuItem)sender;
-			var menu = (ContextMenu)item.Parent;
-			SearchResult result;
-			if (menu.DataContext.GetType() == typeof(NoteRecord))
-			{
-				var record = (NoteRecord)menu.DataContext;
-				result = OpenQuery(record, false);
-			}
-			else
-				result = OpenQuery(RecentSelection, false);
-
-			result.AddTabToRibbon();
-		}
-
 		private void RenameClosed(object sender, EventArgs e)
 		{
 			if (DatabaseNameBox.Text.Equals(string.Empty))

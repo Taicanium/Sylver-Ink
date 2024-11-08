@@ -27,8 +27,8 @@ namespace SylverInk
 				return;
 
 			var hour = (ComboBoxItem)Hour.SelectedItem;
-			var hourValue = int.Parse((string)hour.Content);
 			var minute = (ComboBoxItem)Minute.SelectedItem;
+			var hourValue = int.Parse((string)hour.Content);
 			var hourIndex = Hour.SelectedIndex;
 			SelectedTime.Content = $"{(hourValue == 0 ? 12 : hourValue < 13 ? hourValue : hourValue - 12)}:{minute.Content} {(hourIndex < 12 ? "AM" : "PM")}";
 
@@ -76,6 +76,7 @@ namespace SylverInk
 			MinuteSelected = true;
 			ApplyTime();
 		}
+
 		private void Properties_Loaded(object sender, RoutedEventArgs e)
 		{
 			InitializeProperties();
@@ -99,8 +100,8 @@ namespace SylverInk
 				return;
 
 			var hour = (ComboBoxItem)Hour.SelectedItem;
-			var hourValue = int.Parse((string)hour.Content);
 			var minute = (ComboBoxItem)Minute.SelectedItem;
+			var hourValue = int.Parse((string)hour.Content);
 			var minuteValue = int.Parse((string)minute.Content);
 
 			DateTime reversion = ReversionDate?.SelectedDate ?? DateTime.Now;

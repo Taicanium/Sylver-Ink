@@ -118,11 +118,11 @@ namespace SylverInk
 			if (NewVersion.Equals(Current))
 				return;
 
-			for (int i = 0; i < Math.Min(Current.Length, NewVersion.Length); i++)
+			for (int i = 1; i <= Math.Min(Current.Length, NewVersion.Length); i++)
 			{
 				if (!Current[i].Equals(NewVersion[i]))
 					break;
-				StartIndex = i + 1;
+				StartIndex = i;
 			}
 
 			Changed = true;
@@ -200,15 +200,7 @@ namespace SylverInk
 			return string.Empty;
 		}
 
-		public string? GetDatabaseName() => Name;
-
 		public NoteRecord GetRecord(int RecordIndex) => RecordIndex < Records.Count ? Records[RecordIndex] : new();
-
-		public Serializer GetSerializer()
-		{
-			_serializer ??= new();
-			return _serializer;
-		}
 
 		public void InitializeRecords(bool newDatabase = true)
 		{

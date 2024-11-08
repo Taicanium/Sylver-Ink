@@ -98,14 +98,6 @@ namespace SylverInk
 
 		private void Drag(object sender, MouseButtonEventArgs e) => DragMove();
 
-		private void EraseClick(object sender, RoutedEventArgs e)
-		{
-			if (MessageBox.Show("Are you sure you want to erase your notes and create a new database?", "Sylver Ink: Warning", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.No)
-				return;
-
-			CurrentDatabase.Erase();
-		}
-
 		private void FontSizeChanged(object sender, RoutedEventArgs e)
 		{
 			var button = (Button)sender;

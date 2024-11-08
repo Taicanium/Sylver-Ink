@@ -121,14 +121,6 @@ namespace SylverInk
 			Edited = !ResultText.Equals(ResultRecord?.ToString());
 		}
 
-		private void SaveClick(object sender, RoutedEventArgs e)
-		{
-			SaveRecord();
-
-			DeferUpdateRecentNotes();
-			Close();
-		}
-
 		private void SaveRecord()
 		{
 			if (ResultRecord is null)
