@@ -16,7 +16,9 @@ The most prominent feature of the main window is the Recent Notes box. This list
 
 New notes can be created by entering them in the New Notes textbox near the bottom of the screen.
 
-At the top of the screen are two ribbons: The top displays the user's currently open databases; the bottom displays the user's open notes in the current database. The user may right-click anywhere on the ribbons or in the main window to display a context menu with options for manipulating the database, deleting the database, or creating a new database.
+At the top of the window is the application's context bar, from which note databases can be opened, closed, deleted, or created. Options are also provided for viewing the properties of the current database, and for connecting to networked databases or opening the current database to connections.
+
+Below the context bar are two ribbons: The top displays the user's currently open databases; the bottom displays the user's open notes in the current database.
 
 Opening a note will create a tiny sticky note window from which the note can be quickly viewed or edited. These note windows snap to each other for easy organization, and also provide a "View" button that will open the note in a larger tab within the main window. This tab provides access to previous versions of the note, which Sylver Ink saves along with the current version.
 
@@ -30,11 +32,11 @@ The Replace window allows the user to mass-replace occurrences of a text string 
 
 ### "Search"
 
-The Search window allows the user to search for occurrences of a text string across the database, and display the results in a list. Sylver Ink uses a tagging system to sort search results: Notes are prioritized if they match words in the search query with an overall low occurrence rate in the database at large.
+The Search window allows the user to search for occurrences of a text string across the database, and display the results in a list. Sylver Ink uses a tagging system to assist in sorting search results: Notes are prioritized if they match words in the search query with an overall low occurrence rate in the database at large.
 
 ### "Settings"
 
-The Settings window provides options for customizing the user's experience; placing sticky notes always on top, sorting note entries, reverting the database to its state at a previous date and time, and emptying the database are all options provided in this window. The user may also customize the colors and visual style of the Sylver Ink interface.
+The Settings window provides options for customizing the user's experience; placing sticky notes always on top, sorting note entries, and customizing the colors and visual style of the Sylver Ink interface are all options provided in this window.
 
 ## Contributions
 

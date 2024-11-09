@@ -217,11 +217,12 @@ namespace SylverInk
 			{
 				Fill = new LinearGradientBrush([
 					new(Colors.Red, 0.0),
-					new(Colors.Yellow, 0.25),
+					new(Colors.Orange, 0.167),
+					new(Colors.Yellow, 0.33),
 					new(Colors.Green, 0.5),
-					new(Colors.Blue, 0.75),
-					new(Colors.Violet, 1.0),
-				], 45.0),
+					new(Colors.Blue, 0.667),
+					new(Colors.Violet, 0.833),
+				], new(0, 0), new(1, 1)),
 				Margin = new(-1),
 				Stretch = Stretch.UniformToFill,
 				ToolTip = "Custom color..."
