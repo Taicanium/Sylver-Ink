@@ -36,19 +36,27 @@
 				<Button Click="CloseClick" Content="Close" Grid.Column="1"/>
 			</Grid>
 		</StackPanel>
-		<Grid Margin="0,20" Grid.Row="1">
+		<Grid HorizontalAlignment="Center" Margin="0,20" Grid.Row="1">
 			<Grid.ColumnDefinitions>
-				<ColumnDefinition Width="2*"/>
-				<ColumnDefinition Width="2*"/>
-				<ColumnDefinition Width="*"/>
+				<ColumnDefinition Width="Auto"/>
+				<ColumnDefinition Width="Auto"/>
+				<ColumnDefinition Width="Auto"/>
 			</Grid.ColumnDefinitions>
-			<Label Content="Line tolerance:"/>
-			<Label Grid.Column="2" Content="(?)" Foreground="{Binding AccentForeground}" ToolTip="The number of blank lines to look for when separating the file into different notes."/>
-			<StackPanel Grid.Column="1" HorizontalAlignment="Center" Orientation="Horizontal">
+			<Grid.RowDefinitions>
+				<RowDefinition Height="*"/>
+				<RowDefinition Height="10"/>
+				<RowDefinition Height="*"/>
+			</Grid.RowDefinitions>
+			<Label Content="Adaptive notes:"/>
+			<CheckBox Grid.Column="1" IsChecked="False" Checked="AdaptiveChecked" HorizontalAlignment="Center" Unchecked="AdaptiveChecked" VerticalAlignment="Center" x:Name="AdaptiveCheckBox"/>
+			<Label Grid.Column="2" Content="(?)" Foreground="{Binding AccentForeground}" ToolTip="Attempt to automatically detect boundaries between notes."/>
+			<Label Content="Line tolerance:" Grid.Row="2"/>
+			<StackPanel Grid.Column="1" HorizontalAlignment="Center" Orientation="Horizontal" Grid.Row="2" x:Name="LTPanel">
 				<Button Click="LineToleranceChanged" Content="-" Width="20" x:Name="LTLess"/>
-				<TextBox HorizontalContentAlignment="Center" IsReadOnly="True" Text="{Binding LineTolerance}" Width="40"/>
+				<TextBox HorizontalContentAlignment="Center" IsReadOnly="True" Text="{Binding LineTolerance}" Width="20"/>
 				<Button Click="LineToleranceChanged" Content="+" Width="20" x:Name="LTMore"/>
 			</StackPanel>
+			<Label Grid.Column="2" Content="(?)" Foreground="{Binding AccentForeground}" Grid.Row="2" ToolTip="The number of blank lines to look for when separating the file into different notes."/>
 		</Grid>
 		<Border BorderBrush="{Binding MenuForeground}" BorderThickness="1" Grid.Row="2" Margin="20,5,20,20">
 			<TextBlock Background="{Binding ListBackground}" FontFamily="{Binding MainFontFamily}" FontSize="{Binding MainFontSize}" Foreground="{Binding ListForeground}" Text="{Binding ImportData}" TextWrapping="WrapWithOverflow"/>
