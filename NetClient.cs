@@ -83,6 +83,8 @@ namespace SylverInk
 			catch
 			{
 				MessageBox.Show("Failed to connect to the database.", "Sylver Ink: Error", MessageBoxButton.OK, MessageBoxImage.Error);
+				if (DB is not null)
+					Concurrent(() => RemoveDatabase(DB));
 				return;
 			}
 
