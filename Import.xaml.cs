@@ -107,16 +107,7 @@ namespace SylverInk
 
 		private void LineToleranceChanged(object? sender, RoutedEventArgs e)
 		{
-			var button = (Button?)sender;
-			switch (button?.Content)
-			{
-				case "-":
-					Common.Settings.LineTolerance -= 1;
-					break;
-				case "+":
-					Common.Settings.LineTolerance += 1;
-					break;
-			}
+			Common.Settings.LineTolerance += ((Button?)sender)?.Content.Equals("-") is true ? -1 : 1;
 			DoMeasureTask();
 		}
 
@@ -175,13 +166,12 @@ namespace SylverInk
 					foreach (string key in frequencies.Keys)
 						frequencies[key] /= total;
 
-					var ordered = frequencies.OrderByDescending(pair => pair.Value);
-
 					// tl;dr: We search for note boundaries based on certain strings of characters appearing much more frequently than others at the start of lines.
 					// Think timestamps, for instance.
 					// And to be exact, we're looking for sequences that occur in at least 5% of all lines.
-					if (ordered.First().Value >= 0.05)
-						AdaptivePredicate = "^" + ordered.First().Key;
+					var ordered = frequencies.OrderByDescending(pair => pair.Value).First();
+					if (ordered.Value >= 0.05)
+						AdaptivePredicate = "^" + ordered.Key;
 				}
 
 				if (!AdaptivePredicate.Trim().Equals(string.Empty))

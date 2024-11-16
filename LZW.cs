@@ -38,8 +38,7 @@ namespace SylverInk
 				for (int i = 0; i < bitSize; i++)
 				{
 					b += (byte)(bits[i] << (8 - j));
-					j++;
-					if (j == 9)
+					if (j++ == 8)
 					{
 						j = 1;
 						Outgoing.Add(b);
@@ -167,10 +166,9 @@ namespace SylverInk
 		{
 			for (int i = Range; i <= MaxRange; i++)
 			{
-				if (lastCode >= (uint)Math.Pow(2, i))
-					Range = i + 1;
-				else
+				if (lastCode < (uint)Math.Pow(2, i))
 					break;
+				Range = i + 1;
 			}
 
 			if (lastCode >= (uint)Math.Pow(2, MaxRange + 1))
