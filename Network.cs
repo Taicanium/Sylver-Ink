@@ -28,7 +28,7 @@ namespace SylverInk
 		{
 			var workingList = Address?.GetAddressBytes() ?? [127, 0, 0, 1];
 			if (workingList.Length != 4)
-				return "127.0.0.1";
+				return "Vm000G";
 
 			var convertedList = new List<char>([
 				CodeValues[(workingList[0] & 252) >> 2],
