@@ -53,10 +53,6 @@ namespace SylverInk
 		public static ObservableCollection<Database> Databases { get; set; } = [];
 		public static string DefaultDatabase { get; } = "New";
 		public static string DocumentsFolder { get; } = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Sylver Ink");
-		public static Dictionary<string, string> DocumentsSubfolders { get; } = new([
-			new("Main", DocumentsFolder),
-			new("Databases", Path.Join(DocumentsFolder, "Databases"))
-			]);
 		public static int HighestFormat { get; } = 8;
 		public static Import? ImportWindow { get => _import; set { _import?.Close(); _import = value; _import?.Show(); } }
 		private static BackgroundWorker? MeasureTask { get; set; }
@@ -71,6 +67,10 @@ namespace SylverInk
 		public static ContextSettings Settings { get; } = new();
 		public static string SettingsFile { get; } = Path.Join(DocumentsFolder, "settings.sis");
 		public static Settings? SettingsWindow { get => _settings; set { _settings?.Close(); _settings = value; _settings?.Show(); } }
+		public static Dictionary<string, string> Subfolders { get; } = new([
+			new("Main", DocumentsFolder),
+			new("Databases", Path.Join(DocumentsFolder, "Databases"))
+			]);
 		private static double TextHeight { get; set; } = 0.0;
 		private static BackgroundWorker? UpdateTask { get; set; }
 		public static double WindowHeight { get; set; } = 275.0;
@@ -230,34 +230,25 @@ namespace SylverInk
 
 		public static string DialogFileSelect(bool outgoing = false, int filterIndex = 3, string? defaultName = null)
 		{
-			FileDialog dialog;
-
-			if (outgoing)
+			FileDialog dialog = outgoing ? new SaveFileDialog()
 			{
-				dialog = new SaveFileDialog()
-				{
-					FileName = defaultName ?? DefaultDatabase,
-					Filter = "Sylver Ink backup files (*.sibk)|*.sibk|Sylver Ink database files (*.sidb)|*.sidb|All files (*.*)|*.*",
-					FilterIndex = filterIndex,
-					ValidateNames = true,
-				};
-
-				return dialog.ShowDialog() is true ? dialog.FileName : string.Empty;
-			}
-
-			dialog = new OpenFileDialog()
+				FileName = defaultName ?? DefaultDatabase,
+				Filter = "Sylver Ink backup files (*.sibk)|*.sibk|Sylver Ink database files (*.sidb)|*.sidb|All files (*.*)|*.*",
+				FilterIndex = filterIndex,
+				ValidateNames = true,
+			} : new OpenFileDialog()
 			{
 				CheckFileExists = true,
 				Filter = "Sylver Ink backup files (*.sibk)|*.sibk|Sylver Ink database files (*.sidb)|*.sidb|Text files (*.txt)|*.txt|All files (*.*)|*.*",
 				FilterIndex = filterIndex,
-				InitialDirectory = DocumentsSubfolders["Databases"],
+				InitialDirectory = Subfolders["Databases"],
 				ValidateNames = true,
 			};
 
 			return dialog.ShowDialog() is true ? dialog.FileName : string.Empty;
 		}
 
-		public static string GetBackupPath(Database db) => Path.Join(DocumentsSubfolders["Databases"], db.Name, db.Name);
+		public static string GetBackupPath(Database db) => Path.Join(Subfolders["Databases"], db.Name, db.Name);
 
 		public static TabControl GetChildPanel(string basePanel)
 		{
@@ -275,29 +266,30 @@ namespace SylverInk
 			if ((match = IndexDigits().Match(db.Name ?? string.Empty)).Success)
 				index = int.Parse(match.Groups[1].Value);
 
-			var path = Path.Join(DocumentsSubfolders["Databases"], db.Name, $"{db.Name}.sidb");
-			var uuidFile = Path.Join(DocumentsSubfolders["Databases"], db.Name, "uuid.dat");
+			var path = Path.Join(Subfolders["Databases"], db.Name);
+			var dbFile = Path.Join(path, $"{db.Name}.sidb");
+			var uuidFile = Path.Join(path, "uuid.dat");
 
-			while (File.Exists(path))
+			while (File.Exists(dbFile))
 			{
 				if (File.Exists(uuidFile) && File.ReadAllText(uuidFile).Equals(db.UUID))
-					return path;
+					return dbFile;
 
 				if (!File.Exists(uuidFile))
 				{
 					Database tmpDB = new();
-					tmpDB.Load(path);
+					tmpDB.Load(dbFile);
 					if (tmpDB.UUID?.Equals(db.UUID) is true)
-						return path;
+						return dbFile;
 				}
 
 				index++;
 				db.Name = $"{db.Name} ({index})";
-				path = Path.Join(DocumentsSubfolders["Databases"], db.Name, $"{db.Name}.sidb");
-				uuidFile = Path.Join(DocumentsSubfolders["Databases"], db.Name, "uuid.dat");
+				dbFile = Path.Join(path, $"{db.Name}.sidb");
+				uuidFile = Path.Join(path, "uuid.dat");
 			}
 
-			return path;
+			return dbFile;
 		}
 
 		public static Label GetRibbonHeader(NoteRecord record)
@@ -319,17 +311,14 @@ namespace SylverInk
 			};
 		}
 
-		private static string GetRibbonTooltip(NoteRecord record)
+		private static string GetRibbonTooltip(NoteRecord record) => RibbonTabContent switch
 		{
-			return RibbonTabContent switch
-			{
-				DisplayType.Change => $"{record.ShortChange} — {record.Preview}",
-				DisplayType.Content => record.Preview,
-				DisplayType.Creation => $"{record.GetCreated()} — {record.Preview}",
-				DisplayType.Index => $"Note #{record.Index + 1:N0} — {record.Preview}",
-				_ => record.Preview
-			};
-		}
+			DisplayType.Change => $"{record.ShortChange} — {record.Preview}",
+			DisplayType.Content => record.Preview,
+			DisplayType.Creation => $"{record.GetCreated()} — {record.Preview}",
+			DisplayType.Index => $"Note #{record.Index + 1:N0} — {record.Preview}",
+			_ => record.Preview
+		};
 
 		public static int IntFromBytes(byte[] data) =>
 			(data[0] << 24)

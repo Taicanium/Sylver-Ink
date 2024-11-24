@@ -30,7 +30,7 @@ namespace SylverInk
 			if (workingList.Length != 4)
 				return "Vm000G";
 
-			var convertedList = new List<char>([
+			return string.Concat<char>([
 				CodeValues[(workingList[0] & 252) >> 2],
 				CodeValues[((workingList[0] & 3) << 4) + ((workingList[1] & 240) >> 4)],
 				CodeValues[((workingList[1] & 15) << 2) + ((workingList[2] & 192) >> 6)],
@@ -38,8 +38,6 @@ namespace SylverInk
 				CodeValues[(workingList[3] & 252) >> 2],
 				CodeValues[((workingList[3] & 3) << 4) + ((Flags ?? 0) & 15)],
 			]);
-
-			return string.Concat(convertedList);
 		}
 
 		public static IPAddress CodeToAddress(string? Code, out byte? Flags)

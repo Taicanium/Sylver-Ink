@@ -11,13 +11,14 @@ namespace SylverInk
 {
 	public partial class Database
 	{
-		public NoteController Controller = new();
+		private NoteController Controller = new();
 		public string DBFile = string.Empty;
 		public bool Loaded = false;
 
 		public bool Changed { get => Controller.Changed; set => Controller.Changed = value; }
 		public NetClient? Client;
 		public long? Created;
+		public int Format { get => Controller.Format; set => Controller.Format = value; }
 		private StackPanel? HeaderPanel;
 		public string? Name { get => Controller.Name; set => Controller.Name = value; }
 		public int RecordCount => Controller.RecordCount;
@@ -122,6 +123,8 @@ namespace SylverInk
 				}
 			}
 		}
+
+		public void DeserializeRecords(List<byte>? inMemory = null) => Controller.DeserializeRecords(inMemory);
 
 		public void Erase()
 		{
@@ -280,9 +283,11 @@ namespace SylverInk
 
 			Controller.SerializeRecords();
 
-			if (DBFile.Contains(DocumentsSubfolders["Databases"]))
+			if (DBFile.Contains(Subfolders["Databases"]))
 				File.WriteAllText(Path.Join(Path.GetDirectoryName(DBFile), "uuid.dat"), UUID);
 		}
+
+		public List<byte>? SerializeRecords(bool inMemory = false) => Controller.SerializeRecords(inMemory);
 
 		public void Sort(SortType type = SortType.ByIndex)
 		{

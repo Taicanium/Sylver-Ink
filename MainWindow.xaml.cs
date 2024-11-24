@@ -159,13 +159,13 @@ namespace SylverInk
 			var newPath = DialogFileSelect(true, 2, CurrentDatabase.Name);
 			if (!newPath.Equals(string.Empty))
 				CurrentDatabase.DBFile = newPath;
-			CurrentDatabase.Controller.Format = HighestFormat;
+			CurrentDatabase.Format = HighestFormat;
 		}
 
 		private void DatabaseSaveLocal(object sender, RoutedEventArgs e)
 		{
-			CurrentDatabase.DBFile = Path.Join(DocumentsSubfolders["Databases"], Path.GetFileNameWithoutExtension(CurrentDatabase.DBFile), Path.GetFileName(CurrentDatabase.DBFile));
-			CurrentDatabase.Controller.Format = HighestFormat;
+			CurrentDatabase.DBFile = Path.Join(Subfolders["Databases"], Path.GetFileNameWithoutExtension(CurrentDatabase.DBFile), Path.GetFileName(CurrentDatabase.DBFile));
+			CurrentDatabase.Format = HighestFormat;
 		}
 
 		private void DatabaseServe(object sender, RoutedEventArgs e) => CurrentDatabase.Server?.Serve(0);
@@ -213,7 +213,7 @@ namespace SylverInk
 						foreach (var file in files)
 							Database.Create(file, true);
 						if (!files.Any())
-							Database.Create(Path.Join(DocumentsSubfolders["Databases"], $"{DefaultDatabase}", $"{DefaultDatabase}.sidb"));
+							Database.Create(Path.Join(Subfolders["Databases"], $"{DefaultDatabase}", $"{DefaultDatabase}.sidb"));
 						break;
 					case "ListBackground":
 						Common.Settings.ListBackground = BrushFromBytes(keyValue[1]);
@@ -278,12 +278,12 @@ namespace SylverInk
 		{
 			LoadUserSettings();
 
-			foreach (var folder in DocumentsSubfolders)
+			foreach (var folder in Subfolders)
 				if (!Directory.Exists(folder.Value))
 					Directory.CreateDirectory(folder.Value);
 
 			if (FirstRun)
-				Database.Create(Path.Join(DocumentsSubfolders["Databases"], $"{DefaultDatabase}", $"{DefaultDatabase}.sidb"));
+				Database.Create(Path.Join(Subfolders["Databases"], $"{DefaultDatabase}", $"{DefaultDatabase}.sidb"));
 
 			DatabasesPanel.SelectedIndex = 0;
 
@@ -350,7 +350,7 @@ namespace SylverInk
 			if (!Directory.Exists(oldPath))
 				return;
 
-			var directorySearch = Directory.GetDirectories(DocumentsSubfolders["Databases"], "*", new EnumerationOptions() { IgnoreInaccessible = true, RecurseSubdirectories = true, MaxRecursionDepth = 3 });
+			var directorySearch = Directory.GetDirectories(Subfolders["Databases"], "*", new EnumerationOptions() { IgnoreInaccessible = true, RecurseSubdirectories = true, MaxRecursionDepth = 3 });
 			if (oldPath is not null && newPath is not null && directorySearch.Contains(oldPath))
 			{
 				if (Directory.Exists(newPath))

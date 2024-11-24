@@ -330,27 +330,13 @@ namespace SylverInk
 			return null;
 		}
 
-		public void Sort(SortType type = SortType.ByIndex)
+		public void Sort(SortType type = SortType.ByIndex) => Records.Sort(new Comparison<NoteRecord>((_rev1, _rev2) => type switch
 		{
-			switch (type)
-			{
-				case SortType.ByIndex:
-					Records.Sort(new Comparison<NoteRecord>(
-						(_rev1, _rev2) => _rev1.Index.CompareTo(_rev2.Index)
-						));
-					return;
-				case SortType.ByChange:
-					Records.Sort(new Comparison<NoteRecord>(
-						(_rev2, _rev1) => _rev1.GetLastChangeObject().CompareTo(_rev2.GetLastChangeObject())
-						));
-					return;
-				case SortType.ByCreation:
-					Records.Sort(new Comparison<NoteRecord>(
-						(_rev2, _rev1) => _rev1.GetCreatedObject().CompareTo(_rev2.GetCreatedObject())
-						));
-					return;
-			}
-		}
+			SortType.ByChange => _rev2.GetLastChangeObject().CompareTo(_rev1.GetLastChangeObject()),
+			SortType.ByCreation => _rev2.GetCreatedObject().CompareTo(_rev1.GetCreatedObject()),
+			SortType.ByIndex => _rev1.Index.CompareTo(_rev2.Index),
+			_ => _rev1.Index.CompareTo(_rev2.Index),
+		}));
 
 		public bool TestCanCompress()
 		{

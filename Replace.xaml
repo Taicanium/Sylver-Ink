@@ -6,7 +6,7 @@
 		xmlns:local="clr-namespace:SylverInk"
 		mc:Ignorable="d"
 		d:DataContext="{d:DesignInstance Type=local:ContextSettings}"
-		Background="{Binding MenuBackground}" Foreground="{Binding MenuForeground}" Height="300" MinHeight="300" MinWidth="325" MouseLeftButtonDown="Drag" ResizeMode="CanResize" Title="Sylver Ink: Replace" Width="525">
+		Background="{Binding MenuBackground}" Foreground="{Binding MenuForeground}" Height="275" MinHeight="275" MinWidth="325" MouseLeftButtonDown="Drag" ResizeMode="CanResize" Title="Sylver Ink: Replace" Width="525">
 	<Grid>
 		<StackPanel HorizontalAlignment="Stretch">
 			<Label Content="Text to replace" FontStyle="Italic" HorizontalAlignment="Right" Margin="0,20,40,0"/>
@@ -21,7 +21,7 @@
 				<Button Click="Replace_Click" Content="Replace" IsEnabled="{Binding ReadyToReplace}" x:Name="DoReplace"/>
 				<Button Click="CloseClick" Grid.Column="1" Content="Close"/>
 			</Grid>
-			<Label Content="{Binding NumReplacements}" FontStyle="Italic" Foreground="{Binding AccentForeground}" HorizontalAlignment="Center" Margin="0,20,0,0"/>
+			<Label Content="{Binding NumReplacements}" FontStyle="Italic" Foreground="{Binding AccentForeground}" HorizontalAlignment="Center"/>
 		</StackPanel>
 	</Grid>
 </Window>

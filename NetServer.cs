@@ -83,7 +83,7 @@ namespace SylverInk
 						var stream = client.GetStream();
 						Flags = (byte)stream.ReadByte();
 
-						var data = DB.Controller?.SerializeRecords(true);
+						var data = DB.SerializeRecords(true);
 						int dataLength = data?.Count ?? 0;
 
 						data?.Insert(0, (byte)MessageType.DatabaseInit);

@@ -135,7 +135,7 @@ namespace SylverInk
 						textBuffer = new byte[textCount];
 						stream.Read(textBuffer, 0, textCount);
 
-						DB?.Controller.DeserializeRecords(new(textBuffer));
+						DB?.DeserializeRecords(new(textBuffer));
 
 						Connecting = false;
 						Connected = true;
@@ -233,19 +233,16 @@ namespace SylverInk
 			}
 		}
 
-		public void UpdateIndicator()
+		public void UpdateIndicator() => Indicator?.Dispatcher.Invoke(() =>
 		{
-			Indicator?.Dispatcher.Invoke(() =>
-			{
-				Indicator.Fill = Connecting ? Brushes.Yellow : (DBClient?.Connected is true ? Brushes.Green : Brushes.Orange);
-				Indicator.Height = 12;
-				Indicator.Margin = new(2, 4, 3, 4);
-				Indicator.Stroke = Common.Settings.MenuForeground;
-				Indicator.Width = 12;
-				Indicator.InvalidateVisual();
-				DB?.GetHeader();
-				UpdateContextMenu();
-			});
-		}
+			Indicator.Fill = Connecting ? Brushes.Yellow : (DBClient?.Connected is true ? Brushes.Green : Brushes.Orange);
+			Indicator.Height = 12;
+			Indicator.Margin = new(2, 4, 3, 4);
+			Indicator.Stroke = Common.Settings.MenuForeground;
+			Indicator.Width = 12;
+			Indicator.InvalidateVisual();
+			DB?.GetHeader();
+			UpdateContextMenu();
+		});
 	}
 }
