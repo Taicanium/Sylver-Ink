@@ -17,6 +17,7 @@ namespace SylverInk
 		private bool Dragging = false;
 		private Point DragMouseCoords = new(0, 0);
 		private bool Edited = false;
+		private string OriginalText = string.Empty;
 		public string Query = string.Empty;
 		public int ResultDatabase = 0;
 		public NoteRecord? ResultRecord;
@@ -53,6 +54,8 @@ namespace SylverInk
 						return;
 					case MessageBoxResult.No:
 						Edited = false;
+						ResultText = OriginalText;
+						SaveRecord();
 						break;
 				}
 			}
@@ -112,8 +115,9 @@ namespace SylverInk
 			if (ResultText.Equals(string.Empty))
 				ResultText = ResultRecord?.ToString() ?? string.Empty;
 			
-			ResultBlock.Text = ResultText;
 			Edited = false;
+			ResultBlock.Text = ResultText;
+			OriginalText = ResultText;
 
 			var tabPanel = GetChildPanel("DatabasesPanel");
 			for (int i = tabPanel.Items.Count - 1; i > 0; i--)
