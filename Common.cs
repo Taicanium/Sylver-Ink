@@ -111,6 +111,7 @@ namespace SylverInk
 
 			Databases.Add(db);
 			CurrentDatabase = db;
+			CurrentDatabase.Sort();
 
 			var newControl = (TabControl)item.Content;
 			newControl.Tag = _name;
@@ -125,34 +126,20 @@ namespace SylverInk
 		public static SolidColorBrush? BrushFromBytes(string data)
 		{
 			var hex = NumberStyles.HexNumber;
-			Color color;
-			if (data.Length < 6)
-				return Brushes.Transparent;
+			if (data.Length == 6)
+				data = "FF" + data;
 
 			try
 			{
-				if (data.Length == 8)
+				return new(new()
 				{
-					color = new Color()
-					{
-						A = byte.Parse(data[..2], hex),
-						R = byte.Parse(data[2..4], hex),
-						G = byte.Parse(data[4..6], hex),
-						B = byte.Parse(data[6..8], hex)
-					};
-					return new(color);
-				}
-
-				color = new Color()
-				{
-					A = 0xFF,
-					R = byte.Parse(data[..2], hex),
-					G = byte.Parse(data[2..4], hex),
-					B = byte.Parse(data[4..6], hex)
-				};
-				return new(color);
+					A = byte.Parse(data[..2], hex),
+					R = byte.Parse(data[2..4], hex),
+					G = byte.Parse(data[4..6], hex),
+					B = byte.Parse(data[6..8], hex)
+				});
 			}
-			catch { return null; }
+			catch { return Brushes.Transparent; }
 		}
 
 		public static string BytesFromBrush(Brush? brush, int colors = 4)
@@ -185,8 +172,8 @@ namespace SylverInk
 					if ((RecentBox ?? ChangesBox) is null)
 						return;
 
-					CurrentDatabase.Sort(RecentEntriesSortMode);
 					Settings.RecentNotes.Clear();
+					CurrentDatabase.Sort(RecentEntriesSortMode);
 					for (int i = 0; i < Math.Min(RecentEntries, CurrentDatabase.RecordCount); i++)
 						Settings.RecentNotes.Add(CurrentDatabase.GetRecord(i));
 					CurrentDatabase.Sort();
@@ -234,30 +221,27 @@ namespace SylverInk
 			{
 				FileName = defaultName ?? DefaultDatabase,
 				Filter = "Sylver Ink backup files (*.sibk)|*.sibk|Sylver Ink database files (*.sidb)|*.sidb|All files (*.*)|*.*",
-				FilterIndex = filterIndex,
-				ValidateNames = true,
 			} : new OpenFileDialog()
 			{
 				CheckFileExists = true,
 				Filter = "Sylver Ink backup files (*.sibk)|*.sibk|Sylver Ink database files (*.sidb)|*.sidb|Text files (*.txt)|*.txt|All files (*.*)|*.*",
-				FilterIndex = filterIndex,
 				InitialDirectory = Subfolders["Databases"],
-				ValidateNames = true,
 			};
+
+			dialog.FilterIndex = filterIndex;
+			dialog.ValidateNames = true;
 
 			return dialog.ShowDialog() is true ? dialog.FileName : string.Empty;
 		}
 
 		public static string GetBackupPath(Database db) => Path.Join(Subfolders["Databases"], db.Name, db.Name);
 
-		public static TabControl GetChildPanel(string basePanel)
+		public static TabControl GetChildPanel(string basePanel) => Concurrent(() =>
 		{
-			return Concurrent(() => {
-				var db = (TabControl)Application.Current.MainWindow.FindName(basePanel);
-				var dbItem = (TabItem)db.SelectedItem;
-				return (TabControl)dbItem.Content;
-			});
-		}
+			var db = (TabControl)Application.Current.MainWindow.FindName(basePanel);
+			var dbItem = (TabItem)db.SelectedItem;
+			return (TabControl)dbItem.Content;
+		});
 
 		public static string GetDatabasePath(Database db)
 		{

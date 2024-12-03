@@ -19,6 +19,8 @@ namespace SylverInk
 		{
 			InitializeComponent();
 			DataContext = Common.Settings;
+
+			Common.Settings.NumReplacements = string.Empty;
 		}
 
 		private void CloseClick(object sender, RoutedEventArgs e) => Close();

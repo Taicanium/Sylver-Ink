@@ -11,7 +11,7 @@ namespace SylverInk
 {
 	public partial class ContextSettings : INotifyPropertyChanged
 	{
-		private Brush? _accentBackgound = Brushes.Khaki;
+		private Brush? _accentBackgound = Brushes.PaleGoldenrod;
 		private Brush? _accentForegound = Brushes.Blue;
 		private double _headerFontSize = 12.5;
 		private string _importData = string.Empty;

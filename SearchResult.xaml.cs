@@ -37,13 +37,14 @@ namespace SylverInk
 		{
 			if (Edited)
 			{
-				var result = MessageBox.Show("You have unsaved changes. Save before closing this note?", "Sylver Ink: Notification", MessageBoxButton.YesNoCancel, MessageBoxImage.Question);
-
-				if (result == MessageBoxResult.Cancel)
-					return;
-
-				if (result == MessageBoxResult.No)
-					Edited = false;
+				switch(MessageBox.Show("You have unsaved changes. Save before closing this note?", "Sylver Ink: Notification", MessageBoxButton.YesNoCancel, MessageBoxImage.Question))
+				{
+					case MessageBoxResult.Cancel:
+						return;
+					case MessageBoxResult.No:
+						Edited = false;
+						break;
+				}
 			}
 
 			Close();
@@ -77,11 +78,11 @@ namespace SylverInk
 
 			foreach (SearchResult result in OpenQueries)
 			{
-				if (result.ResultRecord == ResultRecord)
-				{
-					OpenQueries.Remove(result);
-					return;
-				}
+				if (result.ResultRecord != ResultRecord)
+					continue;
+
+				OpenQueries.Remove(result);
+				return;
 			}
 		}
 

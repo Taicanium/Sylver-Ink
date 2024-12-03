@@ -31,7 +31,7 @@ namespace SylverInk
 			_isOpen = true;
 			_writing = true;
 
-			WriteHeader(6);
+			WriteHeader((byte)HighestFormat);
 		}
 
 		public void ClearCompressionTest()
@@ -242,7 +242,7 @@ namespace SylverInk
 			}
 		}
 
-		private uint ReadUInt32() => (uint)Common.IntFromBytes(ReadBytes(4));
+		private uint ReadUInt32() => (uint)IntFromBytes(ReadBytes(4));
 
 		private void WriteBytes(byte[] data)
 		{
@@ -290,6 +290,6 @@ namespace SylverInk
 			WriteBytes(_buffer);
 		}
 
-		private void WriteUInt32(uint data) => WriteBytes(Common.IntToBytes((int)data));
+		private void WriteUInt32(uint data) => WriteBytes(IntToBytes((int)data));
 	}
 }

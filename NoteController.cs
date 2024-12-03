@@ -200,7 +200,7 @@ namespace SylverInk
 			return string.Empty;
 		}
 
-		public NoteRecord GetRecord(int RecordIndex) => RecordIndex < Records.Count ? Records[RecordIndex] : new();
+		public NoteRecord GetRecord(int RecordIndex) => RecordIndex < Records.Count && RecordIndex > -1 ? Records[RecordIndex] : new();
 
 		public void InitializeRecords(bool newDatabase = true)
 		{
@@ -391,9 +391,9 @@ namespace SylverInk
 			{
 				string recordText = record.ToString();
 				var matches = Lowercase().Matches(recordText.ToLower());
-				foreach (Match match in matches)
+				foreach (Match m in matches)
 				{
-					foreach (Group group in match.Groups.Values)
+					foreach (Group group in m.Groups.Values)
 					{
 						WordPercentages.TryAdd(group.Value, 0.0);
 						WordPercentages[group.Value]++;

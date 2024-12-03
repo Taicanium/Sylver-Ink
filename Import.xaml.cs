@@ -26,6 +26,9 @@ namespace SylverInk
 		{
 			InitializeComponent();
 			DataContext = Common.Settings;
+
+			Common.Settings.ImportTarget = string.Empty;
+			Common.Settings.ReadyToFinalize = false;
 		}
 
 		private void AdaptiveChecked(object sender, RoutedEventArgs e)
@@ -61,15 +64,15 @@ namespace SylverInk
 				};
 			}
 
-			if (!MeasureTask.IsBusy)
-			{
-				((Button)FindName("DoImport")).Content = "Scanning...";
-				((Button)FindName("LTLess")).IsEnabled = false;
-				((Button)FindName("LTMore")).IsEnabled = false;
-				Common.Settings.ReadyToFinalize = false;
+			if (MeasureTask.IsBusy)
+				return;
 
-				MeasureTask.RunWorkerAsync();
-			}
+			((Button)FindName("DoImport")).Content = "Scanning...";
+			((Button)FindName("LTLess")).IsEnabled = false;
+			((Button)FindName("LTMore")).IsEnabled = false;
+			Common.Settings.ReadyToFinalize = false;
+
+			MeasureTask.RunWorkerAsync();
 		}
 
 		private void Drag(object sender, MouseButtonEventArgs e) => DragMove();
@@ -304,22 +307,21 @@ namespace SylverInk
 						recordData = string.Empty;
 					}
 					recordData += line + "\r\n";
+					continue;
 				}
-				else
-				{
-					recordData += line + "\r\n";
-					if (line.Length == 0)
-						blankCount++;
-					else
-						blankCount = 0;
 
-					if (recordData.Length > 0 && (blankCount >= Common.Settings.LineTolerance || i >= DataLines.Count - 1))
-					{
-						CurrentDatabase.CreateRecord(recordData);
-						Imported++;
-						recordData = string.Empty;
-						blankCount = 0;
-					}
+				recordData += line + "\r\n";
+				if (line.Length == 0)
+					blankCount++;
+				else
+					blankCount = 0;
+
+				if (recordData.Length > 0 && (blankCount >= Common.Settings.LineTolerance || i >= DataLines.Count - 1))
+				{
+					CurrentDatabase.CreateRecord(recordData);
+					Imported++;
+					recordData = string.Empty;
+					blankCount = 0;
 				}
 			}
 		}

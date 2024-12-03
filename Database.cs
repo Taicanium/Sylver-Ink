@@ -65,41 +65,45 @@ namespace SylverInk
 				Transmit(Network.MessageType.RecordAdd, [.. outBuffer]);
 			}
 
+			DeferUpdateRecentNotes();
+
 			return index;
 		}
 
 		public void CreateRevision(int index, string newVersion, bool local = true)
 		{
 			Controller.CreateRevision(index, newVersion);
-			if (local)
-			{
-				var outBuffer = new List<byte>([
-					.. IntToBytes(index),
+
+			if (!local)
+				return;
+
+			var outBuffer = new List<byte>([
+				.. IntToBytes(index),
 					.. IntToBytes(newVersion.Length)
-				]);
+			]);
 
-				if (newVersion.Length > 0)
-					outBuffer.AddRange(Encoding.UTF8.GetBytes(newVersion));
+			if (newVersion.Length > 0)
+				outBuffer.AddRange(Encoding.UTF8.GetBytes(newVersion));
 
-				Transmit(Network.MessageType.TextInsert, [.. outBuffer]);
-			}
+			Transmit(Network.MessageType.TextInsert, [.. outBuffer]);
 		}
 
 		public void CreateRevision(NoteRecord record, string newVersion, bool local = true)
 		{
 			Controller.CreateRevision(record, newVersion);
-			if (local)
-			{
-				var outBuffer = new List<byte>([
-					.. IntToBytes(record.Index),
+
+			if (!local)
+				return;
+
+			var outBuffer = new List<byte>([
+				.. IntToBytes(record.Index),
 					.. IntToBytes(newVersion.Length)
-				]);
+			]);
 
-				if (newVersion.Length > 0)
-					outBuffer.AddRange(Encoding.UTF8.GetBytes(newVersion));
+			if (newVersion.Length > 0)
+				outBuffer.AddRange(Encoding.UTF8.GetBytes(newVersion));
 
-				Transmit(Network.MessageType.TextInsert, [.. outBuffer]);
-			}
+			Transmit(Network.MessageType.TextInsert, [.. outBuffer]);
 		}
 
 		public void DeleteRecord(int index, bool local = true)
@@ -114,13 +118,13 @@ namespace SylverInk
 		{
 			for (int index = RecordCount - 1; index > -1; index--)
 			{
-				if (Controller.GetRecord(index).Equals(record))
-				{
-					Controller.DeleteRecord(index);
+				if (!Controller.GetRecord(index).Equals(record))
+					continue;
 
-					if (local)
-						Transmit(Network.MessageType.RecordRemove, IntToBytes(index));
-				}
+				Controller.DeleteRecord(index);
+
+				if (local)
+					Transmit(Network.MessageType.RecordRemove, IntToBytes(index));
 			}
 		}
 

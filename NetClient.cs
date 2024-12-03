@@ -108,7 +108,7 @@ namespace SylverInk
 			bool dataFinished = false;
 			do
 			{
-				dataFinished = !SpinWait.SpinUntil(new(() => DBClient.Available != oldData), 200);
+				dataFinished = !SpinWait.SpinUntil(new(() => DBClient.Available != oldData), 500);
 				oldData = DBClient.Available;
 			} while (!dataFinished);
 

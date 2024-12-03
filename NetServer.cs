@@ -58,6 +58,7 @@ namespace SylverInk
 							}
 							catch
 							{
+								//TODO: A fault in one connection really shouldn't be grounds for panicking the entire server. This is safe, but it's overkill.
 								Close();
 							}
 						}
@@ -76,27 +77,27 @@ namespace SylverInk
 				var task = (BackgroundWorker?)sender;
 				while (!task?.CancellationPending is true)
 				{
-					if (DBServer.Pending())
-					{
-						var client = DBServer.AcceptTcpClient();
-						SpinWait.SpinUntil(new(() => client.Available != 0));
-						var stream = client.GetStream();
-						Flags = (byte)stream.ReadByte();
+					if (!DBServer.Pending())
+						continue;
 
-						var data = DB.SerializeRecords(true);
-						int dataLength = data?.Count ?? 0;
+					var client = DBServer.AcceptTcpClient();
+					SpinWait.SpinUntil(new(() => client.Available != 0));
+					var stream = client.GetStream();
+					Flags = (byte)stream.ReadByte();
 
-						data?.Insert(0, (byte)MessageType.DatabaseInit);
-						data?.InsertRange(1, [
-							0, 0, 0, 0,
+					var data = DB.SerializeRecords(true);
+					int dataLength = data?.Count ?? 0;
+
+					data?.Insert(0, (byte)MessageType.DatabaseInit);
+					data?.InsertRange(1, [
+						0, 0, 0, 0,
 							.. IntToBytes(dataLength)
-						]);
+					]);
 
-						if (dataLength > 0)
-							stream.WriteAsync(data?.ToArray()).AsTask().Wait();
+					if (dataLength > 0)
+						stream.WriteAsync(data?.ToArray()).AsTask().Wait();
 
-						Clients.Add(client);
-					}
+					Clients.Add(client);
 				}
 			};
 		}
@@ -230,16 +231,16 @@ namespace SylverInk
 
 			foreach (var otherClient in Clients)
 			{
-				if (!otherClient.Equals(client))
+				if (otherClient.Equals(client))
+					continue;
+
+				try
 				{
-					try
-					{
-						otherClient.GetStream().Write(outBuffer.ToArray());
-					}
-					catch
-					{
-						otherClient.Close();
-					}
+					otherClient.GetStream().Write(outBuffer.ToArray());
+				}
+				catch
+				{
+					otherClient.Close();
 				}
 			}
 		}

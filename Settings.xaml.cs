@@ -70,28 +70,16 @@ namespace SylverInk
 
 		private void CustomColorOpened(object sender, EventArgs e)
 		{
-			Brush? color = Brushes.Transparent;
-			switch (ColorTag)
+			Brush? color = ColorTag switch
 			{
-				case "P1F":
-					color = Common.Settings.MenuForeground;
-					break;
-				case "P1B":
-					color = Common.Settings.MenuBackground;
-					break;
-				case "P2F":
-					color = Common.Settings.ListForeground;
-					break;
-				case "P2B":
-					color = Common.Settings.ListBackground;
-					break;
-				case "P3F":
-					color = Common.Settings.AccentForeground;
-					break;
-				case "P3B":
-					color = Common.Settings.AccentBackground;
-					break;
-			}
+				"P1F" => Common.Settings.MenuForeground,
+				"P1B" => Common.Settings.MenuBackground,
+				"P2F" => Common.Settings.ListForeground,
+				"P2B" => Common.Settings.ListBackground,
+				"P3F" => Common.Settings.AccentForeground,
+				"P3B" => Common.Settings.AccentBackground,
+				_ => Brushes.Transparent
+			};
 			CustomColor.Fill = color;
 			CustomColorBox.Text = BytesFromBrush(color, 3);
 		}
@@ -150,7 +138,7 @@ namespace SylverInk
 
 		private void ResetClick(object sender, RoutedEventArgs e)
 		{
-			Common.Settings.AccentBackground = Brushes.Khaki;
+			Common.Settings.AccentBackground = Brushes.PaleGoldenrod;
 			Common.Settings.AccentForeground = Brushes.Blue;
 			Common.Settings.ListBackground = Brushes.White;
 			Common.Settings.ListForeground = Brushes.Black;
@@ -187,7 +175,7 @@ namespace SylverInk
 						continue;
 
 					SolidColorBrush brushCopy = new(brush.Color);
-					brushCopy.SetValue(TagProperty, UppercaseLetters().Replace(property.Name, new MatchEvaluator(match => " " + match.Value)).Trim());
+					brushCopy.SetValue(TagProperty, Uppercase().Replace(property.Name, new MatchEvaluator(match => " " + match.Value)).Trim());
 					AvailableBrushes.Add(brushCopy);
 				}
 
@@ -334,6 +322,6 @@ namespace SylverInk
 		}
 
 		[GeneratedRegex(@"\p{Lu}")]
-		private static partial Regex UppercaseLetters();
+		private static partial Regex Uppercase();
     }
 }

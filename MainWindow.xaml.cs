@@ -2,10 +2,12 @@
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Media;
 using static SylverInk.Common;
 
@@ -16,8 +18,16 @@ namespace SylverInk
 	/// </summary>
 	public partial class MainWindow : Window
 	{
+		[DllImport("User32.dll")]
+		private static extern bool RegisterHotKey(nint hWnd, int id, uint fsModifiers, uint vk);
+
+		[DllImport("User32.dll")]
+		private static extern bool UnregisterHotKey(nint hWnd, int id);
+
 		private static bool FirstRun = true;
+		private const int HotKeyID = 5192;
 		private NoteRecord RecentSelection = new();
+		private HwndSource? WindowSource;
 
 		public MainWindow()
 		{
@@ -38,14 +48,9 @@ namespace SylverInk
 			switch (senderObject.Content)
 			{
 				case "Import":
-					Common.Settings.ImportTarget = string.Empty;
-					Common.Settings.ReadyToFinalize = false;
-
 					ImportWindow = new();
 					break;
 				case "Replace":
-					Common.Settings.NumReplacements = string.Empty;
-
 					ReplaceWindow = new();
 					break;
 				case "Search":
@@ -182,6 +187,19 @@ namespace SylverInk
 			Application.Current.Shutdown();
 		}
 
+		private nint HwndHook(nint hwnd, int msg, nint wParam, nint lParam, ref bool handled)
+		{
+			if (msg != 0x0312) // WM_HOTKEY
+				return default;
+
+			if (wParam.ToInt32() != HotKeyID)
+				return default;
+
+			OnHotKeyPressed();
+			handled = true;
+			return default;
+		}
+
 		private static void LoadUserSettings()
 		{
 			if (!File.Exists(SettingsFile))
@@ -304,13 +322,57 @@ namespace SylverInk
 
 		private void NewNote_Keydown(object sender, KeyEventArgs e)
 		{
-			if (e.Key == Key.Enter)
+			if (e.Key != Key.Enter)
+				return;
+
+			var box = (TextBox)sender;
+			CurrentDatabase.CreateRecord(box.Text);
+			box.Text = string.Empty;
+			DeferUpdateRecentNotes();
+		}
+
+		protected override void OnClosed(EventArgs e)
+		{
+			WindowSource?.RemoveHook(HwndHook);
+			WindowSource = null;
+			UnregisterHotKey();
+			base.OnClosed(e);
+		}
+
+		private void OnHotKeyPressed()
+		{
+			var lastRecord = CurrentDatabase.GetRecord(0);
+			if (lastRecord.ToString().Equals(string.Empty))
 			{
-				var box = (TextBox)sender;
-				CurrentDatabase.CreateRecord(box.Text);
-				box.Text = string.Empty;
-				DeferUpdateRecentNotes();
+				OpenQuery(lastRecord);
+				return;
 			}
+
+			lastRecord = CurrentDatabase.GetRecord(CurrentDatabase.RecordCount - 1);
+			if (lastRecord.ToString().Equals(string.Empty))
+			{
+				OpenQuery(lastRecord);
+				return;
+			}
+
+			int entry = CurrentDatabase.CreateRecord(string.Empty);
+			OpenQuery(CurrentDatabase.GetRecord(entry));
+		}
+
+		protected override void OnSourceInitialized(EventArgs e)
+		{
+			base.OnSourceInitialized(e);
+			var helper = new WindowInteropHelper(this);
+			WindowSource = HwndSource.FromHwnd(helper.Handle);
+			WindowSource.AddHook(HwndHook);
+			RegisterHotKey();
+		}
+
+		private void RegisterHotKey()
+		{
+			var helper = new WindowInteropHelper(this);
+			if (!RegisterHotKey(helper.Handle, HotKeyID, 2, (uint)KeyInterop.VirtualKeyFromKey(Key.N)))
+				MessageBox.Show("Failed to register hotkey.", "Sylver Ink: Error", MessageBoxButton.OK, MessageBoxImage.Error);
 		}
 
 		private void RenameClosed(object sender, EventArgs e)
@@ -323,11 +385,11 @@ namespace SylverInk
 
 			foreach (Database db in Databases)
 			{
-				if (DatabaseNameBox.Text.Equals(db.Name))
-				{
-					MessageBox.Show("A database already exists with the provided name.", "Sylver Ink: Error", MessageBoxButton.OK, MessageBoxImage.Error);
-					return;
-				}
+				if (!DatabaseNameBox.Text.Equals(db.Name))
+					continue;
+
+				MessageBox.Show("A database already exists with the provided name.", "Sylver Ink: Error", MessageBoxButton.OK, MessageBoxImage.Error);
+				return;
 			}
 
 			CurrentDatabase.Changed = true;
@@ -371,23 +433,25 @@ namespace SylverInk
 
 			var adjustedPath = Path.Join(Path.GetDirectoryName(newFile), Path.GetFileName(oldFile));
 
-			if (File.Exists(adjustedPath))
+			if (!File.Exists(adjustedPath))
+				return;
+
+			if (File.Exists(newFile) && !overwrite)
 			{
-				if (File.Exists(newFile) && !overwrite)
+				if (MessageBox.Show($"A database with that name already exists at {newFile}.\n\nDo you want to overwrite it?", "Sylver Ink: Warning", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.No)
 				{
-					if (MessageBox.Show($"A database with that name already exists at {newFile}.\n\nDo you want to overwrite it?", "Sylver Ink: Warning", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.No)
-					{
-						CurrentDatabase.DBFile = oldFile;
-						CurrentDatabase.Name = oldName;
-						currentTab.Header = CurrentDatabase.GetHeader();
-						return;
-					}
-					overwrite = true;
+					CurrentDatabase.DBFile = oldFile;
+					CurrentDatabase.Name = oldName;
+					currentTab.Header = CurrentDatabase.GetHeader();
+					return;
 				}
-				if (File.Exists(newFile) && overwrite)
-					File.Delete(newFile);
-				File.Move(adjustedPath, newFile);
+				overwrite = true;
 			}
+
+			if (File.Exists(newFile) && overwrite)
+				File.Delete(newFile);
+
+			File.Move(adjustedPath, newFile);
 		}
 
 		private void RenameKeyDown(object sender, KeyEventArgs e)
@@ -480,6 +544,12 @@ namespace SylverInk
 
 			UpdateContextMenu();
 			DeferUpdateRecentNotes(true);
+		}
+
+		private void UnregisterHotKey()
+		{
+			var helper = new WindowInteropHelper(this);
+			UnregisterHotKey(helper.Handle, HotKeyID);
 		}
 	}
 }

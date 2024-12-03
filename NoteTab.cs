@@ -27,11 +27,11 @@ namespace SylverInk
 			for (int i = OpenTabs.Count - 1; i > -1; i--)
 			{
 				var tab = OpenTabs[i];
-				if (tab.Record.Equals(Record))
-				{
-					OpenTabs.RemoveAt(i);
-					tab.Deconstruct();
-				}
+				if (!tab.Record.Equals(Record))
+					continue;
+				
+				OpenTabs.RemoveAt(i);
+				tab.Deconstruct();
 			}
 
 			ButtonGrid = new()
@@ -247,11 +247,11 @@ namespace SylverInk
 			for (int i = OpenTabs.Count - 1; i > -1; i--)
 			{
 				var tab = OpenTabs[i];
-				if (tab.Record.Equals(Record))
-				{
-					OpenTabs.RemoveAt(i);
-					tab.Deconstruct();
-				}
+				if (!tab.Record.Equals(Record))
+					continue;
+
+				OpenTabs.RemoveAt(i);
+				tab.Deconstruct();
 			}
 
 			for (int i = ChildPanel.Items.Count - 1; i > 0; i--)

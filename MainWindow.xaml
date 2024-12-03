@@ -1,7 +1,7 @@
 ﻿<Window x:Class="SylverInk.MainWindow"
 		xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-		xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
 		xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+		xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
 		xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 		xmlns:local="clr-namespace:SylverInk"
 		mc:Ignorable="d"
@@ -57,7 +57,7 @@
 							</Grid>
 							<StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Grid.Row="1" VerticalAlignment="Bottom">
 								<Label Content="New note" FontStyle="Italic"/>
-								<Label Content="(?)" Foreground="{Binding AccentForeground}" ToolTip="Write a line of text and press Enter to create a new entry."/>
+								<Label Content="(?)" Foreground="{Binding AccentForeground}" ToolTip="Write a line of text and press Enter to create a new note. You can also use the Ctrl+N hotkey to open a sticky note at any time."/>
 							</StackPanel>
 							<TextBox KeyDown="NewNote_Keydown" Margin="5" Grid.Row="2" VerticalAlignment="Top"/>
 							<Grid Margin="0,10" Grid.Row="3">

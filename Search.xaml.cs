@@ -95,12 +95,12 @@ namespace SylverInk
 
 				for (int j = 0; j < _results.Count; j++)
 				{
-					if (_results[j].LastMatchCount <= matches)
-					{
-						_results.Insert(j, newRecord);
-						matched = true;
-						break;
-					}
+					if (_results[j].LastMatchCount > matches)
+						continue;
+
+					_results.Insert(j, newRecord);
+					matched = true;
+					break;
 				}
 
 				if (!matched)
