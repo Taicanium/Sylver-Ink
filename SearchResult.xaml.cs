@@ -1,4 +1,6 @@
 ﻿using System;
+using System.ComponentModel;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -11,6 +13,7 @@ namespace SylverInk
 	/// </summary>
 	public partial class SearchResult : Window
 	{
+		private readonly BackgroundWorker? AutosaveThread;
 		private bool Dragging = false;
 		private Point DragMouseCoords = new(0, 0);
 		private bool Edited = false;
@@ -19,11 +22,18 @@ namespace SylverInk
 		public NoteRecord? ResultRecord;
 		public string ResultText = string.Empty;
 		private readonly double SnapTolerance = 20.0;
+		private DateTime TimeSinceAutosave = DateTime.Now;
 
 		public SearchResult()
 		{
 			InitializeComponent();
 			DataContext = Common.Settings;
+			AutosaveThread = new();
+			AutosaveThread.DoWork += (_, _) =>
+			{
+				SpinWait.SpinUntil(new(() => DateTime.Now.Subtract(TimeSinceAutosave).Seconds >= 5.0));
+				Concurrent(SaveRecord);
+			};
 		}
 
 		public void AddTabToRibbon()
@@ -120,6 +130,9 @@ namespace SylverInk
 			var senderObject = sender as TextBox;
 			ResultText = senderObject?.Text ?? string.Empty;
 			Edited = !ResultText.Equals(ResultRecord?.ToString());
+			TimeSinceAutosave = DateTime.Now;
+			if (!AutosaveThread?.IsBusy is true)
+				AutosaveThread?.RunWorkerAsync();
 		}
 
 		private void SaveRecord()
@@ -129,7 +142,7 @@ namespace SylverInk
 
 			CurrentDatabase.CreateRevision(ResultRecord, ResultText);
 			LastChangedLabel.Content = "Last modified: " + ResultRecord?.GetLastChange();
-			DeferUpdateRecentNotes();
+			DeferUpdateRecentNotes(true);
 		}
 
 		private Point Snap(ref Point Coords)

@@ -339,25 +339,7 @@ namespace SylverInk
 			base.OnClosed(e);
 		}
 
-		private void OnHotKeyPressed()
-		{
-			var lastRecord = CurrentDatabase.GetRecord(0);
-			if (lastRecord.ToString().Equals(string.Empty))
-			{
-				OpenQuery(lastRecord);
-				return;
-			}
-
-			lastRecord = CurrentDatabase.GetRecord(CurrentDatabase.RecordCount - 1);
-			if (lastRecord.ToString().Equals(string.Empty))
-			{
-				OpenQuery(lastRecord);
-				return;
-			}
-
-			int entry = CurrentDatabase.CreateRecord(string.Empty);
-			OpenQuery(CurrentDatabase.GetRecord(entry));
-		}
+		private void OnHotKeyPressed() => OpenQuery(CurrentDatabase.GetRecord(CurrentDatabase.CreateRecord(string.Empty)));
 
 		protected override void OnSourceInitialized(EventArgs e)
 		{
