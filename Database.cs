@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -241,6 +242,72 @@ namespace SylverInk
 		}
 
 		public bool Open(string path, bool writing = false) => Controller.Open(path, writing);
+
+		public void Rename(string newName)
+		{
+			var overwrite = false;
+			var oldFile = DBFile;
+			var oldName = Name;
+			var oldPath = Path.GetDirectoryName(oldFile);
+
+			Changed = true;
+			Name = newName;
+
+			DBFile = GetDatabasePath(CurrentDatabase);
+			var newFile = DBFile;
+			var newPath = Path.GetDirectoryName(newFile);
+
+			var panel = (TabControl)Application.Current.MainWindow.FindName("DatabasesPanel");
+			var currentTab = (TabItem)panel.SelectedItem;
+			currentTab.Header = GetHeader();
+
+			if (!File.Exists(oldFile))
+				return;
+
+			if (!Directory.Exists(oldPath))
+				return;
+
+			var directorySearch = Directory.GetDirectories(Subfolders["Databases"], "*", new EnumerationOptions() { IgnoreInaccessible = true, RecurseSubdirectories = true, MaxRecursionDepth = 3 });
+			if (oldPath is not null && newPath is not null && directorySearch.Contains(oldPath))
+			{
+				if (Directory.Exists(newPath))
+				{
+					if (MessageBox.Show($"A database with that name already exists in {newPath}.\n\nDo you want to overwrite it?", "Sylver Ink: Warning", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.No)
+					{
+						DBFile = oldFile;
+						Name = oldName;
+						currentTab.Header = GetHeader();
+						return;
+					}
+					Directory.Delete(newPath, true);
+					overwrite = true;
+				}
+				else
+					Directory.Move(oldPath, newPath);
+			}
+
+			var adjustedPath = Path.Join(Path.GetDirectoryName(newFile), Path.GetFileName(oldFile));
+
+			if (!File.Exists(adjustedPath))
+				return;
+
+			if (File.Exists(newFile) && !overwrite)
+			{
+				if (MessageBox.Show($"A database with that name already exists at {newFile}.\n\nDo you want to overwrite it?", "Sylver Ink: Warning", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.No)
+				{
+					DBFile = oldFile;
+					Name = oldName;
+					currentTab.Header = GetHeader();
+					return;
+				}
+				overwrite = true;
+			}
+
+			if (File.Exists(newFile) && overwrite)
+				File.Delete(newFile);
+
+			File.Move(adjustedPath, newFile);
+		}
 
 		public (int, int) Replace(string oldText, string newText, bool local = true)
 		{

@@ -2,10 +2,13 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Globalization;
+using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Media;
+using static SylverInk.Common;
 
 namespace SylverInk
 {
@@ -69,6 +72,94 @@ namespace SylverInk
 			return default;
 		}
 
+		public void Load()
+		{
+			if (!File.Exists(SettingsFile))
+				return;
+
+			string[] settings = File.ReadAllLines(SettingsFile);
+
+			for (int i = 0; i < settings.Length; i++)
+			{
+				var setting = settings[i].Trim();
+				var keyValue = setting.Split(':', 2);
+				switch (keyValue[0])
+				{
+					case "AccentBackground":
+						AccentBackground = BrushFromBytes(keyValue[1]);
+						break;
+					case "AccentForeground":
+						AccentForeground = BrushFromBytes(keyValue[1]);
+						break;
+					case "FontFamily":
+						MainFontFamily = new(keyValue[1]);
+						break;
+					case "FontSize":
+						MainFontSize = double.Parse(keyValue[1]);
+						break;
+					case "LastDatabases":
+						FirstRun = false;
+						var files = keyValue[1].Split(';').Distinct().Where(File.Exists);
+						foreach (var file in files)
+							Database.Create(file, true);
+						if (!files.Any())
+							Database.Create(Path.Join(Subfolders["Databases"], $"{DefaultDatabase}", $"{DefaultDatabase}.sidb"));
+						break;
+					case "ListBackground":
+						ListBackground = BrushFromBytes(keyValue[1]);
+						break;
+					case "ListForeground":
+						ListForeground = BrushFromBytes(keyValue[1]);
+						break;
+					case "MenuBackground":
+						MenuBackground = BrushFromBytes(keyValue[1]);
+						break;
+					case "MenuForeground":
+						MenuForeground = BrushFromBytes(keyValue[1]);
+						break;
+					case "RecentNotesSortMode":
+						if (!int.TryParse(keyValue[1], out var sortMode))
+							sortMode = 0;
+						RecentEntriesSortMode = (SortType)sortMode;
+						break;
+					case "RibbonDisplayMode":
+						if (!int.TryParse(keyValue[1], out var displayMode))
+							displayMode = 0;
+						RibbonTabContent = (DisplayType)displayMode;
+						break;
+					case "SearchResultsOnTop":
+						SearchResultsOnTop = bool.Parse(keyValue[1]);
+						break;
+					case "SnapSearchResults":
+						SnapSearchResults = bool.Parse(keyValue[1]);
+						break;
+					default:
+						break;
+				}
+			}
+		}
+
 		protected void OnPropertyChanged([CallerMemberName] string? name = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+
+		public void Save()
+		{
+			string[] settings = [
+				$"AccentBackground:{BytesFromBrush(AccentBackground)}",
+				$"AccentForeground:{BytesFromBrush(AccentForeground)}",
+				$"FontFamily:{MainFontFamily?.Source}",
+				$"FontSize:{MainFontSize}",
+				$"LastDatabases:{string.Join(';', DatabaseFiles.Distinct().Where(File.Exists))}",
+				$"ListBackground:{BytesFromBrush(ListBackground)}",
+				$"ListForeground:{BytesFromBrush(ListForeground)}",
+				$"MenuBackground:{BytesFromBrush(MenuBackground)}",
+				$"MenuForeground:{BytesFromBrush(MenuForeground)}",
+				$"RecentNotesSortMode:{(int)RecentEntriesSortMode}",
+				$"RibbonDisplayMode:{(int)RibbonTabContent}",
+				$"SearchResultsOnTop:{SearchResultsOnTop}",
+				$"SnapSearchResults:{SnapSearchResults}",
+			];
+
+			File.WriteAllLines(SettingsFile, settings);
+		}
 	}
 }

@@ -53,6 +53,7 @@ namespace SylverInk
 		public static ObservableCollection<Database> Databases { get; set; } = [];
 		public static string DefaultDatabase { get; } = "New";
 		public static string DocumentsFolder { get; } = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Sylver Ink");
+		public static bool FirstRun { get; set; } = true;
 		public static int HighestFormat { get; } = 8;
 		public static Import? ImportWindow { get => _import; set { _import?.Close(); _import = value; _import?.Show(); } }
 		private static BackgroundWorker? MeasureTask { get; set; }

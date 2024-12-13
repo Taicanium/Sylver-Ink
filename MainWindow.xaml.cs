@@ -24,7 +24,6 @@ namespace SylverInk
 		[DllImport("User32.dll")]
 		private static extern bool UnregisterHotKey(nint hWnd, int id);
 
-		private static bool FirstRun = true;
 		private const int HotKeyID = 5192;
 		private NoteRecord RecentSelection = new();
 		private HwndSource? WindowSource;
@@ -183,7 +182,7 @@ namespace SylverInk
 		{
 			DatabaseChanged = false;
 			MainGrid.IsEnabled = true;
-			SaveUserSettings();
+			Common.Settings.Save();
 			Application.Current.Shutdown();
 		}
 
@@ -198,73 +197,6 @@ namespace SylverInk
 			OnHotKeyPressed();
 			handled = true;
 			return default;
-		}
-
-		private static void LoadUserSettings()
-		{
-			if (!File.Exists(SettingsFile))
-				return;
-
-			string[] settings = File.ReadAllLines(SettingsFile);
-
-			for (int i = 0; i < settings.Length; i++)
-			{
-				var setting = settings[i].Trim();
-				var keyValue = setting.Split(':', 2);
-				switch (keyValue[0])
-				{
-					case "AccentBackground":
-						Common.Settings.AccentBackground = BrushFromBytes(keyValue[1]);
-						break;
-					case "AccentForeground":
-						Common.Settings.AccentForeground = BrushFromBytes(keyValue[1]);
-						break;
-					case "FontFamily":
-						Common.Settings.MainFontFamily = new(keyValue[1]);
-						break;
-					case "FontSize":
-						Common.Settings.MainFontSize = double.Parse(keyValue[1]);
-						break;
-					case "LastDatabases":
-						FirstRun = false;
-						var files = keyValue[1].Split(';').Distinct().Where(File.Exists);
-						foreach (var file in files)
-							Database.Create(file, true);
-						if (!files.Any())
-							Database.Create(Path.Join(Subfolders["Databases"], $"{DefaultDatabase}", $"{DefaultDatabase}.sidb"));
-						break;
-					case "ListBackground":
-						Common.Settings.ListBackground = BrushFromBytes(keyValue[1]);
-						break;
-					case "ListForeground":
-						Common.Settings.ListForeground = BrushFromBytes(keyValue[1]);
-						break;
-					case "MenuBackground":
-						Common.Settings.MenuBackground = BrushFromBytes(keyValue[1]);
-						break;
-					case "MenuForeground":
-						Common.Settings.MenuForeground = BrushFromBytes(keyValue[1]);
-						break;
-					case "RecentNotesSortMode":
-						if (!int.TryParse(keyValue[1], out var sortMode))
-							sortMode = 0;
-						RecentEntriesSortMode = (SortType)sortMode;
-						break;
-					case "RibbonDisplayMode":
-						if (!int.TryParse(keyValue[1], out var displayMode))
-							displayMode = 0;
-						RibbonTabContent = (DisplayType)displayMode;
-						break;
-					case "SearchResultsOnTop":
-						Common.Settings.SearchResultsOnTop = bool.Parse(keyValue[1]);
-						break;
-					case "SnapSearchResults":
-						Common.Settings.SnapSearchResults = bool.Parse(keyValue[1]);
-						break;
-					default:
-						break;
-				}
-			}
 		}
 
 		private void MainWindow_Closing(object sender, CancelEventArgs e)
@@ -288,13 +220,13 @@ namespace SylverInk
 				}
 			}
 
-			SaveUserSettings();
+			Common.Settings.Save();
 			Application.Current.Shutdown();
 		}
 
 		private void MainWindow_Loaded(object sender, RoutedEventArgs e)
 		{
-			LoadUserSettings();
+			Common.Settings.Load();
 
 			foreach (var folder in Subfolders)
 				if (!Directory.Exists(folder.Value))
@@ -339,7 +271,7 @@ namespace SylverInk
 			base.OnClosed(e);
 		}
 
-		private void OnHotKeyPressed() => OpenQuery(CurrentDatabase.GetRecord(CurrentDatabase.CreateRecord(string.Empty)));
+		private static void OnHotKeyPressed() => OpenQuery(CurrentDatabase.GetRecord(CurrentDatabase.CreateRecord(string.Empty)));
 
 		protected override void OnSourceInitialized(EventArgs e)
 		{
@@ -374,66 +306,7 @@ namespace SylverInk
 				return;
 			}
 
-			CurrentDatabase.Changed = true;
-			var oldName = CurrentDatabase.Name;
-			CurrentDatabase.Name = DatabaseNameBox.Text;
-			var overwrite = false;
-
-			var oldFile = CurrentDatabase.DBFile;
-			var oldPath = Path.GetDirectoryName(oldFile);
-			CurrentDatabase.DBFile = GetDatabasePath(CurrentDatabase);
-			var newFile = CurrentDatabase.DBFile;
-			var newPath = Path.GetDirectoryName(newFile);
-
-			var currentTab = (TabItem)DatabasesPanel.SelectedItem;
-			currentTab.Header = CurrentDatabase.GetHeader();
-
-			if (!File.Exists(oldFile))
-				return;
-
-			if (!Directory.Exists(oldPath))
-				return;
-
-			var directorySearch = Directory.GetDirectories(Subfolders["Databases"], "*", new EnumerationOptions() { IgnoreInaccessible = true, RecurseSubdirectories = true, MaxRecursionDepth = 3 });
-			if (oldPath is not null && newPath is not null && directorySearch.Contains(oldPath))
-			{
-				if (Directory.Exists(newPath))
-				{
-					if (MessageBox.Show($"A database with that name already exists in {newPath}.\n\nDo you want to overwrite it?", "Sylver Ink: Warning", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.No)
-					{
-						CurrentDatabase.DBFile = oldFile;
-						CurrentDatabase.Name = oldName;
-						currentTab.Header = CurrentDatabase.GetHeader();
-						return;
-					}
-					Directory.Delete(newPath, true);
-					overwrite = true;
-				}	
-				else
-					Directory.Move(oldPath, newPath);
-			}
-
-			var adjustedPath = Path.Join(Path.GetDirectoryName(newFile), Path.GetFileName(oldFile));
-
-			if (!File.Exists(adjustedPath))
-				return;
-
-			if (File.Exists(newFile) && !overwrite)
-			{
-				if (MessageBox.Show($"A database with that name already exists at {newFile}.\n\nDo you want to overwrite it?", "Sylver Ink: Warning", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.No)
-				{
-					CurrentDatabase.DBFile = oldFile;
-					CurrentDatabase.Name = oldName;
-					currentTab.Header = CurrentDatabase.GetHeader();
-					return;
-				}
-				overwrite = true;
-			}
-
-			if (File.Exists(newFile) && overwrite)
-				File.Delete(newFile);
-
-			File.Move(adjustedPath, newFile);
+			CurrentDatabase.Rename(DatabaseNameBox.Text);
 		}
 
 		private void RenameKeyDown(object sender, KeyEventArgs e)
@@ -462,27 +335,6 @@ namespace SylverInk
 		}
 
 		private void SaveNewName(object? sender, RoutedEventArgs e) => RenameDatabase.IsOpen = false;
-
-		private static void SaveUserSettings()
-		{
-			string[] settings = [
-				$"AccentBackground:{BytesFromBrush(Common.Settings.AccentBackground)}",
-				$"AccentForeground:{BytesFromBrush(Common.Settings.AccentForeground)}",
-				$"FontFamily:{Common.Settings.MainFontFamily?.Source}",
-				$"FontSize:{Common.Settings.MainFontSize}",
-				$"LastDatabases:{string.Join(';', DatabaseFiles.Distinct().Where(File.Exists))}",
-				$"ListBackground:{BytesFromBrush(Common.Settings.ListBackground)}",
-				$"ListForeground:{BytesFromBrush(Common.Settings.ListForeground)}",
-				$"MenuBackground:{BytesFromBrush(Common.Settings.MenuBackground)}",
-				$"MenuForeground:{BytesFromBrush(Common.Settings.MenuForeground)}",
-				$"RecentNotesSortMode:{(int)RecentEntriesSortMode}",
-				$"RibbonDisplayMode:{(int)RibbonTabContent}",
-				$"SearchResultsOnTop:{Common.Settings.SearchResultsOnTop}",
-				$"SnapSearchResults:{Common.Settings.SnapSearchResults}",
-			];
-
-			File.WriteAllLines(SettingsFile, settings);
-		}
 
 		private void SublistChanged(object sender, RoutedEventArgs e)
 		{
