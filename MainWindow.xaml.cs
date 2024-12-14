@@ -233,7 +233,7 @@ namespace SylverInk
 					Directory.CreateDirectory(folder.Value);
 
 			if (FirstRun)
-				Database.Create(Path.Join(Subfolders["Databases"], $"{DefaultDatabase}", $"{DefaultDatabase}.sidb"));
+				Database.Create(Path.Join(Subfolders["Databases"], DefaultDatabase, $"{DefaultDatabase}.sidb"));
 
 			DatabasesPanel.SelectedIndex = 0;
 
@@ -276,17 +276,15 @@ namespace SylverInk
 		protected override void OnSourceInitialized(EventArgs e)
 		{
 			base.OnSourceInitialized(e);
-			var helper = new WindowInteropHelper(this);
-			WindowSource = HwndSource.FromHwnd(helper.Handle);
+			WindowSource = HwndSource.FromHwnd(new WindowInteropHelper(this).Handle);
 			WindowSource.AddHook(HwndHook);
 			RegisterHotKey();
 		}
 
 		private void RegisterHotKey()
 		{
-			var helper = new WindowInteropHelper(this);
-			if (!RegisterHotKey(helper.Handle, HotKeyID, 2, (uint)KeyInterop.VirtualKeyFromKey(Key.N)))
-				MessageBox.Show("Failed to register hotkey.", "Sylver Ink: Error", MessageBoxButton.OK, MessageBoxImage.Error);
+			if (!RegisterHotKey(new WindowInteropHelper(this).Handle, HotKeyID, 2, (uint)KeyInterop.VirtualKeyFromKey(Key.N)))
+				MessageBox.Show("Failed to register new note hotkey.", "Sylver Ink: Error", MessageBoxButton.OK, MessageBoxImage.Error);
 		}
 
 		private void RenameClosed(object sender, EventArgs e)
@@ -364,7 +362,7 @@ namespace SylverInk
 			var control = (TabControl)sender;
 			if (control.Name.Equals("DatabasesPanel"))
 			{
-				var item = (TabItem)control.SelectedItem;
+				var item = (TabItem?)control.SelectedItem;
 				if (item is null)
 					return;
 
@@ -380,10 +378,6 @@ namespace SylverInk
 			DeferUpdateRecentNotes(true);
 		}
 
-		private void UnregisterHotKey()
-		{
-			var helper = new WindowInteropHelper(this);
-			UnregisterHotKey(helper.Handle, HotKeyID);
-		}
+		private void UnregisterHotKey() => UnregisterHotKey(new WindowInteropHelper(this).Handle, HotKeyID);
 	}
 }

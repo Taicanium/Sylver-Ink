@@ -77,12 +77,9 @@ namespace SylverInk
 			if (!File.Exists(SettingsFile))
 				return;
 
-			string[] settings = File.ReadAllLines(SettingsFile);
-
-			for (int i = 0; i < settings.Length; i++)
+			foreach (string setting in File.ReadAllLines(SettingsFile))
 			{
-				var setting = settings[i].Trim();
-				var keyValue = setting.Split(':', 2);
+				var keyValue = setting.Trim().Split(':', 2);
 				switch (keyValue[0])
 				{
 					case "AccentBackground":
@@ -141,25 +138,20 @@ namespace SylverInk
 
 		protected void OnPropertyChanged([CallerMemberName] string? name = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 
-		public void Save()
-		{
-			string[] settings = [
-				$"AccentBackground:{BytesFromBrush(AccentBackground)}",
-				$"AccentForeground:{BytesFromBrush(AccentForeground)}",
-				$"FontFamily:{MainFontFamily?.Source}",
-				$"FontSize:{MainFontSize}",
-				$"LastDatabases:{string.Join(';', DatabaseFiles.Distinct().Where(File.Exists))}",
-				$"ListBackground:{BytesFromBrush(ListBackground)}",
-				$"ListForeground:{BytesFromBrush(ListForeground)}",
-				$"MenuBackground:{BytesFromBrush(MenuBackground)}",
-				$"MenuForeground:{BytesFromBrush(MenuForeground)}",
-				$"RecentNotesSortMode:{(int)RecentEntriesSortMode}",
-				$"RibbonDisplayMode:{(int)RibbonTabContent}",
-				$"SearchResultsOnTop:{SearchResultsOnTop}",
-				$"SnapSearchResults:{SnapSearchResults}",
-			];
-
-			File.WriteAllLines(SettingsFile, settings);
-		}
+		public void Save() => File.WriteAllLines(SettingsFile, [
+			$"AccentBackground:{BytesFromBrush(AccentBackground)}",
+			$"AccentForeground:{BytesFromBrush(AccentForeground)}",
+			$"FontFamily:{MainFontFamily?.Source}",
+			$"FontSize:{MainFontSize}",
+			$"LastDatabases:{string.Join(';', DatabaseFiles.Distinct().Where(File.Exists))}",
+			$"ListBackground:{BytesFromBrush(ListBackground)}",
+			$"ListForeground:{BytesFromBrush(ListForeground)}",
+			$"MenuBackground:{BytesFromBrush(MenuBackground)}",
+			$"MenuForeground:{BytesFromBrush(MenuForeground)}",
+			$"RecentNotesSortMode:{(int)RecentEntriesSortMode}",
+			$"RibbonDisplayMode:{(int)RibbonTabContent}",
+			$"SearchResultsOnTop:{SearchResultsOnTop}",
+			$"SnapSearchResults:{SnapSearchResults}",
+		]);
 	}
 }

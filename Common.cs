@@ -79,6 +79,8 @@ namespace SylverInk
 
 		public static void AddDatabase(Database db)
 		{
+			static object PanelLabel(TabItem item) => ((Label)((StackPanel)item.Header).Children[0]).Content;
+
 			var template = (DataTemplate)Application.Current.MainWindow.TryFindResource("DatabaseContentTemplate");
 			var control = (TabControl)Application.Current.MainWindow.FindName("DatabasesPanel");
 			var tabs = control.Items.Cast<TabItem>();
@@ -86,14 +88,14 @@ namespace SylverInk
 			if ((db.Name ?? string.Empty).Equals(string.Empty))
 				db.Name = DefaultDatabase;
 
-			if (tabs.Where(item => ((Label)((StackPanel)item.Header).Children[0]).Content.Equals(db.Name)).Any())
+			if (tabs.Where(item => PanelLabel(item).Equals(db.Name)).Any())
 			{
 				var index = 1;
 				Match match;
 				if ((match = IndexDigits().Match(db.Name ?? string.Empty)).Success)
 					index = int.Parse(match.Groups[1].Value);
 
-				while (tabs.Where(item => ((Label)((StackPanel)item.Header).Children[0]).Content.Equals($"{db.Name} ({index})")).Any())
+				while (tabs.Where(item => PanelLabel(item).Equals($"{db.Name} ({index})")).Any())
 					index++;
 				db.Name = $"{db.Name} ({index})";
 			}
@@ -127,6 +129,7 @@ namespace SylverInk
 		public static SolidColorBrush? BrushFromBytes(string data)
 		{
 			var hex = NumberStyles.HexNumber;
+
 			if (data.Length == 6)
 				data = "FF" + data;
 
