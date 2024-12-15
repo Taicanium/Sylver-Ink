@@ -211,7 +211,7 @@ namespace SylverInk
 			return Tags.Count;
 		}
 
-		public string GetCreated() => GetCreatedObject().ToString("yyyy-MM-dd HH:mm:ss");
+		public string GetCreated() => GetCreatedObject().ToString(DateFormat);
 
 		public DateTime GetCreatedObject() => DateTime.FromBinary(Created);
 
@@ -219,13 +219,13 @@ namespace SylverInk
 
 		public DateTime GetLastChangeObject() => DateTime.FromBinary(LastChange);
 
-		public string GetLastChange() => GetLastChangeObject().ToString("yyyy-MM-dd HH:mm:ss");
+		public string GetLastChange() => GetLastChangeObject().ToString(DateFormat);
 
 		public int GetNumRevisions() => Revisions.Count;
 
 		public NoteRevision GetRevision(uint index) => Revisions[Revisions.Count - 1 - (int)index];
 
-		public string GetRevisionTime(uint index) => DateTime.FromBinary(GetRevision(index)._created).ToString("yyyy-MM-dd HH:mm:ss");
+		public string GetRevisionTime(uint index) => DateTime.FromBinary(GetRevision(index)._created).ToString(DateFormat);
 
 		public void Lock()
 		{

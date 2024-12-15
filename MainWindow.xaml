@@ -85,6 +85,7 @@
 			</DataTemplate>
 		</ResourceDictionary>
 	</Window.Resources>
+	
 	<Grid Background="{Binding AccentBackground}" x:Name="MainGrid">
 		<Grid.RowDefinitions>
 			<RowDefinition Height="Auto"/>

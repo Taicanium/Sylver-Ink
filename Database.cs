@@ -142,7 +142,7 @@ namespace SylverInk
 		public string GetCreated()
 		{
 			if (Created is not null)
-				return DateTime.FromBinary((long)Created).ToString("yyyy-MM-dd HH:mm:ss");
+				return DateTime.FromBinary((long)Created).ToString(DateFormat);
 
 			var CreatedObject = DateTime.UtcNow;
 			for (int i = 0; i < RecordCount; i++)
@@ -153,7 +153,7 @@ namespace SylverInk
 			}
 
 			Created = CreatedObject.ToBinary();
-			return CreatedObject.ToString("yyyy-MM-dd HH:mm:ss");
+			return CreatedObject.ToString(DateFormat);
 		}
 
 		public object GetHeader()

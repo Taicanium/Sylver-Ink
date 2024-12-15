@@ -100,7 +100,7 @@ namespace SylverInk
 						foreach (var file in files)
 							Database.Create(file, true);
 						if (!files.Any())
-							Database.Create(Path.Join(Subfolders["Databases"], $"{DefaultDatabase}", $"{DefaultDatabase}.sidb"));
+							Database.Create(Path.Join(Subfolders["Databases"], DefaultDatabase, $"{DefaultDatabase}.sidb"));
 						break;
 					case "ListBackground":
 						ListBackground = BrushFromBytes(keyValue[1]);

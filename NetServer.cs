@@ -312,18 +312,15 @@ namespace SylverInk
 			codeBox.Text = AddressCode ?? "Vm000G";
 		}
 
-		public void UpdateIndicator()
+		public void UpdateIndicator() => Indicator?.Dispatcher.Invoke(() =>
 		{
-			Indicator?.Dispatcher.Invoke(() =>
-			{
-				Indicator.Fill = Serving ? Brushes.MediumPurple : Brushes.Orange;
-				Indicator.Height = 12;
-				Indicator.Margin = new(2, 4, 3, 4);
-				Indicator.Stroke = Common.Settings.MenuForeground;
-				Indicator.Width = 12;
-				Indicator.InvalidateVisual();
-				UpdateContextMenu();
-			});
-		}
+			Indicator.Fill = Serving ? Brushes.MediumPurple : Brushes.Orange;
+			Indicator.Height = 12;
+			Indicator.Margin = new(2, 4, 3, 4);
+			Indicator.Stroke = Common.Settings.MenuForeground;
+			Indicator.Width = 12;
+			Indicator.InvalidateVisual();
+			UpdateContextMenu();
+		});
 	}
 }

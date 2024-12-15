@@ -51,6 +51,7 @@ namespace SylverInk
 		public static bool DatabaseChanged { get; set; } = false;
 		public static List<string> DatabaseFiles { get => Databases.ToList().ConvertAll(new Converter<Database, string>(db => db.DBFile)); }
 		public static ObservableCollection<Database> Databases { get; set; } = [];
+		public static string DateFormat { get; } = "yyyy-MM-dd HH:mm:ss";
 		public static string DefaultDatabase { get; } = "New";
 		public static string DocumentsFolder { get; } = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Sylver Ink");
 		public static bool FirstRun { get; set; } = true;
