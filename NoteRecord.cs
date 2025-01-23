@@ -73,8 +73,7 @@ namespace SylverInk
 					SortType.ByCreation => GetCreatedObject(),
 					_ => LastChangeObject,
 				};
-				var now = DateTime.UtcNow;
-				var diff = now - dtObject;
+				var diff = DateTime.UtcNow - dtObject;
 
 				if (diff.TotalHours < 24.0)
 					return dtObject.ToLocalTime().ToShortTimeString();
@@ -211,7 +210,7 @@ namespace SylverInk
 			return Tags.Count;
 		}
 
-		public string GetCreated() => GetCreatedObject().ToString(DateFormat);
+		public string GetCreated() => GetCreatedObject().ToLocalTime().ToString(DateFormat);
 
 		public DateTime GetCreatedObject() => DateTime.FromBinary(Created);
 
@@ -219,13 +218,13 @@ namespace SylverInk
 
 		public DateTime GetLastChangeObject() => DateTime.FromBinary(LastChange);
 
-		public string GetLastChange() => GetLastChangeObject().ToString(DateFormat);
+		public string GetLastChange() => GetLastChangeObject().ToLocalTime().ToString(DateFormat);
 
 		public int GetNumRevisions() => Revisions.Count;
 
 		public NoteRevision GetRevision(uint index) => Revisions[Revisions.Count - 1 - (int)index];
 
-		public string GetRevisionTime(uint index) => DateTime.FromBinary(GetRevision(index)._created).ToString(DateFormat);
+		public string GetRevisionTime(uint index) => DateTime.FromBinary(GetRevision(index)._created).ToLocalTime().ToString(DateFormat);
 
 		public void Lock()
 		{

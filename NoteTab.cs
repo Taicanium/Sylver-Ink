@@ -202,12 +202,12 @@ namespace SylverInk
 				((Button)sender).IsEnabled = false;
 			};
 
-			ButtonGrid.RowDefinitions.Add(new() { Height = GridLength.Auto, });
-			ButtonGrid.RowDefinitions.Add(new() { Height = new(30), });
-			ButtonGrid.RowDefinitions.Add(new() { Height = GridLength.Auto, });
-			ButtonGrid.ColumnDefinitions.Add(new() { Width = new(1, GridUnitType.Star), });
-			ButtonGrid.ColumnDefinitions.Add(new() { Width = new(1, GridUnitType.Star), });
-			ButtonGrid.ColumnDefinitions.Add(new() { Width = new(1, GridUnitType.Star), });
+			ButtonGrid.RowDefinitions.Add(new() { Height = GridLength.Auto });
+			ButtonGrid.RowDefinitions.Add(new() { Height = new(30) });
+			ButtonGrid.RowDefinitions.Add(new() { Height = GridLength.Auto });
+			ButtonGrid.ColumnDefinitions.Add(new() { Width = new(1, GridUnitType.Star) });
+			ButtonGrid.ColumnDefinitions.Add(new() { Width = new(1, GridUnitType.Star) });
+			ButtonGrid.ColumnDefinitions.Add(new() { Width = new(1, GridUnitType.Star) });
 
 			ButtonGrid.Children.Add(DeleteButton);
 			ButtonGrid.Children.Add(NextButton);

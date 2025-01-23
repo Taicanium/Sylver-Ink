@@ -24,21 +24,21 @@ namespace SylverInk
 			Content,
 			Change,
 			Creation,
-			Index,
+			Index
 		}
 
 		public enum SortType
 		{
 			ByIndex,
 			ByChange,
-			ByCreation,
+			ByCreation
 		}
 
 		public enum UUIDType
 		{
 			Database,
 			Record,
-			Revision,
+			Revision
 		}
 
 		private static Import? _import;
@@ -70,7 +70,6 @@ namespace SylverInk
 		public static string SettingsFile { get; } = Path.Join(DocumentsFolder, "settings.sis");
 		public static Settings? SettingsWindow { get => _settings; set { _settings?.Close(); _settings = value; _settings?.Show(); } }
 		public static Dictionary<string, string> Subfolders { get; } = new([
-			new("Main", DocumentsFolder),
 			new("Databases", Path.Join(DocumentsFolder, "Databases"))
 			]);
 		private static double TextHeight { get; set; } = 0.0;
@@ -333,7 +332,7 @@ namespace SylverInk
 			for (double i = 1.2; i < 2.0; i += 0.1)
 				mac -= Math.Sign(mac) * (long)Math.Floor(mac / (new Random().NextDouble() + i));
 
-			return string.Format("{0:X8}-{1:X4}-{2:X4}-{3:X2}{4:X2}-{5:X12}", (binary >> 32) & 0xFFFFFFFF, (binary >> 16) & 0xFFFF, binary & 0xFFFF, (nano & 0x3FC) >> 2, (byte)type, mac & 0xFFFFFFFFFFFF);
+			return string.Format("{0:X8}-{1:X4}-{2:X4}-{3:X2}{4:X2}-{5:X12}", (binary >> 32) & 0xFFFF_FFFF, (binary >> 16) & 0xFFFF, binary & 0xFFFF, (nano & 0x3FC) >> 2, (byte)type, mac & 0xFFFF_FFFF_FFFF);
 		}
 
 		private static double MeasureTextHeight(string text)

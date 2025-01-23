@@ -114,6 +114,7 @@ namespace SylverInk
 			DoMeasureTask();
 		}
 
+		// TODO: Separate into two functions, one adaptive and one manual.
 		private void MeasureNotes()
 		{
 			if (Target.Equals(string.Empty))
@@ -129,7 +130,7 @@ namespace SylverInk
 					return;
 				}
 
-				// Letters, numbers, spaces, and punctuation, respectively.
+				// Letters, numbers, spaces, and punctuation; respectively.
 				string[] classes = [@"\p{L}+", @"\p{Nd}+", @"[\p{Zs}\t]+", @"[\p{P}\p{S}]+"];
 				Dictionary<string, double> frequencies = [];
 				DataLines.Clear();

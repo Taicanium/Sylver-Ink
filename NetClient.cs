@@ -97,8 +97,8 @@ namespace SylverInk
 			DBClient?.Close();
 			await Task.Run(() => SpinWait.SpinUntil(new(() => !DBClient?.Connected is true)));
 			DBClient?.Dispose();
-			Connected = false;
 			Active = false;
+			Connected = false;
 			UpdateIndicator();
 		}
 
@@ -113,7 +113,6 @@ namespace SylverInk
 			} while (!dataFinished);
 
 			var stream = DBClient.GetStream();
-
 			var type = (MessageType)stream.ReadByte();
 
 			var intBuffer = new byte[4];
