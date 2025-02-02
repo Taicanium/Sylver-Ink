@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using static SylverInk.Common;
 
-namespace SylverInk
+namespace SylverInk.FileIO
 {
 	public partial class Serializer
 	{

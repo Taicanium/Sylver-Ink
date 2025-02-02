@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SylverInk.Notes;
+using System;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;

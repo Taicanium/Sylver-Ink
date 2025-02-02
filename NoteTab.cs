@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SylverInk.Net;
+using System;
 using System.Windows;
 using System.Windows.Controls;
 using static SylverInk.Common;
@@ -29,7 +30,7 @@ namespace SylverInk
 				var tab = OpenTabs[i];
 				if (!tab.Record.Equals(Record))
 					continue;
-				
+
 				OpenTabs.RemoveAt(i);
 				tab.Deconstruct();
 			}
@@ -85,7 +86,8 @@ namespace SylverInk
 				VerticalAlignment = VerticalAlignment.Bottom
 			};
 			SaveButton = new() { Content = "Save" };
-			Tab = new() {
+			Tab = new()
+			{
 				Content = MainGrid,
 				Header = GetRibbonHeader(Record),
 				Tag = Record

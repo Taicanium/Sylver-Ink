@@ -19,6 +19,8 @@ namespace SylverInk
 		private readonly List<NoteRecord> _results = [];
 		private string _width = string.Empty;
 
+		// TODO: Search capability across all open databases, not just the current one.
+
 		public Search()
 		{
 			InitializeComponent();

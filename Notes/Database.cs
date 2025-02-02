@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SylverInk.Net;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -8,7 +9,7 @@ using System.Windows;
 using System.Windows.Controls;
 using static SylverInk.Common;
 
-namespace SylverInk
+namespace SylverInk.Notes
 {
 	public partial class Database
 	{
@@ -345,7 +346,7 @@ namespace SylverInk
 				UUID = MakeUUID(UUIDType.Database);
 
 			MakeBackup(true);
-			
+
 			if (!Directory.Exists(Path.GetDirectoryName(DBFile)))
 				Directory.CreateDirectory(Path.GetDirectoryName(DBFile) ?? DBFile);
 

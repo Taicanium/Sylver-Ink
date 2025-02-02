@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SylverInk.Notes;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Net;
@@ -11,9 +12,9 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using static SylverInk.Common;
-using static SylverInk.Network;
+using static SylverInk.Net.Network;
 
-namespace SylverInk
+namespace SylverInk.Net
 {
 	public partial class NetServer
 	{

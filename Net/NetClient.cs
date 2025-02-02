@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SylverInk.Notes;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Net;
@@ -9,9 +10,9 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 using static SylverInk.Common;
-using static SylverInk.Network;
+using static SylverInk.Net.Network;
 
-namespace SylverInk
+namespace SylverInk.Net
 {
 	public partial class NetClient
 	{
@@ -234,7 +235,7 @@ namespace SylverInk
 
 		public void UpdateIndicator() => Indicator?.Dispatcher.Invoke(() =>
 		{
-			Indicator.Fill = Connecting ? Brushes.Yellow : (DBClient?.Connected is true ? Brushes.Green : Brushes.Orange);
+			Indicator.Fill = Connecting ? Brushes.Yellow : DBClient?.Connected is true ? Brushes.Green : Brushes.Orange;
 			Indicator.Height = 12;
 			Indicator.Margin = new(2, 4, 3, 4);
 			Indicator.Stroke = Common.Settings.MenuForeground;

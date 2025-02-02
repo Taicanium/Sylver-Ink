@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Net;
 
-namespace SylverInk
+namespace SylverInk.Net
 {
 	/// <summary>
 	/// Static helper functions serving common networking routines shared between NetClient and NetServer.

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 
-namespace SylverInk
+namespace SylverInk.FileIO
 {
 	public partial class LZW
 	{
@@ -37,13 +37,13 @@ namespace SylverInk
 				int j = 1;
 				for (int i = 0; i < bitSize; i++)
 				{
-					b += (byte)(bits[i] << (8 - j));
-					if (j++ == 8)
-					{
-						j = 1;
-						Outgoing.Add(b);
-						b = 0;
-					}
+					b += (byte)(bits[i] << 8 - j);
+					if (j++ != 8)
+						continue;
+
+					j = 1;
+					Outgoing.Add(b);
+					b = 0;
 				}
 			}
 
@@ -63,16 +63,16 @@ namespace SylverInk
 				C = FromByte(data[i]);
 				string wc = W + C;
 				if (!Codes.TryAdd(wc, NextCode))
-					W = wc;
-				else
 				{
-					var entry = Codes[W];
-					WriteCode(entry);
-					NextCode++;
-					W = C;
-
-					UpdateRange(NextCode);
+					W = wc;
+					continue;
 				}
+
+				var entry = Codes[W];
+				WriteCode(entry);
+				NextCode++;
+				W = C;
+				UpdateRange(NextCode);
 			}
 		}
 
@@ -104,7 +104,6 @@ namespace SylverInk
 				Packets.Add(NextCode, $"{W}{C[0]}");
 				NextCode++;
 				W = C;
-
 				UpdateRange(NextCode + 1);
 			}
 
@@ -135,8 +134,9 @@ namespace SylverInk
 
 			for (char i = (char)0; i < 256; i++)
 			{
-				Codes[FromChar(i)] = i;
-				Packets[i] = FromChar(i);
+				var ci = FromChar(i);
+				Codes[ci] = i;
+				Packets[i] = ci;
 			}
 		}
 
@@ -152,11 +152,11 @@ namespace SylverInk
 
 				byte b = (byte)(n ?? 0);
 				for (int i = 1; i <= 8; i++)
-					BitStream.Add((byte)((b >> (8 - i)) & 1));
+					BitStream.Add((byte)(b >> 8 - i & 1));
 			}
 
 			for (int i = 1; i <= Range; i++)
-				code += (uint)(BitStream[i - 1] << (Range - i));
+				code += (uint)(BitStream[i - 1] << Range - i);
 			BitStream.RemoveRange(0, Range);
 
 			return code;
@@ -178,7 +178,7 @@ namespace SylverInk
 		private void WriteCode(uint code)
 		{
 			for (int i = 1; i <= Range; i++)
-				BitStream.Add((byte)((code >> (Range - i)) & 1));
+				BitStream.Add((byte)(code >> Range - i & 1));
 		}
 	}
 }
