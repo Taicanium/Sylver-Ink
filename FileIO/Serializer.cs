@@ -158,10 +158,7 @@ namespace SylverInk.FileIO
 		private byte[] ReadBytes(int byteCount)
 		{
 			if (UseLZW)
-			{
-				var b = _lzw.Decompress(byteCount);
-				return b;
-			}
+				return _lzw.Decompress(byteCount);
 
 			_buffer = new byte[byteCount];
 			_fileStream?.Read(_buffer, 0, byteCount);
