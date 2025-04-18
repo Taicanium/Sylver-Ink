@@ -175,6 +175,7 @@ namespace SylverInk
 					}
 				}
 				CurrentDatabase.Transmit(Network.MessageType.RecordUnlock, IntToBytes(tag.Item2.Index));
+				PreviousOpenNote = Record;
 				Deconstruct();
 			};
 

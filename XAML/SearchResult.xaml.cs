@@ -5,6 +5,7 @@ using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media.Media3D;
 using static SylverInk.Common;
 
 namespace SylverInk
@@ -61,6 +62,7 @@ namespace SylverInk
 				}
 			}
 
+			PreviousOpenNote = ResultRecord;
 			Close();
 		}
 

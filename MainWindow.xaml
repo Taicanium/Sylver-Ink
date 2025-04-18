@@ -29,7 +29,10 @@
 									<RowDefinition Height="Auto"/>
 									<RowDefinition Height="*"/>
 								</Grid.RowDefinitions>
-								<Label Content="Recent notes" FontStyle="Italic" HorizontalAlignment="Right" VerticalAlignment="Bottom"/>
+								<StackPanel HorizontalAlignment="Right" Orientation="Horizontal" VerticalAlignment="Bottom">
+									<Label Content="Recent notes" FontStyle="Italic"/>
+									<Label Content="(?)" Foreground="{Binding AccentForeground}" ToolTip="You can press Ctrl+L to re-open the note you most recently closed."/>
+								</StackPanel>
 								<Border Grid.Row="1" BorderBrush="{Binding AccentBackground}" BorderThickness="1">
 									<Grid Background="{Binding AccentBackground}">
 										<Grid.ColumnDefinitions>

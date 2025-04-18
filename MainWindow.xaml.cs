@@ -25,7 +25,9 @@ namespace SylverInk
 		[DllImport("User32.dll")]
 		private static extern bool UnregisterHotKey(nint hWnd, int id);
 
-		private const int HotKeyID = 5192;
+		private bool _ABORT = false;
+		private const int NewNoteHotKeyID = 5911;
+		private const int PreviousNoteHotKeyID = 37193;
 		private NoteRecord RecentSelection = new();
 		private HwndSource? WindowSource;
 
@@ -169,8 +171,10 @@ namespace SylverInk
 
 		private void DatabaseSaveLocal(object sender, RoutedEventArgs e)
 		{
+			CurrentDatabase.Changed = true;
 			CurrentDatabase.DBFile = Path.Join(Subfolders["Databases"], Path.GetFileNameWithoutExtension(CurrentDatabase.DBFile), Path.GetFileName(CurrentDatabase.DBFile));
 			CurrentDatabase.Format = HighestFormat;
+			CurrentDatabase.Save();
 		}
 
 		private void DatabaseServe(object sender, RoutedEventArgs e) => CurrentDatabase.Server?.Serve(0);
@@ -192,41 +196,58 @@ namespace SylverInk
 			if (msg != 0x0312) // WM_HOTKEY
 				return default;
 
-			if (wParam.ToInt32() != HotKeyID)
-				return default;
+			if (wParam.ToInt32() == NewNoteHotKeyID)
+				OnNewNoteHotkey();
 
-			OnHotKeyPressed();
+			if (wParam.ToInt32() == PreviousNoteHotKeyID)
+				OnPreviousNoteHotkey();
+
 			handled = true;
 			return default;
 		}
 
 		private void MainWindow_Closing(object sender, CancelEventArgs e)
 		{
-			if (DatabaseChanged)
+			if (!_ABORT)
 			{
-				switch (MessageBox.Show("Do you want to save your work before exiting?", "Sylver Ink: Notification", MessageBoxButton.YesNoCancel, MessageBoxImage.Question))
+				if (DatabaseChanged)
 				{
-					case MessageBoxResult.Cancel:
-						e.Cancel = true;
-						return;
-					case MessageBoxResult.Yes:
-						e.Cancel = true;
-						MainGrid.IsEnabled = false;
+					switch (MessageBox.Show("Do you want to save your work before exiting?", "Sylver Ink: Notification", MessageBoxButton.YesNoCancel, MessageBoxImage.Question))
+					{
+						case MessageBoxResult.Cancel:
+							e.Cancel = true;
+							return;
+						case MessageBoxResult.Yes:
+							e.Cancel = true;
+							MainGrid.IsEnabled = false;
 
-						BackgroundWorker exitTask = new();
-						exitTask.DoWork += SaveDatabases;
-						exitTask.RunWorkerCompleted += ExitComplete;
-						exitTask.RunWorkerAsync();
-						return;
+							BackgroundWorker exitTask = new();
+							exitTask.DoWork += SaveDatabases;
+							exitTask.RunWorkerCompleted += ExitComplete;
+							exitTask.RunWorkerAsync();
+							return;
+					}
 				}
+
+				Common.Settings.Save();
+				Environment.SetEnvironmentVariable("SYLVER_INK", null, EnvironmentVariableTarget.User);
 			}
 
-			Common.Settings.Save();
 			Application.Current.Shutdown();
 		}
 
 		private void MainWindow_Loaded(object sender, RoutedEventArgs e)
 		{
+			if ((Environment.GetEnvironmentVariable("SYLVER_INK", EnvironmentVariableTarget.User) ?? string.Empty).Equals("1"))
+			{
+				_ABORT = true;
+				MessageBox.Show("Another instance of Sylver Ink is already running.", "Sylver Ink: Error", MessageBoxButton.OK, MessageBoxImage.Error);
+				Application.Current.Shutdown();
+				return;
+			}
+
+			Environment.SetEnvironmentVariable("SYLVER_INK", "1", EnvironmentVariableTarget.User);
+
 			Common.Settings.Load();
 
 			foreach (var folder in Subfolders)
@@ -272,7 +293,9 @@ namespace SylverInk
 			base.OnClosed(e);
 		}
 
-		private static void OnHotKeyPressed() => OpenQuery(CurrentDatabase.GetRecord(CurrentDatabase.CreateRecord(string.Empty)));
+		private static void OnNewNoteHotkey() => OpenQuery(CurrentDatabase.GetRecord(CurrentDatabase.CreateRecord(string.Empty)));
+
+		private static void OnPreviousNoteHotkey() => OpenQuery(PreviousOpenNote ?? CurrentDatabase.GetRecord(CurrentDatabase.CreateRecord(string.Empty)));
 
 		protected override void OnSourceInitialized(EventArgs e)
 		{
@@ -284,8 +307,8 @@ namespace SylverInk
 
 		private void RegisterHotKey()
 		{
-			if (!RegisterHotKey(new WindowInteropHelper(this).Handle, HotKeyID, 2, (uint)KeyInterop.VirtualKeyFromKey(Key.N)))
-				MessageBox.Show("Failed to register new note hotkey.", "Sylver Ink: Error", MessageBoxButton.OK, MessageBoxImage.Error);
+			RegisterHotKey(new WindowInteropHelper(this).Handle, NewNoteHotKeyID, 2, (uint)KeyInterop.VirtualKeyFromKey(Key.N));
+			RegisterHotKey(new WindowInteropHelper(this).Handle, PreviousNoteHotKeyID, 2, (uint)KeyInterop.VirtualKeyFromKey(Key.L));
 		}
 
 		private void RenameClosed(object sender, EventArgs e)
@@ -379,6 +402,10 @@ namespace SylverInk
 			DeferUpdateRecentNotes(true);
 		}
 
-		private void UnregisterHotKey() => UnregisterHotKey(new WindowInteropHelper(this).Handle, HotKeyID);
+		private void UnregisterHotKey()
+		{
+			UnregisterHotKey(new WindowInteropHelper(this).Handle, NewNoteHotKeyID);
+			UnregisterHotKey(new WindowInteropHelper(this).Handle, PreviousNoteHotKeyID);
+		}
 	}
 }

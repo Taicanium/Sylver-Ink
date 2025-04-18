@@ -62,6 +62,7 @@ namespace SylverInk
 		public static List<SearchResult> OpenQueries { get; } = [];
 		public static List<NoteTab> OpenTabs { get; } = [];
 		public static double PPD { get; set; } = 1.0;
+		public static NoteRecord? PreviousOpenNote { get; set; }
 		private static int RecentEntries { get; set; } = 10;
 		public static SortType RecentEntriesSortMode { get; set; } = SortType.ByChange;
 		public static Replace? ReplaceWindow { get => _replace; set { _replace?.Close(); _replace = value; _replace?.Show(); } }
