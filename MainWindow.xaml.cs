@@ -236,8 +236,35 @@ namespace SylverInk
 			Application.Current.Shutdown();
 		}
 
-		private void MainWindow_Loaded(object sender, RoutedEventArgs e)
+		private void MainWindow_SizeChanged(object sender, SizeChangedEventArgs e) => DeferUpdateRecentNotes(true);
+
+		private void NewNote_Keydown(object sender, KeyEventArgs e)
 		{
+			if (e.Key != Key.Enter)
+				return;
+
+			var box = (TextBox)sender;
+			CurrentDatabase.CreateRecord(box.Text);
+			box.Text = string.Empty;
+			DeferUpdateRecentNotes();
+		}
+
+		protected override void OnClosed(EventArgs e)
+		{
+			WindowSource?.RemoveHook(HwndHook);
+			WindowSource = null;
+			UnregisterHotKey();
+			base.OnClosed(e);
+		}
+
+		private static void OnNewNoteHotkey() => OpenQuery(CurrentDatabase.GetRecord(CurrentDatabase.CreateRecord(string.Empty)));
+
+		private static void OnPreviousNoteHotkey() => OpenQuery(PreviousOpenNote ?? CurrentDatabase.GetRecord(CurrentDatabase.CreateRecord(string.Empty)));
+
+		protected override void OnSourceInitialized(EventArgs e)
+		{
+			base.OnSourceInitialized(e);
+
 			if ((Environment.GetEnvironmentVariable("SYLVER_INK", EnvironmentVariableTarget.User) ?? string.Empty).Equals("1"))
 			{
 				_ABORT = true;
@@ -270,36 +297,7 @@ namespace SylverInk
 				DeferUpdateRecentNotes(true);
 			};
 			worker.RunWorkerAsync();
-		}
 
-		private void MainWindow_SizeChanged(object sender, SizeChangedEventArgs e) => DeferUpdateRecentNotes(true);
-
-		private void NewNote_Keydown(object sender, KeyEventArgs e)
-		{
-			if (e.Key != Key.Enter)
-				return;
-
-			var box = (TextBox)sender;
-			CurrentDatabase.CreateRecord(box.Text);
-			box.Text = string.Empty;
-			DeferUpdateRecentNotes();
-		}
-
-		protected override void OnClosed(EventArgs e)
-		{
-			WindowSource?.RemoveHook(HwndHook);
-			WindowSource = null;
-			UnregisterHotKey();
-			base.OnClosed(e);
-		}
-
-		private static void OnNewNoteHotkey() => OpenQuery(CurrentDatabase.GetRecord(CurrentDatabase.CreateRecord(string.Empty)));
-
-		private static void OnPreviousNoteHotkey() => OpenQuery(PreviousOpenNote ?? CurrentDatabase.GetRecord(CurrentDatabase.CreateRecord(string.Empty)));
-
-		protected override void OnSourceInitialized(EventArgs e)
-		{
-			base.OnSourceInitialized(e);
 			WindowSource = HwndSource.FromHwnd(new WindowInteropHelper(this).Handle);
 			WindowSource.AddHook(HwndHook);
 			RegisterHotKey();
