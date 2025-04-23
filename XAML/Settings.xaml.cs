@@ -139,7 +139,7 @@ namespace SylverInk
 		private void NTS_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
 		{
 			foreach (SearchResult note in OpenQueries)
-				if (!note.IsFocused)
+				if (!note.IsActive)
 					note.Opacity = 1.0 - (e.NewValue / 100.0);
 
 			e.Handled = true;

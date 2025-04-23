@@ -211,7 +211,7 @@ namespace SylverInk.Notes
 
 		public void Load(string dbFile)
 		{
-			var lockFile = Path.Join(Path.GetDirectoryName(dbFile) ?? ".", "~lock.sidb");
+			var lockFile = GetLockFile(dbFile);
 			if (File.Exists(lockFile))
 			{
 				if (MessageBox.Show($"{Path.GetFileName(dbFile)} - The database last closed unexpectedly. Do you want to load the most recent autosave?", "Sylver Ink: Info", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
@@ -380,8 +380,7 @@ namespace SylverInk.Notes
 			if (DBFile.Contains(Subfolders["Databases"]))
 				File.WriteAllText(Path.Join(Path.GetDirectoryName(DBFile), "uuid.dat"), UUID);
 
-			var lockFile = Path.Join(Path.GetDirectoryName(DBFile) ?? ".", "~lock.sidb");
-
+			var lockFile = GetLockFile(DBFile);
 			if (File.Exists(lockFile))
 				File.Delete(lockFile);
 		}

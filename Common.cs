@@ -131,8 +131,7 @@ namespace SylverInk
 
 		public static void Autosave()
 		{
-			var lockFile = Path.Join(Path.GetDirectoryName(CurrentDatabase.DBFile) ?? ".", "~lock.sidb");
-
+			var lockFile = GetLockFile();
 			if (File.Exists(lockFile))
 				File.Delete(lockFile);
 
@@ -259,6 +258,8 @@ namespace SylverInk
 			var dbItem = (TabItem)db.SelectedItem;
 			return (TabControl)dbItem.Content;
 		});
+
+		public static string GetLockFile(string? dbFile = null) => Path.Join(Path.GetDirectoryName(dbFile ?? CurrentDatabase.DBFile) ?? ".", "~lock.sidb");
 
 		public static string GetDatabasePath(Database db)
 		{
