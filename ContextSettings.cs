@@ -28,6 +28,7 @@ namespace SylverInk
 		private Typeface? _mainTypeFace;
 		private Brush? _menuBackgound = Brushes.Beige;
 		private Brush? _menuForegound = Brushes.DimGray;
+		private double _noteTransparency = 100.0;
 		private string _numReplacements = string.Empty;
 		public event PropertyChangedEventHandler? PropertyChanged;
 		private bool _readyToFinalize = false;
@@ -51,6 +52,7 @@ namespace SylverInk
 		public Typeface? MainTypeFace { get => _mainTypeFace; set { _mainTypeFace = value; OnPropertyChanged(); } }
 		public Brush? MenuBackground { get => _menuBackgound; set { _menuBackgound = value; OnPropertyChanged(); } }
 		public Brush? MenuForeground { get => _menuForegound; set { _menuForegound = value; OnPropertyChanged(); } }
+		public double NoteTransparency { get => _noteTransparency; set { _noteTransparency = value; OnPropertyChanged(); } }
 		public string NumReplacements { get => _numReplacements; set { _numReplacements = value; OnPropertyChanged(); } }
 		public bool ReadyToFinalize { get => _readyToFinalize; set { _readyToFinalize = value; OnPropertyChanged(); } }
 		public bool ReadyToReplace { get => _readyToReplace; set { _readyToReplace = value; OnPropertyChanged(); } }
@@ -115,6 +117,11 @@ namespace SylverInk
 					case "MenuForeground":
 						MenuForeground = BrushFromBytes(keyValue[1]);
 						break;
+					case "NoteTransparency":
+						if (!double.TryParse(keyValue[1], out var transparency))
+							transparency = 100.0;
+						NoteTransparency = transparency;
+						break;
 					case "RecentNotesSortMode":
 						if (!int.TryParse(keyValue[1], out var sortMode))
 							sortMode = 0;
@@ -149,6 +156,7 @@ namespace SylverInk
 			$"ListForeground:{BytesFromBrush(ListForeground)}",
 			$"MenuBackground:{BytesFromBrush(MenuBackground)}",
 			$"MenuForeground:{BytesFromBrush(MenuForeground)}",
+			$"NoteTransparency:{(int)NoteTransparency}",
 			$"RecentNotesSortMode:{(int)RecentEntriesSortMode}",
 			$"RibbonDisplayMode:{(int)RibbonTabContent}",
 			$"SearchResultsOnTop:{SearchResultsOnTop}",

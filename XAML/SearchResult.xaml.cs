@@ -249,6 +249,10 @@ namespace SylverInk
 			AddTabToRibbon();
 		}
 
+		private void WindowActivated(object sender, EventArgs e) => Opacity = 1.0;
+
+		private void WindowDeactivated(object sender, EventArgs e) => Opacity = 1.0 - (Common.Settings.NoteTransparency / 100.0);
+
 		private void WindowMove(object sender, MouseEventArgs e) => Drag(sender, e);
 
 		private void WindowMouseDown(object sender, MouseButtonEventArgs e)

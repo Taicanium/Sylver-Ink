@@ -6,23 +6,26 @@
 		xmlns:local="clr-namespace:SylverInk"
 		mc:Ignorable="d"
 		d:DataContext="{d:DesignInstance Type=local:ContextSettings}"
-		Background="{Binding MenuBackground}" Closed="Result_Closed" Height="250" Loaded="Result_Loaded" MouseDown="WindowMouseDown" MouseMove="WindowMove" MouseUp="WindowMouseUp" Title="Sylver Ink: Sticky Note" Topmost="{Binding SearchResultsOnTop}" Width="250" WindowStyle="None">
-	<Grid>
-		<Grid.ColumnDefinitions>
-			<ColumnDefinition Width="*"/>
-			<ColumnDefinition Width="*"/>
-		</Grid.ColumnDefinitions>
-		<Grid.RowDefinitions>
-			<RowDefinition Height="*"/>
-			<RowDefinition Height="Auto"/>
-			<RowDefinition Height="Auto"/>
-		</Grid.RowDefinitions>
-		<TextBox AcceptsReturn="True" Grid.ColumnSpan="2" Height="Auto" Margin="5" TextChanged="ResultBlock_TextChanged"
-					TextWrapping="WrapWithOverflow" VerticalContentAlignment="Top"
-					ScrollViewer.VerticalScrollBarVisibility="Auto"
-					x:Name="ResultBlock"/>
-		<Label Grid.ColumnSpan="2" FontStyle="Italic" HorizontalAlignment="Center" Grid.Row="1" x:Name="LastChangedLabel"/>
-		<Button Click="ViewClick" Content="View..." Margin="15,5" Grid.Row="2" Width="50"/>
-		<Button Click="CloseClick" Grid.Column="1" Content="Close" Margin="15,5" Grid.Row="2" Width="50"/>
-	</Grid>
+		Activated="WindowActivated" AllowsTransparency="True"
+		Background="Transparent" Closed="Result_Closed" Deactivated="WindowDeactivated" Height="250" Loaded="Result_Loaded" MouseDown="WindowMouseDown" MouseMove="WindowMove" MouseUp="WindowMouseUp" Title="Sylver Ink: Sticky Note" Topmost="{Binding SearchResultsOnTop}" Width="250" WindowStyle="None">
+	<Border Background="{Binding MenuBackground}" BorderBrush="{Binding AccentBackground}" BorderThickness="1.5" CornerRadius="5">
+		<Grid>
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="*"/>
+				<ColumnDefinition Width="*"/>
+			</Grid.ColumnDefinitions>
+			<Grid.RowDefinitions>
+				<RowDefinition Height="*"/>
+				<RowDefinition Height="Auto"/>
+				<RowDefinition Height="Auto"/>
+			</Grid.RowDefinitions>
+			<TextBox AcceptsReturn="True" Grid.ColumnSpan="2" Height="Auto" Margin="5" TextChanged="ResultBlock_TextChanged"
+						TextWrapping="WrapWithOverflow" VerticalContentAlignment="Top"
+						ScrollViewer.VerticalScrollBarVisibility="Auto"
+						x:Name="ResultBlock"/>
+			<Label Grid.ColumnSpan="2" FontStyle="Italic" HorizontalAlignment="Center" Grid.Row="1" x:Name="LastChangedLabel"/>
+			<Button Click="ViewClick" Content="View..." Margin="15,5" Grid.Row="2" Width="50"/>
+			<Button Click="CloseClick" Grid.Column="1" Content="Close" Margin="15,5" Grid.Row="2" Width="50"/>
+		</Grid>
+	</Border>
 </Window>

@@ -225,7 +225,7 @@ namespace SylverInk.Notes
 					if ((Name ?? string.Empty).Equals(string.Empty))
 						Name = Path.GetFileNameWithoutExtension(DBFile);
 
-					DeferUpdateRecentNotes();
+					DeferUpdateRecentNotes(true);
 
 					return;
 				}
@@ -236,6 +236,8 @@ namespace SylverInk.Notes
 
 			if ((Name ?? string.Empty).Equals(string.Empty))
 				Name = Path.GetFileNameWithoutExtension(DBFile);
+
+			DeferUpdateRecentNotes(true);
 		}
 
 		public void Lock(int index) => Controller.GetRecord(index).Lock();

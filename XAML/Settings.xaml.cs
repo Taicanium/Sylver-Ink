@@ -136,6 +136,15 @@ namespace SylverInk
 			LastColorSelection = brush;
 		}
 
+		private void NTS_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+		{
+			foreach (SearchResult note in OpenQueries)
+				if (!note.IsFocused)
+					note.Opacity = 1.0 - (e.NewValue / 100.0);
+
+			e.Handled = true;
+		}
+
 		private void ResetClick(object sender, RoutedEventArgs e)
 		{
 			Common.Settings.AccentBackground = Brushes.PaleGoldenrod;
