@@ -264,7 +264,7 @@ namespace SylverInk
 			for (int i = 0; i < Revisions.Count - Math.Min(backsteps, Revisions.Count); i++)
 			{
 				if (Revisions[i]._startIndex > -1 && Revisions[i]._startIndex < Latest?.Length)
-					Latest = Latest.Remove(Revisions[i]._startIndex);
+					Latest = Latest[..Revisions[i]._startIndex];
 
 				Latest += Revisions[i]._substring;
 			}

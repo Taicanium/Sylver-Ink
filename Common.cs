@@ -58,6 +58,7 @@ namespace SylverInk
 		public static bool FirstRun { get; set; } = true;
 		public static int HighestFormat { get; } = 8;
 		public static Import? ImportWindow { get => _import; set { _import?.Close(); _import = value; _import?.Show(); } }
+		public static char[] InvalidPathChars { get; } = ['/', '\\', ':', '*', '"', '?', '<', '>', '|'];
 		private static BackgroundWorker? MeasureTask { get; set; }
 		public static List<SearchResult> OpenQueries { get; } = [];
 		public static List<NoteTab> OpenTabs { get; } = [];
@@ -126,6 +127,16 @@ namespace SylverInk
 
 			UpdateContextMenu();
 			DeferUpdateRecentNotes();
+		}
+
+		public static void Autosave()
+		{
+			var lockFile = Path.Join(Path.GetDirectoryName(CurrentDatabase.DBFile) ?? ".", "~lock.sidb");
+
+			if (File.Exists(lockFile))
+				File.Delete(lockFile);
+
+			CurrentDatabase.Save(lockFile);
 		}
 
 		public static SolidColorBrush? BrushFromBytes(string data)

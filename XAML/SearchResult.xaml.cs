@@ -5,7 +5,6 @@ using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Windows.Media.Media3D;
 using static SylverInk.Common;
 
 namespace SylverInk
@@ -36,6 +35,7 @@ namespace SylverInk
 			{
 				SpinWait.SpinUntil(new(() => DateTime.Now.Subtract(TimeSinceAutosave).Seconds >= 5.0));
 				Concurrent(SaveRecord);
+				Concurrent(Autosave);
 			};
 		}
 

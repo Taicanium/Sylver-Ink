@@ -135,7 +135,7 @@ namespace SylverInk.Net
 						textBuffer = new byte[textCount];
 						stream.Read(textBuffer, 0, textCount);
 
-						DB?.DeserializeRecords(new(textBuffer));
+						DB?.DeserializeRecords([.. textBuffer]);
 
 						Connecting = false;
 						Connected = true;

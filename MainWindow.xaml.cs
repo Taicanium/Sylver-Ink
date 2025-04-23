@@ -1,6 +1,7 @@
 ﻿using SylverInk.Notes;
 using System;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -230,7 +231,6 @@ namespace SylverInk
 				}
 
 				Common.Settings.Save();
-				Environment.SetEnvironmentVariable("SYLVER_INK", null, EnvironmentVariableTarget.User);
 			}
 
 			Application.Current.Shutdown();
@@ -265,15 +265,13 @@ namespace SylverInk
 		{
 			base.OnSourceInitialized(e);
 
-			if ((Environment.GetEnvironmentVariable("SYLVER_INK", EnvironmentVariableTarget.User) ?? string.Empty).Equals("1"))
+			if (Process.GetProcessesByName("Sylver Ink").Length > 1)
 			{
 				_ABORT = true;
 				MessageBox.Show("Another instance of Sylver Ink is already running.", "Sylver Ink: Error", MessageBoxButton.OK, MessageBoxImage.Error);
 				Application.Current.Shutdown();
 				return;
 			}
-
-			Environment.SetEnvironmentVariable("SYLVER_INK", "1", EnvironmentVariableTarget.User);
 
 			Common.Settings.Load();
 
@@ -324,6 +322,15 @@ namespace SylverInk
 
 				MessageBox.Show("A database already exists with the provided name.", "Sylver Ink: Error", MessageBoxButton.OK, MessageBoxImage.Error);
 				return;
+			}
+
+			foreach (char pc in InvalidPathChars)
+			{
+				if (DatabaseNameBox.Text.Contains(pc))
+				{
+					MessageBox.Show($"Provided name contains invalid character: {pc}", "Sylver Ink: Error", MessageBoxButton.OK, MessageBoxImage.Error);
+					return;
+				}
 			}
 
 			CurrentDatabase.Rename(DatabaseNameBox.Text);

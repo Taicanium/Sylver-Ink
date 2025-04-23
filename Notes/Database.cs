@@ -211,6 +211,26 @@ namespace SylverInk.Notes
 
 		public void Load(string dbFile)
 		{
+			var lockFile = Path.Join(Path.GetDirectoryName(dbFile) ?? ".", "~lock.sidb");
+			if (File.Exists(lockFile))
+			{
+				if (MessageBox.Show($"{Path.GetFileName(dbFile)} - The database last closed unexpectedly. Do you want to load the most recent autosave?", "Sylver Ink: Info", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+				{
+					Controller.Open(lockFile);
+					Controller.DeserializeRecords();
+
+					Loaded = Controller.Loaded = true;
+					Changed = true;
+
+					if ((Name ?? string.Empty).Equals(string.Empty))
+						Name = Path.GetFileNameWithoutExtension(DBFile);
+
+					DeferUpdateRecentNotes();
+
+					return;
+				}
+			}
+
 			Controller = new(DBFile = dbFile);
 			Loaded = Controller.Loaded;
 
@@ -254,7 +274,7 @@ namespace SylverInk.Notes
 			Changed = true;
 			Name = newName;
 
-			DBFile = GetDatabasePath(CurrentDatabase);
+			DBFile = GetDatabasePath(this);
 			var newFile = DBFile;
 			var newPath = Path.GetDirectoryName(newFile);
 
@@ -357,6 +377,33 @@ namespace SylverInk.Notes
 
 			if (DBFile.Contains(Subfolders["Databases"]))
 				File.WriteAllText(Path.Join(Path.GetDirectoryName(DBFile), "uuid.dat"), UUID);
+
+			var lockFile = Path.Join(Path.GetDirectoryName(DBFile) ?? ".", "~lock.sidb");
+
+			if (File.Exists(lockFile))
+				File.Delete(lockFile);
+		}
+
+		public void Save(string targetFile)
+		{
+			if (targetFile.Equals(string.Empty))
+				targetFile = DBFile;
+
+			if (UUID is null || UUID.Equals(string.Empty))
+				UUID = MakeUUID(UUIDType.Database);
+
+			if (!Directory.Exists(Path.GetDirectoryName(targetFile)))
+				Directory.CreateDirectory(Path.GetDirectoryName(targetFile) ?? targetFile);
+
+			File.Create(targetFile, 1).Dispose();
+
+			if (!Controller.Open($"{targetFile}", true))
+				return;
+
+			Controller.SerializeRecords();
+
+			File.SetAttributes(targetFile, FileAttributes.Hidden);
+			Changed = true;
 		}
 
 		public List<byte>? SerializeRecords(bool inMemory = false) => Controller.SerializeRecords(inMemory);

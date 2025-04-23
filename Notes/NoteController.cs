@@ -175,6 +175,7 @@ namespace SylverInk
 				AddRecord(record.Deserialize(_serializer));
 			}
 
+			_serializer?.Close();
 			PropagateIndices();
 			Changed = false;
 		}
