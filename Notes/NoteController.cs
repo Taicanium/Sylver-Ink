@@ -7,7 +7,7 @@ using System.Text.RegularExpressions;
 using System.Windows;
 using static SylverInk.Common;
 
-namespace SylverInk
+namespace SylverInk.Notes
 {
 	public partial class NoteController
 	{

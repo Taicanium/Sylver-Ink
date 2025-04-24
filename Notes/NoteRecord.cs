@@ -6,7 +6,7 @@ using System.Windows;
 using System.Windows.Controls;
 using static SylverInk.Common;
 
-namespace SylverInk
+namespace SylverInk.Notes
 {
 	public struct NoteRevision(long _created = -1, int _startIndex = -1, string? _substring = null, string? _uuid = null)
 	{

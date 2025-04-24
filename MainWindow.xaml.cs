@@ -1,4 +1,5 @@
-﻿using SylverInk.Notes;
+﻿using SylverInk.Net;
+using SylverInk.Notes;
 using System;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -36,6 +37,7 @@ namespace SylverInk
 		{
 			InitializeComponent();
 			DataContext = Common.Settings;
+			UpdateHandler.CheckForUpdates();
 		}
 
 		private void AddressKeyDown(object sender, KeyEventArgs e)
@@ -265,13 +267,16 @@ namespace SylverInk
 		{
 			base.OnSourceInitialized(e);
 
-			if (Process.GetProcessesByName("Sylver Ink").Length > 1)
+			if (Process.GetProcessesByName("Sylver Ink").Length > 1 && !File.Exists(UpdateHandler.UpdateLockUri))
 			{
 				_ABORT = true;
 				MessageBox.Show("Another instance of Sylver Ink is already running.", "Sylver Ink: Error", MessageBoxButton.OK, MessageBoxImage.Error);
 				Application.Current.Shutdown();
 				return;
 			}
+
+			if (File.Exists(UpdateHandler.UpdateLockUri))
+				File.Delete(UpdateHandler.UpdateLockUri);
 
 			Common.Settings.Load();
 

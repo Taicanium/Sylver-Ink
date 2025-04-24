@@ -4,7 +4,7 @@ using System.Windows;
 using System.Windows.Controls;
 using static SylverInk.Common;
 
-namespace SylverInk
+namespace SylverInk.Notes
 {
 	public class NoteTab
 	{
