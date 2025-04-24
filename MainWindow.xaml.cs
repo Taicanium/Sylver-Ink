@@ -211,6 +211,8 @@ namespace SylverInk
 
 		private void MainWindow_Closing(object sender, CancelEventArgs e)
 		{
+			var lockFile = GetLockFile();
+
 			if (!_ABORT)
 			{
 				if (DatabaseChanged)
@@ -223,6 +225,9 @@ namespace SylverInk
 						case MessageBoxResult.Yes:
 							e.Cancel = true;
 							MainGrid.IsEnabled = false;
+
+							if (File.Exists(lockFile))
+								File.Delete(lockFile);
 
 							BackgroundWorker exitTask = new();
 							exitTask.DoWork += SaveDatabases;

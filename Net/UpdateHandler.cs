@@ -14,8 +14,8 @@ namespace SylverInk.Net
 	static class UpdateHandler
 	{
 		private static string GitReleasesURI { get; } = "https://api.github.com/repos/taicanium/Sylver-Ink/releases?per_page=1&page=1";
-		private static string TempUri = Path.Join(DocumentsFolder, "~si_new.exe");
-		public static string UpdateLockUri = Path.Join(DocumentsFolder, "~si_update.lock");
+		private static string TempUri { get; } = Path.Join(DocumentsFolder, "~si_new.exe");
+		public static string UpdateLockUri { get; } = Path.Join(DocumentsFolder, "~si_update.lock");
 
 		public static async void CheckForUpdates()
 		{
@@ -29,62 +29,60 @@ namespace SylverInk.Net
 
 			try
 			{
-				using (var httpClient = new HttpClient())
+				using var httpClient = new HttpClient();
+				if (!httpClient.DefaultRequestHeaders.UserAgent.TryParseAdd("request"))
+					return;
+
+				string response = await httpClient.GetStringAsync(GitReleasesURI);
+				var release = JsonSerializer.Deserialize<JsonArray>(response)?[0]?.AsObject();
+				if (release is null)
+					return;
+				if (!release.ContainsKey("tag_name") || !release.ContainsKey("assets"))
+					return;
+
+				var releaseString = release["tag_name"]?.ToString() ?? string.Empty;
+				if (releaseString.StartsWith('v'))
+					releaseString = releaseString[1..];
+				while (releaseString.AsSpan().Count('.') < 3)
+					releaseString += ".0";
+
+				var asset = release["assets"]?.AsArray()[0]?.AsObject();
+				if (asset is null)
+					return;
+				if (!asset.TryGetPropertyValue("browser_download_url", out var uriNode))
+					return;
+
+				var fileUri = uriNode?.ToString();
+				if (fileUri is null)
+					return;
+
+				var releaseVersion = Version.Parse(releaseString);
+				if (releaseVersion.CompareTo(assemblyVersion) <= 0)
+					return;
+
+				if (MessageBox.Show($"A new update is available ({assemblyVersion} → {releaseString}). Would you like to install it now?", "Sylver Ink: Info", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.No)
+					return;
+
+				if (File.Exists(TempUri))
+					File.Delete(TempUri);
+
+				if (File.Exists(UpdateLockUri))
+					File.Delete(UpdateLockUri);
+
+				File.Create(UpdateLockUri, 0).Close();
+
+				await httpClient.DownloadFileTaskAsync(fileUri, TempUri);
+
+				ProcessStartInfo inf = new()
 				{
-					if (!httpClient.DefaultRequestHeaders.UserAgent.TryParseAdd("request"))
-						return;
+					Arguments = $"/K timeout 5 > nul & copy /y \"{TempUri}\" \"{currentExe}\" > nul & del /q \"{TempUri}\" > nul & (goto) 2>nul & start /B \"\" \"{currentExe}\"",
+					CreateNoWindow = true,
+					FileName = "cmd",
+					UseShellExecute = false,
+				};
 
-					string response = await httpClient.GetStringAsync(GitReleasesURI);
-					var jsonArray = JsonSerializer.Deserialize<JsonArray>(response);
-					var release = jsonArray?[0]?.AsObject();
-					if (release is null)
-						return;
-
-					if (release.ContainsKey("tag_name") && release.ContainsKey("assets"))
-					{
-						var releaseString = release["tag_name"]?.ToString() ?? string.Empty;
-						if (releaseString.StartsWith('v'))
-							releaseString = releaseString[1..];
-						while (releaseString.AsSpan().Count('.') < 3)
-							releaseString += ".0";
-
-						var asset = release["assets"]?.AsArray()[0]?.AsObject();
-						if (asset is null)
-							return;
-						if (!asset.TryGetPropertyValue("browser_download_url", out var uriNode))
-							return;
-
-						var fileUri = uriNode?.ToString();
-						if (fileUri is null)
-							return;
-
-						var releaseVersion = Version.Parse(releaseString);
-
-						if (releaseVersion.CompareTo(assemblyVersion) > 0 && MessageBox.Show($"A new update is available ({assemblyVersion} → {releaseString}). Would you like to install it now?", "Sylver Ink: Info", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
-						{
-							if (File.Exists(TempUri))
-								File.Delete(TempUri);
-
-							if (File.Exists(UpdateLockUri))
-								File.Delete(UpdateLockUri);
-
-							File.Create(UpdateLockUri, 0).Close();
-
-							await httpClient.DownloadFileTaskAsync(fileUri, TempUri);
-
-							ProcessStartInfo inf = new()
-							{
-								Arguments = $"/K timeout 5 > nul & copy /y \"{TempUri}\" \"{currentExe}\" > nul & del /q \"{TempUri}\" > nul & (goto) 2>nul & start /B \"\" \"{currentExe}\"",
-								CreateNoWindow = true,
-								FileName = "cmd",
-								UseShellExecute = false,
-							};
-							Process.Start(inf);
-
-							Application.Current.Shutdown();
-						}
-					}
-				}
+				Process.Start(inf);
+				Application.Current.Shutdown();
 			}
 			catch (Exception)
 			{

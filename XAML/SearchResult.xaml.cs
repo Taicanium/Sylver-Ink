@@ -138,9 +138,12 @@ namespace SylverInk
 			var senderObject = sender as TextBox;
 			ResultText = senderObject?.Text ?? string.Empty;
 			Edited = !ResultText.Equals(ResultRecord?.ToString());
+			if (!Edited)
+				return;
+			if (AutosaveThread?.IsBusy is true)
+				return;
 			TimeSinceAutosave = DateTime.Now;
-			if (!AutosaveThread?.IsBusy is true)
-				AutosaveThread?.RunWorkerAsync();
+			AutosaveThread?.RunWorkerAsync();
 		}
 
 		private void SaveRecord()
