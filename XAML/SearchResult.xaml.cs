@@ -169,50 +169,48 @@ namespace SylverInk
 				Point RB1 = new(Coords.X + Width, Coords.Y + Height);
 				Point LT2 = new(other.Left, other.Top);
 				Point RB2 = new(other.Left + other.Width, other.Top + other.Height);
-				Point LT2A = new(other.Left + 16.0, other.Top + 9.0);
-				Point RB2A = new(other.Left + other.Width - 16.0, other.Top + other.Height - 9.0);
 
-				var dLR = Math.Abs(LT1.X - RB2A.X);
-				var dRL = Math.Abs(RB1.X - LT2A.X);
-				var dTB = Math.Abs(LT1.Y - RB2A.Y);
-				var dBT = Math.Abs(RB1.Y - LT2A.Y);
+				var dLR = Math.Abs(LT1.X - RB2.X);
+				var dRL = Math.Abs(RB1.X - LT2.X);
+				var dTB = Math.Abs(LT1.Y - RB2.Y);
+				var dBT = Math.Abs(RB1.Y - LT2.Y);
 
 				var dLL = Math.Abs(LT1.X - LT2.X);
 				var dRR = Math.Abs(RB1.X - RB2.X);
 				var dTT = Math.Abs(LT1.Y - LT2.Y);
 				var dBB = Math.Abs(RB1.Y - RB2.Y);
 
-				var XTolerance = (LT1.X >= LT2A.X && LT1.X <= RB2A.X)
-					|| (RB1.X >= LT2A.X && RB1.X <= RB2A.X)
-					|| (LT2A.X >= LT1.X && LT2A.X <= RB1.X)
-					|| (RB2A.X >= LT1.X && RB2A.X <= RB1.X);
+				var XTolerance = (LT1.X >= LT2.X && LT1.X <= RB2.X)
+					|| (RB1.X >= LT2.X && RB1.X <= RB2.X)
+					|| (LT2.X >= LT1.X && LT2.X <= RB1.X)
+					|| (RB2.X >= LT1.X && RB2.X <= RB1.X);
 
-				var YTolerance = (LT1.Y >= LT2A.Y && LT1.Y <= RB2A.Y)
-					|| (RB1.Y >= LT2A.Y && RB1.Y <= RB2A.Y)
-					|| (LT2A.Y >= LT1.Y && LT2A.Y <= RB1.Y)
-					|| (RB2A.Y >= LT1.Y && RB2A.Y <= RB1.Y);
+				var YTolerance = (LT1.Y >= LT2.Y && LT1.Y <= RB2.Y)
+					|| (RB1.Y >= LT2.Y && RB1.Y <= RB2.Y)
+					|| (LT2.Y >= LT1.Y && LT2.Y <= RB1.Y)
+					|| (RB2.Y >= LT1.Y && RB2.Y <= RB1.Y);
 
 				if (dLR < SnapTolerance && YTolerance && !Snapped.Item1)
 				{
-					Coords.X = RB2A.X;
+					Coords.X = RB2.X;
 					Snapped = (true, Snapped.Item2);
 				}
 
 				if (dRL < SnapTolerance && YTolerance && !Snapped.Item1)
 				{
-					Coords.X = LT2A.X - Width;
+					Coords.X = LT2.X - Width;
 					Snapped = (true, Snapped.Item2);
 				}
 
 				if (dTB < SnapTolerance && XTolerance && !Snapped.Item2)
 				{
-					Coords.Y = RB2A.Y;
+					Coords.Y = RB2.Y;
 					Snapped = (Snapped.Item1, true);
 				}
 
 				if (dBT < SnapTolerance && XTolerance && !Snapped.Item2)
 				{
-					Coords.Y = LT2A.Y - Height;
+					Coords.Y = LT2.Y - Height;
 					Snapped = (Snapped.Item1, true);
 				}
 
