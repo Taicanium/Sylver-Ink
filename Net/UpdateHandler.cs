@@ -90,7 +90,7 @@ namespace SylverInk.Net
 				ProcessStartInfo inf = new()
 				{
 					FileName = TempUri,
-					UseShellExecute = false,
+					UseShellExecute = true,
 				};
 
 				Process.Start(inf);
