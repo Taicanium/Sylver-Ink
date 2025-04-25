@@ -305,12 +305,16 @@ namespace SylverInk
 
 				foreach (var openNote in LastActiveNotes)
 				{
-					if (!int.TryParse(openNote.Split(':')[1], out var iNote))
+					var oSplit = openNote.Split(':');
+					if (oSplit.Length < 2)
+						continue;
+
+					if (!int.TryParse(oSplit[1], out var iNote))
 						continue;
 
 					Database? target = null;
 					foreach (Database db in Databases)
-						if (openNote.Split(':')[0].Equals(db.Name))
+						if (oSplit[0].Equals(db.Name))
 							target = db;
 
 					if (target is null)

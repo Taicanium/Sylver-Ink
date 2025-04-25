@@ -111,14 +111,24 @@ namespace SylverInk
 					case "LastActiveNotesLeft":
 						var nLeft = keyValue[1].Split(';').Distinct();
 						foreach (var sLeft in nLeft)
+						{
+							var lSplit = sLeft.Split(':');
+							if (lSplit.Length < 3)
+								continue;
 							if (int.TryParse(sLeft.Split(':')[2], out var dLeft))
 								LastActiveNotesLeft.TryAdd(sLeft.Split(':')[0] + ":" + sLeft.Split(':')[1], dLeft);
+						}
 						break;
 					case "LastActiveNotesTop":
 						var nTop = keyValue[1].Split(';').Distinct();
 						foreach (var sTop in nTop)
+						{
+							var sSplit = sTop.Split(':');
+							if (sSplit.Length < 3)
+								continue;
 							if (int.TryParse(sTop.Split(':')[2], out var dTop))
 								LastActiveNotesTop.TryAdd(sTop.Split(':')[0] + ":" + sTop.Split(':')[1], dTop);
+						}
 						break;
 					case "LastDatabases":
 						FirstRun = false;
