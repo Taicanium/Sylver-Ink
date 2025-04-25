@@ -14,7 +14,7 @@ namespace SylverInk.Net
 	static class UpdateHandler
 	{
 		private static string GitReleasesURI { get; } = "https://api.github.com/repos/taicanium/Sylver-Ink/releases?per_page=1&page=1";
-		private static string TempUri { get; } = Path.Join(DocumentsFolder, "~si_new.exe");
+		private static string TempUri { get; } = Path.Join(DocumentsFolder, "SylverInk_Setup.msi");
 		public static string UpdateLockUri { get; } = Path.Join(DocumentsFolder, "~si_update.lock");
 
 		public static async void CheckForUpdates()
@@ -75,9 +75,7 @@ namespace SylverInk.Net
 
 				ProcessStartInfo inf = new()
 				{
-					Arguments = $"/K timeout 5 > nul & copy /y \"{TempUri}\" \"{currentExe}\" > nul & del /q \"{TempUri}\" > nul & (goto) 2>nul & start /B \"\" \"{currentExe}\"",
-					CreateNoWindow = true,
-					FileName = "cmd",
+					FileName = TempUri,
 					UseShellExecute = false,
 				};
 
