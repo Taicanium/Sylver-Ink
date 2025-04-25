@@ -40,25 +40,37 @@ namespace SylverInk.Net
 				if (!release.ContainsKey("tag_name") || !release.ContainsKey("assets"))
 					return;
 
+				var assetArray = release["assets"]?.AsArray();
+				if (assetArray is null)
+					return;
+
 				var releaseString = release["tag_name"]?.ToString() ?? string.Empty;
 				if (releaseString.StartsWith('v'))
 					releaseString = releaseString[1..];
 				while (releaseString.AsSpan().Count('.') < 3)
 					releaseString += ".0";
 
-				var asset = release["assets"]?.AsArray()[0]?.AsObject();
-				if (asset is null)
-					return;
-				if (!asset.TryGetPropertyValue("browser_download_url", out var uriNode))
-					return;
+				string? uriNode = null;
 
-				var fileUri = uriNode?.ToString();
-				if (fileUri is null)
+				foreach (var asset in assetArray)
+				{
+					if (asset is null)
+						continue;
+
+					if (!asset.AsObject().TryGetPropertyValue("browser_download_url", out var nValue))
+						continue;
+
+					if (nValue is null)
+						continue;
+
+					if (nValue.ToString().EndsWith(".msi"))
+						uriNode = nValue.ToString();
+				}
+
+				if (uriNode is null)
 					return;
 
 				var releaseVersion = Version.Parse(releaseString);
-				if (releaseVersion.CompareTo(assemblyVersion) <= 0)
-					return;
 
 				if (MessageBox.Show($"A new update is available ({assemblyVersion} → {releaseString}). Would you like to install it now?", "Sylver Ink: Info", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.No)
 					return;
@@ -71,7 +83,7 @@ namespace SylverInk.Net
 
 				File.Create(UpdateLockUri, 0).Close();
 
-				await httpClient.DownloadFileTaskAsync(fileUri, TempUri);
+				await httpClient.DownloadFileTaskAsync(uriNode, TempUri);
 
 				ProcessStartInfo inf = new()
 				{

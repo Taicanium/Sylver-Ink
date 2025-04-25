@@ -52,7 +52,7 @@ namespace SylverInk
 		public static Database CurrentDatabase { get; set; } = new();
 		public static bool DatabaseChanged { get; set; } = false;
 		public static List<string> DatabaseFiles { get => Databases.ToList().ConvertAll(new Converter<Database, string>(db => db.DBFile)); }
-		public static int DatabaseCount = 0;
+		public static int DatabaseCount { get; set; } = 0;
 		public static ObservableCollection<Database> Databases { get; set; } = [];
 		public static string DateFormat { get; } = "yyyy-MM-dd HH:mm:ss";
 		public static string DefaultDatabase { get; } = "New";
