@@ -48,9 +48,11 @@ namespace SylverInk
 		private static Settings? _settings;
 
 		public static bool CanResize { get; set; } = false;
+		public static BackgroundWorker CheckInit { get; } = new();
 		public static Database CurrentDatabase { get; set; } = new();
 		public static bool DatabaseChanged { get; set; } = false;
 		public static List<string> DatabaseFiles { get => Databases.ToList().ConvertAll(new Converter<Database, string>(db => db.DBFile)); }
+		public static int DatabaseCount = 0;
 		public static ObservableCollection<Database> Databases { get; set; } = [];
 		public static string DateFormat { get; } = "yyyy-MM-dd HH:mm:ss";
 		public static string DefaultDatabase { get; } = "New";
@@ -58,7 +60,12 @@ namespace SylverInk
 		public static bool FirstRun { get; set; } = true;
 		public static int HighestFormat { get; } = 8;
 		public static Import? ImportWindow { get => _import; set { _import?.Close(); _import = value; _import?.Show(); } }
+		public static bool InitComplete { get; set; } = false;
 		public static char[] InvalidPathChars { get; } = ['/', '\\', ':', '*', '"', '?', '<', '>', '|'];
+		public static string LastActiveDatabase { get; set; } = string.Empty;
+		public static List<string> LastActiveNotes { get; set; } = [];
+		public static Dictionary<string, double> LastActiveNotesLeft { get; set; } = [];
+		public static Dictionary<string, double> LastActiveNotesTop { get; set; } = [];
 		private static BackgroundWorker? MeasureTask { get; set; }
 		public static List<SearchResult> OpenQueries { get; } = [];
 		public static List<NoteTab> OpenTabs { get; } = [];
@@ -71,6 +78,7 @@ namespace SylverInk
 		public static Search? SearchWindow { get => _search; set { _search?.Close(); _search = value; _search?.Show(); } }
 		public static ContextSettings Settings { get; } = new();
 		public static string SettingsFile { get; } = Path.Join(DocumentsFolder, "settings.sis");
+		public static bool SettingsLoaded { get; set; } = false;
 		public static Settings? SettingsWindow { get => _settings; set { _settings?.Close(); _settings = value; _settings?.Show(); } }
 		public static Dictionary<string, string> Subfolders { get; } = new([
 			new("Databases", Path.Join(DocumentsFolder, "Databases"))
@@ -116,8 +124,7 @@ namespace SylverInk
 			};
 
 			Databases.Add(db);
-			CurrentDatabase = db;
-			CurrentDatabase.Sort();
+			db.Sort();
 
 			var newControl = (TabControl)item.Content;
 			newControl.Tag = _name;
@@ -364,7 +371,7 @@ namespace SylverInk
 		public static SearchResult OpenQuery(NoteRecord record, bool show = true)
 		{
 			foreach (SearchResult result in OpenQueries)
-				if (result.ResultRecord?.Equals(record) is true)
+				if (Databases[result.ResultDatabase] == CurrentDatabase && result.ResultRecord?.Equals(record) is true)
 					return result;
 
 			var control = (TabControl)Application.Current.MainWindow.FindName("DatabasesPanel");
@@ -373,6 +380,42 @@ namespace SylverInk
 			{
 				Query = record.ToString(),
 				ResultDatabase = control.SelectedIndex,
+				ResultRecord = record,
+				ResultText = CurrentDatabase.GetRecord(record.Index).ToString()
+			};
+
+			if (show)
+			{
+				resultWindow.Show();
+				OpenQueries.Add(resultWindow);
+			}
+
+			return resultWindow;
+		}
+
+		public static SearchResult? OpenQuery(Database db, NoteRecord record, bool show = true)
+		{
+			foreach (SearchResult result in OpenQueries)
+				if (Databases[result.ResultDatabase] == db && result.ResultRecord?.Equals(record) is true)
+					return result;
+
+			var control = (TabControl)Application.Current.MainWindow.FindName("DatabasesPanel");
+
+			int iDB = -1;
+			for (int i = 0; i < control.Items.Count; i++)
+			{
+				TabItem item = (TabItem)control.Items[i];
+				if ((Database)item.Tag == db)
+					iDB = i;
+			}
+
+			if (iDB == -1)
+				return null;
+
+			SearchResult resultWindow = new()
+			{
+				Query = record.ToString(),
+				ResultDatabase = iDB,
 				ResultRecord = record,
 				ResultText = CurrentDatabase.GetRecord(record.Index).ToString()
 			};

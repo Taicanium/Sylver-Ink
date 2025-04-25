@@ -204,6 +204,18 @@ namespace SylverInk.Notes
 
 		public NoteRecord GetRecord(int RecordIndex) => RecordIndex < Records.Count && RecordIndex > -1 ? Records[RecordIndex] : new();
 
+		public bool HasRecord(int index)
+		{
+			try
+			{
+				return Records.ElementAt(index) != null;	
+			}
+			catch (Exception)
+			{
+				return false;
+			}
+		}
+
 		public void InitializeRecords(bool newDatabase = true)
 		{
 			for (int i = (OpenQueries ?? []).Count; i > 0; i--)

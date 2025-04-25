@@ -97,13 +97,40 @@ namespace SylverInk
 					case "FontSize":
 						MainFontSize = double.Parse(keyValue[1]);
 						break;
+					case "LastActiveDatabase":
+						LastActiveDatabase = keyValue[1];
+						foreach (var db in Databases)
+							if (LastActiveDatabase.Equals(db.Name))
+								CurrentDatabase = db;
+						break;
+					case "LastActiveNotes":
+						var notes = keyValue[1].Split(';').Distinct();
+						foreach (var note in notes)
+							LastActiveNotes.Add(note);
+						break;
+					case "LastActiveNotesLeft":
+						var nLeft = keyValue[1].Split(';').Distinct();
+						foreach (var sLeft in nLeft)
+							if (int.TryParse(sLeft.Split(':')[2], out var dLeft))
+								LastActiveNotesLeft.TryAdd(sLeft.Split(':')[0] + ":" + sLeft.Split(':')[1], dLeft);
+						break;
+					case "LastActiveNotesTop":
+						var nTop = keyValue[1].Split(';').Distinct();
+						foreach (var sTop in nTop)
+							if (int.TryParse(sTop.Split(':')[2], out var dTop))
+								LastActiveNotesTop.TryAdd(sTop.Split(':')[0] + ":" + sTop.Split(':')[1], dTop);
+						break;
 					case "LastDatabases":
 						FirstRun = false;
-						var files = keyValue[1].Split(';').Distinct().Where(File.Exists);
+						var files = keyValue[1].Replace("?\\", DocumentsFolder).Split(';').Distinct().Where(File.Exists);
+						DatabaseCount = Math.Max(1, files.Count());
 						foreach (var file in files)
 							Database.Create(file, true);
 						if (!files.Any())
+						{
+							DatabaseCount = 1;
 							Database.Create(Path.Join(Subfolders["Databases"], DefaultDatabase, $"{DefaultDatabase}.sidb"));
+						}
 						break;
 					case "ListBackground":
 						ListBackground = BrushFromBytes(keyValue[1]);
@@ -151,7 +178,11 @@ namespace SylverInk
 			$"AccentForeground:{BytesFromBrush(AccentForeground)}",
 			$"FontFamily:{MainFontFamily?.Source}",
 			$"FontSize:{MainFontSize}",
-			$"LastDatabases:{string.Join(';', DatabaseFiles.Distinct().Where(File.Exists))}",
+			$"LastActiveDatabase:{CurrentDatabase.Name}",
+			$"LastActiveNotes:{string.Join(';', OpenQueries.Select(query => Databases[query.ResultDatabase].Name + ":" + query.ResultRecord?.Index))}",
+			$"LastActiveNotesLeft:{string.Join(';', OpenQueries.Select(query => Databases[query.ResultDatabase].Name + ":" + $"{query.ResultRecord?.Index}:{query.Left}"))}",
+			$"LastActiveNotesTop:{string.Join(';', OpenQueries.Select(query => Databases[query.ResultDatabase].Name + ":" + $"{query.ResultRecord?.Index}:{query.Top}"))}",
+			$"LastDatabases:{string.Join(';', DatabaseFiles.Distinct().Where(File.Exists)).Replace(DocumentsFolder, "?\\")}",
 			$"ListBackground:{BytesFromBrush(ListBackground)}",
 			$"ListForeground:{BytesFromBrush(ListForeground)}",
 			$"MenuBackground:{BytesFromBrush(MenuBackground)}",

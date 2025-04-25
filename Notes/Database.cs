@@ -207,6 +207,8 @@ namespace SylverInk.Notes
 
 		public NoteRecord GetRecord(int index) => Controller.GetRecord(index);
 
+		public bool HasRecord(int index) => Controller.HasRecord(index);
+
 		public void Initialize(bool newDatabase = true) => Controller.InitializeRecords(newDatabase);
 
 		public void Load(string dbFile)

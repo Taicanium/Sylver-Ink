@@ -280,38 +280,95 @@ namespace SylverInk
 				return;
 			}
 
+			CheckInit.DoWork += (_, _) =>
+			{
+				do
+				{
+					InitComplete = DatabaseCount > 0
+						&& Databases.Count == DatabaseCount
+						&& SettingsLoaded;
+
+					if (Concurrent(() => Application.Current.MainWindow.FindName("DatabasesPanel")) is null)
+						InitComplete = false;
+				} while (!InitComplete);
+			};
+			CheckInit.RunWorkerCompleted += (_, _) =>
+			{
+				foreach (TabItem item in DatabasesPanel.Items)
+				{
+					if (LastActiveDatabase.Equals(((Database)item.Tag).Name))
+					{
+						DatabasesPanel.SelectedItem = item;
+						CurrentDatabase = (Database)item.Tag;
+					}
+				}
+
+				foreach (var openNote in LastActiveNotes)
+				{
+					if (!int.TryParse(openNote.Split(':')[1], out var iNote))
+						continue;
+
+					Database? target = null;
+					foreach (Database db in Databases)
+						if (openNote.Split(':')[0].Equals(db.Name))
+							target = db;
+
+					if (target is null)
+						continue;
+
+					if (target.HasRecord(iNote))
+					{
+						var result = OpenQuery(target, target.GetRecord(iNote));
+						if (result is null)
+							continue;
+
+						if (LastActiveNotesLeft.TryGetValue($"{target.Name}:{iNote}", out var openLeft))
+							result.Left = openLeft;
+
+						if (LastActiveNotesTop.TryGetValue($"{target.Name}:{iNote}", out var openTop))
+							result.Top = openTop;
+					}
+				}
+
+				BackgroundWorker worker = new();
+				worker.DoWork += (_, _) => SpinWait.SpinUntil(new(() => Databases.Count > 0));
+				worker.RunWorkerCompleted += (_, _) =>
+				{
+					CanResize = true;
+					ResizeMode = ResizeMode.CanResize;
+					Common.Settings.MainTypeFace = new(Common.Settings.MainFontFamily, FontStyles.Normal, FontWeights.Normal, FontStretches.Normal);
+					PPD = VisualTreeHelper.GetDpi(this).PixelsPerDip;
+					DeferUpdateRecentNotes(true);
+				};
+				worker.RunWorkerAsync();
+
+				WindowSource = HwndSource.FromHwnd(new WindowInteropHelper(this).Handle);
+				WindowSource.AddHook(HwndHook);
+				RegisterHotKeys();
+			};
+
+			CheckInit.RunWorkerAsync();
+
 			if (File.Exists(UpdateHandler.UpdateLockUri))
 				File.Delete(UpdateHandler.UpdateLockUri);
 
 			Common.Settings.Load();
+			SettingsLoaded = true;
 
 			foreach (var folder in Subfolders)
 				if (!Directory.Exists(folder.Value))
 					Directory.CreateDirectory(folder.Value);
 
 			if (FirstRun)
+			{
+				DatabaseCount = 1;
 				Database.Create(Path.Join(Subfolders["Databases"], DefaultDatabase, $"{DefaultDatabase}.sidb"));
+			}
 
 			DatabasesPanel.SelectedIndex = 0;
-
-			BackgroundWorker worker = new();
-			worker.DoWork += (_, _) => SpinWait.SpinUntil(new(() => Databases.Count > 0));
-			worker.RunWorkerCompleted += (_, _) =>
-			{
-				CanResize = true;
-				ResizeMode = ResizeMode.CanResize;
-				Common.Settings.MainTypeFace = new(Common.Settings.MainFontFamily, FontStyles.Normal, FontWeights.Normal, FontStretches.Normal);
-				PPD = VisualTreeHelper.GetDpi(this).PixelsPerDip;
-				DeferUpdateRecentNotes(true);
-			};
-			worker.RunWorkerAsync();
-
-			WindowSource = HwndSource.FromHwnd(new WindowInteropHelper(this).Handle);
-			WindowSource.AddHook(HwndHook);
-			RegisterHotKey();
 		}
 
-		private void RegisterHotKey()
+		private void RegisterHotKeys()
 		{
 			RegisterHotKey(new WindowInteropHelper(this).Handle, NewNoteHotKeyID, 2, (uint)KeyInterop.VirtualKeyFromKey(Key.N));
 			RegisterHotKey(new WindowInteropHelper(this).Handle, PreviousNoteHotKeyID, 2, (uint)KeyInterop.VirtualKeyFromKey(Key.L));

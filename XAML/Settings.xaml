@@ -52,10 +52,18 @@
 				<RowDefinition Height="*"/>
 				<RowDefinition Height="*"/>
 			</Grid.RowDefinitions>
-			<Label Content="Ribbon tabs display..." FontStyle="Italic" Foreground="{Binding MenuForeground}" HorizontalAlignment="Right" Margin="10,0"/>
-			<Label Content="Recent notes sort by..." FontStyle="Italic" Foreground="{Binding MenuForeground}" HorizontalAlignment="Right" Margin="10,0" Grid.Row="1"/>
-			<Label Content="Sticky notes stay on top" FontStyle="Italic" Foreground="{Binding MenuForeground}" HorizontalAlignment="Right" Margin="10,0" Grid.Row="2"/>
-			<Label Content="Sticky note transparency" FontStyle="Italic" Foreground="{Binding MenuForeground}" HorizontalAlignment="Right" Margin="10,0" Grid.Row="3"/>
+			<Label FontStyle="Italic" Foreground="{Binding MenuForeground}" HorizontalAlignment="Right" Margin="10,0">
+				<TextBlock TextAlignment="Right">Ribbon tabs<LineBreak/>display...</TextBlock>
+			</Label>
+			<Label FontStyle="Italic" Foreground="{Binding MenuForeground}" HorizontalAlignment="Right" Margin="10,0" Grid.Row="1">
+				<TextBlock TextAlignment="Right">Recent notes<LineBreak/>sort by...</TextBlock>
+			</Label>
+			<Label FontStyle="Italic" Foreground="{Binding MenuForeground}" HorizontalAlignment="Right" Margin="10,0" Grid.Row="2">
+				<TextBlock TextAlignment="Right">Sticky notes<LineBreak/>stay on top</TextBlock>
+			</Label>
+			<Label FontStyle="Italic" Foreground="{Binding MenuForeground}" HorizontalAlignment="Right" Margin="10,0" Grid.Row="3">
+				<TextBlock TextAlignment="Right">Sticky note<LineBreak/>transparency</TextBlock>
+			</Label>
 			<ComboBox Grid.Column="1" Margin="0,10" SelectionChanged="StickyRibbonChanged" Width="150" x:Name="RibbonBox">
 				<ComboBoxItem Content="Content preview" Tag="Content"/>
 				<ComboBoxItem Content="Last changed date" Tag="Change"/>
