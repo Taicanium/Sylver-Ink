@@ -71,6 +71,8 @@ namespace SylverInk.Net
 					return;
 
 				var releaseVersion = Version.Parse(releaseString);
+				if (releaseVersion.CompareTo(assemblyVersion) <= 0)
+					return;
 
 				if (MessageBox.Show($"A new update is available ({assemblyVersion} → {releaseString}). Would you like to install it now?", "Sylver Ink: Info", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.No)
 					return;
