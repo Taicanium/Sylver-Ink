@@ -84,6 +84,7 @@ namespace SylverInk
 			new("Databases", Path.Join(DocumentsFolder, "Databases"))
 			]);
 		private static double TextHeight { get; set; } = 0.0;
+		public static bool UpdatesChecked { get; set; } = false;
 		private static BackgroundWorker? UpdateTask { get; set; }
 		public static double WindowHeight { get; set; } = 275.0;
 		public static double WindowWidth { get; set; } = 330.0;

@@ -37,7 +37,6 @@ namespace SylverInk
 		{
 			InitializeComponent();
 			DataContext = Common.Settings;
-			UpdateHandler.CheckForUpdates();
 		}
 
 		private void AddressKeyDown(object sender, KeyEventArgs e)
@@ -209,6 +208,19 @@ namespace SylverInk
 			return default;
 		}
 
+		public static bool IsShuttingDown()
+		{
+			try
+			{
+				Application.Current.ShutdownMode = Application.Current.ShutdownMode;
+				return false;
+			}
+			catch (Exception)
+			{
+				return true;
+			}
+		}
+
 		private void MainWindow_Closing(object sender, CancelEventArgs e)
 		{
 			var lockFile = GetLockFile();
@@ -286,7 +298,8 @@ namespace SylverInk
 				{
 					InitComplete = DatabaseCount > 0
 						&& Databases.Count == DatabaseCount
-						&& SettingsLoaded;
+						&& SettingsLoaded
+						&& UpdatesChecked;
 
 					if (Concurrent(() => Application.Current.MainWindow.FindName("DatabasesPanel")) is null)
 						InitComplete = false;
@@ -362,6 +375,13 @@ namespace SylverInk
 			foreach (var folder in Subfolders)
 				if (!Directory.Exists(folder.Value))
 					Directory.CreateDirectory(folder.Value);
+
+			UpdateHandler.CheckForUpdates();
+
+			Application.Current.Shutdown();
+
+			if (!IsShuttingDown())
+				UpdatesChecked = true;
 
 			if (FirstRun)
 			{
