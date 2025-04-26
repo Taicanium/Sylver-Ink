@@ -214,23 +214,20 @@ namespace SylverInk.Notes
 		public void Load(string dbFile)
 		{
 			var lockFile = GetLockFile(dbFile);
-			if (File.Exists(lockFile))
+			if (File.Exists(lockFile) && MessageBox.Show($"{Path.GetFileName(dbFile)} - The database last closed unexpectedly. Do you want to load the most recent autosave?", "Sylver Ink: Info", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
 			{
-				if (MessageBox.Show($"{Path.GetFileName(dbFile)} - The database last closed unexpectedly. Do you want to load the most recent autosave?", "Sylver Ink: Info", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
-				{
-					Controller.Open(lockFile);
-					Controller.DeserializeRecords();
+				Controller.Open(lockFile);
+				Controller.DeserializeRecords();
 
-					Loaded = Controller.Loaded = true;
-					Changed = true;
+				Loaded = Controller.Loaded = true;
+				Changed = true;
 
-					if ((Name ?? string.Empty).Equals(string.Empty))
-						Name = Path.GetFileNameWithoutExtension(DBFile);
+				if ((Name ?? string.Empty).Equals(string.Empty))
+					Name = Path.GetFileNameWithoutExtension(DBFile);
 
-					DeferUpdateRecentNotes(true);
+				DeferUpdateRecentNotes(true);
 
-					return;
-				}
+				return;
 			}
 
 			Controller = new(DBFile = dbFile);
@@ -249,21 +246,20 @@ namespace SylverInk.Notes
 			var DBPath = GetDatabasePath(this);
 			var BKPath = GetBackupPath(this);
 
-			if (auto)
+			if (!auto)
 			{
-				for (int i = 2; i > 0; i--)
-				{
-					if (File.Exists($"{BKPath}_{i}.sibk"))
-						File.Copy($"{BKPath}_{i}.sibk", $"{BKPath}_{i + 1}.sibk", true);
-				}
-
-				if (File.Exists($"{DBPath}"))
-					File.Copy($"{DBPath}", $"{BKPath}_1.sibk", true);
-
+				Controller.MakeBackup();
 				return;
 			}
 
-			Controller.MakeBackup();
+			for (int i = 2; i > 0; i--)
+			{
+				if (File.Exists($"{BKPath}_{i}.sibk"))
+					File.Copy($"{BKPath}_{i}.sibk", $"{BKPath}_{i + 1}.sibk", true);
+			}
+
+			if (File.Exists($"{DBPath}"))
+				File.Copy($"{DBPath}", $"{BKPath}_1.sibk", true);
 		}
 
 		public bool Open(string path, bool writing = false) => Controller.Open(path, writing);

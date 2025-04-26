@@ -121,10 +121,7 @@ namespace SylverInk.Notes
 				string revisionTime = tag.Item2.GetCreated();
 
 				tag.Item1 -= 1U;
-				if (tag.Item1 == 0U)
-					revisionTime = tag.Item2.GetLastChange();
-				else
-					revisionTime = tag.Item2.GetRevisionTime(tag.Item1);
+				revisionTime = tag.Item1 == 0U ? tag.Item2.GetLastChange() : tag.Item2.GetRevisionTime(tag.Item1);
 
 				NoteBox.Tag = (tag.Item1, tag.Item2);
 				NoteBox.Text = tag.Item2.Reconstruct(tag.Item1);
@@ -142,10 +139,7 @@ namespace SylverInk.Notes
 				string revisionTime = tag.Item2.GetLastChange();
 
 				tag.Item1 += 1U;
-				if (tag.Item1 == tag.Item2.GetNumRevisions())
-					revisionTime = tag.Item2.GetCreated();
-				else
-					revisionTime = tag.Item2.GetRevisionTime(tag.Item1);
+				revisionTime = tag.Item1 == tag.Item2.GetNumRevisions() ? tag.Item2.GetCreated() : tag.Item2.GetRevisionTime(tag.Item1);
 
 				NoteBox.Tag = (tag.Item1, tag.Item2);
 				NoteBox.Text = tag.Item2.Reconstruct(tag.Item1);

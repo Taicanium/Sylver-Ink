@@ -114,102 +114,102 @@ namespace SylverInk
 			DoMeasureTask();
 		}
 
-		// TODO: Separate into two functions, one adaptive and one manual.
-		private void MeasureNotes()
+		private bool MeasureNotesAdaptive()
 		{
-			if (Target.Equals(string.Empty))
-				return;
+			if (!Adaptive)
+				return false;
 
-			if (Adaptive)
+			using StreamReader? fileStream = new(Target);
+			if (fileStream is null || fileStream.EndOfStream)
 			{
-				using StreamReader? fileStream = new(Target);
-				if (fileStream is null || fileStream.EndOfStream)
-				{
-					Common.Settings.ImportTarget = string.Empty;
-					Target = string.Empty;
-					return;
-				}
-
-				// Letters, numbers, spaces, and punctuation; respectively.
-				string[] classes = [@"\p{L}+", @"\p{Nd}+", @"[\p{Zs}\t]+", @"[\p{P}\p{S}]+"];
-				Dictionary<string, double> frequencies = [];
-				DataLines.Clear();
-
-				while (fileStream?.EndOfStream is false)
-				{
-					string line = fileStream?.ReadLine() ?? string.Empty;
-					DataLines.Add(line);
-				}
-
-				for (int length = 3; length <= 30; length++)
-				{
-					frequencies.Clear();
-					double total = 0.0;
-
-					try
-					{
-						foreach (string key in DataLines)
-						{
-							total++;
-
-							string pattern = string.Empty;
-							for (int c = 0; c < Math.Max(0, Math.Min(key.Length, length)); c++)
-								foreach (string type in classes)
-									if (!pattern.EndsWith(type) && Regex.IsMatch(key.AsSpan(c, 1), type))
-										pattern += type;
-
-							if (!pattern.Trim().Equals(string.Empty) && !frequencies.TryAdd(pattern, 1.0))
-								frequencies[pattern] += 1.0;
-						}
-					}
-					catch
-					{
-						continue;
-					}
-
-					foreach (string key in frequencies.Keys)
-						frequencies[key] /= total;
-
-					// tl;dr: We search for note boundaries based on certain strings of characters appearing much more frequently than others at the start of lines.
-					// Think timestamps, for instance.
-					// And to be exact, we're looking for sequences that occur in at least 5% of all lines.
-					var ordered = frequencies.OrderByDescending(pair => pair.Value).First();
-					if (ordered.Value >= 0.05)
-						AdaptivePredicate = "^" + ordered.Key;
-				}
-
-				if (!AdaptivePredicate.Trim().Equals(string.Empty))
-				{
-					string recordData = string.Empty;
-					RunningAverage = 0.0;
-					RunningCount = 0;
-
-					for (int i = 0; i < DataLines.Count; i++)
-					{
-						var line = DataLines[i];
-						if (Regex.IsMatch(line, AdaptivePredicate))
-						{
-							if (!recordData.Trim().Equals(string.Empty))
-							{
-								RunningAverage += recordData.Length;
-								RunningCount++;
-							}
-							recordData = line;
-						}
-						else
-							recordData += "\r\n" + line;
-					}
-
-					RunningAverage /= RunningCount;
-					return;
-				}
-
-				MessageBox.Show("Failed to autodetect the note format.", "Sylver Ink: Error", MessageBoxButton.OK);
-				Adaptive = false;
-				AdaptiveCheckBox.IsChecked = false;
-				AdaptivePredicate = string.Empty;
+				Common.Settings.ImportTarget = string.Empty;
+				Target = string.Empty;
+				return false;
 			}
 
+			// Letters, numbers, spaces, and punctuation; respectively.
+			string[] classes = [@"\p{L}+", @"\p{Nd}+", @"[\p{Zs}\t]+", @"[\p{P}\p{S}]+"];
+			Dictionary<string, double> frequencies = [];
+			DataLines.Clear();
+
+			while (fileStream?.EndOfStream is false)
+			{
+				string line = fileStream?.ReadLine() ?? string.Empty;
+				DataLines.Add(line);
+			}
+
+			for (int length = 3; length <= 30; length++)
+			{
+				frequencies.Clear();
+				double total = 0.0;
+
+				try
+				{
+					foreach (string key in DataLines)
+					{
+						total++;
+
+						string pattern = string.Empty;
+						for (int c = 0; c < Math.Max(0, Math.Min(key.Length, length)); c++)
+							foreach (string type in classes)
+								if (!pattern.EndsWith(type) && Regex.IsMatch(key.AsSpan(c, 1), type))
+									pattern += type;
+
+						if (!pattern.Trim().Equals(string.Empty) && !frequencies.TryAdd(pattern, 1.0))
+							frequencies[pattern] += 1.0;
+					}
+				}
+				catch
+				{
+					continue;
+				}
+
+				foreach (string key in frequencies.Keys)
+					frequencies[key] /= total;
+
+				// tl;dr: We search for note boundaries based on certain strings of characters appearing much more frequently than others at the start of lines.
+				// Think timestamps, for instance.
+				// And to be exact, we're looking for sequences that occur in at least 5% of all lines.
+				var ordered = frequencies.OrderByDescending(pair => pair.Value).First();
+				if (ordered.Value >= 0.05)
+					AdaptivePredicate = "^" + ordered.Key;
+			}
+
+			if (!AdaptivePredicate.Trim().Equals(string.Empty))
+			{
+				string recordData = string.Empty;
+				RunningAverage = 0.0;
+				RunningCount = 0;
+
+				for (int i = 0; i < DataLines.Count; i++)
+				{
+					var line = DataLines[i];
+					if (Regex.IsMatch(line, AdaptivePredicate))
+					{
+						if (!recordData.Trim().Equals(string.Empty))
+						{
+							RunningAverage += recordData.Length;
+							RunningCount++;
+						}
+						recordData = line;
+					}
+					else
+						recordData += "\r\n" + line;
+				}
+
+				RunningAverage /= RunningCount;
+				return true;
+			}
+
+			MessageBox.Show("Failed to autodetect the note format.", "Sylver Ink: Error", MessageBoxButton.OK);
+			Adaptive = false;
+			AdaptiveCheckBox.IsChecked = false;
+			AdaptivePredicate = string.Empty;
+			return false;
+		}
+
+		private void MeasureNotesManual()
+		{
 			try
 			{
 				using StreamReader? fileStream = new(Target);
@@ -237,13 +237,13 @@ namespace SylverInk
 					else
 						blankCount = 0;
 
-					if (recordData.Length > 0 && (blankCount >= Common.Settings.LineTolerance || fileStream?.EndOfStream is true))
-					{
-						blankCount = 0;
-						RunningAverage += recordData.Length;
-						recordData = string.Empty;
-						RunningCount++;
-					}
+					if (!(recordData.Length > 0 && (blankCount >= Common.Settings.LineTolerance || fileStream?.EndOfStream is true)))
+						continue;
+
+					blankCount = 0;
+					RunningAverage += recordData.Length;
+					recordData = string.Empty;
+					RunningCount++;
 				}
 
 				RunningAverage /= RunningCount;
@@ -252,6 +252,15 @@ namespace SylverInk
 			{
 				MessageBox.Show($"Could not open file: {Target}", "Sylver Ink: Error", MessageBoxButton.OK, MessageBoxImage.Error);
 			}
+		}
+
+		private void MeasureNotes()
+		{
+			if (Target.Equals(string.Empty))
+				return;
+
+			if (!MeasureNotesAdaptive())
+				MeasureNotesManual();
 		}
 
 		private void Open_Click(object sender, RoutedEventArgs e)
@@ -317,13 +326,13 @@ namespace SylverInk
 				else
 					blankCount = 0;
 
-				if (recordData.Length > 0 && (blankCount >= Common.Settings.LineTolerance || i >= DataLines.Count - 1))
-				{
-					CurrentDatabase.CreateRecord(recordData);
-					Imported++;
-					recordData = string.Empty;
-					blankCount = 0;
-				}
+				if (!(recordData.Length > 0 && (blankCount >= Common.Settings.LineTolerance || i >= DataLines.Count - 1)))
+					continue;
+
+				CurrentDatabase.CreateRecord(recordData);
+				Imported++;
+				recordData = string.Empty;
+				blankCount = 0;
 			}
 		}
 

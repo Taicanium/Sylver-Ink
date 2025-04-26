@@ -106,7 +106,6 @@ namespace SylverInk
 				Match match;
 				if ((match = IndexDigits().Match(db.Name ?? string.Empty)).Success)
 					index = int.Parse(match.Groups[1].Value);
-
 				while (tabs.Where(item => PanelLabel(item).Equals($"{db.Name} ({index})")).Any())
 					index++;
 				db.Name = $"{db.Name} ({index})";

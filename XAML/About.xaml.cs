@@ -15,10 +15,7 @@ namespace SylverInk
 			DataContext = Common.Settings;
 		}
 
-		private void CloseClick(object sender, RoutedEventArgs e)
-		{
-			Close();
-		}
+		private void CloseClick(object sender, RoutedEventArgs e) => Close();
 
 		private void Drag(object sender, MouseButtonEventArgs e) => DragMove();
 

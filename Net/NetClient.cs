@@ -130,19 +130,20 @@ namespace SylverInk.Net
 					stream.Read(intBuffer, 0, 4);
 					textCount = IntFromBytes(intBuffer);
 
-					if (textCount > 0)
-					{
-						textBuffer = new byte[textCount];
-						stream.Read(textBuffer, 0, textCount);
+					if (textCount <= 0)
+						break;
 
-						DB?.DeserializeRecords([.. textBuffer]);
+					textBuffer = new byte[textCount];
+					stream.Read(textBuffer, 0, textCount);
 
-						Connecting = false;
-						Connected = true;
-						UpdateIndicator();
-						DB?.GetHeader();
-						Concurrent(() => DeferUpdateRecentNotes(true));
-					}
+					DB?.DeserializeRecords([.. textBuffer]);
+
+					Connecting = false;
+					Connected = true;
+					UpdateIndicator();
+					DB?.GetHeader();
+					Concurrent(() => DeferUpdateRecentNotes(true));
+
 					break;
 				case MessageType.RecordAdd:
 					stream.Read(intBuffer, 0, 4);
@@ -172,25 +173,25 @@ namespace SylverInk.Net
 					stream.Read(intBuffer, 0, 4);
 					textCount = IntFromBytes(intBuffer);
 
-					if (textCount > 0)
-					{
-						textBuffer = new byte[textCount];
-						stream.Read(textBuffer, 0, textCount);
-						var oldText = Encoding.UTF8.GetString(textBuffer);
+					if (textCount <= 0)
+						break;
 
-						stream.Read(intBuffer, 0, 4);
-						textCount = IntFromBytes(intBuffer);
+					textBuffer = new byte[textCount];
+					stream.Read(textBuffer, 0, textCount);
+					var oldText = Encoding.UTF8.GetString(textBuffer);
 
-						if (textCount > 0)
-						{
-							textBuffer = new byte[textCount];
-							stream.Read(textBuffer, 0, textCount);
-							var newText = Encoding.UTF8.GetString(textBuffer);
+					stream.Read(intBuffer, 0, 4);
+					textCount = IntFromBytes(intBuffer);
 
-							DB?.Replace(oldText, newText, false);
-							Concurrent(() => DeferUpdateRecentNotes());
-						}
-					}
+					if (textCount <= 0)
+						break;
+
+					textBuffer = new byte[textCount];
+					stream.Read(textBuffer, 0, textCount);
+					var newText = Encoding.UTF8.GetString(textBuffer);
+
+					DB?.Replace(oldText, newText, false);
+					Concurrent(() => DeferUpdateRecentNotes());
 					break;
 				case MessageType.RecordUnlock:
 					DB?.Unlock(recordIndex);

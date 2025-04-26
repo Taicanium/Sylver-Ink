@@ -282,6 +282,10 @@ namespace SylverInk.Notes
 				ReplaceCount += (recordText.Length - recordText.Replace(oldText, string.Empty, StringComparison.OrdinalIgnoreCase).Length) / oldText.Length;
 				NoteCount++;
 				CreateRevision(record.Index, newVersion);
+
+				for (int i = OpenQueries.Count - 1; i > -1; i--)
+					if (record.Equals(OpenQueries[i].ResultRecord))
+						Concurrent(OpenQueries[i].Close);
 			}
 
 			Changed = Changed || ReplaceCount > 0;
@@ -292,6 +296,10 @@ namespace SylverInk.Notes
 		{
 			for (int i = RecordCount - 1; i > -1; i--)
 			{
+				for (int j = OpenQueries.Count - 1; j > -1; j--)
+					if (GetRecord(i).Equals(OpenQueries[j].ResultRecord))
+						Concurrent(OpenQueries[j].Close);
+
 				var RecordDate = Records[i].GetCreatedObject().ToLocalTime();
 				var comparison = RecordDate.CompareTo(targetDate);
 				if (comparison > 0)
@@ -304,11 +312,11 @@ namespace SylverInk.Notes
 				{
 					var RevisionDate = DateTime.FromBinary(Records[i].GetRevision((uint)j - 1U)._created).ToLocalTime();
 					comparison = RevisionDate.CompareTo(targetDate);
-					if (comparison > 0)
-					{
-						Records[i].DeleteRevision(j - 1);
-						Changed = true;
-					}
+					if (comparison <= 0)
+						continue;
+
+					Records[i].DeleteRevision(j - 1);
+					Changed = true;
 				}
 			}
 

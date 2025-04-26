@@ -68,10 +68,7 @@ namespace SylverInk
 			var menu = (ContextMenu)item.Parent;
 			SearchResult result;
 			if (menu.DataContext.GetType() == typeof(NoteRecord))
-			{
-				var record = (NoteRecord)menu.DataContext;
-				result = OpenQuery(record, false);
-			}
+				result = OpenQuery((NoteRecord)menu.DataContext, false);
 			else
 				result = OpenQuery(_recentSelection, false);
 

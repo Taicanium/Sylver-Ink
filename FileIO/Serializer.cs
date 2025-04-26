@@ -45,20 +45,20 @@ namespace SylverInk.FileIO
 
 		public void Close(bool testing = false)
 		{
-			if (_isOpen)
-			{
-				_lzw.Close();
-				if (_writing)
-				{
-					if (UseLZW)
-						_outgoing = _lzw.Outgoing;
-					_fileStream?.Write([.. _outgoing], 0, _outgoing.Count);
-					_fileStream?.Flush();
-				}
+			if (!_isOpen)
+				return;
 
-				if (!testing)
-					_fileStream?.Dispose();
+			_lzw.Close();
+			if (_writing)
+			{
+				if (UseLZW)
+					_outgoing = _lzw.Outgoing;
+				_fileStream?.Write([.. _outgoing], 0, _outgoing.Count);
+				_fileStream?.Flush();
 			}
+
+			if (!testing)
+				_fileStream?.Dispose();
 
 			_isOpen = false;
 		}
@@ -95,11 +95,11 @@ namespace SylverInk.FileIO
 			Headless = format < 3;
 			UseLZW = format % 2 == 0;
 
-			if (UseLZW)
-			{
-				_lzw.Outgoing.Clear();
-				_lzw.Init(_fileStream, _writing);
-			}
+			if (!UseLZW)
+				return;
+
+			_lzw.Outgoing.Clear();
+			_lzw.Init(_fileStream, _writing);
 		}
 
 		public bool OpenRead(string path, List<byte>? inMemory = null)
@@ -108,11 +108,7 @@ namespace SylverInk.FileIO
 
 			try
 			{
-				if (inMemory is null)
-					_fileStream = new FileStream(path, FileMode.Open);
-				else
-					_fileStream = new MemoryStream(inMemory?.ToArray() ?? []);
-
+				_fileStream = inMemory is null ? new FileStream(path, FileMode.Open) : new MemoryStream(inMemory?.ToArray() ?? []);
 				_isOpen = true;
 				_writing = false;
 
