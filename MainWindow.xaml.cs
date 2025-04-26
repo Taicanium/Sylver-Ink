@@ -378,8 +378,6 @@ namespace SylverInk
 
 			UpdateHandler.CheckForUpdates();
 
-			Application.Current.Shutdown();
-
 			if (!IsShuttingDown())
 				UpdatesChecked = true;
 
