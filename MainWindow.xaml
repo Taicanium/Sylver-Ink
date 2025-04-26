@@ -60,7 +60,7 @@
 							</Grid>
 							<StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Grid.Row="1" VerticalAlignment="Bottom">
 								<Label Content="New note" FontStyle="Italic"/>
-								<Label Content="(?)" Foreground="{Binding AccentForeground}" ToolTip="Write a line of text and press Enter to create a new note. You can also use the Ctrl+N hotkey to open a sticky note at any time."/>
+								<Label Content="(?)" Foreground="{Binding AccentForeground}" ToolTip="Write a line of text and press Enter to create a new note. You can also press Ctrl+N to open a sticky note at any time."/>
 							</StackPanel>
 							<TextBox KeyDown="NewNote_Keydown" Margin="5" Grid.Row="2" VerticalAlignment="Top"/>
 							<Grid Margin="0,10" Grid.Row="3">
@@ -163,6 +163,9 @@
 				<MenuItem Click="DatabaseConnect" Header="Connect" Tag="NotConnected"/>
 				<MenuItem Click="DatabaseDisconnect" Header="Disconnect" IsEnabled="False" Tag="Connected"/>
 				<MenuItem Click="DatabaseServe" Header="Open to Network" Tag="NotServing"/>
+			</MenuItem>
+			<MenuItem Header="Help" Height="25">
+				<MenuItem Click="ShowAbout" Header="About..."/>
 			</MenuItem>
 		</Menu>
 

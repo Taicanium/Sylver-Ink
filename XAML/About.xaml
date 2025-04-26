@@ -1,0 +1,26 @@
+﻿<Window x:Class="SylverInk.About"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:SylverInk"
+        mc:Ignorable="d"
+		d:DataContext="{d:DesignInstance Type=local:ContextSettings}"
+		Background="{Binding MenuBackground}" Foreground="{Binding MenuForeground}" MouseLeftButtonDown="Drag" Title="Sylver Ink: About" Height="350" Width="350">
+    <Grid>
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition Width="*"/>
+		</Grid.ColumnDefinitions>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="*"/>
+			<RowDefinition Height="50"/>
+		</Grid.RowDefinitions>
+		<TextBlock FontFamily="{Binding MainFontFamily}" FontSize="{Binding MainFontSize}" Margin="15" TextWrapping="WrapWithOverflow">
+			<Bold>Sylver Ink</Bold> is released under the MIT permissive software license. You are free to modify and redistribute Sylver Ink as you see fit, provided no claim is made to patent rights.<LineBreak/><LineBreak/>
+			With thanks to <Bold>Miles Farber</Bold> for the priceless contribution of encouraging words and helpful brainstorming;<LineBreak/>
+			and to <Bold>Norvinsk Hunter</Bold> for his invaluable insight into the wants and needs of our target audience.<LineBreak/><LineBreak/>
+			<Hyperlink NavigateUri="https://github.com/Taicanium/Sylver-Ink" RequestNavigate="FollowHyperlink">Visit us on Github.</Hyperlink>
+		</TextBlock>
+		<Button Click="CloseClick" Content="Close" Grid.Row="1"/>
+	</Grid>
+</Window>

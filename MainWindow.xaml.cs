@@ -434,6 +434,8 @@ namespace SylverInk
 
 		private void SaveNewName(object? sender, RoutedEventArgs e) => RenameDatabase.IsOpen = false;
 
+		private void ShowAbout(object? sender, RoutedEventArgs e) => new About().Show();
+
 		private void SublistChanged(object sender, RoutedEventArgs e)
 		{
 			var box = (ListBox)sender;

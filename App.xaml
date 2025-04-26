@@ -88,6 +88,7 @@
 				<Setter Property="FontSize" Value="{Binding MainFontSize}"/>
 				<Setter Property="Foreground" Value="{Binding MenuForeground}"/>
 				<Setter Property="HorizontalContentAlignment" Value="Center"/>
+				<Setter Property="ToolTipService.InitialShowDelay" Value="250"/>
 				<Setter Property="VerticalContentAlignment" Value="Center"/>
 			</Style>
 			<Style TargetType="{x:Type ListBox}">
