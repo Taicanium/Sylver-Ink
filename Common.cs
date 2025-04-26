@@ -347,13 +347,19 @@ namespace SylverInk
 			var time = DateTime.UtcNow;
 
 			var binary = time.ToBinary();
-			var nano = time.Nanosecond;
+			var micro = time.Microsecond;
 
-			var mac = binary;
-			for (double i = 1.2; i < 2.0; i += 0.1)
-				mac -= Math.Sign(mac) * (long)Math.Floor(mac / (new Random().NextDouble() + i));
+			var seed = (int)(time.Ticks & int.MaxValue);
+			var rnd = new Random(seed);
 
-			return string.Format("{0:X8}-{1:X4}-{2:X4}-{3:X2}{4:X2}-{5:X12}", (binary >> 32) & 0xFFFF_FFFF, (binary >> 16) & 0xFFFF, binary & 0xFFFF, (nano & 0x3FC) >> 2, (byte)type, mac & 0xFFFF_FFFF_FFFF);
+			long mac = rnd.Next();
+			for (double i = 4.2; i < 5.0; i += rnd.NextDouble())
+				mac += (long)Math.Floor(mac / (rnd.NextDouble() + i));
+
+			mac |= (long)(rnd.Next() & 0xFFFF) << 32;
+
+			var uuid = string.Format("{0:X8}-{1:X4}-{2:X4}-{3:X2}{4:X2}-{5:X12}", (binary >> 32) & 0xFFFF_FFFF, (binary >> 16) & 0xFFFF, binary & 0xFFFF, (micro & 0xFF) >> 2, (byte)type, mac & 0xFFFF_FFFF_FFFF);
+			return uuid;
 		}
 
 		private static double MeasureTextHeight(string text)
