@@ -47,7 +47,7 @@ namespace SylverInk.Net
 				var releaseString = release["tag_name"]?.ToString() ?? string.Empty;
 				if (releaseString.StartsWith('v'))
 					releaseString = releaseString[1..];
-				while (releaseString.AsSpan().Count('.') < 3)
+				while (releaseString.AsSpan().Count('.') < 2)
 					releaseString += ".0";
 
 				string? uriNode = null;
@@ -74,7 +74,7 @@ namespace SylverInk.Net
 				if (releaseVersion.CompareTo(assemblyVersion) <= 0)
 					return;
 
-				if (MessageBox.Show($"A new update is available ({assemblyVersion} → {releaseString}). Would you like to install it now?", "Sylver Ink: Info", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.No)
+				if (MessageBox.Show($"A new update is available ({assemblyVersion.ToString(3)} → {releaseString}). Would you like to install it now?", "Sylver Ink: Info", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.No)
 					return;
 
 				if (File.Exists(TempUri))

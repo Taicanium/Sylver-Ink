@@ -128,16 +128,7 @@ namespace SylverInk.FileIO
 
 			try
 			{
-				if (inMemory)
-					_fileStream = new MemoryStream();
-				else
-				{
-					if (File.Exists(path))
-						File.Delete(path);
-
-					_fileStream = new FileStream(path, FileMode.Create);
-				}
-
+				_fileStream = inMemory ? new MemoryStream() : new FileStream(path, FileMode.Create);
 				_isOpen = true;
 				_writing = true;
 

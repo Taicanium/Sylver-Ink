@@ -258,13 +258,13 @@ namespace SylverInk.Notes
 				if (item.Tag is null)
 					continue;
 
-				if (((NoteRecord)item.Tag).Equals(Record))
-				{
-					if (ChildPanel.SelectedIndex == i)
-						ChildPanel.SelectedIndex = Math.Max(0, Math.Min(i - 1, ChildPanel.Items.Count - 1));
+				if (!((NoteRecord)item.Tag).Equals(Record))
+					continue;
 
-					ChildPanel.Items.RemoveAt(i);
-				}
+				if (ChildPanel.SelectedIndex == i)
+					ChildPanel.SelectedIndex = Math.Max(0, Math.Min(i - 1, ChildPanel.Items.Count - 1));
+
+				ChildPanel.Items.RemoveAt(i);
 			}
 		}
 	}

@@ -272,7 +272,7 @@ namespace SylverInk
 		{
 			WindowSource?.RemoveHook(HwndHook);
 			WindowSource = null;
-			UnregisterHotKey();
+			UnregisterHotKeys();
 			base.OnClosed(e);
 		}
 
@@ -498,7 +498,7 @@ namespace SylverInk
 			DeferUpdateRecentNotes(true);
 		}
 
-		private void UnregisterHotKey()
+		private void UnregisterHotKeys()
 		{
 			UnregisterHotKey(new WindowInteropHelper(this).Handle, NewNoteHotKeyID);
 			UnregisterHotKey(new WindowInteropHelper(this).Handle, PreviousNoteHotKeyID);

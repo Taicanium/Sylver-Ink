@@ -97,14 +97,14 @@ namespace SylverInk
 			var control = (TabControl)Application.Current.MainWindow.FindName("DatabasesPanel");
 			var tabs = control.Items.Cast<TabItem>();
 
-			if ((db.Name ?? string.Empty).Equals(string.Empty))
+			if (string.Empty.Equals(db.Name ??= string.Empty)) // Assignment over comparison per CS8604
 				db.Name = DefaultDatabase;
 
 			if (tabs.Where(item => PanelLabel(item).Equals(db.Name)).Any())
 			{
 				var index = 1;
-				Match match;
-				if ((match = IndexDigits().Match(db.Name ?? string.Empty)).Success)
+				Match match = IndexDigits().Match(db.Name);
+				if (match.Success)
 					index = int.Parse(match.Groups[1].Value);
 				while (tabs.Where(item => PanelLabel(item).Equals($"{db.Name} ({index})")).Any())
 					index++;
@@ -113,8 +113,6 @@ namespace SylverInk
 
 			if (db.DBFile.Equals(string.Empty))
 				db.DBFile = GetDatabasePath(db);
-
-			var _name = db.Name ?? string.Empty;
 
 			TabItem item = new()
 			{
@@ -127,7 +125,7 @@ namespace SylverInk
 			db.Sort();
 
 			var newControl = (TabControl)item.Content;
-			newControl.Tag = _name;
+			newControl.Tag = db.Name;
 			item.MouseRightButtonDown += (_, _) => control.SelectedItem = item;
 			control.Items.Add(item);
 			control.SelectedItem = item;
