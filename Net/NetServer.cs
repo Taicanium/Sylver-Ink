@@ -135,7 +135,7 @@ namespace SylverInk.Net
 			bool dataFinished = false;
 			do
 			{
-				dataFinished = !SpinWait.SpinUntil(new(() => client.Available != oldData), 200);
+				dataFinished = !SpinWait.SpinUntil(new(() => client.Available != oldData), 500);
 				oldData = client.Available;
 			} while (!dataFinished);
 
@@ -148,6 +148,7 @@ namespace SylverInk.Net
 			var intBuffer = new byte[4];
 			var recordIndex = 0;
 			byte[] textBuffer;
+			var bufferString = string.Empty;
 			var textCount = 0;
 
 			stream.Read(intBuffer, 0, 4);
@@ -166,13 +167,10 @@ namespace SylverInk.Net
 						textBuffer = new byte[textCount];
 						stream.Read(textBuffer, 0, textCount);
 						outBuffer.AddRange(textBuffer);
-
-						DB?.CreateRecord(Encoding.UTF8.GetString(textBuffer), false);
-						Concurrent(() => DeferUpdateRecentNotes());
-						break;
+						bufferString = Encoding.UTF8.GetString(textBuffer);
 					}
 
-					DB?.CreateRecord(string.Empty, false);
+					DB?.CreateRecord(bufferString, false);
 					Concurrent(() => DeferUpdateRecentNotes());
 					break;
 				case MessageType.RecordLock:
@@ -191,7 +189,7 @@ namespace SylverInk.Net
 
 					textBuffer = new byte[textCount];
 					stream.Read(textBuffer, 0, textCount);
-					var oldText = Encoding.UTF8.GetString(textBuffer);
+					bufferString = Encoding.UTF8.GetString(textBuffer);
 
 					stream.Read(intBuffer, 0, 4);
 					textCount = IntFromBytes(intBuffer);
@@ -201,9 +199,8 @@ namespace SylverInk.Net
 
 					textBuffer = new byte[textCount];
 					stream.Read(textBuffer, 0, textCount);
-					var newText = Encoding.UTF8.GetString(textBuffer);
 
-					DB?.Replace(oldText, newText, false);
+					DB?.Replace(bufferString, Encoding.UTF8.GetString(textBuffer), false);
 					Concurrent(() => DeferUpdateRecentNotes());
 					break;
 				case MessageType.RecordUnlock:
@@ -219,13 +216,10 @@ namespace SylverInk.Net
 						textBuffer = new byte[textCount];
 						stream.Read(textBuffer, 0, textCount);
 						outBuffer.AddRange(textBuffer);
-
-						DB?.CreateRevision(recordIndex, Encoding.UTF8.GetString(textBuffer), false);
-						Concurrent(() => DeferUpdateRecentNotes());
-						break;
+						bufferString = Encoding.UTF8.GetString(textBuffer);
 					}
 
-					DB?.CreateRevision(recordIndex, string.Empty, false);
+					DB?.CreateRevision(recordIndex, bufferString, false);
 					Concurrent(() => DeferUpdateRecentNotes());
 					break;
 			}

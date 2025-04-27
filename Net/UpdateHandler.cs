@@ -74,7 +74,7 @@ namespace SylverInk.Net
 				if (releaseVersion.CompareTo(assemblyVersion) <= 0)
 					return;
 
-				if (MessageBox.Show($"A new update is available ({assemblyVersion.ToString(3)} → {releaseString}). Would you like to install it now?", "Sylver Ink: Info", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.No)
+				if (MessageBox.Show($"A new update is available ({assemblyVersion.ToString(3)} → {releaseString}). Would you like to install it now?", "Sylver Ink: Notification", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.No)
 					return;
 
 				if (File.Exists(TempUri))
