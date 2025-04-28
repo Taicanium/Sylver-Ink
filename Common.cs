@@ -223,7 +223,7 @@ namespace SylverInk
 			}
 
 			BackgroundWorker deferUpdateTask = new();
-			deferUpdateTask.DoWork += (_, _) => SpinWait.SpinUntil(new(() => !MeasureTask?.IsBusy is true && !UpdateTask?.IsBusy is true), 1000);
+			deferUpdateTask.DoWork += (_, _) => SpinWait.SpinUntil(new(() => !MeasureTask?.IsBusy is true && !UpdateTask?.IsBusy is true), 100);
 			deferUpdateTask.RunWorkerCompleted += (_, _) =>
 			{
 				if (MeasureTask?.IsBusy is false && UpdateTask?.IsBusy is false)

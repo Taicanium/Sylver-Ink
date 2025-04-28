@@ -130,6 +130,7 @@ namespace SylverInk
 			// Letters, numbers, spaces, and punctuation; respectively.
 			string[] classes = [@"\p{L}+", @"\p{Nd}+", @"[\p{Zs}\t]+", @"[\p{P}\p{S}]+"];
 			Dictionary<string, double> frequencies = [];
+			Dictionary<string, int> tokenCounts = [];
 			DataLines.Clear();
 
 			while (fileStream?.EndOfStream is false)
@@ -138,31 +139,71 @@ namespace SylverInk
 				DataLines.Add(line);
 			}
 
-			for (int length = 3; length <= 30; length++)
+			int LastPredicateSequence = 0;
+			double LastPredicateValue = 0.0;
+
+			for (int length = 3; length <= 35; length++)
 			{
-				frequencies.Clear();
 				double total = 0.0;
 
-				try
+				frequencies.Clear();
+				frequencies.Add(string.Empty, 0.0);
+
+				tokenCounts.Clear();
+				tokenCounts.Add(string.Empty, 0);
+
+				foreach (string key in DataLines)
 				{
-					foreach (string key in DataLines)
+					if (key.Trim().Equals(string.Empty))
+						continue;
+
+					for (int c = 0; c < Math.Max(0, Math.Min(key.Length, length)); c++)
 					{
-						total++;
+						foreach (string type in classes)
+						{
+							if (!Regex.IsMatch(key.AsSpan(c, 1), type))
+								continue;
 
-						string pattern = string.Empty;
-						for (int c = 0; c < Math.Max(0, Math.Min(key.Length, length)); c++)
-							foreach (string type in classes)
-								if (!pattern.EndsWith(type) && Regex.IsMatch(key.AsSpan(c, 1), type))
-									pattern += type;
+							for (int k = frequencies.Keys.Count - 1; k > -1; k--)
+							{
+								var pattern = frequencies.Keys.ElementAt(k);
+								if (c + 1 < tokenCounts[pattern])
+									continue;
 
-						if (!pattern.Trim().Equals(string.Empty) && !frequencies.TryAdd(pattern, 1.0))
-							frequencies[pattern] += 1.0;
+								if (pattern.EndsWith(type))
+								{
+									frequencies[pattern] += 1.0;
+									total++;
+									continue;
+								}
+
+								var pBrute = pattern + type;
+								var keySpan = key.AsSpan(0, Math.Min(c + 1, key.Length));
+
+								if (!Regex.IsMatch(keySpan, pBrute))
+									continue;
+
+								if (!pBrute.Trim().Equals(string.Empty))
+								{
+									total++;
+
+									if (!frequencies.TryAdd(pBrute, 1.0))
+									{
+										frequencies[pBrute] += 1.0;
+										frequencies.Remove(pattern);
+										tokenCounts.Remove(pattern);
+										continue;
+									}
+
+									tokenCounts.TryAdd(pBrute, tokenCounts[pattern] + 1);
+								}
+							}
+						}
 					}
 				}
-				catch
-				{
+
+				if (frequencies.Count == 0)
 					continue;
-				}
 
 				foreach (string key in frequencies.Keys)
 					frequencies[key] /= total;
@@ -171,8 +212,23 @@ namespace SylverInk
 				// Think timestamps, for instance.
 				// And to be exact, we're looking for sequences that occur in at least 5% of all lines.
 				var ordered = frequencies.OrderByDescending(pair => pair.Value).First();
-				if (ordered.Value >= 0.05)
-					AdaptivePredicate = "^" + ordered.Key;
+				if (ordered.Value >= 0.05 && ordered.Value >= LastPredicateValue)
+				{
+					var NewPredicate = "^" + ordered.Key;
+					if (AdaptivePredicate.Equals(NewPredicate))
+					{
+						LastPredicateSequence++;
+						continue;
+					}
+					AdaptivePredicate = NewPredicate;
+					LastPredicateSequence = 0;
+					LastPredicateValue = ordered.Value;
+				}
+				else
+					LastPredicateSequence++;
+
+				if (LastPredicateSequence > 5)
+					break;
 			}
 
 			if (!AdaptivePredicate.Trim().Equals(string.Empty))

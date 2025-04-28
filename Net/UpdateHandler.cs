@@ -96,7 +96,7 @@ namespace SylverInk.Net
 				Process.Start(inf);
 				Application.Current.Shutdown();
 			}
-			catch (Exception)
+			catch
 			{
 				return;
 			}
