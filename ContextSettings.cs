@@ -1,5 +1,6 @@
 ﻿using SylverInk.Notes;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Globalization;
@@ -20,6 +21,7 @@ namespace SylverInk
 		private double _headerFontSize = 12.5;
 		private string _importData = string.Empty;
 		private string _importTarget = string.Empty;
+		private List<string> _lastDatabases = [];
 		private int _lineTolerance = 2;
 		private Brush? _listBackgound = Brushes.White;
 		private Brush? _listForegound = Brushes.Black;
@@ -44,6 +46,7 @@ namespace SylverInk
 		public double HeaderFontSize { get => _headerFontSize; set { _headerFontSize = value; OnPropertyChanged(); } }
 		public string ImportData { get => _importData; set { _importData = value; OnPropertyChanged(); } }
 		public string ImportTarget { get => _importTarget; set { _importTarget = value; OnPropertyChanged(); } }
+		public List<string> LastDatabases { get => _lastDatabases; set { _lastDatabases = value; OnPropertyChanged(); } }
 		public int LineTolerance { get => _lineTolerance; set { _lineTolerance = Math.Min(36, Math.Max(0, value)); OnPropertyChanged(); } }
 		public Brush? ListBackground { get => _listBackgound; set { _listBackgound = value; OnPropertyChanged(); } }
 		public Brush? ListForeground { get => _listForegound; set { _listForegound = value; OnPropertyChanged(); } }
@@ -132,11 +135,11 @@ namespace SylverInk
 						break;
 					case "LastDatabases":
 						FirstRun = false;
-						var files = keyValue[1].Replace("?\\", DocumentsFolder).Split(';').Distinct().Where(File.Exists);
-						DatabaseCount = Math.Max(1, files.Count());
-						foreach (var file in files)
+						LastDatabases = [.. keyValue[1].Replace("?\\", DocumentsFolder).Split(';').Distinct().Where(File.Exists)];
+						DatabaseCount = Math.Max(1, LastDatabases.Count);
+						foreach (var file in LastDatabases)
 							Database.Create(file, true);
-						if (!files.Any())
+						if (LastDatabases.Count == 0 && Databases.Count == 0)
 						{
 							DatabaseCount = 1;
 							Database.Create(Path.Join(Subfolders["Databases"], DefaultDatabase, $"{DefaultDatabase}.sidb"));

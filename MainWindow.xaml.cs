@@ -193,6 +193,130 @@ namespace SylverInk
 			Application.Current.Shutdown();
 		}
 
+		private void HandleCheckInit()
+		{
+			CheckInit.DoWork += (_, _) =>
+			{
+				do
+				{
+					InitComplete = DatabaseCount > 0
+						&& Databases.Count == DatabaseCount
+						&& SettingsLoaded
+						&& UpdatesChecked;
+
+					if (Concurrent(() => Application.Current.MainWindow.FindName("DatabasesPanel")) is null)
+						InitComplete = false;
+				} while (!InitComplete);
+			};
+
+			CheckInit.RunWorkerCompleted += (_, _) =>
+			{
+				foreach (TabItem item in DatabasesPanel.Items)
+				{
+					if (LastActiveDatabase.Equals(((Database)item.Tag).Name))
+					{
+						DatabasesPanel.SelectedItem = item;
+						CurrentDatabase = (Database)item.Tag;
+					}
+				}
+
+				foreach (var openNote in LastActiveNotes)
+				{
+					var oSplit = openNote.Split(':');
+					if (oSplit.Length < 2)
+						continue;
+
+					if (!int.TryParse(oSplit[1], out var iNote))
+						continue;
+
+					Database? target = null;
+					foreach (Database db in Databases)
+						if (oSplit[0].Equals(db.Name))
+							target = db;
+
+					if (target is null)
+						continue;
+
+					if (target.HasRecord(iNote))
+					{
+						var result = OpenQuery(target, target.GetRecord(iNote));
+						if (result is null)
+							continue;
+
+						if (LastActiveNotesLeft.TryGetValue($"{target.Name}:{iNote}", out var openLeft))
+							result.Left = openLeft;
+
+						if (LastActiveNotesTop.TryGetValue($"{target.Name}:{iNote}", out var openTop))
+							result.Top = openTop;
+					}
+				}
+
+				HandleShellVerbs();
+
+				BackgroundWorker initialUpdateThread = new();
+				initialUpdateThread.DoWork += (_, _) => SpinWait.SpinUntil(new(() => Databases.Count > 0));
+				initialUpdateThread.RunWorkerCompleted += (_, _) =>
+				{
+					CanResize = true;
+					ResizeMode = ResizeMode.CanResize;
+					Common.Settings.MainTypeFace = new(Common.Settings.MainFontFamily, FontStyles.Normal, FontWeights.Normal, FontStretches.Normal);
+					PPD = VisualTreeHelper.GetDpi(this).PixelsPerDip;
+					DeferUpdateRecentNotes(true);
+				};
+				initialUpdateThread.RunWorkerAsync();
+
+				WindowSource = HwndSource.FromHwnd(new WindowInteropHelper(this).Handle);
+				WindowSource.AddHook(HwndHook);
+				RegisterHotKeys();
+			};
+
+			CheckInit.RunWorkerAsync();
+		}
+
+		private void HandleShellVerbs()
+		{
+			var args = Environment.GetCommandLineArgs();
+			if (args.Length < 2)
+				return;
+
+			switch (args[1])
+			{
+				case "open": // &Open
+					HandleVerbOpen(args.Length > 2 ? args[2] : string.Empty);
+					break;
+				default: // &Open
+					HandleVerbOpen(args[1]);
+					break;
+			}
+		}
+
+		private void HandleVerbOpen(string filename)
+		{
+			var wideBreak = string.Empty;
+
+			if (string.Empty.Equals(filename ??= string.Empty))
+				return;
+
+			foreach (string dbFile in Common.Settings.LastDatabases)
+				if (Path.GetFullPath(dbFile).Equals(Path.GetFullPath(filename)))
+					wideBreak = Path.GetFullPath(dbFile);
+
+			if (wideBreak.Equals(string.Empty))
+			{
+				Database.Create(filename);
+				return;
+			}
+
+			foreach (TabItem item in DatabasesPanel.Items)
+			{
+				if (wideBreak.Equals(Path.GetFullPath(((Database)item.Tag).DBFile)))
+				{
+					DatabasesPanel.SelectedItem = item;
+					CurrentDatabase = (Database)item.Tag;
+				}
+			}
+		}
+
 		private nint HwndHook(nint hwnd, int msg, nint wParam, nint lParam, ref bool handled)
 		{
 			if (msg != 0x0312) // WM_HOTKEY
@@ -292,79 +416,7 @@ namespace SylverInk
 				return;
 			}
 
-			CheckInit.DoWork += (_, _) =>
-			{
-				do
-				{
-					InitComplete = DatabaseCount > 0
-						&& Databases.Count == DatabaseCount
-						&& SettingsLoaded
-						&& UpdatesChecked;
-
-					if (Concurrent(() => Application.Current.MainWindow.FindName("DatabasesPanel")) is null)
-						InitComplete = false;
-				} while (!InitComplete);
-			};
-			CheckInit.RunWorkerCompleted += (_, _) =>
-			{
-				foreach (TabItem item in DatabasesPanel.Items)
-				{
-					if (LastActiveDatabase.Equals(((Database)item.Tag).Name))
-					{
-						DatabasesPanel.SelectedItem = item;
-						CurrentDatabase = (Database)item.Tag;
-					}
-				}
-
-				foreach (var openNote in LastActiveNotes)
-				{
-					var oSplit = openNote.Split(':');
-					if (oSplit.Length < 2)
-						continue;
-
-					if (!int.TryParse(oSplit[1], out var iNote))
-						continue;
-
-					Database? target = null;
-					foreach (Database db in Databases)
-						if (oSplit[0].Equals(db.Name))
-							target = db;
-
-					if (target is null)
-						continue;
-
-					if (target.HasRecord(iNote))
-					{
-						var result = OpenQuery(target, target.GetRecord(iNote));
-						if (result is null)
-							continue;
-
-						if (LastActiveNotesLeft.TryGetValue($"{target.Name}:{iNote}", out var openLeft))
-							result.Left = openLeft;
-
-						if (LastActiveNotesTop.TryGetValue($"{target.Name}:{iNote}", out var openTop))
-							result.Top = openTop;
-					}
-				}
-
-				BackgroundWorker worker = new();
-				worker.DoWork += (_, _) => SpinWait.SpinUntil(new(() => Databases.Count > 0));
-				worker.RunWorkerCompleted += (_, _) =>
-				{
-					CanResize = true;
-					ResizeMode = ResizeMode.CanResize;
-					Common.Settings.MainTypeFace = new(Common.Settings.MainFontFamily, FontStyles.Normal, FontWeights.Normal, FontStretches.Normal);
-					PPD = VisualTreeHelper.GetDpi(this).PixelsPerDip;
-					DeferUpdateRecentNotes(true);
-				};
-				worker.RunWorkerAsync();
-
-				WindowSource = HwndSource.FromHwnd(new WindowInteropHelper(this).Handle);
-				WindowSource.AddHook(HwndHook);
-				RegisterHotKeys();
-			};
-
-			CheckInit.RunWorkerAsync();
+			HandleCheckInit();
 
 			if (File.Exists(UpdateHandler.UpdateLockUri))
 				File.Delete(UpdateHandler.UpdateLockUri);
@@ -386,8 +438,6 @@ namespace SylverInk
 				DatabaseCount = 1;
 				Database.Create(Path.Join(Subfolders["Databases"], DefaultDatabase, $"{DefaultDatabase}.sidb"));
 			}
-
-			DatabasesPanel.SelectedIndex = 0;
 		}
 
 		private void RegisterHotKeys()
