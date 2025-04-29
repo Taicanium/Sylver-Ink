@@ -13,13 +13,13 @@ namespace SylverInk
 {
 	public partial class Import : Window
 	{
-		private bool Adaptive = false;
+		private bool Adaptive;
 		private string AdaptivePredicate = string.Empty;
 		private List<string> DataLines { get; } = [];
-		private int Imported = 0;
+		private int Imported;
 		private BackgroundWorker? MeasureTask;
-		private double RunningAverage = 0.0;
-		private int RunningCount = 0;
+		private double RunningAverage;
+		private int RunningCount;
 		private string Target = string.Empty;
 
 		public Import()
@@ -41,7 +41,7 @@ namespace SylverInk
 
 		private void DoMeasureTask()
 		{
-			if (Target.Equals(string.Empty))
+			if (string.IsNullOrWhiteSpace(Target))
 				return;
 
 			if (MeasureTask is null)
@@ -145,7 +145,7 @@ namespace SylverInk
 
 				foreach (string key in DataLines)
 				{
-					if (key.Trim().Equals(string.Empty))
+					if (string.IsNullOrWhiteSpace(key.Trim()))
 						continue;
 
 					for (int c = 0; c < Math.Max(0, Math.Min(key.Length, length)); c++)
@@ -174,7 +174,7 @@ namespace SylverInk
 								if (!Regex.IsMatch(keySpan, pBrute))
 									continue;
 
-								if (!pBrute.Trim().Equals(string.Empty))
+								if (!string.IsNullOrWhiteSpace(pBrute.Trim()))
 								{
 									total++;
 
@@ -222,7 +222,7 @@ namespace SylverInk
 					break;
 			}
 
-			if (!AdaptivePredicate.Trim().Equals(string.Empty))
+			if (!string.IsNullOrWhiteSpace(AdaptivePredicate.Trim()))
 			{
 				string recordData = string.Empty;
 				RunningAverage = 0.0;
@@ -233,7 +233,7 @@ namespace SylverInk
 					var line = DataLines[i];
 					if (Regex.IsMatch(line, AdaptivePredicate))
 					{
-						if (!recordData.Trim().Equals(string.Empty))
+						if (!string.IsNullOrWhiteSpace(recordData.Trim()))
 						{
 							RunningAverage += recordData.Length;
 							RunningCount++;
@@ -303,7 +303,7 @@ namespace SylverInk
 
 		private void MeasureNotes()
 		{
-			if (Target.Equals(string.Empty))
+			if (string.IsNullOrWhiteSpace(Target))
 				return;
 
 			if (!MeasureNotesAdaptive())
@@ -357,7 +357,7 @@ namespace SylverInk
 
 				if (Adaptive)
 				{
-					if (Regex.IsMatch(line, AdaptivePredicate) && !recordData.Trim().Equals(string.Empty))
+					if (Regex.IsMatch(line, AdaptivePredicate) && !string.IsNullOrWhiteSpace(recordData.Trim()))
 					{
 						CurrentDatabase.CreateRecord(recordData);
 						Imported++;
@@ -386,7 +386,7 @@ namespace SylverInk
 		private void Target_TextChanged(object sender, RoutedEventArgs e)
 		{
 			Target = Common.Settings.ImportTarget;
-			Common.Settings.ReadyToFinalize = !Target.Equals(string.Empty);
+			Common.Settings.ReadyToFinalize = !string.IsNullOrWhiteSpace(Target);
 		}
 	}
 }

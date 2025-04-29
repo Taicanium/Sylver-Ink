@@ -15,7 +15,7 @@ namespace SylverInk.Notes
 	{
 		private NoteController Controller = new();
 		public string DBFile = string.Empty;
-		public bool Loaded = false;
+		public bool Loaded;
 
 		public bool Changed { get => Controller.Changed; set => Controller.Changed = value; }
 		public NetClient? Client;
@@ -221,7 +221,7 @@ namespace SylverInk.Notes
 				Loaded = Controller.Loaded = true;
 				Changed = true;
 
-				if ((Name ?? string.Empty).Equals(string.Empty))
+				if (string.IsNullOrWhiteSpace(Name))
 					Name = Path.GetFileNameWithoutExtension(DBFile);
 
 				DeferUpdateRecentNotes(true);
@@ -232,7 +232,7 @@ namespace SylverInk.Notes
 			Controller = new(DBFile = dbFile);
 			Loaded = Controller.Loaded;
 
-			if ((Name ?? string.Empty).Equals(string.Empty))
+			if (string.IsNullOrWhiteSpace(Name))
 				Name = Path.GetFileNameWithoutExtension(DBFile);
 
 			DeferUpdateRecentNotes(true);
@@ -358,10 +358,10 @@ namespace SylverInk.Notes
 			if (!Changed)
 				return;
 
-			if (DBFile.Equals(string.Empty))
+			if (string.IsNullOrWhiteSpace(DBFile))
 				DBFile = GetDatabasePath(this);
 
-			if (UUID is null || UUID.Equals(string.Empty))
+			if (string.IsNullOrWhiteSpace(UUID))
 				UUID = MakeUUID(UUIDType.Database);
 
 			MakeBackup(true);
@@ -384,10 +384,10 @@ namespace SylverInk.Notes
 
 		public void Save(string targetFile)
 		{
-			if (targetFile.Equals(string.Empty))
+			if (string.IsNullOrWhiteSpace(targetFile))
 				targetFile = DBFile;
 
-			if (UUID is null || UUID.Equals(string.Empty))
+			if (string.IsNullOrWhiteSpace(UUID))
 				UUID = MakeUUID(UUIDType.Database);
 
 			if (!Directory.Exists(Path.GetDirectoryName(targetFile)))

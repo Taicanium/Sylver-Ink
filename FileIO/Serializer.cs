@@ -10,18 +10,18 @@ namespace SylverInk.FileIO
 	{
 		private byte[] _buffer = [];
 		private Stream? _fileStream;
-		private bool _isOpen = false;
+		private bool _isOpen;
 		private readonly LZW _lzw = new();
 		private List<byte> _outgoing = [];
 		private byte[] _testBuffer = [];
-		private bool _writing = false;
+		private bool _writing;
 
 		/// <summary>
 		/// See SIDB.md for a file format description.
 		/// </summary>
 		public byte DatabaseFormat { get; set; } = (byte)HighestFormat;
-		public bool Headless { get; private set; } = false;
-		public bool UseLZW { get; private set; } = false;
+		public bool Headless { get; private set; }
+		public bool UseLZW { get; private set; }
 
 		public void BeginCompressionTest()
 		{

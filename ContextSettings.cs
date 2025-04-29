@@ -33,11 +33,11 @@ namespace SylverInk
 		private double _noteTransparency = 100.0;
 		private string _numReplacements = string.Empty;
 		public event PropertyChangedEventHandler? PropertyChanged;
-		private bool _readyToFinalize = false;
-		private bool _readyToReplace = false;
+		private bool _readyToFinalize;
+		private bool _readyToReplace;
 		private readonly ObservableCollection<NoteRecord> _recentNotes = [];
 		private readonly ObservableCollection<NoteRecord> _searchResults = [];
-		private bool _searchResultsOnTop = false;
+		private bool _searchResultsOnTop;
 		private bool _snapSearchResults = true;
 		private readonly string _versionString = $"v. {Assembly.GetExecutingAssembly().GetName().Version?.ToString(3)} © Taica, {GetBuildYear(Assembly.GetExecutingAssembly())}";
 

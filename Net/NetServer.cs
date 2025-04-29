@@ -18,7 +18,7 @@ namespace SylverInk.Net
 {
 	public partial class NetServer
 	{
-		public bool Active { get; set; } = false;
+		public bool Active { get; set; }
 		public IPAddress? Address { get; set; }
 		public string? AddressCode { get; set; }
 		public List<TcpClient> Clients { get; } = [];
@@ -31,7 +31,7 @@ namespace SylverInk.Net
 		public byte? Flags;
 		public System.Windows.Shapes.Ellipse? Indicator { get; set; }
 		public BackgroundWorker ServerTask { get; set; } = new() { WorkerSupportsCancellation = true };
-		public bool Serving { get; private set; } = false;
+		public bool Serving { get; private set; }
 		public BackgroundWorker WatchTask { get; set; } = new() { WorkerSupportsCancellation = true };
 
 		public NetServer(Database DB)

@@ -15,7 +15,7 @@ namespace SylverInk
 	/// </summary>
 	public partial class Settings : Window
 	{
-		private static int ArialIndex = 0;
+		private static int ArialIndex;
 		private static string? ColorTag;
 		public Brush? LastColorSelection { get; set; }
 		private static List<SolidColorBrush> AvailableBrushes { get; } = [];

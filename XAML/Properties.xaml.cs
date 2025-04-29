@@ -11,8 +11,8 @@ namespace SylverInk
 	/// </summary>
 	public partial class Properties : Window
 	{
-		private bool HourSelected = false;
-		private bool MinuteSelected = false;
+		private bool HourSelected;
+		private bool MinuteSelected;
 
 		public Database? DB { get; set; }
 

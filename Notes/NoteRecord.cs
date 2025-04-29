@@ -32,8 +32,8 @@ namespace SylverInk.Notes
 		private bool TagsDirty = true;
 
 		public int Index = -1;
-		public int LastMatchCount { get; private set; } = 0;
-		public bool Locked { get; private set; } = false;
+		public int LastMatchCount { get; private set; }
+		public bool Locked { get; private set; }
 		public string? UUID;
 
 		public string Preview

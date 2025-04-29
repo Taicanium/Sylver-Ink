@@ -47,12 +47,12 @@ namespace SylverInk
 		private static Search? _search;
 		private static Settings? _settings;
 
-		public static bool CanResize { get; set; } = false;
+		public static bool CanResize { get; set; }
 		public static BackgroundWorker CheckInit { get; } = new();
 		public static Database CurrentDatabase { get; set; } = new();
-		public static bool DatabaseChanged { get; set; } = false;
+		public static bool DatabaseChanged { get; set; }
 		public static List<string> DatabaseFiles { get => Databases.ToList().ConvertAll(new Converter<Database, string>(db => db.DBFile)); }
-		public static int DatabaseCount { get; set; } = 0;
+		public static int DatabaseCount { get; set; }
 		public static ObservableCollection<Database> Databases { get; set; } = [];
 		public static string DateFormat { get; } = "yyyy-MM-dd HH:mm:ss";
 		public static string DefaultDatabase { get; } = "New";
@@ -60,7 +60,7 @@ namespace SylverInk
 		public static bool FirstRun { get; set; } = true;
 		public static int HighestFormat { get; } = 8;
 		public static Import? ImportWindow { get => _import; set { _import?.Close(); _import = value; _import?.Show(); } }
-		public static bool InitComplete { get; set; } = false;
+		public static bool InitComplete { get; set; }
 		public static char[] InvalidPathChars { get; } = ['/', '\\', ':', '*', '"', '?', '<', '>', '|'];
 		public static string LastActiveDatabase { get; set; } = string.Empty;
 		public static List<string> LastActiveNotes { get; set; } = [];
@@ -78,13 +78,13 @@ namespace SylverInk
 		public static Search? SearchWindow { get => _search; set { _search?.Close(); _search = value; _search?.Show(); } }
 		public static ContextSettings Settings { get; } = new();
 		public static string SettingsFile { get; } = Path.Join(DocumentsFolder, "settings.sis");
-		public static bool SettingsLoaded { get; set; } = false;
+		public static bool SettingsLoaded { get; set; }
 		public static Settings? SettingsWindow { get => _settings; set { _settings?.Close(); _settings = value; _settings?.Show(); } }
 		public static Dictionary<string, string> Subfolders { get; } = new([
 			new("Databases", Path.Join(DocumentsFolder, "Databases"))
 			]);
-		private static double TextHeight { get; set; } = 0.0;
-		public static bool UpdatesChecked { get; set; } = false;
+		private static double TextHeight { get; set; }
+		public static bool UpdatesChecked { get; set; }
 		private static BackgroundWorker? UpdateTask { get; set; }
 		public static double WindowHeight { get; set; } = 275.0;
 		public static double WindowWidth { get; set; } = 330.0;
@@ -97,7 +97,7 @@ namespace SylverInk
 			var control = (TabControl)Application.Current.MainWindow.FindName("DatabasesPanel");
 			var tabs = control.Items.Cast<TabItem>();
 
-			if (string.Empty.Equals(db.Name ??= string.Empty)) // Assignment over comparison per CS8604
+			if (string.IsNullOrWhiteSpace(db.Name))
 				db.Name = DefaultDatabase;
 
 			if (tabs.Where(item => PanelLabel(item).Equals(db.Name)).Any())
@@ -111,7 +111,7 @@ namespace SylverInk
 				db.Name = $"{db.Name} ({index})";
 			}
 
-			if (db.DBFile.Equals(string.Empty))
+			if (string.IsNullOrWhiteSpace(db.DBFile))
 				db.DBFile = GetDatabasePath(db);
 
 			TabItem item = new()
@@ -167,8 +167,8 @@ namespace SylverInk
 		{
 			var data = brush as SolidColorBrush;
 			if (colors == 4)
-				return string.Format("{0:X2}{1:X2}{2:X2}{3:X2}", data?.Color.A, data?.Color.R, data?.Color.G, data?.Color.B);
-			return string.Format("{0:X2}{1:X2}{2:X2}", data?.Color.R, data?.Color.G, data?.Color.B);
+				return $"{data?.Color.A:X2}{data?.Color.R:X2}{data?.Color.G:X2}{data?.Color.B:X2}";
+			return $"{data?.Color.R:X2}{data?.Color.G:X2}{data?.Color.B:X2}";
 		}
 
 		public static void Concurrent(Action callback) => Application.Current.Dispatcher.Invoke(callback);
@@ -356,7 +356,7 @@ namespace SylverInk
 
 			mac |= (long)(rnd.Next() & 0xFFFF) << 32;
 
-			var uuid = string.Format("{0:X8}-{1:X4}-{2:X4}-{3:X2}{4:X2}-{5:X12}", (binary >> 32) & 0xFFFF_FFFF, (binary >> 16) & 0xFFFF, binary & 0xFFFF, (micro & 0xFF) >> 2, (byte)type, mac & 0xFFFF_FFFF_FFFF);
+			var uuid = $"{(binary >> 32) & 0xFFFF_FFFF:X8}-{(binary >> 16) & 0xFFFF:X4}-{binary & 0xFFFF:X4}-{(micro & 0xFF) >> 2:X2}{(byte)type:X2}-{mac & 0xFFFF_FFFF_FFFF:X12}";
 			return uuid;
 		}
 
@@ -508,9 +508,6 @@ namespace SylverInk
 
 		public static void UpdateRecentNotesSorting(SortType protocol)
 		{
-			if (protocol.Equals(string.Empty))
-				return;
-
 			RecentEntriesSortMode = protocol;
 			DeferUpdateRecentNotes(true);
 		}

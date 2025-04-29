@@ -11,9 +11,9 @@ namespace SylverInk.Notes
 {
 	public partial class NoteController
 	{
-		private short _canCompress = 0; // -1 = Cannot compress, 1 = Can compress, 0 = Not tested.
-		private bool _changed = false;
-		private int _nextIndex = 0;
+		private short _canCompress; // -1 = Cannot compress, 1 = Can compress, 0 = Not tested.
+		private bool _changed;
+		private int _nextIndex;
 		private Serializer? _serializer;
 
 		public bool Changed
@@ -27,7 +27,7 @@ namespace SylverInk.Notes
 		}
 
 		public int Format = HighestFormat;
-		public bool Loaded = false;
+		public bool Loaded;
 		public string? Name;
 		public int RecordCount => Records.Count;
 		private List<NoteRecord> Records { get; } = [];
@@ -57,7 +57,7 @@ namespace SylverInk.Notes
 			if (!File.Exists(dbFile) || !_serializer?.OpenRead(dbFile) is true)
 			{
 				string backup = FindBackup(dbFile);
-				if (!backup.Equals(string.Empty))
+				if (!string.IsNullOrWhiteSpace(backup))
 				{
 					ReloadSerializer();
 					if (!_serializer?.OpenRead(backup) is true)

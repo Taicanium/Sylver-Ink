@@ -16,12 +16,12 @@ namespace SylverInk
 	public partial class SearchResult : Window
 	{
 		private readonly BackgroundWorker? AutosaveThread;
-		private bool Dragging = false;
+		private bool Dragging;
 		private Point DragMouseCoords = new(0, 0);
-		private bool Edited = false;
+		private bool Edited;
 		private string OriginalText = string.Empty;
 		public string Query = string.Empty;
-		public int ResultDatabase = 0;
+		public int ResultDatabase;
 		public NoteRecord? ResultRecord;
 		public string ResultText = string.Empty;
 		private readonly double SnapTolerance = 20.0;
@@ -116,7 +116,7 @@ namespace SylverInk
 				CurrentDatabase.Transmit(Network.MessageType.RecordUnlock, IntToBytes(ResultRecord?.Index ?? 0));
 			}
 
-			if (ResultText.Equals(string.Empty))
+			if (string.IsNullOrWhiteSpace(ResultText))
 				ResultText = ResultRecord?.ToString() ?? string.Empty;
 			
 			Edited = false;

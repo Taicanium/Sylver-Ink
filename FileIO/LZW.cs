@@ -14,18 +14,18 @@ namespace SylverInk.FileIO
 		private List<byte> Incoming { get; } = [];
 		private int MaxRange { get; } = 24;
 		private uint NextCode = 258U;
-		private bool Open = false;
+		private bool Open;
 		public List<byte> Outgoing { get; } = [];
 		private Dictionary<uint, string> Packets { get; } = [];
 		private int Range = 9;
 		private string W = string.Empty;
-		private bool Writing = false;
+		private bool Writing;
 
 		public void Close()
 		{
 			if (Open && Writing)
 			{
-				if (!W.Equals(string.Empty))
+				if (!string.IsNullOrEmpty(W))
 					WriteCode(Codes[W]);
 
 				WriteCode(257U);
@@ -78,7 +78,7 @@ namespace SylverInk.FileIO
 
 		public byte[] Decompress(int byteCount = 1)
 		{
-			if (W.Equals(string.Empty))
+			if (string.IsNullOrEmpty(W))
 			{
 				var k = ReadCode();
 				if (k != 257U)

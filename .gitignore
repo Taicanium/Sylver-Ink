@@ -41,3 +41,4 @@ AssemblyInfo.cs
 *.user
 DvlErrLog.txt
 LICENSE
+GlobalSuppressions.cs

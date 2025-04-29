@@ -27,7 +27,7 @@ namespace SylverInk
 		[DllImport("User32.dll")]
 		private static extern bool UnregisterHotKey(nint hWnd, int id);
 
-		private bool _ABORT = false;
+		private bool _ABORT;
 		private const int NewNoteHotKeyID = 5911;
 		private const int PreviousNoteHotKeyID = 37193;
 		private NoteRecord RecentSelection = new();
@@ -130,7 +130,7 @@ namespace SylverInk
 		private void DatabaseOpen(object sender, RoutedEventArgs e)
 		{
 			string dbFile = DialogFileSelect(filterIndex: 2);
-			if (dbFile.Equals(string.Empty))
+			if (string.IsNullOrWhiteSpace(dbFile))
 				return;
 
 			var path = Path.GetFullPath(dbFile);
@@ -168,7 +168,7 @@ namespace SylverInk
 		private void DatabaseSaveAs(object sender, RoutedEventArgs e)
 		{
 			var newPath = DialogFileSelect(true, 2, CurrentDatabase.Name);
-			if (!newPath.Equals(string.Empty))
+			if (!string.IsNullOrWhiteSpace(newPath))
 				CurrentDatabase.DBFile = newPath;
 			CurrentDatabase.Format = HighestFormat;
 		}
@@ -294,16 +294,15 @@ namespace SylverInk
 
 		private void HandleVerbOpen(string filename)
 		{
-			var wideBreak = string.Empty;
-
-			if (string.Empty.Equals(filename ??= string.Empty))
+			if (string.IsNullOrWhiteSpace(filename))
 				return;
 
+			var wideBreak = string.Empty;
 			foreach (string dbFile in Common.Settings.LastDatabases)
 				if (Path.GetFullPath(dbFile).Equals(Path.GetFullPath(filename)))
 					wideBreak = Path.GetFullPath(dbFile);
 
-			if (wideBreak.Equals(string.Empty))
+			if (string.IsNullOrWhiteSpace(wideBreak))
 			{
 				Database.Create(filename);
 				return;
@@ -453,7 +452,7 @@ namespace SylverInk
 
 		private void RenameClosed(object sender, EventArgs e)
 		{
-			if (DatabaseNameBox.Text.Equals(string.Empty))
+			if (string.IsNullOrWhiteSpace(DatabaseNameBox.Text))
 				return;
 
 			if (DatabaseNameBox.Text.Equals(CurrentDatabase.Name))

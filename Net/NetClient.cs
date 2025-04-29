@@ -16,12 +16,12 @@ namespace SylverInk.Net
 {
 	public partial class NetClient
 	{
-		public bool Active { get; set; } = false;
+		public bool Active { get; set; }
 		public IPAddress? Address { get; set; }
 		public string? AddressCode { get; set; }
 		private BackgroundWorker ClientTask { get; set; } = new() { WorkerSupportsCancellation = true };
-		public bool Connected { get; private set; } = false;
-		public bool Connecting { get; private set; } = false;
+		public bool Connected { get; private set; }
+		public bool Connecting { get; private set; }
 		public Database? DB { get; set; }
 		private TcpClient DBClient { get; set; } = new();
 		public byte? Flags;
