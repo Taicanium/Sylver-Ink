@@ -75,7 +75,7 @@
 				<ComboBoxItem Content="Last changed date" Tag="ByChange"/>
 			</ComboBox>
 			<CheckBox Grid.Column="1" IsChecked="{Binding SearchResultsOnTop}" Margin="6,10" Grid.Row="2"/>
-			<Slider x:Name="NoteTransparentSlider" Grid.Column="1" IsSnapToTickEnabled="True" LargeChange="5" Minimum="0" Margin="0,5" Maximum="90" Grid.Row="3" SmallChange="5" TickFrequency="10" TickPlacement="BottomRight" ToolTip="{Binding NoteTransparency}" Value="{Binding NoteTransparency}" ValueChanged="NTS_ValueChanged" Width="150"/>
+			<Slider x:Name="NoteTransparentSlider" Grid.Column="1" IsSnapToTickEnabled="True" LargeChange="10" Margin="0,5" Maximum="95" Minimum="0" Grid.Row="3" SmallChange="5" TickFrequency="5" TickPlacement="BottomRight" ToolTip="{Binding NoteTransparency}" Value="{Binding NoteTransparency}" ValueChanged="NTS_ValueChanged" Width="150"/>
 		</Grid>
 		<Separator Grid.ColumnSpan="2" Grid.Row="1"/>
 		<Grid Background="{Binding MenuBackground}" Grid.ColumnSpan="2" Grid.Row="2">
