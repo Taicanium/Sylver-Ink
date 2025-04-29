@@ -14,7 +14,7 @@ namespace SylverInk.Net
 	static class UpdateHandler
 	{
 		private static string GitReleasesURI { get; } = "https://api.github.com/repos/taicanium/Sylver-Ink/releases?per_page=1&page=1";
-		private static string TempUri { get; } = Path.Join(DocumentsFolder, "SylverInk_Setup.msi");
+		public static string TempUri { get; } = Path.Join(DocumentsFolder, "SylverInk_Setup.msi");
 		public static string UpdateLockUri { get; } = Path.Join(DocumentsFolder, "~si_update.lock");
 
 		public static async void CheckForUpdates()

@@ -32,9 +32,8 @@ namespace SylverInk
 			Common.Settings.NumReplacements = $"Replaced {_counts.Item1:N0} occurrences in {_counts.Item2:N0} notes.";
 			DeferUpdateRecentNotes();
 
-			var button = (Button)FindName("DoReplace");
-			button.Content = "Replace";
-			button.IsEnabled = true;
+			DoReplace.Content = "Replace";
+			DoReplace.IsEnabled = true;
 		}
 
 		private void PerformReplace(object? sender, DoWorkEventArgs e) => _counts = CurrentDatabase.Replace(_oldText, _newText);

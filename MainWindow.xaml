@@ -144,7 +144,7 @@
 			</Border>
 		</Popup>
 
-		<Menu Background="{Binding MenuBackground}" x:Name="DatabaseContextMenu">
+		<Menu Background="{Binding MenuBackground}" x:Name="DatabaseMenu">
 			<MenuItem Header="File" Height="25">
 				<MenuItem Click="DatabaseCreate" Header="New" Tag="Always"/>
 				<MenuItem Click="DatabaseOpen" Header="Open..." Tag="Always"/>

@@ -39,9 +39,8 @@ namespace SylverInk
 			for (int i = 0; i < _results.Count; i++)
 				Common.Settings.SearchResults.Add(_results[i]);
 
-			var button = (Button)FindName("DoQuery");
-			button.Content = "Query";
-			button.IsEnabled = true;
+			DoQuery.Content = "Query";
+			DoQuery.IsEnabled = true;
 		}
 
 		private void NoteDelete(object sender, RoutedEventArgs e)

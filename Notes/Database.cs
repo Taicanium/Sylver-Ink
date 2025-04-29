@@ -193,7 +193,6 @@ namespace SylverInk.Notes
 
 			HeaderPanel = new StackPanel()
 			{
-				ContextMenu = (ContextMenu)Application.Current.MainWindow.TryFindResource("DatabaseContextMenu"),
 				Margin = new(0),
 				Orientation = Orientation.Horizontal,
 				ToolTip = Name,

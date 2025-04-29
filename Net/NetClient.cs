@@ -237,7 +237,7 @@ namespace SylverInk.Net
 			Indicator.Width = 12;
 			Indicator.InvalidateVisual();
 			DB?.GetHeader();
-			UpdateContextMenu();
+			UpdateDatabaseMenu();
 		});
 	}
 }

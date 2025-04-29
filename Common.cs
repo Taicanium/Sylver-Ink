@@ -130,7 +130,7 @@ namespace SylverInk
 			control.Items.Add(item);
 			control.SelectedItem = item;
 
-			UpdateContextMenu();
+			UpdateDatabaseMenu();
 			DeferUpdateRecentNotes();
 		}
 
@@ -451,13 +451,13 @@ namespace SylverInk
 			control.Items.RemoveAt(control.SelectedIndex);
 			control.SelectedIndex = Math.Max(0, Math.Min(control.Items.Count - 1, control.SelectedIndex));
 
-			UpdateContextMenu();
+			UpdateDatabaseMenu();
 		}
 
-		public static void UpdateContextMenu()
+		public static void UpdateDatabaseMenu()
 		{
 			var control = (TabControl)Application.Current.MainWindow.FindName("DatabasesPanel");
-			var menu = (Menu)Application.Current.MainWindow.FindName("DatabaseContextMenu");
+			var menu = (Menu)Application.Current.MainWindow.FindName("DatabaseMenu");
 
 			foreach (MenuItem tab in menu.Items)
 			{

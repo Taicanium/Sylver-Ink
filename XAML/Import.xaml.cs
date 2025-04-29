@@ -34,13 +34,7 @@ namespace SylverInk
 		private void AdaptiveChecked(object sender, RoutedEventArgs e)
 		{
 			Adaptive = AdaptiveCheckBox.IsChecked is true;
-			if (Adaptive)
-			{
-				LTPanel.IsEnabled = false;
-				DoMeasureTask();
-				return;
-			}
-			LTPanel.IsEnabled = true;
+			DoMeasureTask();
 		}
 
 		private void CloseClick(object sender, RoutedEventArgs e) => Close();
@@ -57,9 +51,8 @@ namespace SylverInk
 				MeasureTask.RunWorkerCompleted += (_, _) =>
 				{
 					Common.Settings.ImportData = $"Estimated new notes: {RunningCount:N0}\nAverage length: {RunningAverage:N0} characters per note\n\nRemember to press Import to finalize your changes!";
-					((Button)FindName("DoImport")).Content = "Import";
-					((Button)FindName("LTLess")).IsEnabled = true;
-					((Button)FindName("LTMore")).IsEnabled = true;
+					DoImport.Content = "Import";
+					LTPanel.IsEnabled = !Adaptive;
 					Common.Settings.ReadyToFinalize = RunningCount > 0;
 				};
 			}
@@ -67,9 +60,8 @@ namespace SylverInk
 			if (MeasureTask.IsBusy)
 				return;
 
-			((Button)FindName("DoImport")).Content = "Scanning...";
-			((Button)FindName("LTLess")).IsEnabled = false;
-			((Button)FindName("LTMore")).IsEnabled = false;
+			DoImport.Content = "Scanning...";
+			LTPanel.IsEnabled = false;
 			Common.Settings.ReadyToFinalize = false;
 
 			MeasureTask.RunWorkerAsync();
@@ -99,8 +91,7 @@ namespace SylverInk
 		private void FinishImport(object? sender, RunWorkerCompletedEventArgs? e)
 		{
 			Common.Settings.ImportData = $"Notes imported: {Imported:N0}";
-			var button = (Button)FindName("DoImport");
-			button.Content = "Import";
+			DoImport.Content = "Import";
 
 			Common.Settings.ImportTarget = string.Empty;
 			Common.Settings.ReadyToFinalize = false;

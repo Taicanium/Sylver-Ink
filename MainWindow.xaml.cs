@@ -32,11 +32,13 @@ namespace SylverInk
 		private const int PreviousNoteHotKeyID = 37193;
 		private NoteRecord RecentSelection = new();
 		private HwndSource? WindowSource;
+		private readonly WindowInteropHelper hWndHelper;
 
 		public MainWindow()
 		{
 			InitializeComponent();
 			DataContext = Common.Settings;
+			hWndHelper = new WindowInteropHelper(this);
 		}
 
 		private void AddressKeyDown(object sender, KeyEventArgs e)
@@ -265,7 +267,7 @@ namespace SylverInk
 				};
 				initialUpdateThread.RunWorkerAsync();
 
-				WindowSource = HwndSource.FromHwnd(new WindowInteropHelper(this).Handle);
+				WindowSource = HwndSource.FromHwnd(hWndHelper.Handle);
 				WindowSource.AddHook(HwndHook);
 				RegisterHotKeys();
 			};
@@ -339,7 +341,7 @@ namespace SylverInk
 				Application.Current.ShutdownMode = Application.Current.ShutdownMode;
 				return false;
 			}
-			catch (Exception)
+			catch
 			{
 				return true;
 			}
@@ -421,6 +423,9 @@ namespace SylverInk
 			if (File.Exists(UpdateHandler.UpdateLockUri))
 				File.Delete(UpdateHandler.UpdateLockUri);
 
+			if (File.Exists(UpdateHandler.TempUri))
+				File.Delete(UpdateHandler.TempUri);
+
 			Common.Settings.Load();
 			SettingsLoaded = true;
 
@@ -442,8 +447,8 @@ namespace SylverInk
 
 		private void RegisterHotKeys()
 		{
-			RegisterHotKey(new WindowInteropHelper(this).Handle, NewNoteHotKeyID, 2, (uint)KeyInterop.VirtualKeyFromKey(Key.N));
-			RegisterHotKey(new WindowInteropHelper(this).Handle, PreviousNoteHotKeyID, 2, (uint)KeyInterop.VirtualKeyFromKey(Key.L));
+			RegisterHotKey(hWndHelper.Handle, NewNoteHotKeyID, 2, (uint)KeyInterop.VirtualKeyFromKey(Key.N));
+			RegisterHotKey(hWndHelper.Handle, PreviousNoteHotKeyID, 2, (uint)KeyInterop.VirtualKeyFromKey(Key.L));
 		}
 
 		private void RenameClosed(object sender, EventArgs e)
@@ -544,14 +549,14 @@ namespace SylverInk
 				Common.Settings.SearchResults.Clear();
 			}
 
-			UpdateContextMenu();
+			UpdateDatabaseMenu();
 			DeferUpdateRecentNotes(true);
 		}
 
 		private void UnregisterHotKeys()
 		{
-			UnregisterHotKey(new WindowInteropHelper(this).Handle, NewNoteHotKeyID);
-			UnregisterHotKey(new WindowInteropHelper(this).Handle, PreviousNoteHotKeyID);
+			UnregisterHotKey(hWndHelper.Handle, NewNoteHotKeyID);
+			UnregisterHotKey(hWndHelper.Handle, PreviousNoteHotKeyID);
 		}
 	}
 }

@@ -126,7 +126,7 @@ namespace SylverInk.Net
 			Serving = false;
 			Active = false;
 			UpdateIndicator();
-			UpdateContextMenu();
+			UpdateDatabaseMenu();
 		}
 
 		private void ReadFromStream(TcpClient client, Database DB)
@@ -293,7 +293,7 @@ namespace SylverInk.Net
 			WatchTask.RunWorkerAsync();
 			ServerTask.RunWorkerAsync();
 			UpdateIndicator();
-			UpdateContextMenu();
+			UpdateDatabaseMenu();
 
 			var codePopup = (Popup?)Application.Current.MainWindow.FindName("CodePopup");
 			if (codePopup is null)
@@ -315,7 +315,7 @@ namespace SylverInk.Net
 			Indicator.Stroke = Common.Settings.MenuForeground;
 			Indicator.Width = 12;
 			Indicator.InvalidateVisual();
-			UpdateContextMenu();
+			UpdateDatabaseMenu();
 		});
 	}
 }
