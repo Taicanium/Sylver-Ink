@@ -84,22 +84,10 @@ namespace SylverInk
 					continue;
 
 				newRecord.Preview = _width;
-				var matches = newRecord.MatchTags(_query);
-				var matched = false;
-
-				for (int j = 0; j < _results.Count; j++)
-				{
-					if (_results[j].LastMatchCount > matches)
-						continue;
-
-					_results.Insert(j, newRecord);
-					matched = true;
-					break;
-				}
-
-				if (!matched)
-					_results.Add(newRecord);
+				_results.Add(newRecord);
 			}
+
+			_results.Sort(new Comparison<NoteRecord>((r1, r2) => r2.MatchTags(_query).CompareTo(r1.MatchTags(_query))));
 		}
 
 		private void QueryClick(object sender, RoutedEventArgs e)

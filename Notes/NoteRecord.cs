@@ -23,6 +23,7 @@ namespace SylverInk.Notes
 		private string? Initial = string.Empty;
 		private long LastChange = -1;
 		private DateTime LastChangeObject = DateTime.UtcNow;
+		private string LastQuery = string.Empty;
 		private string Latest = string.Empty;
 		private string PreviewText = string.Empty;
 		private int PreviewWidth = 375;
@@ -235,6 +236,9 @@ namespace SylverInk.Notes
 		public int MatchTags(string text)
 		{
 			var format = text.Trim();
+			if (!TagsDirty && format.Equals(LastQuery))
+				return LastMatchCount;
+
 			var matches = Lowercase().Matches(format.ToLower());
 			int outCount = 0;
 
@@ -245,6 +249,7 @@ namespace SylverInk.Notes
 					if (Tags.Contains(group.Value.ToLower()))
 						outCount++;
 
+			LastQuery = format;
 			return LastMatchCount = outCount;
 		}
 
