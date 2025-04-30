@@ -107,12 +107,12 @@ namespace SylverInk
 		{
 			if (ResultRecord?.Locked is true)
 			{
-				LastChangedLabel.Content = "Note locked by another user";
+				LastChangedLabel.Content = "Locked by another user";
 				ResultBlock.IsEnabled = false;
 			}
 			else
 			{
-				LastChangedLabel.Content = "Last modified: " + ResultRecord?.GetLastChange();
+				LastChangedLabel.Content = ResultRecord?.GetLastChange();
 				CurrentDatabase.Transmit(Network.MessageType.RecordUnlock, IntToBytes(ResultRecord?.Index ?? 0));
 			}
 
@@ -152,7 +152,7 @@ namespace SylverInk
 				return;
 
 			CurrentDatabase.CreateRevision(ResultRecord, ResultText);
-			LastChangedLabel.Content = "Last modified: " + ResultRecord?.GetLastChange();
+			LastChangedLabel.Content = ResultRecord?.GetLastChange();
 			DeferUpdateRecentNotes(true);
 		}
 

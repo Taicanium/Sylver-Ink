@@ -308,7 +308,7 @@ namespace SylverInk.Notes
 				if (!query.ResultRecord?.Equals(Index) is true)
 					continue;
 
-				query.LastChangedLabel.Content = "Last modified: " + CurrentDatabase.GetRecord(Index).GetLastChange();
+				query.LastChangedLabel.Content = CurrentDatabase.GetRecord(Index).GetLastChange();
 				query.ResultBlock.IsEnabled = true;
 			}
 

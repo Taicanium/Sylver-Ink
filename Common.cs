@@ -64,8 +64,10 @@ namespace SylverInk
 		public static char[] InvalidPathChars { get; } = ['/', '\\', ':', '*', '"', '?', '<', '>', '|'];
 		public static string LastActiveDatabase { get; set; } = string.Empty;
 		public static List<string> LastActiveNotes { get; set; } = [];
+		public static Dictionary<string, double> LastActiveNotesHeight { get; set; } = [];
 		public static Dictionary<string, double> LastActiveNotesLeft { get; set; } = [];
 		public static Dictionary<string, double> LastActiveNotesTop { get; set; } = [];
+		public static Dictionary<string, double> LastActiveNotesWidth { get; set; } = [];
 		private static BackgroundWorker? MeasureTask { get; set; }
 		public static List<SearchResult> OpenQueries { get; } = [];
 		public static List<NoteTab> OpenTabs { get; } = [];

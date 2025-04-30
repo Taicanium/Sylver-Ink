@@ -245,11 +245,17 @@ namespace SylverInk
 						if (result is null)
 							continue;
 
+						if (LastActiveNotesHeight.TryGetValue($"{target.Name}:{iNote}", out var openHeight))
+							result.Height = openHeight;
+
 						if (LastActiveNotesLeft.TryGetValue($"{target.Name}:{iNote}", out var openLeft))
 							result.Left = openLeft;
 
 						if (LastActiveNotesTop.TryGetValue($"{target.Name}:{iNote}", out var openTop))
 							result.Top = openTop;
+
+						if (LastActiveNotesWidth.TryGetValue($"{target.Name}:{iNote}", out var openWidth))
+							result.Width = openWidth;
 					}
 				}
 

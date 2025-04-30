@@ -111,6 +111,17 @@ namespace SylverInk
 						foreach (var note in notes)
 							LastActiveNotes.Add(note);
 						break;
+					case "LastActiveNotesHeight":
+						var nHeight = keyValue[1].Split(';').Distinct();
+						foreach (var sHeight in nHeight)
+						{
+							var hSplit = sHeight.Split(':');
+							if (hSplit.Length < 3)
+								continue;
+							if (int.TryParse(hSplit[2], out var dHeight))
+								LastActiveNotesHeight.TryAdd(hSplit[0] + ":" + hSplit[1], dHeight);
+						}
+						break;
 					case "LastActiveNotesLeft":
 						var nLeft = keyValue[1].Split(';').Distinct();
 						foreach (var sLeft in nLeft)
@@ -118,19 +129,30 @@ namespace SylverInk
 							var lSplit = sLeft.Split(':');
 							if (lSplit.Length < 3)
 								continue;
-							if (int.TryParse(sLeft.Split(':')[2], out var dLeft))
-								LastActiveNotesLeft.TryAdd(sLeft.Split(':')[0] + ":" + sLeft.Split(':')[1], dLeft);
+							if (int.TryParse(lSplit[2], out var dLeft))
+								LastActiveNotesLeft.TryAdd(lSplit[0] + ":" + lSplit[1], dLeft);
 						}
 						break;
 					case "LastActiveNotesTop":
 						var nTop = keyValue[1].Split(';').Distinct();
 						foreach (var sTop in nTop)
 						{
-							var sSplit = sTop.Split(':');
-							if (sSplit.Length < 3)
+							var tSplit = sTop.Split(':');
+							if (tSplit.Length < 3)
 								continue;
-							if (int.TryParse(sTop.Split(':')[2], out var dTop))
-								LastActiveNotesTop.TryAdd(sTop.Split(':')[0] + ":" + sTop.Split(':')[1], dTop);
+							if (int.TryParse(tSplit[2], out var dTop))
+								LastActiveNotesTop.TryAdd(tSplit[0] + ":" + tSplit[1], dTop);
+						}
+						break;
+					case "LastActiveNotesWidth":
+						var nWidth = keyValue[1].Split(';').Distinct();
+						foreach (var sWidth in nWidth)
+						{
+							var wSplit = sWidth.Split(':');
+							if (wSplit.Length < 3)
+								continue;
+							if (int.TryParse(wSplit[2], out var dWidth))
+								LastActiveNotesWidth.TryAdd(wSplit[0] + ":" + wSplit[1], dWidth);
 						}
 						break;
 					case "LastDatabases":
@@ -193,8 +215,10 @@ namespace SylverInk
 			$"FontSize:{MainFontSize}",
 			$"LastActiveDatabase:{CurrentDatabase.Name}",
 			$"LastActiveNotes:{string.Join(';', OpenQueries.Select(query => Databases[query.ResultDatabase].Name + ":" + query.ResultRecord?.Index))}",
+			$"LastActiveNotesHeight:{string.Join(';', OpenQueries.Select(query => Databases[query.ResultDatabase].Name + ":" + $"{query.ResultRecord?.Index}:{query.Height}"))}",
 			$"LastActiveNotesLeft:{string.Join(';', OpenQueries.Select(query => Databases[query.ResultDatabase].Name + ":" + $"{query.ResultRecord?.Index}:{query.Left}"))}",
 			$"LastActiveNotesTop:{string.Join(';', OpenQueries.Select(query => Databases[query.ResultDatabase].Name + ":" + $"{query.ResultRecord?.Index}:{query.Top}"))}",
+			$"LastActiveNotesWidth:{string.Join(';', OpenQueries.Select(query => Databases[query.ResultDatabase].Name + ":" + $"{query.ResultRecord?.Index}:{query.Width}"))}",
 			$"LastDatabases:{string.Join(';', DatabaseFiles.Distinct().Where(File.Exists)).Replace(DocumentsFolder, "?\\")}",
 			$"ListBackground:{BytesFromBrush(ListBackground)}",
 			$"ListForeground:{BytesFromBrush(ListForeground)}",
