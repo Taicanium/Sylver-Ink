@@ -14,554 +14,553 @@ using System.Windows.Interop;
 using System.Windows.Media;
 using static SylverInk.Common;
 
-namespace SylverInk
+namespace SylverInk;
+
+/// <summary>
+/// Interaction logic for MainWindow.xaml
+/// </summary>
+public partial class MainWindow : Window
 {
-	/// <summary>
-	/// Interaction logic for MainWindow.xaml
-	/// </summary>
-	public partial class MainWindow : Window
+	[DllImport("User32.dll")]
+	private static extern bool RegisterHotKey(nint hWnd, int id, uint fsModifiers, uint vk);
+
+	[DllImport("User32.dll")]
+	private static extern bool UnregisterHotKey(nint hWnd, int id);
+
+	private bool _ABORT;
+	private const int NewNoteHotKeyID = 5911;
+	private const int PreviousNoteHotKeyID = 37193;
+	private NoteRecord RecentSelection = new();
+	private HwndSource? WindowSource;
+	private readonly WindowInteropHelper hWndHelper;
+
+	public MainWindow()
 	{
-		[DllImport("User32.dll")]
-		private static extern bool RegisterHotKey(nint hWnd, int id, uint fsModifiers, uint vk);
+		InitializeComponent();
+		DataContext = Common.Settings;
+		hWndHelper = new WindowInteropHelper(this);
+	}
 
-		[DllImport("User32.dll")]
-		private static extern bool UnregisterHotKey(nint hWnd, int id);
+	private void AddressKeyDown(object sender, KeyEventArgs e)
+	{
+		if (e.Key == Key.Enter)
+			ConnectAddress.IsOpen = false;
+	}
 
-		private bool _ABORT;
-		private const int NewNoteHotKeyID = 5911;
-		private const int PreviousNoteHotKeyID = 37193;
-		private NoteRecord RecentSelection = new();
-		private HwndSource? WindowSource;
-		private readonly WindowInteropHelper hWndHelper;
+	private void Button_Click(object sender, RoutedEventArgs e)
+	{
+		var senderObject = (Button)sender;
 
-		public MainWindow()
+		switch (senderObject.Content)
 		{
-			InitializeComponent();
-			DataContext = Common.Settings;
-			hWndHelper = new WindowInteropHelper(this);
+			case "Import":
+				ImportWindow = new();
+				break;
+			case "Replace":
+				ReplaceWindow = new();
+				break;
+			case "Search":
+				SearchWindow = new();
+				break;
+			case "Settings":
+				SettingsWindow = new();
+				break;
+			case "Exit":
+				Close();
+				break;
 		}
+	}
 
-		private void AddressKeyDown(object sender, KeyEventArgs e)
+	private void CodePopupClosed(object sender, EventArgs e) => Clipboard.SetText(CodeBox.Text);
+
+	private void CopyCode(object sender, RoutedEventArgs e) => CodePopup.IsOpen = false;
+
+	private void DatabaseBackup(object sender, RoutedEventArgs e) => CurrentDatabase.MakeBackup();
+
+	private void DatabaseClose(object sender, RoutedEventArgs e)
+	{
+		if (CurrentDatabase.Changed)
 		{
-			if (e.Key == Key.Enter)
-				ConnectAddress.IsOpen = false;
-		}
-
-		private void Button_Click(object sender, RoutedEventArgs e)
-		{
-			var senderObject = (Button)sender;
-
-			switch (senderObject.Content)
-			{
-				case "Import":
-					ImportWindow = new();
-					break;
-				case "Replace":
-					ReplaceWindow = new();
-					break;
-				case "Search":
-					SearchWindow = new();
-					break;
-				case "Settings":
-					SettingsWindow = new();
-					break;
-				case "Exit":
-					Close();
-					break;
-			}
-		}
-
-		private void CodePopupClosed(object sender, EventArgs e) => Clipboard.SetText(CodeBox.Text);
-
-		private void CopyCode(object sender, RoutedEventArgs e) => CodePopup.IsOpen = false;
-
-		private void DatabaseBackup(object sender, RoutedEventArgs e) => CurrentDatabase.MakeBackup();
-
-		private void DatabaseClose(object sender, RoutedEventArgs e)
-		{
-			if (CurrentDatabase.Changed)
-			{
-				var res = MessageBox.Show("Do you want to save your changes?", "Sylver Ink: Warning", MessageBoxButton.YesNoCancel, MessageBoxImage.Warning);
-				if (res == MessageBoxResult.Cancel)
-					return;
-				if (res == MessageBoxResult.Yes)
-					CurrentDatabase.Save();
-			}
-
-			RemoveDatabase(CurrentDatabase);
-			DeferUpdateRecentNotes();
-		}
-
-		private void DatabaseConnect(object sender, RoutedEventArgs e)
-		{
-			ConnectAddress.IsOpen = true;
-			AddressBox.Text = string.Empty;
-		}
-
-		private void DatabaseCreate(object sender, RoutedEventArgs e)
-		{
-			AddDatabase(new());
-			DatabasesPanel.SelectedIndex = DatabasesPanel.Items.Count - 1;
-			DeferUpdateRecentNotes();
-		}
-
-		private void DatabaseDelete(object sender, RoutedEventArgs e)
-		{
-			if (MessageBox.Show("Are you sure you want to permanently delete this database?", "Sylver Ink: Warning", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.No)
+			var res = MessageBox.Show("Do you want to save your changes?", "Sylver Ink: Warning", MessageBoxButton.YesNoCancel, MessageBoxImage.Warning);
+			if (res == MessageBoxResult.Cancel)
 				return;
-
-			if (File.Exists(CurrentDatabase.DBFile))
-				File.Delete(CurrentDatabase.DBFile);
-
-			var BKPath = Path.GetDirectoryName(GetBackupPath(CurrentDatabase));
-			if (Directory.Exists(BKPath))
-				Directory.Delete(BKPath, true);
-
-			RemoveDatabase(CurrentDatabase);
-			DeferUpdateRecentNotes();
+			if (res == MessageBoxResult.Yes)
+				CurrentDatabase.Save();
 		}
 
-		private void DatabaseDisconnect(object sender, RoutedEventArgs e)
+		RemoveDatabase(CurrentDatabase);
+		DeferUpdateRecentNotes();
+	}
+
+	private void DatabaseConnect(object sender, RoutedEventArgs e)
+	{
+		ConnectAddress.IsOpen = true;
+		AddressBox.Text = string.Empty;
+	}
+
+	private void DatabaseCreate(object sender, RoutedEventArgs e)
+	{
+		AddDatabase(new());
+		DatabasesPanel.SelectedIndex = DatabasesPanel.Items.Count - 1;
+		DeferUpdateRecentNotes();
+	}
+
+	private void DatabaseDelete(object sender, RoutedEventArgs e)
+	{
+		if (MessageBox.Show("Are you sure you want to permanently delete this database?", "Sylver Ink: Warning", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.No)
+			return;
+
+		if (File.Exists(CurrentDatabase.DBFile))
+			File.Delete(CurrentDatabase.DBFile);
+
+		var BKPath = Path.GetDirectoryName(GetBackupPath(CurrentDatabase));
+		if (Directory.Exists(BKPath))
+			Directory.Delete(BKPath, true);
+
+		RemoveDatabase(CurrentDatabase);
+		DeferUpdateRecentNotes();
+	}
+
+	private void DatabaseDisconnect(object sender, RoutedEventArgs e)
+	{
+		CurrentDatabase.Client?.Disconnect();
+		CurrentDatabase.Changed = true;
+	}
+
+	private void DatabaseOpen(object sender, RoutedEventArgs e)
+	{
+		string dbFile = DialogFileSelect(filterIndex: 2);
+		if (string.IsNullOrWhiteSpace(dbFile))
+			return;
+
+		var path = Path.GetFullPath(dbFile);
+
+		if (DatabaseFiles.Contains(path))
 		{
-			CurrentDatabase.Client?.Disconnect();
-			CurrentDatabase.Changed = true;
+			var items = DatabasesPanel.Items.Cast<TabItem>().ToList();
+			var db = items?.FindIndex(new(item => {
+				var innerDB = (Database)item.Tag;
+				return Path.GetFullPath(innerDB.DBFile).Equals(path);
+			}));
+
+			DatabasesPanel.SelectedIndex = db ?? DatabasesPanel.SelectedIndex;
+			return;
 		}
 
-		private void DatabaseOpen(object sender, RoutedEventArgs e)
+		Database.Create(dbFile, true);
+		DeferUpdateRecentNotes();
+	}
+
+	private void DatabaseProperties(object sender, RoutedEventArgs e)
+	{
+		Properties window = new() { DB = CurrentDatabase };
+		window.Show();
+	}
+
+	private void DatabaseRename(object sender, RoutedEventArgs e)
+	{
+		RenameDatabase.IsOpen = true;
+		DatabaseNameBox.Text = CurrentDatabase.Name;
+		DatabaseNameBox.Focus();
+		DatabaseNameBox.CaretIndex = DatabaseNameBox.Text?.Length ?? 0;
+	}
+
+	private void DatabaseSaveAs(object sender, RoutedEventArgs e)
+	{
+		var newPath = DialogFileSelect(true, 2, CurrentDatabase.Name);
+		if (!string.IsNullOrWhiteSpace(newPath))
+			CurrentDatabase.DBFile = newPath;
+		CurrentDatabase.Format = HighestFormat;
+	}
+
+	private void DatabaseSaveLocal(object sender, RoutedEventArgs e)
+	{
+		CurrentDatabase.Changed = true;
+		CurrentDatabase.DBFile = Path.Join(Subfolders["Databases"], Path.GetFileNameWithoutExtension(CurrentDatabase.DBFile), Path.GetFileName(CurrentDatabase.DBFile));
+		CurrentDatabase.Format = HighestFormat;
+		CurrentDatabase.Save();
+	}
+
+	private void DatabaseServe(object sender, RoutedEventArgs e) => CurrentDatabase.Server?.Serve(0);
+
+	private void DatabaseUnserve(object sender, RoutedEventArgs e) => CurrentDatabase.Server?.Close();
+
+	private void Drag(object sender, MouseButtonEventArgs e) => DragMove();
+
+	private void ExitComplete(object? sender, RunWorkerCompletedEventArgs e)
+	{
+		DatabaseChanged = false;
+		MainGrid.IsEnabled = true;
+		Common.Settings.Save();
+		Application.Current.Shutdown();
+	}
+
+	private void HandleCheckInit()
+	{
+		CheckInit.DoWork += (_, _) =>
 		{
-			string dbFile = DialogFileSelect(filterIndex: 2);
-			if (string.IsNullOrWhiteSpace(dbFile))
-				return;
-
-			var path = Path.GetFullPath(dbFile);
-
-			if (DatabaseFiles.Contains(path))
+			do
 			{
-				var items = DatabasesPanel.Items.Cast<TabItem>().ToList();
-				var db = items?.FindIndex(new(item => {
-					var innerDB = (Database)item.Tag;
-					return Path.GetFullPath(innerDB.DBFile).Equals(path);
-				}));
+				InitComplete = DatabaseCount > 0
+					&& Databases.Count == DatabaseCount
+					&& SettingsLoaded
+					&& UpdatesChecked;
 
-				DatabasesPanel.SelectedIndex = db ?? DatabasesPanel.SelectedIndex;
-				return;
-			}
+				if (Concurrent(() => Application.Current.MainWindow.FindName("DatabasesPanel")) is null)
+					InitComplete = false;
+			} while (!InitComplete);
+		};
 
-			Database.Create(dbFile, true);
-			DeferUpdateRecentNotes();
-		}
-
-		private void DatabaseProperties(object sender, RoutedEventArgs e)
+		CheckInit.RunWorkerCompleted += (_, _) =>
 		{
-			Properties window = new() { DB = CurrentDatabase };
-			window.Show();
-		}
-
-		private void DatabaseRename(object sender, RoutedEventArgs e)
-		{
-			RenameDatabase.IsOpen = true;
-			DatabaseNameBox.Text = CurrentDatabase.Name;
-			DatabaseNameBox.Focus();
-			DatabaseNameBox.CaretIndex = DatabaseNameBox.Text?.Length ?? 0;
-		}
-
-		private void DatabaseSaveAs(object sender, RoutedEventArgs e)
-		{
-			var newPath = DialogFileSelect(true, 2, CurrentDatabase.Name);
-			if (!string.IsNullOrWhiteSpace(newPath))
-				CurrentDatabase.DBFile = newPath;
-			CurrentDatabase.Format = HighestFormat;
-		}
-
-		private void DatabaseSaveLocal(object sender, RoutedEventArgs e)
-		{
-			CurrentDatabase.Changed = true;
-			CurrentDatabase.DBFile = Path.Join(Subfolders["Databases"], Path.GetFileNameWithoutExtension(CurrentDatabase.DBFile), Path.GetFileName(CurrentDatabase.DBFile));
-			CurrentDatabase.Format = HighestFormat;
-			CurrentDatabase.Save();
-		}
-
-		private void DatabaseServe(object sender, RoutedEventArgs e) => CurrentDatabase.Server?.Serve(0);
-
-		private void DatabaseUnserve(object sender, RoutedEventArgs e) => CurrentDatabase.Server?.Close();
-
-		private void Drag(object sender, MouseButtonEventArgs e) => DragMove();
-
-		private void ExitComplete(object? sender, RunWorkerCompletedEventArgs e)
-		{
-			DatabaseChanged = false;
-			MainGrid.IsEnabled = true;
-			Common.Settings.Save();
-			Application.Current.Shutdown();
-		}
-
-		private void HandleCheckInit()
-		{
-			CheckInit.DoWork += (_, _) =>
-			{
-				do
-				{
-					InitComplete = DatabaseCount > 0
-						&& Databases.Count == DatabaseCount
-						&& SettingsLoaded
-						&& UpdatesChecked;
-
-					if (Concurrent(() => Application.Current.MainWindow.FindName("DatabasesPanel")) is null)
-						InitComplete = false;
-				} while (!InitComplete);
-			};
-
-			CheckInit.RunWorkerCompleted += (_, _) =>
-			{
-				foreach (TabItem item in DatabasesPanel.Items)
-				{
-					if (LastActiveDatabase.Equals(((Database)item.Tag).Name))
-					{
-						DatabasesPanel.SelectedItem = item;
-						CurrentDatabase = (Database)item.Tag;
-					}
-				}
-
-				foreach (var openNote in LastActiveNotes)
-				{
-					var oSplit = openNote.Split(':');
-					if (oSplit.Length < 2)
-						continue;
-
-					if (!int.TryParse(oSplit[1], out var iNote))
-						continue;
-
-					Database? target = null;
-					foreach (Database db in Databases)
-						if (oSplit[0].Equals(db.Name))
-							target = db;
-
-					if (target is null)
-						continue;
-
-					if (target.HasRecord(iNote))
-					{
-						var result = OpenQuery(target, target.GetRecord(iNote));
-						if (result is null)
-							continue;
-
-						if (LastActiveNotesHeight.TryGetValue($"{target.Name}:{iNote}", out var openHeight))
-							result.Height = openHeight;
-
-						if (LastActiveNotesLeft.TryGetValue($"{target.Name}:{iNote}", out var openLeft))
-							result.Left = openLeft;
-
-						if (LastActiveNotesTop.TryGetValue($"{target.Name}:{iNote}", out var openTop))
-							result.Top = openTop;
-
-						if (LastActiveNotesWidth.TryGetValue($"{target.Name}:{iNote}", out var openWidth))
-							result.Width = openWidth;
-					}
-				}
-
-				HandleShellVerbs();
-
-				BackgroundWorker initialUpdateThread = new();
-				initialUpdateThread.DoWork += (_, _) => SpinWait.SpinUntil(new(() => Databases.Count > 0));
-				initialUpdateThread.RunWorkerCompleted += (_, _) =>
-				{
-					CanResize = true;
-					ResizeMode = ResizeMode.CanResize;
-					Common.Settings.MainTypeFace = new(Common.Settings.MainFontFamily, FontStyles.Normal, FontWeights.Normal, FontStretches.Normal);
-					PPD = VisualTreeHelper.GetDpi(this).PixelsPerDip;
-					DeferUpdateRecentNotes(true);
-				};
-				initialUpdateThread.RunWorkerAsync();
-
-				WindowSource = HwndSource.FromHwnd(hWndHelper.Handle);
-				WindowSource.AddHook(HwndHook);
-				RegisterHotKeys();
-			};
-
-			CheckInit.RunWorkerAsync();
-		}
-
-		private void HandleShellVerbs()
-		{
-			var args = Environment.GetCommandLineArgs();
-			if (args.Length < 2)
-				return;
-
-			switch (args[1])
-			{
-				case "open": // &Open
-					HandleVerbOpen(args.Length > 2 ? args[2] : string.Empty);
-					break;
-				default: // &Open
-					HandleVerbOpen(args[1]);
-					break;
-			}
-		}
-
-		private void HandleVerbOpen(string filename)
-		{
-			if (string.IsNullOrWhiteSpace(filename))
-				return;
-
-			var wideBreak = string.Empty;
-			foreach (string dbFile in Common.Settings.LastDatabases)
-				if (Path.GetFullPath(dbFile).Equals(Path.GetFullPath(filename)))
-					wideBreak = Path.GetFullPath(dbFile);
-
-			if (string.IsNullOrWhiteSpace(wideBreak))
-			{
-				Database.Create(filename);
-				return;
-			}
-
 			foreach (TabItem item in DatabasesPanel.Items)
 			{
-				if (wideBreak.Equals(Path.GetFullPath(((Database)item.Tag).DBFile)))
+				if (LastActiveDatabase.Equals(((Database)item.Tag).Name))
 				{
 					DatabasesPanel.SelectedItem = item;
 					CurrentDatabase = (Database)item.Tag;
 				}
 			}
-		}
 
-		private nint HwndHook(nint hwnd, int msg, nint wParam, nint lParam, ref bool handled)
-		{
-			if (msg != 0x0312) // WM_HOTKEY
-				return default;
-
-			if (wParam.ToInt32() == NewNoteHotKeyID)
-				OnNewNoteHotkey();
-
-			if (wParam.ToInt32() == PreviousNoteHotKeyID)
-				OnPreviousNoteHotkey();
-
-			handled = true;
-			return default;
-		}
-
-		public static bool IsShuttingDown()
-		{
-			try
+			foreach (var openNote in LastActiveNotes)
 			{
-				Application.Current.ShutdownMode = Application.Current.ShutdownMode;
-				return false;
-			}
-			catch
-			{
-				return true;
-			}
-		}
-
-		private void MainWindow_Closing(object sender, CancelEventArgs e)
-		{
-			var lockFile = GetLockFile();
-
-			if (!_ABORT)
-			{
-				if (DatabaseChanged)
-				{
-					switch (MessageBox.Show("Do you want to save your work before exiting?", "Sylver Ink: Notification", MessageBoxButton.YesNoCancel, MessageBoxImage.Question))
-					{
-						case MessageBoxResult.Cancel:
-							e.Cancel = true;
-							return;
-						case MessageBoxResult.Yes:
-							e.Cancel = true;
-							MainGrid.IsEnabled = false;
-
-							if (File.Exists(lockFile))
-								File.Delete(lockFile);
-
-							BackgroundWorker exitTask = new();
-							exitTask.DoWork += SaveDatabases;
-							exitTask.RunWorkerCompleted += ExitComplete;
-							exitTask.RunWorkerAsync();
-							return;
-					}
-				}
-
-				Common.Settings.Save();
-			}
-
-			Application.Current.Shutdown();
-		}
-
-		private void MainWindow_SizeChanged(object sender, SizeChangedEventArgs e) => DeferUpdateRecentNotes(true);
-
-		private void NewNote_Keydown(object sender, KeyEventArgs e)
-		{
-			if (e.Key != Key.Enter)
-				return;
-
-			var box = (TextBox)sender;
-			CurrentDatabase.CreateRecord(box.Text);
-			box.Text = string.Empty;
-			DeferUpdateRecentNotes();
-		}
-
-		protected override void OnClosed(EventArgs e)
-		{
-			WindowSource?.RemoveHook(HwndHook);
-			WindowSource = null;
-			UnregisterHotKeys();
-			base.OnClosed(e);
-		}
-
-		private static void OnNewNoteHotkey() => OpenQuery(CurrentDatabase.GetRecord(CurrentDatabase.CreateRecord(string.Empty)));
-
-		private static void OnPreviousNoteHotkey() => OpenQuery(PreviousOpenNote ?? CurrentDatabase.GetRecord(CurrentDatabase.CreateRecord(string.Empty)));
-
-		protected override void OnSourceInitialized(EventArgs e)
-		{
-			base.OnSourceInitialized(e);
-
-			if (Process.GetProcessesByName("Sylver Ink").Length > 1 && !File.Exists(UpdateHandler.UpdateLockUri))
-			{
-				_ABORT = true;
-				MessageBox.Show("Another instance of Sylver Ink is already running.", "Sylver Ink: Error", MessageBoxButton.OK, MessageBoxImage.Error);
-				Application.Current.Shutdown();
-				return;
-			}
-
-			HandleCheckInit();
-
-			if (File.Exists(UpdateHandler.UpdateLockUri))
-				File.Delete(UpdateHandler.UpdateLockUri);
-
-			if (File.Exists(UpdateHandler.TempUri))
-				File.Delete(UpdateHandler.TempUri);
-
-			Common.Settings.Load();
-			SettingsLoaded = true;
-
-			foreach (var folder in Subfolders)
-				if (!Directory.Exists(folder.Value))
-					Directory.CreateDirectory(folder.Value);
-
-			UpdateHandler.CheckForUpdates();
-
-			if (!IsShuttingDown())
-				UpdatesChecked = true;
-
-			if (FirstRun)
-			{
-				DatabaseCount = 1;
-				Database.Create(Path.Join(Subfolders["Databases"], DefaultDatabase, $"{DefaultDatabase}.sidb"));
-			}
-		}
-
-		private void RegisterHotKeys()
-		{
-			RegisterHotKey(hWndHelper.Handle, NewNoteHotKeyID, 2, (uint)KeyInterop.VirtualKeyFromKey(Key.N));
-			RegisterHotKey(hWndHelper.Handle, PreviousNoteHotKeyID, 2, (uint)KeyInterop.VirtualKeyFromKey(Key.L));
-		}
-
-		private void RenameClosed(object sender, EventArgs e)
-		{
-			if (string.IsNullOrWhiteSpace(DatabaseNameBox.Text))
-				return;
-
-			if (DatabaseNameBox.Text.Equals(CurrentDatabase.Name))
-				return;
-
-			foreach (Database db in Databases)
-			{
-				if (!DatabaseNameBox.Text.Equals(db.Name))
+				var oSplit = openNote.Split(':');
+				if (oSplit.Length < 2)
 					continue;
 
-				MessageBox.Show("A database already exists with the provided name.", "Sylver Ink: Error", MessageBoxButton.OK, MessageBoxImage.Error);
-				return;
-			}
+				if (!int.TryParse(oSplit[1], out var iNote))
+					continue;
 
-			foreach (char pc in InvalidPathChars)
-			{
-				if (DatabaseNameBox.Text.Contains(pc))
+				Database? target = null;
+				foreach (Database db in Databases)
+					if (oSplit[0].Equals(db.Name))
+						target = db;
+
+				if (target is null)
+					continue;
+
+				if (target.HasRecord(iNote))
 				{
-					MessageBox.Show($"Provided name contains invalid character: {pc}", "Sylver Ink: Error", MessageBoxButton.OK, MessageBoxImage.Error);
-					return;
+					var result = OpenQuery(target, target.GetRecord(iNote));
+					if (result is null)
+						continue;
+
+					if (LastActiveNotesHeight.TryGetValue($"{target.Name}:{iNote}", out var openHeight))
+						result.Height = openHeight;
+
+					if (LastActiveNotesLeft.TryGetValue($"{target.Name}:{iNote}", out var openLeft))
+						result.Left = openLeft;
+
+					if (LastActiveNotesTop.TryGetValue($"{target.Name}:{iNote}", out var openTop))
+						result.Top = openTop;
+
+					if (LastActiveNotesWidth.TryGetValue($"{target.Name}:{iNote}", out var openWidth))
+						result.Width = openWidth;
 				}
 			}
 
-			CurrentDatabase.Rename(DatabaseNameBox.Text);
-		}
+			HandleShellVerbs();
 
-		private void RenameKeyDown(object sender, KeyEventArgs e)
-		{
-			if (e.Key == Key.Enter)
-				RenameDatabase.IsOpen = false;
-		}
-
-		private void SaveAddress(object sender, RoutedEventArgs e)
-		{
-			ConnectAddress.IsOpen = false;
-
-			Database newDB = new();
-			AddDatabase(newDB);
-
-			var addr = AddressBox.Text;
-			BackgroundWorker worker = new();
-			worker.DoWork += (_, _) => newDB.Client?.Connect(addr);
-			worker.RunWorkerAsync();
-		}
-
-		private void SaveDatabases(object? sender, DoWorkEventArgs e)
-		{
-			foreach (Database db in Databases)
-				db.Save();
-		}
-
-		private void SaveNewName(object? sender, RoutedEventArgs e) => RenameDatabase.IsOpen = false;
-
-		private void ShowAbout(object? sender, RoutedEventArgs e) => new About().Show();
-
-		private void SublistChanged(object sender, RoutedEventArgs e)
-		{
-			var box = (ListBox)sender;
-			var grid = (Grid)box.Parent;
-			RecentSelection = (NoteRecord)box.SelectedItem;
-
-			foreach (ListBox item in grid.Children)
-				item.SelectedIndex = box.SelectedIndex;
-		}
-
-		private void SublistOpen(object sender, RoutedEventArgs e)
-		{
-			if (Mouse.RightButton == MouseButtonState.Pressed)
-				return;
-
-			var box = (ListBox)sender;
-			if (box.SelectedItem is null)
-				return;
-
-			OpenQuery(RecentSelection);
-			box.SelectedItem = null;
-		}
-
-		private void TabChanged(object sender, SelectionChangedEventArgs e)
-		{
-			var control = (TabControl)sender;
-			if (control.Name.Equals("DatabasesPanel"))
+			BackgroundWorker initialUpdateThread = new();
+			initialUpdateThread.DoWork += (_, _) => SpinWait.SpinUntil(new(() => Databases.Count > 0));
+			initialUpdateThread.RunWorkerCompleted += (_, _) =>
 			{
-				var item = (TabItem?)control.SelectedItem;
-				if (item is null)
-					return;
+				CanResize = true;
+				ResizeMode = ResizeMode.CanResize;
+				Common.Settings.MainTypeFace = new(Common.Settings.MainFontFamily, FontStyles.Normal, FontWeights.Normal, FontStretches.Normal);
+				PPD = VisualTreeHelper.GetDpi(this).PixelsPerDip;
+				DeferUpdateRecentNotes(true);
+			};
+			initialUpdateThread.RunWorkerAsync();
 
-				var newDB = (Database)item.Tag;
-				if (newDB.Equals(CurrentDatabase))
-					return;
+			WindowSource = HwndSource.FromHwnd(hWndHelper.Handle);
+			WindowSource.AddHook(HwndHook);
+			RegisterHotKeys();
+		};
 
-				CurrentDatabase = newDB;
-				Common.Settings.SearchResults.Clear();
+		CheckInit.RunWorkerAsync();
+	}
+
+	private void HandleShellVerbs()
+	{
+		var args = Environment.GetCommandLineArgs();
+		if (args.Length < 2)
+			return;
+
+		switch (args[1])
+		{
+			case "open": // &Open
+				HandleVerbOpen(args.Length > 2 ? args[2] : string.Empty);
+				break;
+			default: // &Open
+				HandleVerbOpen(args[1]);
+				break;
+		}
+	}
+
+	private void HandleVerbOpen(string filename)
+	{
+		if (string.IsNullOrWhiteSpace(filename))
+			return;
+
+		var wideBreak = string.Empty;
+		foreach (string dbFile in Common.Settings.LastDatabases)
+			if (Path.GetFullPath(dbFile).Equals(Path.GetFullPath(filename)))
+				wideBreak = Path.GetFullPath(dbFile);
+
+		if (string.IsNullOrWhiteSpace(wideBreak))
+		{
+			Database.Create(filename);
+			return;
+		}
+
+		foreach (TabItem item in DatabasesPanel.Items)
+		{
+			if (wideBreak.Equals(Path.GetFullPath(((Database)item.Tag).DBFile)))
+			{
+				DatabasesPanel.SelectedItem = item;
+				CurrentDatabase = (Database)item.Tag;
+			}
+		}
+	}
+
+	private nint HwndHook(nint hwnd, int msg, nint wParam, nint lParam, ref bool handled)
+	{
+		if (msg != 0x0312) // WM_HOTKEY
+			return default;
+
+		if (wParam.ToInt32() == NewNoteHotKeyID)
+			OnNewNoteHotkey();
+
+		if (wParam.ToInt32() == PreviousNoteHotKeyID)
+			OnPreviousNoteHotkey();
+
+		handled = true;
+		return default;
+	}
+
+	public static bool IsShuttingDown()
+	{
+		try
+		{
+			Application.Current.ShutdownMode = Application.Current.ShutdownMode;
+			return false;
+		}
+		catch
+		{
+			return true;
+		}
+	}
+
+	private void MainWindow_Closing(object sender, CancelEventArgs e)
+	{
+		var lockFile = GetLockFile();
+
+		if (!_ABORT)
+		{
+			if (DatabaseChanged)
+			{
+				switch (MessageBox.Show("Do you want to save your work before exiting?", "Sylver Ink: Notification", MessageBoxButton.YesNoCancel, MessageBoxImage.Question))
+				{
+					case MessageBoxResult.Cancel:
+						e.Cancel = true;
+						return;
+					case MessageBoxResult.Yes:
+						e.Cancel = true;
+						MainGrid.IsEnabled = false;
+
+						if (File.Exists(lockFile))
+							File.Delete(lockFile);
+
+						BackgroundWorker exitTask = new();
+						exitTask.DoWork += SaveDatabases;
+						exitTask.RunWorkerCompleted += ExitComplete;
+						exitTask.RunWorkerAsync();
+						return;
+				}
 			}
 
-			UpdateDatabaseMenu();
-			DeferUpdateRecentNotes(true);
+			Common.Settings.Save();
 		}
 
-		private void UnregisterHotKeys()
+		Application.Current.Shutdown();
+	}
+
+	private void MainWindow_SizeChanged(object sender, SizeChangedEventArgs e) => DeferUpdateRecentNotes(true);
+
+	private void NewNote_Keydown(object sender, KeyEventArgs e)
+	{
+		if (e.Key != Key.Enter)
+			return;
+
+		var box = (TextBox)sender;
+		CurrentDatabase.CreateRecord(box.Text);
+		box.Text = string.Empty;
+		DeferUpdateRecentNotes();
+	}
+
+	protected override void OnClosed(EventArgs e)
+	{
+		WindowSource?.RemoveHook(HwndHook);
+		WindowSource = null;
+		UnregisterHotKeys();
+		base.OnClosed(e);
+	}
+
+	private static void OnNewNoteHotkey() => OpenQuery(CurrentDatabase.GetRecord(CurrentDatabase.CreateRecord(string.Empty)));
+
+	private static void OnPreviousNoteHotkey() => OpenQuery(PreviousOpenNote ?? CurrentDatabase.GetRecord(CurrentDatabase.CreateRecord(string.Empty)));
+
+	protected override void OnSourceInitialized(EventArgs e)
+	{
+		base.OnSourceInitialized(e);
+
+		if (Process.GetProcessesByName("Sylver Ink").Length > 1 && !File.Exists(UpdateHandler.UpdateLockUri))
 		{
-			UnregisterHotKey(hWndHelper.Handle, NewNoteHotKeyID);
-			UnregisterHotKey(hWndHelper.Handle, PreviousNoteHotKeyID);
+			_ABORT = true;
+			MessageBox.Show("Another instance of Sylver Ink is already running.", "Sylver Ink: Error", MessageBoxButton.OK, MessageBoxImage.Error);
+			Application.Current.Shutdown();
+			return;
 		}
+
+		HandleCheckInit();
+
+		if (File.Exists(UpdateHandler.UpdateLockUri))
+			File.Delete(UpdateHandler.UpdateLockUri);
+
+		if (File.Exists(UpdateHandler.TempUri))
+			File.Delete(UpdateHandler.TempUri);
+
+		Common.Settings.Load();
+		SettingsLoaded = true;
+
+		foreach (var folder in Subfolders)
+			if (!Directory.Exists(folder.Value))
+				Directory.CreateDirectory(folder.Value);
+
+		UpdateHandler.CheckForUpdates();
+
+		if (!IsShuttingDown())
+			UpdatesChecked = true;
+
+		if (FirstRun)
+		{
+			DatabaseCount = 1;
+			Database.Create(Path.Join(Subfolders["Databases"], DefaultDatabase, $"{DefaultDatabase}.sidb"));
+		}
+	}
+
+	private void RegisterHotKeys()
+	{
+		RegisterHotKey(hWndHelper.Handle, NewNoteHotKeyID, 2, (uint)KeyInterop.VirtualKeyFromKey(Key.N));
+		RegisterHotKey(hWndHelper.Handle, PreviousNoteHotKeyID, 2, (uint)KeyInterop.VirtualKeyFromKey(Key.L));
+	}
+
+	private void RenameClosed(object sender, EventArgs e)
+	{
+		if (string.IsNullOrWhiteSpace(DatabaseNameBox.Text))
+			return;
+
+		if (DatabaseNameBox.Text.Equals(CurrentDatabase.Name))
+			return;
+
+		foreach (Database db in Databases)
+		{
+			if (!DatabaseNameBox.Text.Equals(db.Name))
+				continue;
+
+			MessageBox.Show("A database already exists with the provided name.", "Sylver Ink: Error", MessageBoxButton.OK, MessageBoxImage.Error);
+			return;
+		}
+
+		foreach (char pc in InvalidPathChars)
+		{
+			if (DatabaseNameBox.Text.Contains(pc))
+			{
+				MessageBox.Show($"Provided name contains invalid character: {pc}", "Sylver Ink: Error", MessageBoxButton.OK, MessageBoxImage.Error);
+				return;
+			}
+		}
+
+		CurrentDatabase.Rename(DatabaseNameBox.Text);
+	}
+
+	private void RenameKeyDown(object sender, KeyEventArgs e)
+	{
+		if (e.Key == Key.Enter)
+			RenameDatabase.IsOpen = false;
+	}
+
+	private void SaveAddress(object sender, RoutedEventArgs e)
+	{
+		ConnectAddress.IsOpen = false;
+
+		Database newDB = new();
+		AddDatabase(newDB);
+
+		var addr = AddressBox.Text;
+		BackgroundWorker worker = new();
+		worker.DoWork += (_, _) => newDB.Client?.Connect(addr);
+		worker.RunWorkerAsync();
+	}
+
+	private void SaveDatabases(object? sender, DoWorkEventArgs e)
+	{
+		foreach (Database db in Databases)
+			db.Save();
+	}
+
+	private void SaveNewName(object? sender, RoutedEventArgs e) => RenameDatabase.IsOpen = false;
+
+	private void ShowAbout(object? sender, RoutedEventArgs e) => new About().Show();
+
+	private void SublistChanged(object sender, RoutedEventArgs e)
+	{
+		var box = (ListBox)sender;
+		var grid = (Grid)box.Parent;
+		RecentSelection = (NoteRecord)box.SelectedItem;
+
+		foreach (ListBox item in grid.Children)
+			item.SelectedIndex = box.SelectedIndex;
+	}
+
+	private void SublistOpen(object sender, RoutedEventArgs e)
+	{
+		if (Mouse.RightButton == MouseButtonState.Pressed)
+			return;
+
+		var box = (ListBox)sender;
+		if (box.SelectedItem is null)
+			return;
+
+		OpenQuery(RecentSelection);
+		box.SelectedItem = null;
+	}
+
+	private void TabChanged(object sender, SelectionChangedEventArgs e)
+	{
+		var control = (TabControl)sender;
+		if (control.Name.Equals("DatabasesPanel"))
+		{
+			var item = (TabItem?)control.SelectedItem;
+			if (item is null)
+				return;
+
+			var newDB = (Database)item.Tag;
+			if (newDB.Equals(CurrentDatabase))
+				return;
+
+			CurrentDatabase = newDB;
+			Common.Settings.SearchResults.Clear();
+		}
+
+		UpdateDatabaseMenu();
+		DeferUpdateRecentNotes(true);
+	}
+
+	private void UnregisterHotKeys()
+	{
+		UnregisterHotKey(hWndHelper.Handle, NewNoteHotKeyID);
+		UnregisterHotKey(hWndHelper.Handle, PreviousNoteHotKeyID);
 	}
 }

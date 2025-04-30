@@ -4,121 +4,120 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 
-namespace SylverInk
+namespace SylverInk;
+
+/// <summary>
+/// Interaction logic for Properties.xaml
+/// </summary>
+public partial class Properties : Window
 {
-	/// <summary>
-	/// Interaction logic for Properties.xaml
-	/// </summary>
-	public partial class Properties : Window
+	private bool HourSelected;
+	private bool MinuteSelected;
+
+	public Database? DB { get; set; }
+
+	public Properties()
 	{
-		private bool HourSelected;
-		private bool MinuteSelected;
+		InitializeComponent();
+		DataContext = Common.Settings;
+	}
 
-		public Database? DB { get; set; }
+	private void ApplyTime()
+	{
+		if (Hour.SelectedItem is null || Minute.SelectedItem is null)
+			return;
 
-		public Properties()
+		var hour = (ComboBoxItem)Hour.SelectedItem;
+		var minute = (ComboBoxItem)Minute.SelectedItem;
+		var hourValue = int.Parse((string)hour.Content);
+		var hourIndex = Hour.SelectedIndex;
+		SelectedTime.Content = $"{(hourValue == 0 ? 12 : hourValue < 13 ? hourValue : hourValue - 12)}:{minute.Content} {(hourIndex < 12 ? "AM" : "PM")}";
+
+		if (HourSelected && MinuteSelected)
+			TimeSelector.IsOpen = false;
+	}
+
+	private void CloseClick(object sender, RoutedEventArgs e) => Close();
+
+	private void Drag(object sender, MouseButtonEventArgs e) => DragMove();
+
+	private void Hour_Selected(object sender, RoutedEventArgs e)
+	{
+		HourSelected = true;
+		ApplyTime();
+	}
+
+	private void InitializeProperties()
+	{
+		DBNameLabel.ToolTip = DBNameLabel.Text = DB?.Name;
+		DBCreatedLabel.Content = DB?.GetCreated();
+		DBFormatLabel.Content = $"SIDB v.{DB?.Format}";
+		DBPathLabel.ToolTip = DBPathLabel.Text = $"{DB?.DBFile}";
+		DBNotesLabel.Content = $"{DB?.RecordCount:N0} notes";
+
+		double noteAvg = 0.0;
+		int noteLongest = 0;
+		int noteTotal = 0;
+		for (int i = 0; i < DB?.RecordCount; i++)
 		{
-			InitializeComponent();
-			DataContext = Common.Settings;
+			var length = DB?.GetRecord(i).ToString().Length ?? 0;
+			noteAvg += length;
+			noteLongest = Math.Max(noteLongest, length);
+			noteTotal += length;
 		}
+		noteAvg /= DB?.RecordCount ?? 1.0;
 
-		private void ApplyTime()
-		{
-			if (Hour.SelectedItem is null || Minute.SelectedItem is null)
-				return;
+		DBAvgLabel.Content = $"{noteAvg:N1} characters";
+		DBLongestLabel.Content = $"{noteLongest:N0} characters";
+		DBTotalLabel.Content = $"{noteTotal:N0} characters";
+	}
 
-			var hour = (ComboBoxItem)Hour.SelectedItem;
-			var minute = (ComboBoxItem)Minute.SelectedItem;
-			var hourValue = int.Parse((string)hour.Content);
-			var hourIndex = Hour.SelectedIndex;
-			SelectedTime.Content = $"{(hourValue == 0 ? 12 : hourValue < 13 ? hourValue : hourValue - 12)}:{minute.Content} {(hourIndex < 12 ? "AM" : "PM")}";
+	private void Minute_Selected(object sender, RoutedEventArgs e)
+	{
+		MinuteSelected = true;
+		ApplyTime();
+	}
 
-			if (HourSelected && MinuteSelected)
-				TimeSelector.IsOpen = false;
-		}
+	private void Properties_Loaded(object sender, RoutedEventArgs e)
+	{
+		InitializeProperties();
 
-		private void CloseClick(object sender, RoutedEventArgs e) => Close();
+		for (int i = 0; i < 24; i++)
+			Hour.Items.Add(new ComboBoxItem() { Content = $"{i:0,0}" });
 
-		private void Drag(object sender, MouseButtonEventArgs e) => DragMove();
+		for (int i = 0; i < 60; i++)
+			Minute.Items.Add(new ComboBoxItem() { Content = $"{i:0,0}" });
 
-		private void Hour_Selected(object sender, RoutedEventArgs e)
-		{
-			HourSelected = true;
-			ApplyTime();
-		}
+		Hour.SelectedIndex = 0;
+		Minute.SelectedIndex = 0;
+	}
 
-		private void InitializeProperties()
-		{
-			DBNameLabel.ToolTip = DBNameLabel.Text = DB?.Name;
-			DBCreatedLabel.Content = DB?.GetCreated();
-			DBFormatLabel.Content = $"SIDB v.{DB?.Format}";
-			DBPathLabel.ToolTip = DBPathLabel.Text = $"{DB?.DBFile}";
-			DBNotesLabel.Content = $"{DB?.RecordCount:N0} notes";
+	private void RestoreClick(object sender, RoutedEventArgs e)
+	{
+		if (ReversionDate.SelectedDate is null)
+			return;
 
-			double noteAvg = 0.0;
-			int noteLongest = 0;
-			int noteTotal = 0;
-			for (int i = 0; i < DB?.RecordCount; i++)
-			{
-				var length = DB?.GetRecord(i).ToString().Length ?? 0;
-				noteAvg += length;
-				noteLongest = Math.Max(noteLongest, length);
-				noteTotal += length;
-			}
-			noteAvg /= DB?.RecordCount ?? 1.0;
+		if (MessageBox.Show("Are you sure you want to revert the database to the selected date and time?", "Sylver Ink: Warning", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.No)
+			return;
 
-			DBAvgLabel.Content = $"{noteAvg:N1} characters";
-			DBLongestLabel.Content = $"{noteLongest:N0} characters";
-			DBTotalLabel.Content = $"{noteTotal:N0} characters";
-		}
+		var hour = (ComboBoxItem)Hour.SelectedItem;
+		var minute = (ComboBoxItem)Minute.SelectedItem;
+		var hourValue = int.Parse((string)hour.Content);
+		var minuteValue = int.Parse((string)minute.Content);
 
-		private void Minute_Selected(object sender, RoutedEventArgs e)
-		{
-			MinuteSelected = true;
-			ApplyTime();
-		}
+		DateTime reversion = ReversionDate?.SelectedDate ?? DateTime.Now;
+		reversion = reversion.Date.AddHours(hourValue).AddMinutes(minuteValue);
 
-		private void Properties_Loaded(object sender, RoutedEventArgs e)
-		{
-			InitializeProperties();
+		DB?.Revert(reversion);
+		InitializeProperties();
+	}
 
-			for (int i = 0; i < 24; i++)
-				Hour.Items.Add(new ComboBoxItem() { Content = $"{i:0,0}" });
+	private void SelectedDateChanged(object sender, SelectionChangedEventArgs e) => RestoreButton.IsEnabled = ReversionDate.SelectedDate is not null;
 
-			for (int i = 0; i < 60; i++)
-				Minute.Items.Add(new ComboBoxItem() { Content = $"{i:0,0}" });
-
-			Hour.SelectedIndex = 0;
-			Minute.SelectedIndex = 0;
-		}
-
-		private void RestoreClick(object sender, RoutedEventArgs e)
-		{
-			if (ReversionDate.SelectedDate is null)
-				return;
-
-			if (MessageBox.Show("Are you sure you want to revert the database to the selected date and time?", "Sylver Ink: Warning", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.No)
-				return;
-
-			var hour = (ComboBoxItem)Hour.SelectedItem;
-			var minute = (ComboBoxItem)Minute.SelectedItem;
-			var hourValue = int.Parse((string)hour.Content);
-			var minuteValue = int.Parse((string)minute.Content);
-
-			DateTime reversion = ReversionDate?.SelectedDate ?? DateTime.Now;
-			reversion = reversion.Date.AddHours(hourValue).AddMinutes(minuteValue);
-
-			DB?.Revert(reversion);
-			InitializeProperties();
-		}
-
-		private void SelectedDateChanged(object sender, SelectionChangedEventArgs e) => RestoreButton.IsEnabled = ReversionDate.SelectedDate is not null;
-
-		private void SelectTime(object sender, RoutedEventArgs e)
-		{
-			TimeSelector.IsOpen = true;
-			HourSelected = false;
-			MinuteSelected = false;
-		}
+	private void SelectTime(object sender, RoutedEventArgs e)
+	{
+		TimeSelector.IsOpen = true;
+		HourSelected = false;
+		MinuteSelected = false;
 	}
 }

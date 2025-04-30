@@ -9,384 +9,383 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using static SylverInk.Common;
 
-namespace SylverInk
+namespace SylverInk;
+
+public partial class Import : Window
 {
-	public partial class Import : Window
+	private bool Adaptive;
+	private string AdaptivePredicate = string.Empty;
+	private List<string> DataLines { get; } = [];
+	private int Imported;
+	private BackgroundWorker? MeasureTask;
+	private double RunningAverage;
+	private int RunningCount;
+	private string Target = string.Empty;
+
+	public Import()
 	{
-		private bool Adaptive;
-		private string AdaptivePredicate = string.Empty;
-		private List<string> DataLines { get; } = [];
-		private int Imported;
-		private BackgroundWorker? MeasureTask;
-		private double RunningAverage;
-		private int RunningCount;
-		private string Target = string.Empty;
+		InitializeComponent();
+		DataContext = Common.Settings;
 
-		public Import()
+		Common.Settings.ImportTarget = string.Empty;
+		Common.Settings.ReadyToFinalize = false;
+	}
+
+	private void AdaptiveChecked(object sender, RoutedEventArgs e)
+	{
+		Adaptive = AdaptiveCheckBox.IsChecked is true;
+		DoMeasureTask();
+	}
+
+	private void CloseClick(object sender, RoutedEventArgs e) => Close();
+
+	private void DoMeasureTask()
+	{
+		if (string.IsNullOrWhiteSpace(Target))
+			return;
+
+		if (MeasureTask is null)
 		{
-			InitializeComponent();
-			DataContext = Common.Settings;
-
-			Common.Settings.ImportTarget = string.Empty;
-			Common.Settings.ReadyToFinalize = false;
-		}
-
-		private void AdaptiveChecked(object sender, RoutedEventArgs e)
-		{
-			Adaptive = AdaptiveCheckBox.IsChecked is true;
-			DoMeasureTask();
-		}
-
-		private void CloseClick(object sender, RoutedEventArgs e) => Close();
-
-		private void DoMeasureTask()
-		{
-			if (string.IsNullOrWhiteSpace(Target))
-				return;
-
-			if (MeasureTask is null)
+			MeasureTask = new();
+			MeasureTask.DoWork += (_, _) => MeasureNotes();
+			MeasureTask.RunWorkerCompleted += (_, _) =>
 			{
-				MeasureTask = new();
-				MeasureTask.DoWork += (_, _) => MeasureNotes();
-				MeasureTask.RunWorkerCompleted += (_, _) =>
+				Common.Settings.ImportData = $"Estimated new notes: {RunningCount:N0}\nAverage length: {RunningAverage:N0} characters per note\n\nRemember to press Import to finalize your changes!";
+				DoImport.Content = "Import";
+				LTPanel.IsEnabled = !Adaptive;
+				Common.Settings.ReadyToFinalize = RunningCount > 0;
+			};
+		}
+
+		if (MeasureTask.IsBusy)
+			return;
+
+		DoImport.Content = "Scanning...";
+		LTPanel.IsEnabled = false;
+		Common.Settings.ReadyToFinalize = false;
+
+		MeasureTask.RunWorkerAsync();
+	}
+
+	private void Drag(object sender, MouseButtonEventArgs e) => DragMove();
+
+	private void Finalize_Click(object sender, RoutedEventArgs e)
+	{
+		var button = (Button)sender;
+		button.Content = "Importing...";
+		Common.Settings.ImportTarget = string.Empty;
+
+		try
+		{
+			BackgroundWorker importTask = new();
+			importTask.DoWork += PerformImport;
+			importTask.RunWorkerCompleted += FinishImport;
+			importTask.RunWorkerAsync();
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show($"Failed to import the selected file: {ex.Message}", "Sylver Ink: Error", MessageBoxButton.OK);
+		}
+	}
+
+	private void FinishImport(object? sender, RunWorkerCompletedEventArgs? e)
+	{
+		Common.Settings.ImportData = $"Notes imported: {Imported:N0}";
+		DoImport.Content = "Import";
+
+		Common.Settings.ImportTarget = string.Empty;
+		Common.Settings.ReadyToFinalize = false;
+		DeferUpdateRecentNotes(true);
+		DataLines.Clear();
+	}
+
+	private void LineToleranceChanged(object? sender, RoutedEventArgs e)
+	{
+		Common.Settings.LineTolerance += ((Button?)sender)?.Content.Equals("-") is true ? -1 : 1;
+		DoMeasureTask();
+	}
+
+	private bool MeasureNotesAdaptive()
+	{
+		if (!Adaptive)
+			return false;
+
+		using StreamReader? fileStream = new(Target);
+		if (fileStream is null || fileStream.EndOfStream)
+		{
+			Common.Settings.ImportTarget = string.Empty;
+			Target = string.Empty;
+			return false;
+		}
+
+		// Letters, numbers, spaces, and punctuation; respectively.
+		string[] classes = [@"\p{L}+", @"\p{Nd}+", @"[\p{Zs}\t]+", @"[\p{P}\p{S}]+"];
+		Dictionary<string, double> frequencies = [];
+		Dictionary<string, int> tokenCounts = [];
+		DataLines.Clear();
+
+		while (fileStream?.EndOfStream is false)
+		{
+			string line = fileStream?.ReadLine() ?? string.Empty;
+			DataLines.Add(line);
+		}
+
+		int LastPredicateSequence = 0;
+		double LastPredicateValue = 0.0;
+
+		for (int length = 3; length <= 35; length++)
+		{
+			double total = 0.0;
+
+			frequencies.Clear();
+			frequencies.Add(string.Empty, 0.0);
+
+			tokenCounts.Clear();
+			tokenCounts.Add(string.Empty, 0);
+
+			foreach (string key in DataLines)
+			{
+				if (string.IsNullOrWhiteSpace(key.Trim()))
+					continue;
+
+				for (int c = 0; c < Math.Max(0, Math.Min(key.Length, length)); c++)
 				{
-					Common.Settings.ImportData = $"Estimated new notes: {RunningCount:N0}\nAverage length: {RunningAverage:N0} characters per note\n\nRemember to press Import to finalize your changes!";
-					DoImport.Content = "Import";
-					LTPanel.IsEnabled = !Adaptive;
-					Common.Settings.ReadyToFinalize = RunningCount > 0;
-				};
+					foreach (string type in classes)
+					{
+						if (!Regex.IsMatch(key.AsSpan(c, 1), type))
+							continue;
+
+						for (int k = frequencies.Keys.Count - 1; k > -1; k--)
+						{
+							var pattern = frequencies.Keys.ElementAt(k);
+							if (c + 1 < tokenCounts[pattern])
+								continue;
+
+							if (pattern.EndsWith(type))
+							{
+								frequencies[pattern] += 1.0;
+								total++;
+								continue;
+							}
+
+							var pBrute = pattern + type;
+							var keySpan = key.AsSpan(0, Math.Min(c + 1, key.Length));
+
+							if (!Regex.IsMatch(keySpan, pBrute))
+								continue;
+
+							if (!string.IsNullOrWhiteSpace(pBrute.Trim()))
+							{
+								total++;
+
+								if (!frequencies.TryAdd(pBrute, 1.0))
+								{
+									frequencies[pBrute] += 1.0;
+									frequencies.Remove(pattern);
+									tokenCounts.Remove(pattern);
+									continue;
+								}
+
+								tokenCounts.TryAdd(pBrute, tokenCounts[pattern] + 1);
+							}
+						}
+					}
+				}
 			}
 
-			if (MeasureTask.IsBusy)
-				return;
+			if (frequencies.Count == 0)
+				continue;
 
-			DoImport.Content = "Scanning...";
-			LTPanel.IsEnabled = false;
-			Common.Settings.ReadyToFinalize = false;
+			foreach (string key in frequencies.Keys)
+				frequencies[key] /= total;
 
-			MeasureTask.RunWorkerAsync();
-		}
-
-		private void Drag(object sender, MouseButtonEventArgs e) => DragMove();
-
-		private void Finalize_Click(object sender, RoutedEventArgs e)
-		{
-			var button = (Button)sender;
-			button.Content = "Importing...";
-			Common.Settings.ImportTarget = string.Empty;
-
-			try
+			// tl;dr: We search for note boundaries based on certain strings of characters appearing much more frequently than others at the start of lines.
+			// Think timestamps, for instance.
+			// And to be exact, we're looking for sequences that occur in at least 5% of all lines.
+			var ordered = frequencies.OrderByDescending(pair => pair.Value).First();
+			if (ordered.Value >= 0.05 && ordered.Value >= LastPredicateValue)
 			{
-				BackgroundWorker importTask = new();
-				importTask.DoWork += PerformImport;
-				importTask.RunWorkerCompleted += FinishImport;
-				importTask.RunWorkerAsync();
+				var NewPredicate = "^" + ordered.Key;
+				if (AdaptivePredicate.Equals(NewPredicate))
+				{
+					LastPredicateSequence++;
+					continue;
+				}
+				AdaptivePredicate = NewPredicate;
+				LastPredicateSequence = 0;
+				LastPredicateValue = ordered.Value;
 			}
-			catch (Exception ex)
+			else
+				LastPredicateSequence++;
+
+			if (LastPredicateSequence > 5)
+				break;
+		}
+
+		if (!string.IsNullOrWhiteSpace(AdaptivePredicate.Trim()))
+		{
+			string recordData = string.Empty;
+			RunningAverage = 0.0;
+			RunningCount = 0;
+
+			for (int i = 0; i < DataLines.Count; i++)
 			{
-				MessageBox.Show($"Failed to import the selected file: {ex.Message}", "Sylver Ink: Error", MessageBoxButton.OK);
+				var line = DataLines[i];
+				if (Regex.IsMatch(line, AdaptivePredicate))
+				{
+					if (!string.IsNullOrWhiteSpace(recordData.Trim()))
+					{
+						RunningAverage += recordData.Length;
+						RunningCount++;
+					}
+					recordData = line;
+				}
+				else
+					recordData += "\r\n" + line;
 			}
+
+			RunningAverage /= RunningCount;
+			return true;
 		}
 
-		private void FinishImport(object? sender, RunWorkerCompletedEventArgs? e)
+		MessageBox.Show("Failed to autodetect the note format.", "Sylver Ink: Error", MessageBoxButton.OK);
+		Adaptive = false;
+		AdaptiveCheckBox.IsChecked = false;
+		AdaptivePredicate = string.Empty;
+		return false;
+	}
+
+	private void MeasureNotesManual()
+	{
+		try
 		{
-			Common.Settings.ImportData = $"Notes imported: {Imported:N0}";
-			DoImport.Content = "Import";
-
-			Common.Settings.ImportTarget = string.Empty;
-			Common.Settings.ReadyToFinalize = false;
-			DeferUpdateRecentNotes(true);
-			DataLines.Clear();
-		}
-
-		private void LineToleranceChanged(object? sender, RoutedEventArgs e)
-		{
-			Common.Settings.LineTolerance += ((Button?)sender)?.Content.Equals("-") is true ? -1 : 1;
-			DoMeasureTask();
-		}
-
-		private bool MeasureNotesAdaptive()
-		{
-			if (!Adaptive)
-				return false;
-
 			using StreamReader? fileStream = new(Target);
 			if (fileStream is null || fileStream.EndOfStream)
 			{
 				Common.Settings.ImportTarget = string.Empty;
 				Target = string.Empty;
-				return false;
+				return;
 			}
 
-			// Letters, numbers, spaces, and punctuation; respectively.
-			string[] classes = [@"\p{L}+", @"\p{Nd}+", @"[\p{Zs}\t]+", @"[\p{P}\p{S}]+"];
-			Dictionary<string, double> frequencies = [];
-			Dictionary<string, int> tokenCounts = [];
+			int blankCount = 0;
+			string recordData = string.Empty;
+			RunningAverage = 0.0;
+			RunningCount = 0;
 			DataLines.Clear();
 
 			while (fileStream?.EndOfStream is false)
 			{
 				string line = fileStream?.ReadLine() ?? string.Empty;
 				DataLines.Add(line);
-			}
-
-			int LastPredicateSequence = 0;
-			double LastPredicateValue = 0.0;
-
-			for (int length = 3; length <= 35; length++)
-			{
-				double total = 0.0;
-
-				frequencies.Clear();
-				frequencies.Add(string.Empty, 0.0);
-
-				tokenCounts.Clear();
-				tokenCounts.Add(string.Empty, 0);
-
-				foreach (string key in DataLines)
-				{
-					if (string.IsNullOrWhiteSpace(key.Trim()))
-						continue;
-
-					for (int c = 0; c < Math.Max(0, Math.Min(key.Length, length)); c++)
-					{
-						foreach (string type in classes)
-						{
-							if (!Regex.IsMatch(key.AsSpan(c, 1), type))
-								continue;
-
-							for (int k = frequencies.Keys.Count - 1; k > -1; k--)
-							{
-								var pattern = frequencies.Keys.ElementAt(k);
-								if (c + 1 < tokenCounts[pattern])
-									continue;
-
-								if (pattern.EndsWith(type))
-								{
-									frequencies[pattern] += 1.0;
-									total++;
-									continue;
-								}
-
-								var pBrute = pattern + type;
-								var keySpan = key.AsSpan(0, Math.Min(c + 1, key.Length));
-
-								if (!Regex.IsMatch(keySpan, pBrute))
-									continue;
-
-								if (!string.IsNullOrWhiteSpace(pBrute.Trim()))
-								{
-									total++;
-
-									if (!frequencies.TryAdd(pBrute, 1.0))
-									{
-										frequencies[pBrute] += 1.0;
-										frequencies.Remove(pattern);
-										tokenCounts.Remove(pattern);
-										continue;
-									}
-
-									tokenCounts.TryAdd(pBrute, tokenCounts[pattern] + 1);
-								}
-							}
-						}
-					}
-				}
-
-				if (frequencies.Count == 0)
-					continue;
-
-				foreach (string key in frequencies.Keys)
-					frequencies[key] /= total;
-
-				// tl;dr: We search for note boundaries based on certain strings of characters appearing much more frequently than others at the start of lines.
-				// Think timestamps, for instance.
-				// And to be exact, we're looking for sequences that occur in at least 5% of all lines.
-				var ordered = frequencies.OrderByDescending(pair => pair.Value).First();
-				if (ordered.Value >= 0.05 && ordered.Value >= LastPredicateValue)
-				{
-					var NewPredicate = "^" + ordered.Key;
-					if (AdaptivePredicate.Equals(NewPredicate))
-					{
-						LastPredicateSequence++;
-						continue;
-					}
-					AdaptivePredicate = NewPredicate;
-					LastPredicateSequence = 0;
-					LastPredicateValue = ordered.Value;
-				}
-				else
-					LastPredicateSequence++;
-
-				if (LastPredicateSequence > 5)
-					break;
-			}
-
-			if (!string.IsNullOrWhiteSpace(AdaptivePredicate.Trim()))
-			{
-				string recordData = string.Empty;
-				RunningAverage = 0.0;
-				RunningCount = 0;
-
-				for (int i = 0; i < DataLines.Count; i++)
-				{
-					var line = DataLines[i];
-					if (Regex.IsMatch(line, AdaptivePredicate))
-					{
-						if (!string.IsNullOrWhiteSpace(recordData.Trim()))
-						{
-							RunningAverage += recordData.Length;
-							RunningCount++;
-						}
-						recordData = line;
-					}
-					else
-						recordData += "\r\n" + line;
-				}
-
-				RunningAverage /= RunningCount;
-				return true;
-			}
-
-			MessageBox.Show("Failed to autodetect the note format.", "Sylver Ink: Error", MessageBoxButton.OK);
-			Adaptive = false;
-			AdaptiveCheckBox.IsChecked = false;
-			AdaptivePredicate = string.Empty;
-			return false;
-		}
-
-		private void MeasureNotesManual()
-		{
-			try
-			{
-				using StreamReader? fileStream = new(Target);
-				if (fileStream is null || fileStream.EndOfStream)
-				{
-					Common.Settings.ImportTarget = string.Empty;
-					Target = string.Empty;
-					return;
-				}
-
-				int blankCount = 0;
-				string recordData = string.Empty;
-				RunningAverage = 0.0;
-				RunningCount = 0;
-				DataLines.Clear();
-
-				while (fileStream?.EndOfStream is false)
-				{
-					string line = fileStream?.ReadLine() ?? string.Empty;
-					DataLines.Add(line);
-					recordData += line + "\r\n";
-
-					if (line.Trim().Length == 0)
-						blankCount++;
-					else
-						blankCount = 0;
-
-					if (!(recordData.Length > 0 && (blankCount >= Common.Settings.LineTolerance || fileStream?.EndOfStream is true)))
-						continue;
-
-					blankCount = 0;
-					RunningAverage += recordData.Length;
-					recordData = string.Empty;
-					RunningCount++;
-				}
-
-				RunningAverage /= RunningCount;
-			}
-			catch
-			{
-				MessageBox.Show($"Could not open file: {Target}", "Sylver Ink: Error", MessageBoxButton.OK, MessageBoxImage.Error);
-			}
-		}
-
-		private void MeasureNotes()
-		{
-			if (string.IsNullOrWhiteSpace(Target))
-				return;
-
-			if (!MeasureNotesAdaptive())
-				MeasureNotesManual();
-		}
-
-		private void Open_Click(object sender, RoutedEventArgs e)
-		{
-			Common.Settings.ImportTarget = DialogFileSelect();
-			Common.Settings.ImportData = string.Empty;
-
-			if (Target.EndsWith(".sidb") || Target.EndsWith(".sibk"))
-			{
-				var result = MessageBox.Show("You have selected an existing Sylver Ink database. Its contents will be merged with your current database.\n\nDo you want to overwrite your current database instead?", "Sylver Ink: Warning", MessageBoxButton.YesNoCancel, MessageBoxImage.Warning);
-
-				if (result == MessageBoxResult.Cancel)
-					return;
-
-				if (result == MessageBoxResult.Yes)
-				{
-					CurrentDatabase.MakeBackup(true);
-					CurrentDatabase.Erase();
-				}
-
-				if (!CurrentDatabase.Open(Target))
-				{
-					MessageBox.Show($"Failed to import the selected file.", "Sylver Ink: Error", MessageBoxButton.OK);
-					return;
-				}
-
-				CurrentDatabase.Initialize(false);
-
-				Imported = CurrentDatabase.RecordCount;
-				FinishImport(sender, null);
-
-				return;
-			}
-
-			DoMeasureTask();
-		}
-
-		private void PerformImport(object? sender, DoWorkEventArgs e)
-		{
-			int blankCount = 0;
-			Imported = 0;
-			string recordData = string.Empty;
-
-			for (int i = 0; i < DataLines.Count; i++)
-			{
-				string line = DataLines[i];
-
-				if (Adaptive)
-				{
-					if (Regex.IsMatch(line, AdaptivePredicate) && !string.IsNullOrWhiteSpace(recordData.Trim()))
-					{
-						CurrentDatabase.CreateRecord(recordData);
-						Imported++;
-						recordData = string.Empty;
-					}
-					recordData += line + "\r\n";
-					continue;
-				}
-
 				recordData += line + "\r\n";
-				if (line.Length == 0)
+
+				if (line.Trim().Length == 0)
 					blankCount++;
 				else
 					blankCount = 0;
 
-				if (!(recordData.Length > 0 && (blankCount >= Common.Settings.LineTolerance || i >= DataLines.Count - 1)))
+				if (!(recordData.Length > 0 && (blankCount >= Common.Settings.LineTolerance || fileStream?.EndOfStream is true)))
 					continue;
 
-				CurrentDatabase.CreateRecord(recordData);
-				Imported++;
-				recordData = string.Empty;
 				blankCount = 0;
+				RunningAverage += recordData.Length;
+				recordData = string.Empty;
+				RunningCount++;
 			}
+
+			RunningAverage /= RunningCount;
+		}
+		catch
+		{
+			MessageBox.Show($"Could not open file: {Target}", "Sylver Ink: Error", MessageBoxButton.OK, MessageBoxImage.Error);
+		}
+	}
+
+	private void MeasureNotes()
+	{
+		if (string.IsNullOrWhiteSpace(Target))
+			return;
+
+		if (!MeasureNotesAdaptive())
+			MeasureNotesManual();
+	}
+
+	private void Open_Click(object sender, RoutedEventArgs e)
+	{
+		Common.Settings.ImportTarget = DialogFileSelect();
+		Common.Settings.ImportData = string.Empty;
+
+		if (Target.EndsWith(".sidb") || Target.EndsWith(".sibk"))
+		{
+			var result = MessageBox.Show("You have selected an existing Sylver Ink database. Its contents will be merged with your current database.\n\nDo you want to overwrite your current database instead?", "Sylver Ink: Warning", MessageBoxButton.YesNoCancel, MessageBoxImage.Warning);
+
+			if (result == MessageBoxResult.Cancel)
+				return;
+
+			if (result == MessageBoxResult.Yes)
+			{
+				CurrentDatabase.MakeBackup(true);
+				CurrentDatabase.Erase();
+			}
+
+			if (!CurrentDatabase.Open(Target))
+			{
+				MessageBox.Show($"Failed to import the selected file.", "Sylver Ink: Error", MessageBoxButton.OK);
+				return;
+			}
+
+			CurrentDatabase.Initialize(false);
+
+			Imported = CurrentDatabase.RecordCount;
+			FinishImport(sender, null);
+
+			return;
 		}
 
-		private void Target_TextChanged(object sender, RoutedEventArgs e)
+		DoMeasureTask();
+	}
+
+	private void PerformImport(object? sender, DoWorkEventArgs e)
+	{
+		int blankCount = 0;
+		Imported = 0;
+		string recordData = string.Empty;
+
+		for (int i = 0; i < DataLines.Count; i++)
 		{
-			Target = Common.Settings.ImportTarget;
-			Common.Settings.ReadyToFinalize = !string.IsNullOrWhiteSpace(Target);
+			string line = DataLines[i];
+
+			if (Adaptive)
+			{
+				if (Regex.IsMatch(line, AdaptivePredicate) && !string.IsNullOrWhiteSpace(recordData.Trim()))
+				{
+					CurrentDatabase.CreateRecord(recordData);
+					Imported++;
+					recordData = string.Empty;
+				}
+				recordData += line + "\r\n";
+				continue;
+			}
+
+			recordData += line + "\r\n";
+			if (line.Length == 0)
+				blankCount++;
+			else
+				blankCount = 0;
+
+			if (!(recordData.Length > 0 && (blankCount >= Common.Settings.LineTolerance || i >= DataLines.Count - 1)))
+				continue;
+
+			CurrentDatabase.CreateRecord(recordData);
+			Imported++;
+			recordData = string.Empty;
+			blankCount = 0;
 		}
+	}
+
+	private void Target_TextChanged(object sender, RoutedEventArgs e)
+	{
+		Target = Common.Settings.ImportTarget;
+		Common.Settings.ReadyToFinalize = !string.IsNullOrWhiteSpace(Target);
 	}
 }

@@ -9,421 +9,420 @@ using System.Windows;
 using System.Windows.Controls;
 using static SylverInk.Common;
 
-namespace SylverInk.Notes
+namespace SylverInk.Notes;
+
+public partial class Database
 {
-	public partial class Database
+	private NoteController Controller = new();
+	public string DBFile = string.Empty;
+	public bool Loaded;
+
+	public bool Changed { get => Controller.Changed; set => Controller.Changed = value; }
+	public NetClient? Client;
+	public long? Created;
+	public int Format { get => Controller.Format; set => Controller.Format = value; }
+	private StackPanel? HeaderPanel;
+	public string? Name { get => Controller.Name; set => Controller.Name = value; }
+	public int RecordCount => Controller.RecordCount;
+	public NetServer? Server;
+	public string? UUID { get => Controller.UUID; set => Controller.UUID = value; }
+	public Dictionary<string, double> WordPercentages => Controller.WordPercentages;
+
+	public Database()
 	{
-		private NoteController Controller = new();
-		public string DBFile = string.Empty;
-		public bool Loaded;
+		Client = new(this);
+		Controller = new();
+		Loaded = Controller.Loaded;
+		Server = new(this);
+	}
 
-		public bool Changed { get => Controller.Changed; set => Controller.Changed = value; }
-		public NetClient? Client;
-		public long? Created;
-		public int Format { get => Controller.Format; set => Controller.Format = value; }
-		private StackPanel? HeaderPanel;
-		public string? Name { get => Controller.Name; set => Controller.Name = value; }
-		public int RecordCount => Controller.RecordCount;
-		public NetServer? Server;
-		public string? UUID { get => Controller.UUID; set => Controller.UUID = value; }
-		public Dictionary<string, double> WordPercentages => Controller.WordPercentages;
-
-		public Database()
+	public static void Create(string dbFile, bool threaded = false)
+	{
+		Database db = new();
+		if (threaded)
 		{
-			Client = new(this);
-			Controller = new();
-			Loaded = Controller.Loaded;
-			Server = new(this);
+			BackgroundWorker worker = new();
+			worker.DoWork += (_, _) => db.Load(dbFile);
+			worker.RunWorkerCompleted += (_, _) => AddDatabase(db);
+			worker.RunWorkerAsync();
+
+			return;
 		}
 
-		public static void Create(string dbFile, bool threaded = false)
+		db.Load(dbFile);
+		AddDatabase(db);
+	}
+
+	public int CreateRecord(string entry, bool local = true)
+	{
+		int index = Controller.CreateRecord(entry);
+
+		if (local)
 		{
-			Database db = new();
-			if (threaded)
-			{
-				BackgroundWorker worker = new();
-				worker.DoWork += (_, _) => db.Load(dbFile);
-				worker.RunWorkerCompleted += (_, _) => AddDatabase(db);
-				worker.RunWorkerAsync();
+			var outBuffer = new List<byte>([0, 0, 0, 0, .. IntToBytes(entry.Length)]);
 
-				return;
-			}
+			if (entry.Length > 0)
+				outBuffer.AddRange(Encoding.UTF8.GetBytes(entry));
 
-			db.Load(dbFile);
-			AddDatabase(db);
+			Transmit(Network.MessageType.RecordAdd, [.. outBuffer]);
 		}
 
-		public int CreateRecord(string entry, bool local = true)
+		DeferUpdateRecentNotes();
+
+		return index;
+	}
+
+	public void CreateRevision(int index, string newVersion, bool local = true)
+	{
+		Controller.CreateRevision(index, newVersion);
+
+		if (!local)
+			return;
+
+		var outBuffer = new List<byte>([
+			.. IntToBytes(index),
+				.. IntToBytes(newVersion.Length)
+		]);
+
+		if (newVersion.Length > 0)
+			outBuffer.AddRange(Encoding.UTF8.GetBytes(newVersion));
+
+		Transmit(Network.MessageType.TextInsert, [.. outBuffer]);
+	}
+
+	public void CreateRevision(NoteRecord record, string newVersion, bool local = true)
+	{
+		Controller.CreateRevision(record, newVersion);
+
+		if (!local)
+			return;
+
+		var outBuffer = new List<byte>([
+			.. IntToBytes(record.Index),
+				.. IntToBytes(newVersion.Length)
+		]);
+
+		if (newVersion.Length > 0)
+			outBuffer.AddRange(Encoding.UTF8.GetBytes(newVersion));
+
+		Transmit(Network.MessageType.TextInsert, [.. outBuffer]);
+	}
+
+	public void DeleteRecord(int index, bool local = true)
+	{
+		Controller.DeleteRecord(index);
+
+		if (local)
+			Transmit(Network.MessageType.RecordRemove, IntToBytes(index));
+	}
+
+	public void DeleteRecord(NoteRecord record, bool local = true)
+	{
+		for (int index = RecordCount - 1; index > -1; index--)
 		{
-			int index = Controller.CreateRecord(entry);
+			if (!Controller.GetRecord(index).Equals(record))
+				continue;
 
-			if (local)
-			{
-				var outBuffer = new List<byte>([0, 0, 0, 0, .. IntToBytes(entry.Length)]);
-
-				if (entry.Length > 0)
-					outBuffer.AddRange(Encoding.UTF8.GetBytes(entry));
-
-				Transmit(Network.MessageType.RecordAdd, [.. outBuffer]);
-			}
-
-			DeferUpdateRecentNotes();
-
-			return index;
-		}
-
-		public void CreateRevision(int index, string newVersion, bool local = true)
-		{
-			Controller.CreateRevision(index, newVersion);
-
-			if (!local)
-				return;
-
-			var outBuffer = new List<byte>([
-				.. IntToBytes(index),
-					.. IntToBytes(newVersion.Length)
-			]);
-
-			if (newVersion.Length > 0)
-				outBuffer.AddRange(Encoding.UTF8.GetBytes(newVersion));
-
-			Transmit(Network.MessageType.TextInsert, [.. outBuffer]);
-		}
-
-		public void CreateRevision(NoteRecord record, string newVersion, bool local = true)
-		{
-			Controller.CreateRevision(record, newVersion);
-
-			if (!local)
-				return;
-
-			var outBuffer = new List<byte>([
-				.. IntToBytes(record.Index),
-					.. IntToBytes(newVersion.Length)
-			]);
-
-			if (newVersion.Length > 0)
-				outBuffer.AddRange(Encoding.UTF8.GetBytes(newVersion));
-
-			Transmit(Network.MessageType.TextInsert, [.. outBuffer]);
-		}
-
-		public void DeleteRecord(int index, bool local = true)
-		{
 			Controller.DeleteRecord(index);
 
 			if (local)
 				Transmit(Network.MessageType.RecordRemove, IntToBytes(index));
 		}
+	}
 
-		public void DeleteRecord(NoteRecord record, bool local = true)
+	public void DeserializeRecords(List<byte>? inMemory = null) => Controller.DeserializeRecords(inMemory);
+
+	public void Erase()
+	{
+		if (Client?.Connected is true || Server?.Serving is true)
+			return;
+
+		Controller.EraseDatabase();
+	}
+
+	public string GetCreated()
+	{
+		if (Created is not null)
+			return DateTime.FromBinary((long)Created).ToString(DateFormat);
+
+		var CreatedObject = DateTime.UtcNow;
+		for (int i = 0; i < RecordCount; i++)
 		{
-			for (int index = RecordCount - 1; index > -1; index--)
-			{
-				if (!Controller.GetRecord(index).Equals(record))
-					continue;
-
-				Controller.DeleteRecord(index);
-
-				if (local)
-					Transmit(Network.MessageType.RecordRemove, IntToBytes(index));
-			}
+			var other = Controller.GetRecord(i).GetCreatedObject();
+			if (CreatedObject.CompareTo(other) > 0)
+				CreatedObject = other;
 		}
 
-		public void DeserializeRecords(List<byte>? inMemory = null) => Controller.DeserializeRecords(inMemory);
+		Created = CreatedObject.ToBinary();
+		return CreatedObject.ToString(DateFormat);
+	}
 
-		public void Erase()
+	public object GetHeader()
+	{
+		string? headerContent;
+		Label label;
+		if (HeaderPanel is not null)
 		{
-			if (Client?.Connected is true || Server?.Serving is true)
-				return;
-
-			Controller.EraseDatabase();
-		}
-
-		public string GetCreated()
-		{
-			if (Created is not null)
-				return DateTime.FromBinary((long)Created).ToString(DateFormat);
-
-			var CreatedObject = DateTime.UtcNow;
-			for (int i = 0; i < RecordCount; i++)
+			HeaderPanel.Dispatcher.Invoke(() =>
 			{
-				var other = Controller.GetRecord(i).GetCreatedObject();
-				if (CreatedObject.CompareTo(other) > 0)
-					CreatedObject = other;
-			}
+				label = (Label)HeaderPanel.Children[0];
 
-			Created = CreatedObject.ToBinary();
-			return CreatedObject.ToString(DateFormat);
-		}
+				headerContent = Name;
+				if (headerContent?.Length > 12)
+					headerContent = $"{headerContent[..10]}...";
 
-		public object GetHeader()
-		{
-			string? headerContent;
-			Label label;
-			if (HeaderPanel is not null)
-			{
-				HeaderPanel.Dispatcher.Invoke(() =>
-				{
-					label = (Label)HeaderPanel.Children[0];
+				label.Content = headerContent;
 
-					headerContent = Name;
-					if (headerContent?.Length > 12)
-						headerContent = $"{headerContent[..10]}...";
-
-					label.Content = headerContent;
-
-					HeaderPanel.Children.RemoveAt(1);
-					HeaderPanel.Children.Add((Client?.Active is true ? Client?.Indicator : Server?.Indicator) ?? new System.Windows.Shapes.Ellipse());
-					HeaderPanel.ToolTip = Name;
-				});
-
-				return HeaderPanel;
-			}
-
-			headerContent = Name;
-			if (headerContent?.Length > 12)
-				headerContent = $"{headerContent[..10]}...";
-
-			label = new Label()
-			{
-				Content = headerContent,
-				Margin = new(0),
-			};
-
-			HeaderPanel = new StackPanel()
-			{
-				Margin = new(0),
-				Orientation = Orientation.Horizontal,
-				ToolTip = Name,
-			};
-
-			HeaderPanel.Children.Add(label);
-			HeaderPanel.Children.Add((Client?.Active is true ? Client?.Indicator : Server?.Indicator) ?? new System.Windows.Shapes.Ellipse());
+				HeaderPanel.Children.RemoveAt(1);
+				HeaderPanel.Children.Add((Client?.Active is true ? Client?.Indicator : Server?.Indicator) ?? new System.Windows.Shapes.Ellipse());
+				HeaderPanel.ToolTip = Name;
+			});
 
 			return HeaderPanel;
 		}
 
-		public NoteRecord GetRecord(int index) => Controller.GetRecord(index);
+		headerContent = Name;
+		if (headerContent?.Length > 12)
+			headerContent = $"{headerContent[..10]}...";
 
-		public bool HasRecord(int index) => Controller.HasRecord(index);
-
-		public void Initialize(bool newDatabase = true) => Controller.InitializeRecords(newDatabase);
-
-		public void Load(string dbFile)
+		label = new Label()
 		{
-			var lockFile = GetLockFile(dbFile);
-			if (File.Exists(lockFile) && MessageBox.Show($"{Path.GetFileName(dbFile)} - The database last closed unexpectedly. Do you want to load the most recent autosave?", "Sylver Ink: Notification", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
-			{
-				Controller.Open(lockFile);
-				Controller.DeserializeRecords();
+			Content = headerContent,
+			Margin = new(0),
+		};
 
-				Loaded = Controller.Loaded = true;
-				Changed = true;
+		HeaderPanel = new StackPanel()
+		{
+			Margin = new(0),
+			Orientation = Orientation.Horizontal,
+			ToolTip = Name,
+		};
 
-				if (string.IsNullOrWhiteSpace(Name))
-					Name = Path.GetFileNameWithoutExtension(DBFile);
+		HeaderPanel.Children.Add(label);
+		HeaderPanel.Children.Add((Client?.Active is true ? Client?.Indicator : Server?.Indicator) ?? new System.Windows.Shapes.Ellipse());
 
-				DeferUpdateRecentNotes(true);
+		return HeaderPanel;
+	}
 
-				return;
-			}
+	public NoteRecord GetRecord(int index) => Controller.GetRecord(index);
 
-			Controller = new(DBFile = dbFile);
-			Loaded = Controller.Loaded;
+	public bool HasRecord(int index) => Controller.HasRecord(index);
+
+	public void Initialize(bool newDatabase = true) => Controller.InitializeRecords(newDatabase);
+
+	public void Load(string dbFile)
+	{
+		var lockFile = GetLockFile(dbFile);
+		if (File.Exists(lockFile) && MessageBox.Show($"{Path.GetFileName(dbFile)} - The database last closed unexpectedly. Do you want to load the most recent autosave?", "Sylver Ink: Notification", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+		{
+			Controller.Open(lockFile);
+			Controller.DeserializeRecords();
+
+			Loaded = Controller.Loaded = true;
+			Changed = true;
 
 			if (string.IsNullOrWhiteSpace(Name))
 				Name = Path.GetFileNameWithoutExtension(DBFile);
 
 			DeferUpdateRecentNotes(true);
+
+			return;
 		}
 
-		public void Lock(int index) => Controller.GetRecord(index).Lock();
+		Controller = new(DBFile = dbFile);
+		Loaded = Controller.Loaded;
 
-		public void MakeBackup(bool auto = false)
+		if (string.IsNullOrWhiteSpace(Name))
+			Name = Path.GetFileNameWithoutExtension(DBFile);
+
+		DeferUpdateRecentNotes(true);
+	}
+
+	public void Lock(int index) => Controller.GetRecord(index).Lock();
+
+	public void MakeBackup(bool auto = false)
+	{
+		var DBPath = GetDatabasePath(this);
+		var BKPath = GetBackupPath(this);
+
+		if (!auto)
 		{
-			var DBPath = GetDatabasePath(this);
-			var BKPath = GetBackupPath(this);
-
-			if (!auto)
-			{
-				Controller.MakeBackup();
-				return;
-			}
-
-			for (int i = 2; i > 0; i--)
-			{
-				if (File.Exists($"{BKPath}_{i}.sibk"))
-					File.Copy($"{BKPath}_{i}.sibk", $"{BKPath}_{i + 1}.sibk", true);
-			}
-
-			if (File.Exists($"{DBPath}"))
-				File.Copy($"{DBPath}", $"{BKPath}_1.sibk", true);
+			Controller.MakeBackup();
+			return;
 		}
 
-		public bool Open(string path, bool writing = false) => Controller.Open(path, writing);
-
-		public void Rename(string newName)
+		for (int i = 2; i > 0; i--)
 		{
-			var overwrite = false;
-			var oldFile = DBFile;
-			var oldName = Name;
-			var oldPath = Path.GetDirectoryName(oldFile);
+			if (File.Exists($"{BKPath}_{i}.sibk"))
+				File.Copy($"{BKPath}_{i}.sibk", $"{BKPath}_{i + 1}.sibk", true);
+		}
 
-			Changed = true;
-			Name = newName;
+		if (File.Exists($"{DBPath}"))
+			File.Copy($"{DBPath}", $"{BKPath}_1.sibk", true);
+	}
 
-			DBFile = GetDatabasePath(this);
-			var newFile = DBFile;
-			var newPath = Path.GetDirectoryName(newFile);
+	public bool Open(string path, bool writing = false) => Controller.Open(path, writing);
 
-			var panel = (TabControl)Application.Current.MainWindow.FindName("DatabasesPanel");
-			var currentTab = (TabItem)panel.SelectedItem;
-			currentTab.Header = GetHeader();
+	public void Rename(string newName)
+	{
+		var overwrite = false;
+		var oldFile = DBFile;
+		var oldName = Name;
+		var oldPath = Path.GetDirectoryName(oldFile);
 
-			if (!File.Exists(oldFile))
-				return;
+		Changed = true;
+		Name = newName;
 
-			if (!Directory.Exists(oldPath))
-				return;
+		DBFile = GetDatabasePath(this);
+		var newFile = DBFile;
+		var newPath = Path.GetDirectoryName(newFile);
 
-			var directorySearch = Directory.GetDirectories(Subfolders["Databases"], "*", new EnumerationOptions() { IgnoreInaccessible = true, RecurseSubdirectories = true, MaxRecursionDepth = 3 });
-			if (oldPath is not null && newPath is not null && directorySearch.Contains(oldPath))
+		var panel = (TabControl)Application.Current.MainWindow.FindName("DatabasesPanel");
+		var currentTab = (TabItem)panel.SelectedItem;
+		currentTab.Header = GetHeader();
+
+		if (!File.Exists(oldFile))
+			return;
+
+		if (!Directory.Exists(oldPath))
+			return;
+
+		var directorySearch = Directory.GetDirectories(Subfolders["Databases"], "*", new EnumerationOptions() { IgnoreInaccessible = true, RecurseSubdirectories = true, MaxRecursionDepth = 3 });
+		if (oldPath is not null && newPath is not null && directorySearch.Contains(oldPath))
+		{
+			if (Directory.Exists(newPath))
 			{
-				if (Directory.Exists(newPath))
-				{
-					if (MessageBox.Show($"A database with that name already exists in {newPath}.\n\nDo you want to overwrite it?", "Sylver Ink: Warning", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.No)
-					{
-						DBFile = oldFile;
-						Name = oldName;
-						currentTab.Header = GetHeader();
-						return;
-					}
-					Directory.Delete(newPath, true);
-					overwrite = true;
-				}
-				else
-					Directory.Move(oldPath, newPath);
-			}
-
-			var adjustedPath = Path.Join(Path.GetDirectoryName(newFile), Path.GetFileName(oldFile));
-
-			if (!File.Exists(adjustedPath))
-				return;
-
-			if (File.Exists(newFile) && !overwrite)
-			{
-				if (MessageBox.Show($"A database with that name already exists at {newFile}.\n\nDo you want to overwrite it?", "Sylver Ink: Warning", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.No)
+				if (MessageBox.Show($"A database with that name already exists in {newPath}.\n\nDo you want to overwrite it?", "Sylver Ink: Warning", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.No)
 				{
 					DBFile = oldFile;
 					Name = oldName;
 					currentTab.Header = GetHeader();
 					return;
 				}
+				Directory.Delete(newPath, true);
 				overwrite = true;
 			}
-
-			if (File.Exists(newFile) && overwrite)
-				File.Delete(newFile);
-
-			File.Move(adjustedPath, newFile);
+			else
+				Directory.Move(oldPath, newPath);
 		}
 
-		public (int, int) Replace(string oldText, string newText, bool local = true)
+		var adjustedPath = Path.Join(Path.GetDirectoryName(newFile), Path.GetFileName(oldFile));
+
+		if (!File.Exists(adjustedPath))
+			return;
+
+		if (File.Exists(newFile) && !overwrite)
 		{
-			if (local)
+			if (MessageBox.Show($"A database with that name already exists at {newFile}.\n\nDo you want to overwrite it?", "Sylver Ink: Warning", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.No)
 			{
-				var oldLength = oldText.Length;
-				var newLength = newText.Length;
-
-				List<byte> outBuffer = [
-					0, 0, 0, 0,
-					.. IntToBytes(oldLength),
-					.. IntToBytes(newLength),
-				];
-
-				outBuffer.InsertRange(8, Encoding.UTF8.GetBytes(oldText));
-				outBuffer.AddRange(Encoding.UTF8.GetBytes(newText));
-
-				Transmit(Network.MessageType.RecordReplace, [.. outBuffer]);
+				DBFile = oldFile;
+				Name = oldName;
+				currentTab.Header = GetHeader();
+				return;
 			}
-
-			return Controller.Replace(oldText, newText);
+			overwrite = true;
 		}
 
-		public void Revert(DateTime targetDate) => Controller.Revert(targetDate);
+		if (File.Exists(newFile) && overwrite)
+			File.Delete(newFile);
 
-		public void Save()
-		{
-			if (!Changed)
-				return;
-
-			if (string.IsNullOrWhiteSpace(DBFile))
-				DBFile = GetDatabasePath(this);
-
-			if (string.IsNullOrWhiteSpace(UUID))
-				UUID = MakeUUID(UUIDType.Database);
-
-			MakeBackup(true);
-
-			if (!Directory.Exists(Path.GetDirectoryName(DBFile)))
-				Directory.CreateDirectory(Path.GetDirectoryName(DBFile) ?? DBFile);
-
-			if (!Controller.Open($"{DBFile}", true))
-				return;
-
-			Controller.SerializeRecords();
-
-			if (DBFile.Contains(Subfolders["Databases"]))
-				File.WriteAllText(Path.Join(Path.GetDirectoryName(DBFile), "uuid.dat"), UUID);
-
-			var lockFile = GetLockFile(DBFile);
-			if (File.Exists(lockFile))
-				File.Delete(lockFile);
-		}
-
-		public void Save(string targetFile)
-		{
-			if (string.IsNullOrWhiteSpace(targetFile))
-				targetFile = DBFile;
-
-			if (string.IsNullOrWhiteSpace(UUID))
-				UUID = MakeUUID(UUIDType.Database);
-
-			if (!Directory.Exists(Path.GetDirectoryName(targetFile)))
-				Directory.CreateDirectory(Path.GetDirectoryName(targetFile) ?? targetFile);
-
-			File.Create(targetFile, 1).Dispose();
-
-			if (!Controller.Open($"{targetFile}", true))
-				return;
-
-			Controller.SerializeRecords();
-
-			File.SetAttributes(targetFile, FileAttributes.Hidden);
-			Changed = true;
-		}
-
-		public List<byte>? SerializeRecords(bool inMemory = false) => Controller.SerializeRecords(inMemory);
-
-		public void Sort(SortType type = SortType.ByIndex)
-		{
-			if (type == SortType.ByIndex)
-				Controller.PropagateIndices();
-			Controller.Sort(type);
-		}
-
-		public void Transmit(Network.MessageType type, byte[] data)
-		{
-			if (Client?.Connected is true)
-				Client?.Send(type, data);
-
-			if (Server?.Serving is true)
-				Server?.Broadcast(type, data);
-		}
-
-		public void Unlock(int index) => Controller.GetRecord(index).Unlock();
-
-		public void UpdateWordPercentages() => Controller.UpdateWordPercentages();
+		File.Move(adjustedPath, newFile);
 	}
+
+	public (int, int) Replace(string oldText, string newText, bool local = true)
+	{
+		if (local)
+		{
+			var oldLength = oldText.Length;
+			var newLength = newText.Length;
+
+			List<byte> outBuffer = [
+				0, 0, 0, 0,
+				.. IntToBytes(oldLength),
+				.. IntToBytes(newLength),
+			];
+
+			outBuffer.InsertRange(8, Encoding.UTF8.GetBytes(oldText));
+			outBuffer.AddRange(Encoding.UTF8.GetBytes(newText));
+
+			Transmit(Network.MessageType.RecordReplace, [.. outBuffer]);
+		}
+
+		return Controller.Replace(oldText, newText);
+	}
+
+	public void Revert(DateTime targetDate) => Controller.Revert(targetDate);
+
+	public void Save()
+	{
+		if (!Changed)
+			return;
+
+		if (string.IsNullOrWhiteSpace(DBFile))
+			DBFile = GetDatabasePath(this);
+
+		if (string.IsNullOrWhiteSpace(UUID))
+			UUID = MakeUUID(UUIDType.Database);
+
+		MakeBackup(true);
+
+		if (!Directory.Exists(Path.GetDirectoryName(DBFile)))
+			Directory.CreateDirectory(Path.GetDirectoryName(DBFile) ?? DBFile);
+
+		if (!Controller.Open($"{DBFile}", true))
+			return;
+
+		Controller.SerializeRecords();
+
+		if (DBFile.Contains(Subfolders["Databases"]))
+			File.WriteAllText(Path.Join(Path.GetDirectoryName(DBFile), "uuid.dat"), UUID);
+
+		var lockFile = GetLockFile(DBFile);
+		if (File.Exists(lockFile))
+			File.Delete(lockFile);
+	}
+
+	public void Save(string targetFile)
+	{
+		if (string.IsNullOrWhiteSpace(targetFile))
+			targetFile = DBFile;
+
+		if (string.IsNullOrWhiteSpace(UUID))
+			UUID = MakeUUID(UUIDType.Database);
+
+		if (!Directory.Exists(Path.GetDirectoryName(targetFile)))
+			Directory.CreateDirectory(Path.GetDirectoryName(targetFile) ?? targetFile);
+
+		File.Create(targetFile, 1).Dispose();
+
+		if (!Controller.Open($"{targetFile}", true))
+			return;
+
+		Controller.SerializeRecords();
+
+		File.SetAttributes(targetFile, FileAttributes.Hidden);
+		Changed = true;
+	}
+
+	public List<byte>? SerializeRecords(bool inMemory = false) => Controller.SerializeRecords(inMemory);
+
+	public void Sort(SortType type = SortType.ByIndex)
+	{
+		if (type == SortType.ByIndex)
+			Controller.PropagateIndices();
+		Controller.Sort(type);
+	}
+
+	public void Transmit(Network.MessageType type, byte[] data)
+	{
+		if (Client?.Connected is true)
+			Client?.Send(type, data);
+
+		if (Server?.Serving is true)
+			Server?.Broadcast(type, data);
+	}
+
+	public void Unlock(int index) => Controller.GetRecord(index).Unlock();
+
+	public void UpdateWordPercentages() => Controller.UpdateWordPercentages();
 }
