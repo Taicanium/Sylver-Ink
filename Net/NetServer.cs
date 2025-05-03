@@ -151,21 +151,21 @@ public partial class NetServer
 		var bufferString = string.Empty;
 		var textCount = 0;
 
-		stream.Read(intBuffer, 0, 4);
+		stream.ReadExactly(intBuffer, 0, 4);
 		recordIndex = IntFromBytes(intBuffer);
 		outBuffer.AddRange(intBuffer);
 
 		switch (type)
 		{
 			case MessageType.RecordAdd:
-				stream.Read(intBuffer, 0, 4);
+				stream.ReadExactly(intBuffer, 0, 4);
 				textCount = IntFromBytes(intBuffer);
 				outBuffer.AddRange(intBuffer);
 
 				if (textCount > 0)
 				{
 					textBuffer = new byte[textCount];
-					stream.Read(textBuffer, 0, textCount);
+					stream.ReadExactly(textBuffer, 0, textCount);
 					outBuffer.AddRange(textBuffer);
 					bufferString = Encoding.UTF8.GetString(textBuffer);
 				}
@@ -181,24 +181,24 @@ public partial class NetServer
 				Concurrent(() => DeferUpdateRecentNotes());
 				break;
 			case MessageType.RecordReplace:
-				stream.Read(intBuffer, 0, 4);
+				stream.ReadExactly(intBuffer, 0, 4);
 				textCount = IntFromBytes(intBuffer);
 
 				if (textCount <= 0)
 					break;
 
 				textBuffer = new byte[textCount];
-				stream.Read(textBuffer, 0, textCount);
+				stream.ReadExactly(textBuffer, 0, textCount);
 				bufferString = Encoding.UTF8.GetString(textBuffer);
 
-				stream.Read(intBuffer, 0, 4);
+				stream.ReadExactly(intBuffer, 0, 4);
 				textCount = IntFromBytes(intBuffer);
 
 				if (textCount <= 0)
 					break;
 
 				textBuffer = new byte[textCount];
-				stream.Read(textBuffer, 0, textCount);
+				stream.ReadExactly(textBuffer, 0, textCount);
 
 				DB?.Replace(bufferString, Encoding.UTF8.GetString(textBuffer), false);
 				Concurrent(() => DeferUpdateRecentNotes());
@@ -207,14 +207,14 @@ public partial class NetServer
 				DB?.Unlock(recordIndex);
 				break;
 			case MessageType.TextInsert:
-				stream.Read(intBuffer, 0, 4);
+				stream.ReadExactly(intBuffer, 0, 4);
 				textCount = IntFromBytes(intBuffer);
 				outBuffer.AddRange(intBuffer);
 
 				if (textCount > 0)
 				{
 					textBuffer = new byte[textCount];
-					stream.Read(textBuffer, 0, textCount);
+					stream.ReadExactly(textBuffer, 0, textCount);
 					outBuffer.AddRange(textBuffer);
 					bufferString = Encoding.UTF8.GetString(textBuffer);
 				}

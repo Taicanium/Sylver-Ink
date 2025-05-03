@@ -13,7 +13,7 @@ namespace SylverInk;
 /// <summary>
 /// Interaction logic for SearchResult.xaml
 /// </summary>
-public partial class SearchResult : Window
+public partial class SearchResult : Window, IDisposable
 {
 	private readonly BackgroundWorker? AutosaveThread;
 	private bool Dragging;
@@ -65,6 +65,12 @@ public partial class SearchResult : Window
 
 		PreviousOpenNote = ResultRecord;
 		Close();
+	}
+
+	public void Dispose()
+	{
+		AutosaveThread?.Dispose();
+		GC.SuppressFinalize(this);
 	}
 
 	private void Drag(object sender, MouseEventArgs e)

@@ -266,8 +266,6 @@ public static partial class Common
 		return (TabControl)dbItem.Content;
 	});
 
-	public static string GetLockFile(string? dbFile = null) => Path.Join(Path.GetDirectoryName(dbFile ?? CurrentDatabase.DBFile) ?? ".", "~lock.sidb");
-
 	public static string GetDatabasePath(Database db)
 	{
 		var index = 0;
@@ -300,6 +298,8 @@ public static partial class Common
 
 		return dbFile;
 	}
+
+	public static string GetLockFile(string? dbFile = null) => Path.Join(Path.GetDirectoryName(dbFile ?? CurrentDatabase.DBFile) ?? ".", "~lock.sidb");
 
 	public static Label GetRibbonHeader(NoteRecord record)
 	{

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -6,7 +7,7 @@ using static SylverInk.Common;
 
 namespace SylverInk.FileIO;
 
-public partial class Serializer
+public partial class Serializer : IDisposable
 {
 	private byte[] _buffer = [];
 	private Stream? _fileStream;
@@ -61,6 +62,12 @@ public partial class Serializer
 			_fileStream?.Dispose();
 
 		_isOpen = false;
+	}
+
+	public void Dispose()
+	{
+		_fileStream?.Dispose();
+		GC.SuppressFinalize(this);
 	}
 
 	public void EndCompressionTest()

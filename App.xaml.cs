@@ -1,8 +1,5 @@
-﻿using System.Windows;
+﻿namespace SylverInk;
 
-namespace SylverInk
+public partial class App : System.Windows.Application
 {
-	public partial class App : Application
-	{
-	}
 }

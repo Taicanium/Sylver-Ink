@@ -117,11 +117,11 @@ public partial class LZW
 
 	private static string FromChar(char c) => $"{c}";
 
-	public void Init(Stream? _fileStream = null, bool _writing = false)
+	public void Init(Stream? fileStream = null, bool writing = false)
 	{
-		FileStream = _fileStream ?? FileStream;
+		FileStream = fileStream ?? FileStream;
 		Open = true;
-		Writing = _writing;
+		Writing = writing;
 		InitDictionary();
 	}
 
@@ -172,7 +172,7 @@ public partial class LZW
 		}
 
 		if (lastCode >= (uint)Math.Pow(2, MaxRange + 1))
-			throw new ApplicationException("Serialized database has exceeded the maximum capacity for restricted LZW compression.", new IndexOutOfRangeException());
+			throw new OverflowException("Serialized database has exceeded the maximum capacity for restricted LZW compression.", new OverflowException());
 	}
 
 	private void WriteCode(uint code)

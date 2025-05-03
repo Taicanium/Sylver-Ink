@@ -11,7 +11,7 @@ using static SylverInk.Common;
 
 namespace SylverInk;
 
-public partial class Import : Window
+public partial class Import : Window, IDisposable
 {
 	private bool Adaptive;
 	private string AdaptivePredicate = string.Empty;
@@ -38,6 +38,12 @@ public partial class Import : Window
 	}
 
 	private void CloseClick(object sender, RoutedEventArgs e) => Close();
+
+	public void Dispose()
+	{
+		MeasureTask?.Dispose();
+		GC.SuppressFinalize(this);
+	}
 
 	private void DoMeasureTask()
 	{

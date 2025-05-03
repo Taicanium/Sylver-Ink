@@ -8,12 +8,12 @@ using static SylverInk.Common;
 
 namespace SylverInk.Notes;
 
-public struct NoteRevision(long _created = -1, int _startIndex = -1, string? _substring = null, string? _uuid = null)
+public struct NoteRevision(long created = -1, int startIndex = -1, string? substring = null, string? uuid = null)
 {
-	public long _created = _created;
-	public int _startIndex = _startIndex;
-	public string? _substring = _substring;
-	public string? _uuid = _uuid ?? MakeUUID(UUIDType.Revision);
+	public long _created = created;
+	public int _startIndex = startIndex;
+	public string? _substring = substring;
+	public string? _uuid = uuid ?? MakeUUID(UUIDType.Revision);
 }
 
 public partial class NoteRecord
@@ -107,15 +107,15 @@ public partial class NoteRecord
 		this.UUID = UUID ?? MakeUUID();
 	}
 
-	public void Add(NoteRevision _revision)
+	public void Add(NoteRevision revision)
 	{
-		Revisions.Add(_revision);
+		Revisions.Add(revision);
 		TagsDirty = true;
 		
-		if (_revision._created == -1)
-			_revision._created = DateTime.UtcNow.ToBinary();
+		if (revision._created == -1)
+			revision._created = DateTime.UtcNow.ToBinary();
 
-		var revisionTime = DateTime.FromBinary(_revision._created);
+		var revisionTime = DateTime.FromBinary(revision._created);
 
 		Revisions.Sort(new Comparison<NoteRevision>(
 			(_rev1, _rev2) => DateTime.FromBinary(_rev1._created).CompareTo(DateTime.FromBinary(_rev2._created))
@@ -123,7 +123,7 @@ public partial class NoteRecord
 
 		if (revisionTime.CompareTo(LastChangeObject) > 0)
 		{
-			LastChange = _revision._created;
+			LastChange = revision._created;
 			LastChangeObject = DateTime.FromBinary(LastChange);
 		}
 	}
@@ -145,25 +145,25 @@ public partial class NoteRecord
 		Revisions.RemoveAt(index);
 	}
 
-	public NoteRecord Deserialize(Serializer? _serializer)
+	public NoteRecord Deserialize(Serializer? serializer)
 	{
-		if (_serializer?.DatabaseFormat >= 5)
-			_serializer?.ReadString(ref UUID);
-		_serializer?.ReadLong(ref Created);
-		_serializer?.ReadInt32(ref Index);
-		_serializer?.ReadString(ref Initial);
-		_serializer?.ReadLong(ref LastChange);
+		if (serializer?.DatabaseFormat >= 5)
+			serializer?.ReadString(ref UUID);
+		serializer?.ReadLong(ref Created);
+		serializer?.ReadInt32(ref Index);
+		serializer?.ReadString(ref Initial);
+		serializer?.ReadLong(ref LastChange);
 
 		int RevisionsCount = 0;
-		_serializer?.ReadInt32(ref RevisionsCount);
+		serializer?.ReadInt32(ref RevisionsCount);
 		for (int i = 0; i < RevisionsCount; i++)
 		{
 			NoteRevision _revision = new();
-			if (_serializer?.DatabaseFormat >= 7)
-				_serializer?.ReadString(ref _revision._uuid);
-			_serializer?.ReadLong(ref _revision._created);
-			_serializer?.ReadInt32(ref _revision._startIndex);
-			_serializer?.ReadString(ref _revision._substring);
+			if (serializer?.DatabaseFormat >= 7)
+				serializer?.ReadString(ref _revision._uuid);
+			serializer?.ReadLong(ref _revision._created);
+			serializer?.ReadInt32(ref _revision._startIndex);
+			serializer?.ReadString(ref _revision._substring);
 			Revisions.Add(_revision);
 		}
 
@@ -277,23 +277,23 @@ public partial class NoteRecord
 		return Latest ?? string.Empty;
 	}
 
-	public void Serialize(Serializer? _serializer)
+	public void Serialize(Serializer? serializer)
 	{
-		if (_serializer?.DatabaseFormat >= 5)
-			_serializer?.WriteString(UUID);
-		_serializer?.WriteLong(Created);
-		_serializer?.WriteInt32(Index);
-		_serializer?.WriteString(Initial);
-		_serializer?.WriteLong(LastChange);
+		if (serializer?.DatabaseFormat >= 5)
+			serializer?.WriteString(UUID);
+		serializer?.WriteLong(Created);
+		serializer?.WriteInt32(Index);
+		serializer?.WriteString(Initial);
+		serializer?.WriteLong(LastChange);
 
-		_serializer?.WriteInt32(Revisions.Count);
+		serializer?.WriteInt32(Revisions.Count);
 		for (int i = 0; i < Revisions.Count; i++)
 		{
-			if (_serializer?.DatabaseFormat >= 7)
-				_serializer?.WriteString(Revisions[i]._uuid);
-			_serializer?.WriteLong(Revisions[i]._created);
-			_serializer?.WriteInt32(Revisions[i]._startIndex);
-			_serializer?.WriteString(Revisions[i]._substring);
+			if (serializer?.DatabaseFormat >= 7)
+				serializer?.WriteString(Revisions[i]._uuid);
+			serializer?.WriteLong(Revisions[i]._created);
+			serializer?.WriteInt32(Revisions[i]._startIndex);
+			serializer?.WriteString(Revisions[i]._substring);
 		}
 	}
 

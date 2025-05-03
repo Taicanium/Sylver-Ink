@@ -122,20 +122,20 @@ public partial class NetClient
 		var bufferString = string.Empty;
 		var textCount = 0;
 
-		stream.Read(intBuffer, 0, 4);
+		stream.ReadExactly(intBuffer, 0, 4);
 		recordIndex = IntFromBytes(intBuffer);
 
 		switch (type)
 		{
 			case MessageType.DatabaseInit:
-				stream.Read(intBuffer, 0, 4);
+				stream.ReadExactly(intBuffer, 0, 4);
 				textCount = IntFromBytes(intBuffer);
 
 				if (textCount <= 0)
 					break;
 
 				textBuffer = new byte[textCount];
-				stream.Read(textBuffer, 0, textCount);
+				stream.ReadExactly(textBuffer, 0, textCount);
 
 				DB?.DeserializeRecords([.. textBuffer]);
 
@@ -147,13 +147,13 @@ public partial class NetClient
 
 				break;
 			case MessageType.RecordAdd:
-				stream.Read(intBuffer, 0, 4);
+				stream.ReadExactly(intBuffer, 0, 4);
 				textCount = IntFromBytes(intBuffer);
 
 				if (textCount > 0)
 				{
 					textBuffer = new byte[textCount];
-					stream.Read(textBuffer, 0, textCount);
+					stream.ReadExactly(textBuffer, 0, textCount);
 					bufferString = Encoding.UTF8.GetString(textBuffer);
 				}
 
@@ -168,24 +168,24 @@ public partial class NetClient
 				Concurrent(() => DeferUpdateRecentNotes());
 				break;
 			case MessageType.RecordReplace:
-				stream.Read(intBuffer, 0, 4);
+				stream.ReadExactly(intBuffer, 0, 4);
 				textCount = IntFromBytes(intBuffer);
 
 				if (textCount <= 0)
 					break;
 
 				textBuffer = new byte[textCount];
-				stream.Read(textBuffer, 0, textCount);
+				stream.ReadExactly(textBuffer, 0, textCount);
 				bufferString = Encoding.UTF8.GetString(textBuffer);
 
-				stream.Read(intBuffer, 0, 4);
+				stream.ReadExactly(intBuffer, 0, 4);
 				textCount = IntFromBytes(intBuffer);
 
 				if (textCount <= 0)
 					break;
 
 				textBuffer = new byte[textCount];
-				stream.Read(textBuffer, 0, textCount);
+				stream.ReadExactly(textBuffer, 0, textCount);
 
 				DB?.Replace(bufferString, Encoding.UTF8.GetString(textBuffer), false);
 				Concurrent(() => DeferUpdateRecentNotes());
@@ -194,13 +194,13 @@ public partial class NetClient
 				DB?.Unlock(recordIndex);
 				break;
 			case MessageType.TextInsert:
-				stream.Read(intBuffer, 0, 4);
+				stream.ReadExactly(intBuffer, 0, 4);
 				textCount = IntFromBytes(intBuffer);
 
 				if (textCount > 0)
 				{
 					textBuffer = new byte[textCount];
-					stream.Read(textBuffer, 0, textCount);
+					stream.ReadExactly(textBuffer, 0, textCount);
 					bufferString = Encoding.UTF8.GetString(textBuffer);
 				}
 

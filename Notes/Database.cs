@@ -11,7 +11,7 @@ using static SylverInk.Common;
 
 namespace SylverInk.Notes;
 
-public partial class Database
+public partial class Database : IDisposable
 {
 	private NoteController Controller = new();
 	public string DBFile = string.Empty;
@@ -131,6 +131,12 @@ public partial class Database
 	}
 
 	public void DeserializeRecords(List<byte>? inMemory = null) => Controller.DeserializeRecords(inMemory);
+
+	public void Dispose()
+	{
+		Controller.Dispose();
+		GC.SuppressFinalize(this);
+	}
 
 	public void Erase()
 	{

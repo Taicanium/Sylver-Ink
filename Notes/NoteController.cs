@@ -9,7 +9,7 @@ using static SylverInk.Common;
 
 namespace SylverInk.Notes;
 
-public partial class NoteController
+public partial class NoteController : IDisposable
 {
 	private short _canCompress; // -1 = Cannot compress, 1 = Can compress, 0 = Not tested.
 	private bool _changed;
@@ -178,6 +178,12 @@ public partial class NoteController
 		_serializer?.Close();
 		PropagateIndices();
 		Changed = false;
+	}
+
+	public void Dispose()
+	{
+		_serializer?.Dispose();
+		GC.SuppressFinalize(this);
 	}
 
 	public void EraseDatabase()
