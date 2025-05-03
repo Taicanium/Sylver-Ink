@@ -2,7 +2,6 @@
 
   <PropertyGroup>
 	<OutputType>WinExe</OutputType>
-	<TargetFramework>net8.0-windows10.0.26100.0</TargetFramework>
 	<RootNamespace>SylverInk</RootNamespace>
 	<Nullable>enable</Nullable>
 	<UseWPF>true</UseWPF>
@@ -25,17 +24,18 @@
 	<RepositoryUrl>https://github.com/Taicanium/Sylver-Ink</RepositoryUrl>
 	<IncludeSymbols>False</IncludeSymbols>
 	<AnalysisLevel>none</AnalysisLevel>
-	<ProduceReferenceAssembly>False</ProduceReferenceAssembly>
+	<ProduceReferenceAssembly>True</ProduceReferenceAssembly>
 	<PackageLicenseFile>LICENSE</PackageLicenseFile>
 	<PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
+	<TargetFramework>net8.0-windows10.0.26100.0</TargetFramework>
   </PropertyGroup>
   
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-	<DebugType>embedded</DebugType>
+	<DebugType>none</DebugType>
   </PropertyGroup>
   
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-	<DebugType>embedded</DebugType>
+	<DebugType>none</DebugType>
   </PropertyGroup>
   
   <ItemGroup>

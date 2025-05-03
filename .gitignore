@@ -42,3 +42,5 @@ AssemblyInfo.cs
 DvlErrLog.txt
 LICENSE
 GlobalSuppressions.cs
+*.rtf
+*.jpg
