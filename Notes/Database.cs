@@ -383,9 +383,7 @@ public partial class Database : IDisposable
 		if (DBFile.Contains(Subfolders["Databases"]))
 			File.WriteAllText(Path.Join(Path.GetDirectoryName(DBFile), "uuid.dat"), UUID);
 
-		var lockFile = GetLockFile(DBFile);
-		if (File.Exists(lockFile))
-			File.Delete(lockFile);
+		Common.Erase(GetLockFile(DBFile));
 	}
 
 	public void Save(string targetFile)

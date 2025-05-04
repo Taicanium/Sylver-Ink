@@ -139,9 +139,7 @@ public static partial class Common
 	public static void Autosave()
 	{
 		var lockFile = GetLockFile();
-		if (File.Exists(lockFile))
-			File.Delete(lockFile);
-
+		Erase(lockFile);
 		CurrentDatabase.Save(lockFile);
 	}
 
@@ -255,6 +253,20 @@ public static partial class Common
 		dialog.ValidateNames = true;
 
 		return dialog.ShowDialog() is true ? dialog.FileName : string.Empty;
+	}
+
+	/// <summary>
+	/// Delete a file if it exists.
+	/// </summary>
+	/// <param name="filename">The file to be deleted.</param>
+	/// <returns>'true' if the file existed and was deleted; else, 'false'</returns>
+	public static bool Erase(string filename)
+	{
+		if (!File.Exists(filename))
+			return false;
+
+		File.Delete(filename);
+		return true;
 	}
 
 	public static string GetBackupPath(Database db) => Path.Join(Subfolders["Databases"], db.Name, db.Name);

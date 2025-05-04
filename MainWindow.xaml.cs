@@ -110,8 +110,7 @@ public partial class MainWindow : Window
 		if (MessageBox.Show("Are you sure you want to permanently delete this database?", "Sylver Ink: Warning", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.No)
 			return;
 
-		if (File.Exists(CurrentDatabase.DBFile))
-			File.Delete(CurrentDatabase.DBFile);
+		Erase(CurrentDatabase.DBFile);
 
 		var BKPath = Path.GetDirectoryName(GetBackupPath(CurrentDatabase));
 		if (Directory.Exists(BKPath))
@@ -354,36 +353,39 @@ public partial class MainWindow : Window
 
 	private void MainWindow_Closing(object sender, CancelEventArgs e)
 	{
-		var lockFile = GetLockFile();
-
 		if (!_ABORT)
-		{
-			if (DatabaseChanged)
-			{
-				switch (MessageBox.Show("Do you want to save your work before exiting?", "Sylver Ink: Notification", MessageBoxButton.YesNoCancel, MessageBoxImage.Question))
-				{
-					case MessageBoxResult.Cancel:
-						e.Cancel = true;
-						return;
-					case MessageBoxResult.Yes:
-						e.Cancel = true;
-						MainGrid.IsEnabled = false;
-
-						if (File.Exists(lockFile))
-							File.Delete(lockFile);
-
-						BackgroundWorker exitTask = new();
-						exitTask.DoWork += SaveDatabases;
-						exitTask.RunWorkerCompleted += ExitComplete;
-						exitTask.RunWorkerAsync();
-						return;
-				}
-			}
-
 			Common.Settings.Save();
+
+		if (_ABORT || !DatabaseChanged)
+		{
+			Application.Current.Shutdown();
+			return;
 		}
 
-		Application.Current.Shutdown();
+		switch (MessageBox.Show("Do you want to save your work before exiting?", "Sylver Ink: Notification", MessageBoxButton.YesNoCancel, MessageBoxImage.Question))
+		{
+			case MessageBoxResult.Cancel:
+				e.Cancel = true;
+				return;
+			case MessageBoxResult.Yes:
+				e.Cancel = true;
+				MainGrid.IsEnabled = false;
+
+				foreach (Database db in Databases)
+					Erase(GetLockFile(db.DBFile));
+
+				BackgroundWorker exitTask = new();
+				exitTask.DoWork += SaveDatabases;
+				exitTask.RunWorkerCompleted += ExitComplete;
+				exitTask.RunWorkerAsync();
+				return;
+			case MessageBoxResult.No:
+				foreach (Database db in Databases)
+					Erase(GetLockFile(db.DBFile));
+
+				Application.Current.Shutdown();
+				return;
+		}
 	}
 
 	private void MainWindow_SizeChanged(object sender, SizeChangedEventArgs e) => DeferUpdateRecentNotes(true);
@@ -425,11 +427,8 @@ public partial class MainWindow : Window
 
 		HandleCheckInit();
 
-		if (File.Exists(UpdateHandler.UpdateLockUri))
-			File.Delete(UpdateHandler.UpdateLockUri);
-
-		if (File.Exists(UpdateHandler.TempUri))
-			File.Delete(UpdateHandler.TempUri);
+		Erase(UpdateHandler.UpdateLockUri);
+		Erase(UpdateHandler.TempUri);
 
 		Common.Settings.Load();
 		SettingsLoaded = true;

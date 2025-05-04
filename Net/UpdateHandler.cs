@@ -77,11 +77,8 @@ static class UpdateHandler
 			if (MessageBox.Show($"A new update is available ({assemblyVersion.ToString(3)} → {releaseString}). Would you like to install it now?", "Sylver Ink: Notification", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.No)
 				return;
 
-			if (File.Exists(TempUri))
-				File.Delete(TempUri);
-
-			if (File.Exists(UpdateLockUri))
-				File.Delete(UpdateLockUri);
+			Erase(TempUri);
+			Erase(UpdateLockUri);
 
 			File.Create(UpdateLockUri, 0).Close();
 
