@@ -19,7 +19,7 @@
 				<RowDefinition Height="Auto"/>
 				<RowDefinition Height="Auto"/>
 			</Grid.RowDefinitions>
-			<TextBox AcceptsReturn="True" Grid.ColumnSpan="2" Height="Auto" Margin="5,2,5,0" TextChanged="ResultBlock_TextChanged"
+			<TextBox AcceptsReturn="True" Grid.ColumnSpan="2" Height="Auto" Margin="5,5,5,0" TextChanged="ResultBlock_TextChanged"
 						TextWrapping="WrapWithOverflow" VerticalContentAlignment="Top"
 						ScrollViewer.VerticalScrollBarVisibility="Auto"
 						x:Name="ResultBlock"/>

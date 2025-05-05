@@ -216,7 +216,7 @@ public partial class NoteController : IDisposable
 		{
 			return Records.ElementAt(index) != null;	
 		}
-		catch (Exception)
+		catch
 		{
 			return false;
 		}
