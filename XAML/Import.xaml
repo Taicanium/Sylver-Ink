@@ -33,7 +33,7 @@
 				</Grid.ColumnDefinitions>
 
 				<Button Click="Finalize_Click" Content="Import" IsEnabled="{Binding ReadyToFinalize}" x:Name="DoImport"/>
-				<Button Click="CloseClick" Content="Close" Grid.Column="1"/>
+				<Button Click="CloseClick" Content="Close" Grid.Column="1" x:Name="CloseButton"/>
 			</Grid>
 		</StackPanel>
 		<Grid HorizontalAlignment="Center" Margin="0,20" Grid.Row="1">

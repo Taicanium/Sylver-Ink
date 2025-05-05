@@ -57,6 +57,8 @@ public partial class Import : Window, IDisposable
 			MeasureTask.RunWorkerCompleted += (_, _) =>
 			{
 				Common.Settings.ImportData = $"Estimated new notes: {RunningCount:N0}\nAverage length: {RunningAverage:N0} characters per note\n\nRemember to press Import to finalize your changes!";
+				AdaptiveCheckBox.IsEnabled = true;
+				CloseButton.IsEnabled = true;
 				DoImport.Content = "Import";
 				LTPanel.IsEnabled = !Adaptive;
 				Common.Settings.ReadyToFinalize = RunningCount > 0;
@@ -66,6 +68,8 @@ public partial class Import : Window, IDisposable
 		if (MeasureTask.IsBusy)
 			return;
 
+		AdaptiveCheckBox.IsEnabled = false;
+		CloseButton.IsEnabled = false;
 		DoImport.Content = "Scanning...";
 		LTPanel.IsEnabled = false;
 		Common.Settings.ReadyToFinalize = false;
@@ -79,7 +83,11 @@ public partial class Import : Window, IDisposable
 	{
 		var button = (Button)sender;
 		button.Content = "Importing...";
+
+		AdaptiveCheckBox.IsEnabled = false;
+		CloseButton.IsEnabled = false;
 		Common.Settings.ImportTarget = string.Empty;
+		LTPanel.IsEnabled = false;
 
 		try
 		{
@@ -96,13 +104,15 @@ public partial class Import : Window, IDisposable
 
 	private void FinishImport(object? sender, RunWorkerCompletedEventArgs? e)
 	{
-		Common.Settings.ImportData = $"Notes imported: {Imported:N0}";
+		AdaptiveCheckBox.IsEnabled = true;
+		CloseButton.IsEnabled = true;
 		DoImport.Content = "Import";
-
-		Common.Settings.ImportTarget = string.Empty;
+		Common.Settings.ImportData = $"Notes imported: {Imported:N0}";
+		LTPanel.IsEnabled = true;
 		Common.Settings.ReadyToFinalize = false;
-		DeferUpdateRecentNotes(true);
+
 		DataLines.Clear();
+		DeferUpdateRecentNotes(true);
 	}
 
 	private void LineToleranceChanged(object? sender, RoutedEventArgs e)
@@ -116,28 +126,21 @@ public partial class Import : Window, IDisposable
 		if (!Adaptive)
 			return false;
 
-		using StreamReader? fileStream = new(Target);
-		if (fileStream is null || fileStream.EndOfStream)
+		// Letters, numbers, spaces, and punctuation; respectively.
+		string[] classes = [@"\p{L}+", @"\p{Nd}+", @"[\p{Zs}\t]+", @"[\p{P}\p{S}]+"];
+		Dictionary<string, double> frequencies = [];
+		Dictionary<string, int> tokenCounts = [];
+		
+		if (!ReadFromStream(Target))
 		{
 			Common.Settings.ImportTarget = string.Empty;
 			Target = string.Empty;
 			return false;
 		}
 
-		// Letters, numbers, spaces, and punctuation; respectively.
-		string[] classes = [@"\p{L}+", @"\p{Nd}+", @"[\p{Zs}\t]+", @"[\p{P}\p{S}]+"];
-		Dictionary<string, double> frequencies = [];
-		Dictionary<string, int> tokenCounts = [];
-		DataLines.Clear();
-
-		while (fileStream?.EndOfStream is false)
-		{
-			string line = fileStream?.ReadLine() ?? string.Empty;
-			DataLines.Add(line);
-		}
-
 		int LastPredicateSequence = 0;
 		double LastPredicateValue = 0.0;
+		double LineTotal = 0.0;
 
 		for (int length = 3; length <= 35; length++)
 		{
@@ -149,8 +152,11 @@ public partial class Import : Window, IDisposable
 			tokenCounts.Clear();
 			tokenCounts.Add(string.Empty, 0);
 
-			foreach (string key in DataLines)
+			for (int line = 0; line < DataLines.Count; line++, LineTotal++)
 			{
+				Common.Settings.ImportData = $"Adaptive scanning...";
+
+				var key = DataLines[line];
 				if (string.IsNullOrWhiteSpace(key.Trim()))
 					continue;
 
@@ -265,8 +271,7 @@ public partial class Import : Window, IDisposable
 	{
 		try
 		{
-			using StreamReader? fileStream = new(Target);
-			if (fileStream is null || fileStream.EndOfStream)
+			if (!ReadFromStream(Target))
 			{
 				Common.Settings.ImportTarget = string.Empty;
 				Target = string.Empty;
@@ -277,12 +282,11 @@ public partial class Import : Window, IDisposable
 			string recordData = string.Empty;
 			RunningAverage = 0.0;
 			RunningCount = 0;
-			DataLines.Clear();
+			ReadFromStream(Target);
 
-			while (fileStream?.EndOfStream is false)
+			for (int i = 0; i < DataLines.Count; i++)
 			{
-				string line = fileStream?.ReadLine() ?? string.Empty;
-				DataLines.Add(line);
+				var line = DataLines[i];
 				recordData += line + "\r\n";
 
 				if (line.Trim().Length == 0)
@@ -290,7 +294,9 @@ public partial class Import : Window, IDisposable
 				else
 					blankCount = 0;
 
-				if (!(recordData.Length > 0 && (blankCount >= Common.Settings.LineTolerance || fileStream?.EndOfStream is true)))
+				Common.Settings.ImportData = $"{i * 100.0 / DataLines.Count:N2}% scanned...";
+
+				if (recordData.Length == 0 || blankCount < Common.Settings.LineTolerance)
 					continue;
 
 				blankCount = 0;
@@ -379,7 +385,9 @@ public partial class Import : Window, IDisposable
 			else
 				blankCount = 0;
 
-			if (!(recordData.Length > 0 && (blankCount >= Common.Settings.LineTolerance || i >= DataLines.Count - 1)))
+			Common.Settings.ImportData = $"{i * 100.0 / DataLines.Count:N2}% imported...";
+
+			if (blankCount < Common.Settings.LineTolerance && i < DataLines.Count - 1)
 				continue;
 
 			CurrentDatabase.CreateRecord(recordData);
@@ -387,6 +395,21 @@ public partial class Import : Window, IDisposable
 			recordData = string.Empty;
 			blankCount = 0;
 		}
+	}
+
+	private bool ReadFromStream(string filename)
+	{
+		using StreamReader? fileStream = new(filename);
+		if (fileStream is null || fileStream.EndOfStream)
+			return false;
+
+		var lines = fileStream?.ReadToEnd().Split('\n');
+		if (lines is null)
+			return false;
+
+		DataLines.Clear();
+		DataLines.AddRange(lines);
+		return true;
 	}
 
 	private void Target_TextChanged(object sender, RoutedEventArgs e)
