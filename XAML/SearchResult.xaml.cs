@@ -21,7 +21,7 @@ public partial class SearchResult : Window, IDisposable
 	private bool Edited;
 	private string OriginalText = string.Empty;
 	public string Query = string.Empty;
-	public int ResultDatabase;
+	public Database? ResultDatabase;
 	public NoteRecord? ResultRecord;
 	public string ResultText = string.Empty;
 	private readonly double SnapTolerance = 20.0;
@@ -97,7 +97,7 @@ public partial class SearchResult : Window, IDisposable
 		if (Edited)
 			SaveRecord();
 
-		CurrentDatabase.Transmit(Network.MessageType.RecordUnlock, IntToBytes(ResultRecord?.Index ?? 0));
+		ResultDatabase?.Transmit(Network.MessageType.RecordUnlock, IntToBytes(ResultRecord?.Index ?? 0));
 
 		foreach (SearchResult result in OpenQueries)
 		{
@@ -119,7 +119,7 @@ public partial class SearchResult : Window, IDisposable
 		else
 		{
 			LastChangedLabel.Content = ResultRecord?.GetLastChange();
-			CurrentDatabase.Transmit(Network.MessageType.RecordUnlock, IntToBytes(ResultRecord?.Index ?? 0));
+			ResultDatabase?.Transmit(Network.MessageType.RecordUnlock, IntToBytes(ResultRecord?.Index ?? 0));
 		}
 
 		if (string.IsNullOrWhiteSpace(ResultText))
@@ -157,7 +157,7 @@ public partial class SearchResult : Window, IDisposable
 		if (ResultRecord is null)
 			return;
 
-		CurrentDatabase.CreateRevision(ResultRecord, ResultText);
+		ResultDatabase?.CreateRevision(ResultRecord, ResultText);
 		LastChangedLabel.Content = ResultRecord?.GetLastChange();
 		DeferUpdateRecentNotes(true);
 	}
@@ -257,9 +257,19 @@ public partial class SearchResult : Window, IDisposable
 		AddTabToRibbon();
 	}
 
-	private void WindowActivated(object sender, EventArgs e) => Opacity = 1.0;
+	private void WindowActivated(object sender, EventArgs e)
+	{
+		CloseButton.IsEnabled = true;
+		Opacity = 1.0;
+		ViewButton.IsEnabled = true;
+	}
 
-	private void WindowDeactivated(object sender, EventArgs e) => Opacity = 1.0 - (Common.Settings.NoteTransparency / 100.0);
+	private void WindowDeactivated(object sender, EventArgs e)
+	{
+		CloseButton.IsEnabled = false;
+		Opacity = 1.0 - (Common.Settings.NoteTransparency / 100.0);
+		ViewButton.IsEnabled = false;
+	}
 
 	private void WindowMove(object sender, MouseEventArgs e) => Drag(sender, e);
 

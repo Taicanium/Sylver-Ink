@@ -389,7 +389,7 @@ public static partial class Common
 	public static SearchResult OpenQuery(NoteRecord record, bool show = true)
 	{
 		foreach (SearchResult result in OpenQueries)
-			if (Databases[result.ResultDatabase] == CurrentDatabase && result.ResultRecord?.Equals(record) is true)
+			if (result.ResultDatabase?.Equals(CurrentDatabase) is true && result.ResultRecord?.Equals(record) is true)
 				return result;
 
 		var control = (TabControl)Application.Current.MainWindow.FindName("DatabasesPanel");
@@ -397,7 +397,7 @@ public static partial class Common
 		SearchResult resultWindow = new()
 		{
 			Query = record.ToString(),
-			ResultDatabase = control.SelectedIndex,
+			ResultDatabase = (Database)((TabItem)control.SelectedItem).Tag,
 			ResultRecord = record,
 			ResultText = CurrentDatabase.GetRecord(record.Index).ToString()
 		};
@@ -414,28 +414,15 @@ public static partial class Common
 	public static SearchResult? OpenQuery(Database db, NoteRecord record, bool show = true)
 	{
 		foreach (SearchResult result in OpenQueries)
-			if (Databases[result.ResultDatabase] == db && result.ResultRecord?.Equals(record) is true)
+			if (result.ResultDatabase?.Equals(db) is true && result.ResultRecord?.Equals(record) is true)
 				return result;
-
-		var control = (TabControl)Application.Current.MainWindow.FindName("DatabasesPanel");
-
-		int iDB = -1;
-		for (int i = 0; i < control.Items.Count; i++)
-		{
-			TabItem item = (TabItem)control.Items[i];
-			if ((Database)item.Tag == db)
-				iDB = i;
-		}
-
-		if (iDB == -1)
-			return null;
 
 		SearchResult resultWindow = new()
 		{
 			Query = record.ToString(),
-			ResultDatabase = iDB,
+			ResultDatabase = db,
 			ResultRecord = record,
-			ResultText = CurrentDatabase.GetRecord(record.Index).ToString()
+			ResultText = db.GetRecord(record.Index).ToString()
 		};
 
 		if (show)
@@ -452,7 +439,7 @@ public static partial class Common
 		var control = (TabControl)Application.Current.MainWindow.FindName("DatabasesPanel");
 
 		for (int i = OpenQueries.Count - 1; i > -1; i--)
-			if (OpenQueries[i].ResultDatabase == control.SelectedIndex)
+			if (OpenQueries[i].ResultDatabase?.Equals((Database)((TabItem)control.SelectedItem).Tag) is true)
 				OpenQueries[i].Close();
 
 		for (int i = Databases.Count - 1; i > -1; i--)
