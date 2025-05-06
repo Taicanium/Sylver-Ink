@@ -305,6 +305,12 @@ public partial class Import : Window, IDisposable
 				RunningCount++;
 			}
 
+			if (!recordData.Equals(string.Empty))
+			{
+				RunningAverage += recordData.Length;
+				RunningCount++;
+			}
+
 			RunningAverage /= RunningCount;
 		}
 		catch
@@ -394,6 +400,12 @@ public partial class Import : Window, IDisposable
 			Imported++;
 			recordData = string.Empty;
 			blankCount = 0;
+		}
+
+		if (!recordData.Equals(string.Empty))
+		{
+			CurrentDatabase.CreateRecord(recordData);
+			Imported++;
 		}
 	}
 
