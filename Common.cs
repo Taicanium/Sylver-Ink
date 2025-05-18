@@ -11,6 +11,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Documents;
 using System.Windows.Media;
 
 namespace SylverInk;
@@ -58,7 +59,7 @@ public static partial class Common
 	public static string DefaultDatabase { get; } = "New";
 	public static string DocumentsFolder { get; } = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Sylver Ink");
 	public static bool FirstRun { get; set; } = true;
-	public static int HighestFormat { get; } = 8;
+	public static int HighestFormat { get; } = 10;
 	public static Import? ImportWindow { get => _import; set { _import?.Close(); _import = value; _import?.Show(); } }
 	public static bool InitComplete { get; set; }
 	public static char[] InvalidPathChars { get; } = ['/', '\\', ':', '*', '"', '?', '<', '>', '|'];
@@ -269,6 +270,8 @@ public static partial class Common
 		return true;
 	}
 
+	public static string FlowDocumentToPlaintext(FlowDocument document) => new TextRange(document.ContentStart, document.ContentEnd).Text;
+
 	public static string GetBackupPath(Database db) => Path.Join(Subfolders["Databases"], db.Name, db.Name);
 
 	public static TabControl GetChildPanel(string basePanel) => Concurrent(() =>
@@ -396,10 +399,9 @@ public static partial class Common
 
 		SearchResult resultWindow = new()
 		{
-			Query = record.ToString(),
 			ResultDatabase = (Database)((TabItem)control.SelectedItem).Tag,
 			ResultRecord = record,
-			ResultText = CurrentDatabase.GetRecord(record.Index).ToString()
+			ResultText = record.Reconstruct()
 		};
 
 		if (show)
@@ -419,10 +421,9 @@ public static partial class Common
 
 		SearchResult resultWindow = new()
 		{
-			Query = record.ToString(),
 			ResultDatabase = db,
 			ResultRecord = record,
-			ResultText = db.GetRecord(record.Index).ToString()
+			ResultText = record.ToString()
 		};
 
 		if (show)
@@ -432,6 +433,32 @@ public static partial class Common
 		}
 
 		return resultWindow;
+	}
+
+	public static FlowDocument PlaintextToFlowDocument(string content)
+	{
+		FlowDocument document = new();
+		TextPointer pointer = document.ContentStart;
+		var lineSplit = content.Replace("\r", string.Empty).Split('\n') ?? [];
+		for (int i = 0; i < lineSplit.Length; i++)
+		{
+			var line = lineSplit[i];
+			if (!string.IsNullOrEmpty(line))
+			{
+				pointer.InsertTextInRun(line);
+				while (pointer.GetPointerContext(LogicalDirection.Forward) != TextPointerContext.ElementEnd)
+					pointer = pointer.GetNextContextPosition(LogicalDirection.Forward);
+				if (i < lineSplit.Length - 1)
+				{
+					if (string.IsNullOrEmpty(lineSplit[i + 1]))
+						pointer = pointer.InsertParagraphBreak();
+					else
+						pointer = pointer.InsertLineBreak();
+				}
+				continue;
+			}
+		}
+		return document;
 	}
 
 	public static void RemoveDatabase(Database db)

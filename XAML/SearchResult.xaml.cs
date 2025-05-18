@@ -5,7 +5,9 @@ using System.ComponentModel;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Documents;
 using System.Windows.Input;
+using System.Windows.Markup;
 using static SylverInk.Common;
 
 namespace SylverInk;
@@ -20,7 +22,6 @@ public partial class SearchResult : Window, IDisposable
 	private Point DragMouseCoords = new(0, 0);
 	private bool Edited;
 	private string OriginalText = string.Empty;
-	public string Query = string.Empty;
 	public Database? ResultDatabase;
 	public NoteRecord? ResultRecord;
 	public string ResultText = string.Empty;
@@ -122,11 +123,12 @@ public partial class SearchResult : Window, IDisposable
 			ResultDatabase?.Transmit(Network.MessageType.RecordUnlock, IntToBytes(ResultRecord?.Index ?? 0));
 		}
 
-		if (string.IsNullOrWhiteSpace(ResultText))
+		ResultBlock.Document = (FlowDocument)XamlReader.Parse(ResultText);
+
+		if (string.IsNullOrWhiteSpace(ResultText) || ResultBlock.Document.Blocks.Count == 0)
 			ResultText = ResultRecord?.ToString() ?? string.Empty;
 		
 		Edited = false;
-		ResultBlock.Text = ResultText;
 		OriginalText = ResultText;
 
 		var tabPanel = GetChildPanel("DatabasesPanel");
@@ -141,8 +143,8 @@ public partial class SearchResult : Window, IDisposable
 
 	private void ResultBlock_TextChanged(object sender, TextChangedEventArgs e)
 	{
-		var senderObject = sender as TextBox;
-		ResultText = senderObject?.Text ?? string.Empty;
+		var senderObject = sender as RichTextBox;
+		ResultText = XamlWriter.Save(senderObject?.Document ?? new FlowDocument());
 		Edited = !ResultText.Equals(ResultRecord?.ToString());
 		if (!Edited)
 			return;

@@ -5,6 +5,8 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows;
+using System.Windows.Documents;
+using System.Windows.Markup;
 using static SylverInk.Common;
 
 namespace SylverInk.Notes;
@@ -81,15 +83,17 @@ public partial class NoteController : IDisposable
 
 	public int CreateRecord(string entry)
 	{
+		string RecordText = string.Empty;
 		int Index = NextIndex;
-		Records.Add(new(Index, entry));
+		RecordText = XamlWriter.Save(PlaintextToFlowDocument(entry));
+		Records.Add(new(Index, RecordText));
 		Changed = true;
 		return Index;
 	}
 
 	public void CreateRevision(int index, string NewVersion)
 	{
-		string Current = Records[index].ToString();
+		string Current = Records[index].ToXaml();
 		int StartIndex = 0;
 
 		if (NewVersion.Equals(Current))
@@ -113,7 +117,7 @@ public partial class NoteController : IDisposable
 
 	public void CreateRevision(NoteRecord record, string NewVersion)
 	{
-		string Current = record.ToString();
+		string Current = record.ToXaml();
 		int StartIndex = 0;
 
 		if (NewVersion.Equals(Current))
@@ -276,22 +280,44 @@ public partial class NoteController : IDisposable
 
 	public (int, int) Replace(string oldText, string newText)
 	{
+		var newVersion = string.Empty;
 		int NoteCount = 0;
 		int ReplaceCount = 0;
 		foreach (NoteRecord record in Records)
 		{
-			var recordText = record.ToString();
+			var recordText = record.ToXaml();
 			if (!recordText.Contains(oldText, StringComparison.OrdinalIgnoreCase))
 				continue;
-
-			var newVersion = recordText.Replace(oldText, newText, StringComparison.OrdinalIgnoreCase);
-			ReplaceCount += (recordText.Length - recordText.Replace(oldText, string.Empty, StringComparison.OrdinalIgnoreCase).Length) / oldText.Length;
-			NoteCount++;
-			CreateRevision(record.Index, newVersion);
 
 			for (int i = OpenQueries.Count - 1; i > -1; i--)
 				if (record.Equals(OpenQueries[i].ResultRecord))
 					Concurrent(OpenQueries[i].Close);
+
+			FlowDocument document = (FlowDocument)XamlReader.Parse(recordText);
+			TextPointer? pointer = document.ContentStart;
+			while (pointer is not null && pointer.GetPointerContext(LogicalDirection.Forward) != TextPointerContext.None)
+			{
+				while (pointer is not null && pointer?.GetPointerContext(LogicalDirection.Forward) != TextPointerContext.Text)
+					pointer = pointer?.GetNextContextPosition(LogicalDirection.Forward);
+
+				if (pointer is null)
+					continue;
+
+				var text = pointer.GetTextInRun(LogicalDirection.Forward);
+				var textLength = pointer.GetTextRunLength(LogicalDirection.Forward);
+				newVersion = text.Replace(oldText, newText, StringComparison.OrdinalIgnoreCase);
+				pointer.DeleteTextInRun(textLength);
+				pointer.InsertTextInRun(newVersion);
+				while (pointer.GetPointerContext(LogicalDirection.Forward) == TextPointerContext.Text)
+					pointer = pointer.GetNextContextPosition(LogicalDirection.Forward);
+			}
+			newVersion = XamlWriter.Save(document);
+			if (!newVersion.Equals(recordText))
+			{
+				CreateRevision(record.Index, newVersion);
+				NoteCount++;
+				ReplaceCount += (recordText.Length - recordText.Replace(oldText, string.Empty, StringComparison.OrdinalIgnoreCase).Length) / oldText.Length;
+			}
 		}
 
 		Changed = Changed || ReplaceCount > 0;

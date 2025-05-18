@@ -42,15 +42,32 @@ public partial class Database : IDisposable
 		if (threaded)
 		{
 			BackgroundWorker worker = new();
-			worker.DoWork += (_, _) => db.Load(dbFile);
+			worker.DoWork += (_, _) =>
+			{
+				try
+				{
+					db.Load(dbFile);
+				}
+				catch
+				{
+					MessageBox.Show($"Could not load database: {dbFile}", "Sylver Ink: Error", MessageBoxButton.OK);
+				}
+			};
 			worker.RunWorkerCompleted += (_, _) => AddDatabase(db);
 			worker.RunWorkerAsync();
 
 			return;
 		}
 
-		db.Load(dbFile);
-		AddDatabase(db);
+		try
+		{
+			db.Load(dbFile);
+			AddDatabase(db);
+		}
+		catch
+		{
+			MessageBox.Show($"Could not load database: {dbFile}", "Sylver Ink: Error", MessageBoxButton.OK);
+		}
 	}
 
 	public int CreateRecord(string entry, bool local = true)

@@ -5,7 +5,9 @@ using System.ComponentModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Documents;
 using System.Windows.Input;
+using System.Windows.Markup;
 using static SylverInk.Common;
 
 namespace SylverInk;
@@ -80,7 +82,29 @@ public partial class Search : Window
 			if (newRecord is null)
 				continue;
 
-			if (!newRecord.ToString().Contains(_query, StringComparison.OrdinalIgnoreCase) is true)
+			FlowDocument document = (FlowDocument)XamlReader.Parse(newRecord.ToXaml());
+			TextPointer? pointer = document.ContentStart;
+			bool textFound = false;
+			while (pointer is not null && pointer.GetPointerContext(LogicalDirection.Forward) != TextPointerContext.None)
+			{
+				while (pointer is not null && pointer.GetPointerContext(LogicalDirection.Forward) != TextPointerContext.Text)
+					pointer = pointer.GetNextContextPosition(LogicalDirection.Forward);
+
+				if (pointer is null)
+					break;
+
+				string recordText = pointer.GetTextInRun(LogicalDirection.Forward);
+				if (recordText.Contains(_query, StringComparison.OrdinalIgnoreCase))
+				{
+					textFound = true;
+					break;
+				}
+
+				while (pointer.GetPointerContext(LogicalDirection.Forward) == TextPointerContext.Text)
+					pointer = pointer.GetNextContextPosition(LogicalDirection.Forward);
+			}
+
+			if (!textFound)
 				continue;
 
 			newRecord.Preview = _width;

@@ -2,6 +2,8 @@
 using System;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Documents;
+using System.Windows.Markup;
 using static SylverInk.Common;
 
 namespace SylverInk.Notes;
@@ -12,7 +14,7 @@ public class NoteTab
 	private readonly Button DeleteButton;
 	private readonly Grid MainGrid;
 	private readonly Button NextButton;
-	private readonly TextBox NoteBox;
+	private readonly RichTextBox NoteBox;
 	private readonly NoteRecord Record;
 	private readonly Button PreviousButton;
 	private readonly Button ReturnButton;
@@ -59,8 +61,6 @@ public class NoteTab
 			Height = double.NaN,
 			Margin = new(5),
 			Tag = (0U, Record),
-			Text = content ?? string.Empty,
-			TextWrapping = TextWrapping.WrapWithOverflow,
 			VerticalContentAlignment = VerticalAlignment.Top,
 			VerticalScrollBarVisibility = ScrollBarVisibility.Auto
 		};
@@ -93,6 +93,7 @@ public class NoteTab
 			Tag = Record
 		};
 
+		NoteBox.Document = (FlowDocument)XamlReader.Parse(content);
 		ChildPanel.SelectedIndex = ChildPanel.Items.Add(Tab);
 	}
 
@@ -110,9 +111,9 @@ public class NoteTab
 
 		NoteBox.TextChanged += (sender, e) =>
 		{
-			var senderObject = (TextBox)sender;
+			var senderObject = (RichTextBox)sender;
 			var tag = ((uint, NoteRecord))senderObject.Tag;
-			SaveButton.IsEnabled = !senderObject.Text.Equals(tag.Item2.ToString());
+			SaveButton.IsEnabled = !XamlWriter.Save(senderObject.Document).Equals(tag.Item2.ToXaml());
 		};
 
 		NextButton.Click += (sender, _) =>
@@ -123,14 +124,14 @@ public class NoteTab
 			tag.Item1 -= 1U;
 			revisionTime = tag.Item1 == 0U ? tag.Item2.GetLastChange() : tag.Item2.GetRevisionTime(tag.Item1);
 
+			NoteBox.Document = (FlowDocument)XamlReader.Parse(tag.Item2.Reconstruct(tag.Item1));
 			NoteBox.Tag = (tag.Item1, tag.Item2);
-			NoteBox.Text = tag.Item2.Reconstruct(tag.Item1);
 			NoteBox.IsReadOnly = tag.Item1 != 0;
 			((Button)sender).IsEnabled = tag.Item1 > 0;
 			PreviousButton.IsEnabled = tag.Item1 < tag.Item2.GetNumRevisions();
 			RevisionLabel.Content = (tag.Item1 == 0U ? "Entry last modified: " : $"Revision {tag.Item2.GetNumRevisions() - tag.Item1} from ") + revisionTime;
 			SaveButton.Content = tag.Item1 == 0 ? "Save" : "Restore";
-			SaveButton.IsEnabled = !tag.Item2.ToString().Equals(NoteBox.Text);
+			SaveButton.IsEnabled = !tag.Item2.ToXaml().Equals(XamlWriter.Save(NoteBox.Document));
 		};
 
 		PreviousButton.Click += (sender, _) =>
@@ -142,14 +143,13 @@ public class NoteTab
 			revisionTime = tag.Item1 == tag.Item2.GetNumRevisions() ? tag.Item2.GetCreated() : tag.Item2.GetRevisionTime(tag.Item1);
 
 			NoteBox.Tag = (tag.Item1, tag.Item2);
-			NoteBox.Text = tag.Item2.Reconstruct(tag.Item1);
+			NoteBox.Document = (FlowDocument)XamlReader.Parse(tag.Item2.Reconstruct(tag.Item1));
 			NoteBox.IsReadOnly = tag.Item1 != 0;
 			((Button)sender).IsEnabled = tag.Item1 + 1 <= tag.Item2.GetNumRevisions();
 			RevisionLabel.Content = (tag.Item1 == tag.Item2.GetNumRevisions() ? "Entry created " : $"Revision {tag.Item2.GetNumRevisions() - tag.Item1} from ") + revisionTime;
 			NextButton.IsEnabled = tag.Item1 > 0;
 			SaveButton.Content = "Restore";
-			var latestText = tag.Item2.ToString();
-			SaveButton.IsEnabled = !latestText.Equals(NoteBox.Text);
+			SaveButton.IsEnabled = !tag.Item2.ToXaml().Equals(XamlWriter.Save(NoteBox.Document));
 		};
 
 		ReturnButton.Click += (sender, _) =>
@@ -163,7 +163,7 @@ public class NoteTab
 					case MessageBoxResult.Cancel:
 						return;
 					case MessageBoxResult.Yes:
-						CurrentDatabase.CreateRevision(tag.Item2, NoteBox.Text);
+						CurrentDatabase.CreateRevision(tag.Item2, XamlWriter.Save(NoteBox.Document));
 						DeferUpdateRecentNotes();
 						break;
 				}
@@ -188,7 +188,7 @@ public class NoteTab
 		{
 			var tag = ((uint, NoteRecord))NoteBox.Tag;
 
-			CurrentDatabase.CreateRevision(tag.Item2, NoteBox.Text);
+			CurrentDatabase.CreateRevision(tag.Item2, XamlWriter.Save(NoteBox.Document));
 			DeferUpdateRecentNotes();
 
 			NoteBox.Tag = (0U, tag.Item2);

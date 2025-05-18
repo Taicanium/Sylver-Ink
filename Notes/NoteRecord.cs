@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Documents;
+using System.Windows.Markup;
 using static SylverInk.Common;
 
 namespace SylverInk.Notes;
@@ -24,7 +26,6 @@ public partial class NoteRecord
 	private long LastChange = -1;
 	private DateTime LastChangeObject = DateTime.UtcNow;
 	private string LastQuery = string.Empty;
-	private string Latest = string.Empty;
 	private string PreviewText = string.Empty;
 	private int PreviewWidth = 375;
 	private readonly List<NoteRevision> Revisions = [];
@@ -111,7 +112,7 @@ public partial class NoteRecord
 	{
 		Revisions.Add(revision);
 		TagsDirty = true;
-		
+
 		if (revision._created == -1)
 			revision._created = DateTime.UtcNow.ToBinary();
 
@@ -165,6 +166,52 @@ public partial class NoteRecord
 			serializer?.ReadInt32(ref _revision._startIndex);
 			serializer?.ReadString(ref _revision._substring);
 			Revisions.Add(_revision);
+		}
+
+		// SIDB v.9 introduced XAML rich text formatting. Its absence in earlier versions must be accounted for.
+		if (serializer?.DatabaseFormat < 9)
+		{
+			var RCount = Revisions.Count;
+			var ParsedInitial = XamlWriter.Save(PlaintextToFlowDocument(Initial ?? string.Empty));
+
+			List<string> ReconstructedSubstrings = [];
+
+			for (int i = RCount - 1; i > -1; i--)
+			{
+				var oldText = Reconstruct((uint)i);
+				ReconstructedSubstrings.Add(XamlWriter.Save(PlaintextToFlowDocument(oldText)));
+			}
+
+			for (int i = 0; i < ReconstructedSubstrings.Count; i++)
+			{
+				var Created = Revisions[i]._created;
+				var RString = ReconstructedSubstrings[i];
+				var StartIndex = -1;
+				var Substring = string.Empty;
+				var ToCompare = i == 0 ? ParsedInitial : ReconstructedSubstrings[i - 1];
+				for (int j = 0; j < ToCompare.Length; j++)
+				{
+					if (j >= RString.Length)
+						break;
+
+					if (!RString[j].Equals(ToCompare[j]))
+						break;
+
+					StartIndex = j + 1;
+					if (StartIndex < RString.Length)
+						Substring = RString[StartIndex..];
+				}
+
+				Revisions.RemoveAt(i);
+				Revisions.Insert(i, new NoteRevision()
+				{
+					_created = Created,
+					_startIndex = StartIndex,
+					_substring = Substring
+				});
+			}
+
+			Initial = ParsedInitial;
 		}
 
 		return this;
@@ -262,19 +309,19 @@ public partial class NoteRecord
 	/// <returns>The text of this record after undoing the requested number of revisions.</returns>
 	public string Reconstruct(uint backsteps = 0U)
 	{
-		Latest = Initial ?? string.Empty;
+		var latest = Initial ?? string.Empty;
 		if (Revisions.Count == 0)
-			return Latest;
+			return latest;
 
 		for (int i = 0; i < Revisions.Count - Math.Min(backsteps, Revisions.Count); i++)
 		{
-			if (Revisions[i]._startIndex > -1 && Revisions[i]._startIndex < Latest?.Length)
-				Latest = Latest[..Revisions[i]._startIndex];
+			if (Revisions[i]._startIndex > -1 && Revisions[i]._startIndex < latest.Length)
+				latest = latest[..Revisions[i]._startIndex];
 
-			Latest += Revisions[i]._substring;
+			latest += Revisions[i]._substring;
 		}
 
-		return Latest ?? string.Empty;
+		return latest ?? string.Empty;
 	}
 
 	public void Serialize(Serializer? serializer)
@@ -297,7 +344,31 @@ public partial class NoteRecord
 		}
 	}
 
-	public override string ToString() => Reconstruct(0U);
+	public override string ToString()
+	{
+		try
+		{
+			return FlowDocumentToPlaintext((FlowDocument)XamlReader.Parse(Reconstruct()));
+		}
+		catch
+		{
+			return Reconstruct();
+		}
+	}
+
+	public string ToXaml()
+	{
+		var reconstructed = Reconstruct();
+		try
+		{
+			_ = XamlReader.Parse(reconstructed);
+			return reconstructed;
+		}
+		catch
+		{
+			return XamlWriter.Save(PlaintextToFlowDocument(reconstructed));
+		}
+	}
 
 	public void Unlock()
 	{
