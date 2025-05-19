@@ -19,7 +19,8 @@
 				<RowDefinition Height="Auto"/>
 				<RowDefinition Height="Auto"/>
 			</Grid.RowDefinitions>
-			<RichTextBox AcceptsReturn="True" Grid.ColumnSpan="2" Height="Auto" Margin="5,5,5,0" TextChanged="ResultBlock_TextChanged"
+			<RichTextBox AcceptsReturn="True" Grid.ColumnSpan="2" Height="Auto"
+						Margin="5,5,5,0" TextChanged="ResultBlock_TextChanged"
 						VerticalContentAlignment="Top"
 						ScrollViewer.VerticalScrollBarVisibility="Auto"
 						x:Name="ResultBlock" />

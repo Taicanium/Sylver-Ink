@@ -22,6 +22,7 @@ public partial class NoteRecord
 {
 	private long Created = -1;
 	private bool Dirty = true;
+	private FlowDocument? Document;
 	private string? Initial = string.Empty;
 	private long LastChange = -1;
 	private DateTime LastChangeObject = DateTime.UtcNow;
@@ -108,7 +109,7 @@ public partial class NoteRecord
 		this.UUID = UUID ?? MakeUUID();
 	}
 
-	public void Add(NoteRevision revision)
+	public void Add(NoteRevision revision, bool Rich = true)
 	{
 		Revisions.Add(revision);
 		TagsDirty = true;
@@ -120,15 +121,16 @@ public partial class NoteRecord
 
 		if (revisionTime.CompareTo(LastChangeObject) > 0)
 		{
+			if (Rich)
+				Document = (FlowDocument)XamlReader.Parse(Reconstruct());
 			LastChange = revision._created;
 			LastChangeObject = DateTime.FromBinary(LastChange);
 		}
-
-		var reconstructed = Reconstruct();
 	}
 
 	public void Delete()
 	{
+		Document?.Blocks.Clear();
 		Index = 0;
 		Initial = string.Empty;
 		LastChange = DateTime.UtcNow.ToBinary();
@@ -143,6 +145,7 @@ public partial class NoteRecord
 			return;
 
 		Revisions.RemoveAt(index);
+		Document = (FlowDocument)XamlReader.Parse(Reconstruct());
 		LastChange = GetNumRevisions() == 0 ? Created : Revisions[GetNumRevisions() - 1]._created;
 		LastChangeObject = DateTime.FromBinary(LastChange);
 	}
@@ -166,55 +169,12 @@ public partial class NoteRecord
 			serializer?.ReadLong(ref _revision._created);
 			serializer?.ReadInt32(ref _revision._startIndex);
 			serializer?.ReadString(ref _revision._substring);
-			Add(_revision);
+			Add(_revision, false);
 		}
 
 		// SIDB v.9 introduced XAML rich text formatting. Its absence in earlier versions must be accounted for.
 		if (serializer?.DatabaseFormat < 9)
-		{
-			List<long> CreatedTags = [];
-			var ParsedInitial = XamlWriter.Save(PlaintextToFlowDocument(Initial ?? string.Empty));
-			var RCount = Revisions.Count;
-			List<string> ReconstructedSubstrings = [];
-
-			for (int i = RCount - 1; i > -1; i--)
-			{
-				var oldText = Reconstruct((uint)i);
-				CreatedTags.Add(Revisions[i]._created);
-				ReconstructedSubstrings.Add(XamlWriter.Save(PlaintextToFlowDocument(oldText)));
-			}
-
-			Revisions.Clear();
-			Initial = ParsedInitial;
-
-			for (int i = 0; i < ReconstructedSubstrings.Count; i++)
-			{
-				var Created = CreatedTags[i];
-				var RString = ReconstructedSubstrings[i];
-				var StartIndex = -1;
-				var Substring = string.Empty;
-				var ToCompare = i == 0 ? ParsedInitial : ReconstructedSubstrings[i - 1];
-				for (int j = 0; j < ToCompare.Length; j++)
-				{
-					if (j >= RString.Length)
-						break;
-
-					if (!RString[j].Equals(ToCompare[j]))
-						break;
-
-					StartIndex = j + 1;
-					if (StartIndex < RString.Length)
-						Substring = RString[StartIndex..];
-				}
-
-				Add(new NoteRevision()
-				{
-					_created = Created,
-					_startIndex = StartIndex,
-					_substring = Substring
-				});
-			}
-		}
+			TargetXaml();
 
 		return this;
 	}
@@ -271,6 +231,8 @@ public partial class NoteRecord
 
 	public string GetLastChange() => GetLastChangeObject().ToLocalTime().ToString(DateFormat);
 
+	public FlowDocument GetLatestDocument() => Document ??= (FlowDocument)XamlReader.Parse(Reconstruct());
+
 	public int GetNumRevisions() => Revisions.Count;
 
 	public NoteRevision GetRevision(uint index) => Revisions[Revisions.Count - 1 - (int)index];
@@ -326,8 +288,42 @@ public partial class NoteRecord
 		return latest ?? string.Empty;
 	}
 
+	private void ReconstructRevisions(List<long> CreatedTags, List<string> Substrings)
+	{
+		for (int i = 0; i < Substrings.Count; i++)
+		{
+			var Created = CreatedTags[i];
+			var RString = Substrings[i];
+			var StartIndex = -1;
+			var Substring = string.Empty;
+			var ToCompare = i == 0 ? Initial : Substrings[i - 1];
+			for (int j = 0; j < ToCompare?.Length; j++)
+			{
+				if (j >= RString.Length)
+					break;
+
+				if (!RString[j].Equals(ToCompare[j]))
+					break;
+
+				StartIndex = j + 1;
+				if (StartIndex < RString.Length)
+					Substring = RString[StartIndex..];
+			}
+
+			Add(new NoteRevision()
+			{
+				_created = Created,
+				_startIndex = StartIndex,
+				_substring = Substring
+			});
+		}
+	}
+
 	public void Serialize(Serializer? serializer)
 	{
+		if (serializer?.DatabaseFormat < 9)
+			TargetPlaintext();
+
 		if (serializer?.DatabaseFormat >= 5)
 			serializer?.WriteString(UUID);
 		serializer?.WriteLong(Created);
@@ -346,15 +342,49 @@ public partial class NoteRecord
 		}
 	}
 
-	public override string ToString()
+	private void TargetPlaintext()
 	{
-		return FlowDocumentToPlaintext((FlowDocument)XamlReader.Parse(Reconstruct()));
+		List<long> CreatedTags = [];
+		var ParsedInitial = FlowDocumentToPlaintext((FlowDocument)XamlReader.Parse(Initial));
+		var RCount = Revisions.Count;
+		List<string> ReconstructedSubstrings = [];
+
+		for (int i = RCount - 1; i > -1; i--)
+		{
+			var oldText = Reconstruct((uint)i);
+			CreatedTags.Add(Revisions[i]._created);
+			ReconstructedSubstrings.Add(FlowDocumentToPlaintext((FlowDocument)XamlReader.Parse(oldText)));
+		}
+
+		Revisions.Clear();
+		Initial = ParsedInitial;
+
+		ReconstructRevisions(CreatedTags, ReconstructedSubstrings);
 	}
 
-	public string ToXaml()
+	private void TargetXaml()
 	{
-		return Reconstruct(0U);
+		List<long> CreatedTags = [];
+		var ParsedInitial = XamlWriter.Save(PlaintextToFlowDocument(Initial ?? string.Empty));
+		var RCount = Revisions.Count;
+		List<string> ReconstructedSubstrings = [];
+
+		for (int i = RCount - 1; i > -1; i--)
+		{
+			var oldText = Reconstruct((uint)i);
+			CreatedTags.Add(Revisions[i]._created);
+			ReconstructedSubstrings.Add(XamlWriter.Save(PlaintextToFlowDocument(oldText)));
+		}
+
+		Revisions.Clear();
+		Initial = ParsedInitial;
+
+		ReconstructRevisions(CreatedTags, ReconstructedSubstrings);
 	}
+
+	public override string ToString() => FlowDocumentToPlaintext(GetLatestDocument());
+
+	public string ToXaml() => Reconstruct(0U);
 
 	public void Unlock()
 	{

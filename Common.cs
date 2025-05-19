@@ -274,7 +274,18 @@ public static partial class Common
 		return true;
 	}
 
-	public static string FlowDocumentToPlaintext(FlowDocument document) => new TextRange(document.ContentStart, document.ContentEnd).Text;
+	public static string FlowDocumentToPlaintext(FlowDocument document)
+	{
+		try
+		{
+			return new TextRange(document.ContentStart, document.ContentEnd).Text;
+		}
+		catch // System.ExecutionEngineException - occurs rarely when resizing the window too quickly
+		{
+			SpinWait.SpinUntil(new(() => false), 150);
+			return new TextRange(document.ContentStart, document.ContentEnd).Text;
+		}
+	}
 
 	public static string GetBackupPath(Database db) => Path.Join(Subfolders["Databases"], db.Name, db.Name);
 

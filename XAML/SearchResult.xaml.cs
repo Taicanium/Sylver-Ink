@@ -2,7 +2,6 @@
 using SylverInk.Notes;
 using System;
 using System.ComponentModel;
-using System.Reflection.Metadata;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
@@ -156,7 +155,6 @@ public partial class SearchResult : Window, IDisposable
 
 	private void ResultBlock_TextChanged(object sender, TextChangedEventArgs e)
 	{
-		var senderObject = sender as RichTextBox;
 		var plainText = FlowDocumentToPlaintext(ResultBlock.Document);
 		Edited = !plainText.Equals(ResultRecord?.ToString());
 		if (!Edited)
