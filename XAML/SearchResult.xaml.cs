@@ -2,6 +2,7 @@
 using SylverInk.Notes;
 using System;
 using System.ComponentModel;
+using System.Reflection.Metadata;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
@@ -21,6 +22,7 @@ public partial class SearchResult : Window, IDisposable
 	private bool Dragging;
 	private Point DragMouseCoords = new(0, 0);
 	private bool Edited;
+	private int OriginalRevisionCount = 0;
 	private string OriginalText = string.Empty;
 	public Database? ResultDatabase;
 	public NoteRecord? ResultRecord;
@@ -32,6 +34,7 @@ public partial class SearchResult : Window, IDisposable
 	{
 		InitializeComponent();
 		DataContext = Common.Settings;
+
 		AutosaveThread = new();
 		AutosaveThread.DoWork += (_, _) =>
 		{
@@ -43,6 +46,7 @@ public partial class SearchResult : Window, IDisposable
 
 	public void AddTabToRibbon()
 	{
+		ResultText = XamlWriter.Save(ResultBlock.Document);
 		NoteTab newTab = new(ResultRecord ?? new(), ResultText);
 		newTab.Construct();
 		Close();
@@ -57,9 +61,12 @@ public partial class SearchResult : Window, IDisposable
 				case MessageBoxResult.Cancel:
 					return;
 				case MessageBoxResult.No:
-					Edited = false;
+					ResultBlock.Document = (FlowDocument)XamlReader.Parse(OriginalText);
 					ResultText = OriginalText;
-					SaveRecord();
+					Edited = false;
+					for (int i = (ResultRecord?.GetNumRevisions() ?? 1) - 1; i >= OriginalRevisionCount; i--)
+						ResultRecord?.DeleteRevision(i);
+					DeferUpdateRecentNotes(true);
 					break;
 			}
 		}
@@ -123,12 +130,18 @@ public partial class SearchResult : Window, IDisposable
 			ResultDatabase?.Transmit(Network.MessageType.RecordUnlock, IntToBytes(ResultRecord?.Index ?? 0));
 		}
 
-		ResultBlock.Document = (FlowDocument)XamlReader.Parse(ResultText);
+		try
+		{
+			ResultBlock.Document = (FlowDocument)XamlReader.Parse(ResultText);
+		}
+		catch
+		{
+			ResultText = ResultRecord?.ToXaml() ?? string.Empty;
+			ResultBlock.Document = (FlowDocument)XamlReader.Parse(ResultText);
+		}
 
-		if (string.IsNullOrWhiteSpace(ResultText) || ResultBlock.Document.Blocks.Count == 0)
-			ResultText = ResultRecord?.ToString() ?? string.Empty;
-		
 		Edited = false;
+		OriginalRevisionCount = ResultRecord?.GetNumRevisions() ?? 0;
 		OriginalText = ResultText;
 
 		var tabPanel = GetChildPanel("DatabasesPanel");
@@ -144,8 +157,8 @@ public partial class SearchResult : Window, IDisposable
 	private void ResultBlock_TextChanged(object sender, TextChangedEventArgs e)
 	{
 		var senderObject = sender as RichTextBox;
-		ResultText = XamlWriter.Save(senderObject?.Document ?? new FlowDocument());
-		Edited = !ResultText.Equals(ResultRecord?.ToString());
+		var plainText = FlowDocumentToPlaintext(ResultBlock.Document);
+		Edited = !plainText.Equals(ResultRecord?.ToString());
 		if (!Edited)
 			return;
 		if (AutosaveThread?.IsBusy is true)
@@ -159,6 +172,7 @@ public partial class SearchResult : Window, IDisposable
 		if (ResultRecord is null)
 			return;
 
+		ResultText = XamlWriter.Save(ResultBlock.Document);
 		ResultDatabase?.CreateRevision(ResultRecord, ResultText);
 		LastChangedLabel.Content = ResultRecord?.GetLastChange();
 		DeferUpdateRecentNotes(true);

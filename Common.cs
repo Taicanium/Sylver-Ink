@@ -427,7 +427,7 @@ public static partial class Common
 		{
 			ResultDatabase = db,
 			ResultRecord = record,
-			ResultText = record.ToString()
+			ResultText = record.Reconstruct()
 		};
 
 		if (show)

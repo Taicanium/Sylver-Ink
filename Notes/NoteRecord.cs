@@ -144,6 +144,8 @@ public partial class NoteRecord
 			return;
 
 		Revisions.RemoveAt(index);
+		LastChange = GetNumRevisions() == 0 ? Created : Revisions[GetNumRevisions() - 1]._created;
+		LastChangeObject = DateTime.FromBinary(LastChange);
 	}
 
 	public NoteRecord Deserialize(Serializer? serializer)

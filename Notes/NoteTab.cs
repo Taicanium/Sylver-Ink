@@ -113,7 +113,7 @@ public class NoteTab
 		{
 			var senderObject = (RichTextBox)sender;
 			var tag = ((uint, NoteRecord))senderObject.Tag;
-			SaveButton.IsEnabled = !XamlWriter.Save(senderObject.Document).Equals(tag.Item2.ToXaml());
+			SaveButton.IsEnabled = !FlowDocumentToPlaintext(senderObject.Document).Equals(tag.Item2.ToString());
 		};
 
 		NextButton.Click += (sender, _) =>
@@ -131,7 +131,7 @@ public class NoteTab
 			PreviousButton.IsEnabled = tag.Item1 < tag.Item2.GetNumRevisions();
 			RevisionLabel.Content = (tag.Item1 == 0U ? "Entry last modified: " : $"Revision {tag.Item2.GetNumRevisions() - tag.Item1} from ") + revisionTime;
 			SaveButton.Content = tag.Item1 == 0 ? "Save" : "Restore";
-			SaveButton.IsEnabled = !tag.Item2.ToXaml().Equals(XamlWriter.Save(NoteBox.Document));
+			SaveButton.IsEnabled = !tag.Item2.ToString().Equals(FlowDocumentToPlaintext(NoteBox.Document));
 		};
 
 		PreviousButton.Click += (sender, _) =>
@@ -149,7 +149,7 @@ public class NoteTab
 			RevisionLabel.Content = (tag.Item1 == tag.Item2.GetNumRevisions() ? "Entry created " : $"Revision {tag.Item2.GetNumRevisions() - tag.Item1} from ") + revisionTime;
 			NextButton.IsEnabled = tag.Item1 > 0;
 			SaveButton.Content = "Restore";
-			SaveButton.IsEnabled = !tag.Item2.ToXaml().Equals(XamlWriter.Save(NoteBox.Document));
+			SaveButton.IsEnabled = !tag.Item2.ToString().Equals(FlowDocumentToPlaintext(NoteBox.Document));
 		};
 
 		ReturnButton.Click += (sender, _) =>
