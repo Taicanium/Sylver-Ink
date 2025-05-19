@@ -118,15 +118,13 @@ public partial class NoteRecord
 
 		var revisionTime = DateTime.FromBinary(revision._created);
 
-		Revisions.Sort(new Comparison<NoteRevision>(
-			(_rev1, _rev2) => DateTime.FromBinary(_rev1._created).CompareTo(DateTime.FromBinary(_rev2._created))
-			));
-
 		if (revisionTime.CompareTo(LastChangeObject) > 0)
 		{
 			LastChange = revision._created;
 			LastChangeObject = DateTime.FromBinary(LastChange);
 		}
+
+		var reconstructed = Reconstruct();
 	}
 
 	public void Delete()
@@ -138,6 +136,7 @@ public partial class NoteRecord
 		TagsDirty = true;
 	}
 
+	// In its current state, this function is only well-behaved when also removing all revisions following it.
 	public void DeleteRevision(int index)
 	{
 		if (index >= GetNumRevisions())
@@ -167,26 +166,30 @@ public partial class NoteRecord
 			serializer?.ReadLong(ref _revision._created);
 			serializer?.ReadInt32(ref _revision._startIndex);
 			serializer?.ReadString(ref _revision._substring);
-			Revisions.Add(_revision);
+			Add(_revision);
 		}
 
 		// SIDB v.9 introduced XAML rich text formatting. Its absence in earlier versions must be accounted for.
 		if (serializer?.DatabaseFormat < 9)
 		{
-			var RCount = Revisions.Count;
+			List<long> CreatedTags = [];
 			var ParsedInitial = XamlWriter.Save(PlaintextToFlowDocument(Initial ?? string.Empty));
-
+			var RCount = Revisions.Count;
 			List<string> ReconstructedSubstrings = [];
 
 			for (int i = RCount - 1; i > -1; i--)
 			{
 				var oldText = Reconstruct((uint)i);
+				CreatedTags.Add(Revisions[i]._created);
 				ReconstructedSubstrings.Add(XamlWriter.Save(PlaintextToFlowDocument(oldText)));
 			}
 
+			Revisions.Clear();
+			Initial = ParsedInitial;
+
 			for (int i = 0; i < ReconstructedSubstrings.Count; i++)
 			{
-				var Created = Revisions[i]._created;
+				var Created = CreatedTags[i];
 				var RString = ReconstructedSubstrings[i];
 				var StartIndex = -1;
 				var Substring = string.Empty;
@@ -204,16 +207,13 @@ public partial class NoteRecord
 						Substring = RString[StartIndex..];
 				}
 
-				Revisions.RemoveAt(i);
-				Revisions.Insert(i, new NoteRevision()
+				Add(new NoteRevision()
 				{
 					_created = Created,
 					_startIndex = StartIndex,
 					_substring = Substring
 				});
 			}
-
-			Initial = ParsedInitial;
 		}
 
 		return this;
@@ -348,28 +348,12 @@ public partial class NoteRecord
 
 	public override string ToString()
 	{
-		try
-		{
-			return FlowDocumentToPlaintext((FlowDocument)XamlReader.Parse(Reconstruct()));
-		}
-		catch
-		{
-			return Reconstruct();
-		}
+		return FlowDocumentToPlaintext((FlowDocument)XamlReader.Parse(Reconstruct()));
 	}
 
 	public string ToXaml()
 	{
-		var reconstructed = Reconstruct();
-		try
-		{
-			_ = XamlReader.Parse(reconstructed);
-			return reconstructed;
-		}
-		catch
-		{
-			return XamlWriter.Save(PlaintextToFlowDocument(reconstructed));
-		}
+		return Reconstruct(0U);
 	}
 
 	public void Unlock()
@@ -381,7 +365,7 @@ public partial class NoteRecord
 			if (!query.ResultRecord?.Equals(Index) is true)
 				continue;
 
-			query.LastChangedLabel.Content = CurrentDatabase.GetRecord(Index).GetLastChange();
+			query.LastChangedLabel.Content = query.ResultDatabase?.GetRecord(Index).GetLastChange();
 			query.ResultBlock.IsEnabled = true;
 		}
 
