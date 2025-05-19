@@ -147,19 +147,20 @@ public static partial class Common
 
 	public static SolidColorBrush? BrushFromBytes(string data)
 	{
-		var hex = NumberStyles.HexNumber;
-
 		if (data.Length == 6)
 			data = "FF" + data;
+
+		if (data.Length != 8)
+			return Brushes.Transparent;
 
 		try
 		{
 			return new(new()
 			{
-				A = byte.Parse(data[..2], hex),
-				R = byte.Parse(data[2..4], hex),
-				G = byte.Parse(data[4..6], hex),
-				B = byte.Parse(data[6..8], hex)
+				A = byte.Parse(data[..2], NumberStyles.HexNumber),
+				R = byte.Parse(data[2..4], NumberStyles.HexNumber),
+				G = byte.Parse(data[4..6], NumberStyles.HexNumber),
+				B = byte.Parse(data[6..8], NumberStyles.HexNumber)
 			});
 		}
 		catch { return Brushes.Transparent; }
@@ -171,6 +172,34 @@ public static partial class Common
 		if (colors == 4)
 			return $"{data?.Color.A:X2}{data?.Color.R:X2}{data?.Color.G:X2}{data?.Color.B:X2}";
 		return $"{data?.Color.R:X2}{data?.Color.G:X2}{data?.Color.B:X2}";
+	}
+
+	public static void ColorChanged(string? ColorTag, Brush ColorSelection)
+	{
+		if (ColorTag is null)
+			return;
+
+		switch (ColorTag)
+		{
+			case "P1F":
+				Settings.MenuForeground = ColorSelection;
+				break;
+			case "P1B":
+				Settings.MenuBackground = ColorSelection;
+				break;
+			case "P2F":
+				Settings.ListForeground = ColorSelection;
+				break;
+			case "P2B":
+				Settings.ListBackground = ColorSelection;
+				break;
+			case "P3F":
+				Settings.AccentForeground = ColorSelection;
+				break;
+			case "P3B":
+				Settings.AccentBackground = ColorSelection;
+				break;
+		}
 	}
 
 	public static void Concurrent(Action callback) => Application.Current.Dispatcher.Invoke(callback);
@@ -358,6 +387,32 @@ public static partial class Common
 		DisplayType.Index => $"Note #{record.Index + 1:N0} — {record.Preview}",
 		_ => record.Preview
 	};
+
+	public static uint HSVFromRGB(SolidColorBrush brush)
+	{
+		const double fInv = 1.0 / 255.0;
+		var (r_, g_, b_) = (brush.Color.R * fInv, brush.Color.G * fInv, brush.Color.B * fInv);
+		var Cmax = Math.Max(r_, Math.Max(g_, b_));
+		var Cmin = Math.Min(r_, Math.Min(g_, b_));
+		var delta = Cmax - Cmin;
+		var _h = 0.0;
+		var _s = Cmax == 0.0 ? 0.0 : (delta / Cmax);
+		var _v = Cmax;
+		if (delta != 0.0)
+		{
+			delta = 60.0 / delta;
+			if (Cmax == r_)
+				_h = delta * (g_ - b_) + 360.0;
+			if (Cmax == g_)
+				_h = delta * (b_ - r_) + 120.0;
+			if (Cmax == b_)
+				_h = delta * (r_ - g_) + 240.0;
+		}
+		var H = (uint)(_h % 360.0 * 0.7083333333);
+		var S = (uint)(_s * 255.0);
+		var V = (uint)(_v * 255.0);
+		return (H << 16) + (S << 8) + V;
+	}
 
 	public static int IntFromBytes(byte[] data) =>
 		(data[0] << 24)
