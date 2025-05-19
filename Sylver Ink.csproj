@@ -59,7 +59,6 @@
   
   <ItemGroup>
     <Folder Include="publish\" />
-    <Folder Include="publish\Framework\" />
   </ItemGroup>
   
   <ItemGroup>

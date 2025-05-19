@@ -34,10 +34,15 @@ public partial class SearchResult : Window, IDisposable
 		InitializeComponent();
 		DataContext = Common.Settings;
 
-		AutosaveThread = new();
-		AutosaveThread.DoWork += (_, _) =>
+		AutosaveThread = new()
+		{
+			WorkerSupportsCancellation = true
+		};
+		AutosaveThread.DoWork += (sender, _) =>
 		{
 			SpinWait.SpinUntil(new(() => DateTime.Now.Subtract(TimeSinceAutosave).Seconds >= 5.0));
+			if (((BackgroundWorker?)sender)?.CancellationPending is true)
+				return;
 			Concurrent(SaveRecord);
 			Concurrent(Autosave);
 		};
@@ -53,6 +58,9 @@ public partial class SearchResult : Window, IDisposable
 
 	private void CloseClick(object sender, RoutedEventArgs e)
 	{
+		if (AutosaveThread?.IsBusy is true)
+			AutosaveThread?.CancelAsync();
+
 		if (Edited)
 		{
 			switch(MessageBox.Show("You have unsaved changes. Save before closing this note?", "Sylver Ink: Notification", MessageBoxButton.YesNoCancel, MessageBoxImage.Question))
@@ -101,6 +109,9 @@ public partial class SearchResult : Window, IDisposable
 
 	private void Result_Closed(object sender, EventArgs e)
 	{
+		if (AutosaveThread?.IsBusy is true)
+			AutosaveThread?.CancelAsync();
+
 		if (Edited)
 			SaveRecord();
 
