@@ -47,7 +47,6 @@ public partial class Import : Window
 		AdaptiveCheckBox.IsEnabled = false;
 		CloseButton.IsEnabled = false;
 		DoImport.Content = "Importing...";
-		DoImport.IsEnabled = false;
 		LTPanel.IsEnabled = false;
 
 		BackgroundWorker worker = new();

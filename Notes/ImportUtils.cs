@@ -16,6 +16,7 @@ public static class ImportUtils
 	private static int Imported;
 	private static double RunningAverage;
 	private static int RunningCount;
+	private static string Target = string.Empty;
 
 	private static void FinishImport()
 	{
@@ -30,7 +31,8 @@ public static class ImportUtils
 	{
 		try
 		{
-			Concurrent(PerformImport);
+			Common.Settings.ImportTarget = string.Empty;
+			PerformImport();
 			Concurrent(FinishImport);
 		}
 		catch (Exception ex)
@@ -63,6 +65,7 @@ public static class ImportUtils
 		if (!ReadFromStream(Common.Settings.ImportTarget))
 		{
 			Common.Settings.ImportTarget = string.Empty;
+			Target = string.Empty;
 			return false;
 		}
 
@@ -247,6 +250,7 @@ public static class ImportUtils
 	private static void PerformImport()
 	{
 		int blankCount = 0;
+		DelayVisualUpdates = true;
 		Imported = 0;
 		string recordData = string.Empty;
 
@@ -283,11 +287,13 @@ public static class ImportUtils
 			blankCount = 0;
 		}
 
-		if (!recordData.Equals(string.Empty))
+		if (!string.IsNullOrWhiteSpace(recordData))
 		{
 			CurrentDatabase.CreateRecord(recordData);
 			Imported++;
 		}
+
+		DelayVisualUpdates = false;
 	}
 
 	private static bool ReadFromStream(string filename)

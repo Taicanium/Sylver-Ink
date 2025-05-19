@@ -57,6 +57,7 @@ public static partial class Common
 	public static ObservableCollection<Database> Databases { get; set; } = [];
 	public static string DateFormat { get; } = "yyyy-MM-dd HH:mm:ss";
 	public static string DefaultDatabase { get; } = "New";
+	public static bool DelayVisualUpdates { get; set; } = false;
 	public static string DocumentsFolder { get; } = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Sylver Ink");
 	public static bool FirstRun { get; set; } = true;
 	public static int HighestFormat { get; } = 10;
@@ -179,6 +180,9 @@ public static partial class Common
 	public static void DeferUpdateRecentNotes(bool RepeatUpdate = false)
 	{
 		if (!CanResize)
+			return;
+
+		if (DelayVisualUpdates)
 			return;
 
 		if (UpdateTask is null)
