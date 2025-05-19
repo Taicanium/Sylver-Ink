@@ -179,7 +179,7 @@ public class NoteTab
 				return;
 
 			var tag = ((uint, NoteRecord))NoteBox.Tag;
-			CurrentDatabase.DeleteRecord(tag.Item2);
+			Concurrent(() => CurrentDatabase.DeleteRecord(tag.Item2));
 			Deconstruct();
 			DeferUpdateRecentNotes();
 		};

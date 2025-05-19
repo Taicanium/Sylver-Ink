@@ -130,7 +130,6 @@ public partial class NoteRecord
 
 	public void Delete()
 	{
-		Document?.Blocks.Clear();
 		Index = 0;
 		Initial = string.Empty;
 		LastChange = DateTime.UtcNow.ToBinary();
