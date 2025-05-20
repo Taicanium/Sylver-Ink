@@ -307,12 +307,13 @@ public static partial class Common
 	{
 		try
 		{
-			return new TextRange(document.ContentStart, document.ContentEnd).Text;
+			if (document.IsInitialized)
+				return new TextRange(document.ContentStart, document.ContentEnd).Text;
+			return string.Empty;
 		}
-		catch // System.ExecutionEngineException - occurs rarely when resizing the window too quickly
+		catch
 		{
-			SpinWait.SpinUntil(new(() => false), 150);
-			return new TextRange(document.ContentStart, document.ContentEnd).Text;
+			return string.Empty;
 		}
 	}
 
@@ -595,7 +596,7 @@ public static partial class Common
 		while (RecentEntries < CurrentDatabase.RecordCount && TextHeight < WindowHeight)
 		{
 			var record = CurrentDatabase.GetRecord(RecentEntries);
-			record.Preview = $"{WindowWidth}";
+			Concurrent(() => record.Preview = $"{WindowWidth}");
 
 			RecentEntries++;
 			TextHeight += MeasureTextHeight(record.Preview) * 1.25;
