@@ -1,11 +1,13 @@
 ﻿using SylverInk.FileIO;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Markup;
+using System.Windows.Media;
 using static SylverInk.Common;
 
 namespace SylverInk.Notes;
@@ -54,12 +56,13 @@ public partial class NoteRecord
 
 			PreviewWidth = (int)Math.Round(double.Parse(value));
 
-			var width = MeasureTextWidth(PreviewText);
-			while (width > PreviewWidth)
+			var ft = new FormattedText(PreviewText, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, Common.Settings.MainTypeFace, Common.Settings.MainFontSize, Brushes.Black, PPD);
+
+			while (ft.Width > PreviewWidth)
 			{
 				PreviewText = PreviewText[..^1];
 				Dirty = true;
-				width = MeasureTextWidth(PreviewText);
+				ft = new(PreviewText, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, Common.Settings.MainTypeFace, Common.Settings.MainFontSize, Brushes.Black, PPD);
 			}
 
 			if (Dirty)

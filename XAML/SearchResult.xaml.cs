@@ -56,7 +56,14 @@ public partial class SearchResult : Window, IDisposable
 		Close();
 	}
 
-	private void CloseClick(object sender, RoutedEventArgs e)
+	private static void Autosave()
+	{
+		var lockFile = GetLockFile();
+		Erase(lockFile);
+		CurrentDatabase.Save(lockFile);
+	}
+
+	private void CloseClick(object? sender, RoutedEventArgs e)
 	{
 		if (AutosaveThread?.IsBusy is true)
 			AutosaveThread?.CancelAsync();
@@ -88,7 +95,7 @@ public partial class SearchResult : Window, IDisposable
 		GC.SuppressFinalize(this);
 	}
 
-	private void Drag(object sender, MouseEventArgs e)
+	private void Drag(object? sender, MouseEventArgs e)
 	{
 		if (!Dragging)
 			return;
@@ -107,7 +114,7 @@ public partial class SearchResult : Window, IDisposable
 		Top = newCoords.Y;
 	}
 
-	private void Result_Closed(object sender, EventArgs e)
+	private void Result_Closed(object? sender, EventArgs e)
 	{
 		if (AutosaveThread?.IsBusy is true)
 			AutosaveThread?.CancelAsync();
@@ -127,7 +134,7 @@ public partial class SearchResult : Window, IDisposable
 		}
 	}
 
-	private void Result_Loaded(object sender, RoutedEventArgs e)
+	private void Result_Loaded(object? sender, RoutedEventArgs e)
 	{
 		if (ResultRecord?.Locked is true)
 		{
@@ -164,7 +171,7 @@ public partial class SearchResult : Window, IDisposable
 		}
 	}
 
-	private void ResultBlock_TextChanged(object sender, TextChangedEventArgs e)
+	private void ResultBlock_TextChanged(object? sender, TextChangedEventArgs e)
 	{
 		var plainText = FlowDocumentToPlaintext(ResultBlock.Document);
 		Edited = !plainText.Equals(ResultRecord?.ToString());
@@ -276,29 +283,29 @@ public partial class SearchResult : Window, IDisposable
 		return Coords;
 	}
 
-	private void ViewClick(object sender, RoutedEventArgs e)
+	private void ViewClick(object? sender, RoutedEventArgs e)
 	{
 		SearchWindow?.Close();
 		AddTabToRibbon();
 	}
 
-	private void WindowActivated(object sender, EventArgs e)
+	private void WindowActivated(object? sender, EventArgs e)
 	{
 		CloseButton.IsEnabled = true;
 		Opacity = 1.0;
 		ViewButton.IsEnabled = true;
 	}
 
-	private void WindowDeactivated(object sender, EventArgs e)
+	private void WindowDeactivated(object? sender, EventArgs e)
 	{
 		CloseButton.IsEnabled = false;
 		Opacity = 1.0 - (Common.Settings.NoteTransparency / 100.0);
 		ViewButton.IsEnabled = false;
 	}
 
-	private void WindowMove(object sender, MouseEventArgs e) => Drag(sender, e);
+	private void WindowMove(object? sender, MouseEventArgs e) => Drag(sender, e);
 
-	private void WindowMouseDown(object sender, MouseButtonEventArgs e)
+	private void WindowMouseDown(object? sender, MouseButtonEventArgs e)
 	{
 		var n = PointToScreen(e.GetPosition(null));
 		CaptureMouse();
@@ -306,7 +313,7 @@ public partial class SearchResult : Window, IDisposable
 		Dragging = true;
 	}
 
-	private void WindowMouseUp(object sender, MouseButtonEventArgs e)
+	private void WindowMouseUp(object? sender, MouseButtonEventArgs e)
 	{
 		ReleaseMouseCapture();
 		DragMouseCoords = new(0, 0);

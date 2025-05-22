@@ -18,7 +18,7 @@ public partial class Import : Window
 		Common.Settings.ReadyToFinalize = false;
 	}
 
-	private void AdaptiveChecked(object sender, RoutedEventArgs e)
+	private void AdaptiveChecked(object? sender, RoutedEventArgs e)
 	{
 		AdaptiveCheckBox.IsEnabled = false;
 		CloseButton.IsEnabled = false;
@@ -38,11 +38,11 @@ public partial class Import : Window
 		worker.RunWorkerAsync();
 	}
 
-	private void CloseClick(object sender, RoutedEventArgs e) => Close();
+	private void CloseClick(object? sender, RoutedEventArgs e) => Close();
 
-	private void Drag(object sender, MouseButtonEventArgs e) => DragMove();
+	private void Drag(object? sender, MouseButtonEventArgs e) => DragMove();
 
-	private void Finalize_Click(object sender, RoutedEventArgs e)
+	private void Finalize_Click(object? sender, RoutedEventArgs e)
 	{
 		AdaptiveCheckBox.IsEnabled = false;
 		CloseButton.IsEnabled = false;

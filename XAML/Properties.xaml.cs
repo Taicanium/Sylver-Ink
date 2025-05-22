@@ -37,11 +37,11 @@ public partial class Properties : Window
 			TimeSelector.IsOpen = false;
 	}
 
-	private void CloseClick(object sender, RoutedEventArgs e) => Close();
+	private void CloseClick(object? sender, RoutedEventArgs e) => Close();
 
-	private void Drag(object sender, MouseButtonEventArgs e) => DragMove();
+	private void Drag(object? sender, MouseButtonEventArgs e) => DragMove();
 
-	private void Hour_Selected(object sender, RoutedEventArgs e)
+	private void Hour_Selected(object? sender, RoutedEventArgs e)
 	{
 		HourSelected = true;
 		ApplyTime();
@@ -72,13 +72,13 @@ public partial class Properties : Window
 		DBTotalLabel.Content = $"{noteTotal:N0} characters";
 	}
 
-	private void Minute_Selected(object sender, RoutedEventArgs e)
+	private void Minute_Selected(object? sender, RoutedEventArgs e)
 	{
 		MinuteSelected = true;
 		ApplyTime();
 	}
 
-	private void Properties_Loaded(object sender, RoutedEventArgs e)
+	private void Properties_Loaded(object? sender, RoutedEventArgs e)
 	{
 		InitializeProperties();
 
@@ -92,7 +92,7 @@ public partial class Properties : Window
 		Minute.SelectedIndex = 0;
 	}
 
-	private void RestoreClick(object sender, RoutedEventArgs e)
+	private void RestoreClick(object? sender, RoutedEventArgs e)
 	{
 		if (ReversionDate.SelectedDate is null)
 			return;
@@ -112,9 +112,9 @@ public partial class Properties : Window
 		InitializeProperties();
 	}
 
-	private void SelectedDateChanged(object sender, SelectionChangedEventArgs e) => RestoreButton.IsEnabled = ReversionDate.SelectedDate is not null;
+	private void SelectedDateChanged(object? sender, SelectionChangedEventArgs e) => RestoreButton.IsEnabled = ReversionDate.SelectedDate is not null;
 
-	private void SelectTime(object sender, RoutedEventArgs e)
+	private void SelectTime(object? sender, RoutedEventArgs e)
 	{
 		TimeSelector.IsOpen = true;
 		HourSelected = false;

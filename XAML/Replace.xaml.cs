@@ -23,9 +23,9 @@ public partial class Replace : Window
 		Common.Settings.NumReplacements = string.Empty;
 	}
 
-	private void CloseClick(object sender, RoutedEventArgs e) => Close();
+	private void CloseClick(object? sender, RoutedEventArgs e) => Close();
 
-	private void Drag(object sender, MouseButtonEventArgs e) => DragMove();
+	private void Drag(object? sender, MouseButtonEventArgs e) => DragMove();
 
 	private void FinishReplace(object? sender, RunWorkerCompletedEventArgs e)
 	{
@@ -38,11 +38,14 @@ public partial class Replace : Window
 
 	private void PerformReplace(object? sender, DoWorkEventArgs e) => _counts = CurrentDatabase.Replace(_oldText, _newText);
 
-	private void ReplaceTextChanged(object sender, TextChangedEventArgs e) => Common.Settings.ReadyToReplace = !string.IsNullOrWhiteSpace(OldText.Text);
+	private void ReplaceTextChanged(object? sender, TextChangedEventArgs e) => Common.Settings.ReadyToReplace = !string.IsNullOrWhiteSpace(OldText.Text);
 
-	private void Replace_Click(object sender, RoutedEventArgs e)
+	private void Replace_Click(object? sender, RoutedEventArgs e)
 	{
-		var button = (Button)sender;
+		var button = (Button?)sender;
+		if (button is null)
+			return;
+
 		button.Content = "Replacing...";
 		button.IsEnabled = false;
 

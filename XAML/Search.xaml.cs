@@ -30,9 +30,9 @@ public partial class Search : Window
 		DataContext = Common.Settings;
 	}
 
-	private void CloseClick(object sender, RoutedEventArgs e) => Close();
+	private void CloseClick(object? sender, RoutedEventArgs e) => Close();
 
-	private void Drag(object sender, MouseButtonEventArgs e) => DragMove();
+	private void Drag(object? sender, MouseButtonEventArgs e) => DragMove();
 
 	private void FinishSearch(object? sender, RunWorkerCompletedEventArgs e)
 	{
@@ -45,12 +45,12 @@ public partial class Search : Window
 		DoQuery.IsEnabled = true;
 	}
 
-	private void NoteDelete(object sender, RoutedEventArgs e)
+	private void NoteDelete(object? sender, RoutedEventArgs e)
 	{
-		var item = (MenuItem)sender;
-		var menu = (ContextMenu)item.Parent;
+		var item = (MenuItem?)sender;
+		var menu = (ContextMenu?)item?.Parent;
 		int index;
-		if (menu.DataContext.GetType() == typeof(NoteRecord))
+		if (menu?.DataContext.GetType() == typeof(NoteRecord))
 		{
 			var record = (NoteRecord)menu.DataContext;
 			index = record.Index;
@@ -63,11 +63,11 @@ public partial class Search : Window
 		Results.Items.Refresh();
 	}
 
-	private void NoteOpen(object sender, RoutedEventArgs e)
+	private void NoteOpen(object? sender, RoutedEventArgs e)
 	{
-		var item = (MenuItem)sender;
-		var menu = (ContextMenu)item.Parent;
-		SearchResult result = menu.DataContext.GetType() == typeof(NoteRecord) ? OpenQuery((NoteRecord)menu.DataContext, false) : OpenQuery(_recentSelection, false);
+		var item = (MenuItem?)sender;
+		var menu = (ContextMenu?)item?.Parent;
+		SearchResult result = menu?.DataContext.GetType() == typeof(NoteRecord) ? OpenQuery((NoteRecord)menu.DataContext, false) : OpenQuery(_recentSelection, false);
 		result.AddTabToRibbon();
 	}
 
@@ -114,9 +114,12 @@ public partial class Search : Window
 		_results.Sort(new Comparison<NoteRecord>((r1, r2) => r2.MatchTags(_query).CompareTo(r1.MatchTags(_query))));
 	}
 
-	private void QueryClick(object sender, RoutedEventArgs e)
+	private void QueryClick(object? sender, RoutedEventArgs e)
 	{
-		var button = (Button)sender;
+		var button = (Button?)sender;
+		if (button is null)
+			return;
+
 		button.Content = "Querying...";
 		button.IsEnabled = false;
 
@@ -130,19 +133,22 @@ public partial class Search : Window
 		queryTask.RunWorkerAsync();
 	}
 
-	private void SublistChanged(object sender, RoutedEventArgs e)
+	private void SublistChanged(object? sender, RoutedEventArgs e)
 	{
-		var box = (ListBox)sender;
+		var box = (ListBox?)sender;
+		if (box is null)
+			return;
+
 		_recentSelection = (NoteRecord)box.SelectedItem;
 	}
 
-	private void SublistOpen(object sender, RoutedEventArgs e)
+	private void SublistOpen(object? sender, RoutedEventArgs e)
 	{
 		if (Mouse.RightButton == MouseButtonState.Pressed)
 			return;
 
-		var box = (ListBox)sender;
-		if (box.SelectedItem is null)
+		var box = (ListBox?)sender;
+		if (box?.SelectedItem is null)
 			return;
 
 		OpenQuery(_recentSelection);

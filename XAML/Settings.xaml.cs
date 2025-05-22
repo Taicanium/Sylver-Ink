@@ -27,23 +27,51 @@ public partial class Settings : Window
 		DataContext = Common.Settings;
 	}
 
-	private void CloseClick(object sender, RoutedEventArgs e) => Close();
+	private void CloseClick(object? sender, RoutedEventArgs e) => Close();
 
-	private void ColorPopup(object sender, RoutedEventArgs e)
+	private static void ColorChanged(string? ColorTag, Brush ColorSelection)
 	{
-		var button = (Button)sender;
-		ColorTag = (string)button.Tag;
+		if (ColorTag is null)
+			return;
+
+		switch (ColorTag)
+		{
+			case "P1F":
+				Common.Settings.MenuForeground = ColorSelection;
+				break;
+			case "P1B":
+				Common.Settings.MenuBackground = ColorSelection;
+				break;
+			case "P2F":
+				Common.Settings.ListForeground = ColorSelection;
+				break;
+			case "P2B":
+				Common.Settings.ListBackground = ColorSelection;
+				break;
+			case "P3F":
+				Common.Settings.AccentForeground = ColorSelection;
+				break;
+			case "P3B":
+				Common.Settings.AccentBackground = ColorSelection;
+				break;
+		}
+	}
+
+	private void ColorPopup(object? sender, RoutedEventArgs e)
+	{
+		var button = (Button?)sender;
+		ColorTag = (string?)button?.Tag;
 		ColorSelection.IsOpen = true;
 	}
 
-	private void CustomColorFinished(object sender, EventArgs e)
+	private void CustomColorFinished(object? sender, EventArgs e)
 	{
 		if (LastColorSelection is null)
 			return;
 		ColorChanged(ColorTag, LastColorSelection);
 	}
 
-	private void CustomColorOpened(object sender, EventArgs e)
+	private void CustomColorOpened(object? sender, EventArgs e)
 	{
 		Brush? color = ColorTag switch
 		{
@@ -59,13 +87,39 @@ public partial class Settings : Window
 		CustomColorBox.Text = BytesFromBrush(color, 3);
 	}
 
-	private void Drag(object sender, MouseButtonEventArgs e) => DragMove();
+	private void Drag(object? sender, MouseButtonEventArgs e) => DragMove();
 
-	private void FontSizeChanged(object sender, RoutedEventArgs e)
+	private void FontSizeChanged(object? sender, RoutedEventArgs e)
 	{
-		var button = (Button)sender;
-		Common.Settings.MainFontSize += button.Content.Equals("-") ? -0.5 : 0.5;
+		var button = (Button?)sender;
+		Common.Settings.MainFontSize += button?.Content.Equals("-") is true ? -0.5 : 0.5;
 		DeferUpdateRecentNotes();
+	}
+
+	private static uint HSVFromRGB(SolidColorBrush brush)
+	{
+		const double fInv = 1.0 / 255.0;
+		var (r_, g_, b_) = (brush.Color.R * fInv, brush.Color.G * fInv, brush.Color.B * fInv);
+		var Cmax = Math.Max(r_, Math.Max(g_, b_));
+		var Cmin = Math.Min(r_, Math.Min(g_, b_));
+		var delta = Cmax - Cmin;
+		var _h = 0.0;
+		var _s = Cmax == 0.0 ? 0.0 : (delta / Cmax);
+		var _v = Cmax;
+		if (delta != 0.0)
+		{
+			delta = 60.0 / delta;
+			if (Cmax == r_)
+				_h = delta * (g_ - b_) + 360.0;
+			if (Cmax == g_)
+				_h = delta * (b_ - r_) + 120.0;
+			if (Cmax == b_)
+				_h = delta * (r_ - g_) + 240.0;
+		}
+		var H = (uint)(_h % 360.0 * 0.7083333333);
+		var S = (uint)(_s * 255.0);
+		var V = (uint)(_v * 255.0);
+		return (H << 16) + (S << 8) + V;
 	}
 
 	private void InitBrushes()
@@ -204,16 +258,19 @@ public partial class Settings : Window
 			MenuFont.SelectedIndex = ArialIndex;
 	}
 
-	private void MenuFontChanged(object sender, SelectionChangedEventArgs e)
+	private void MenuFontChanged(object? sender, SelectionChangedEventArgs e)
 	{
 		var item = (ComboBoxItem)MenuFont.SelectedItem;
 		Common.Settings.MainFontFamily = item.FontFamily;
 		DeferUpdateRecentNotes();
 	}
 
-	private void NewCustomColor(object sender, TextChangedEventArgs e)
+	private void NewCustomColor(object? sender, TextChangedEventArgs e)
 	{
-		var box = (TextBox)sender;
+		var box = (TextBox?)sender;
+		if (box is null)
+			return;
+
 		var text = box.Text.StartsWith('#') ? box.Text[1..] : box.Text;
 		var brush = BrushFromBytes(text);
 
@@ -221,7 +278,7 @@ public partial class Settings : Window
 		LastColorSelection = brush;
 	}
 
-	private void NTS_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+	private void NTS_ValueChanged(object? sender, RoutedPropertyChangedEventArgs<double> e)
 	{
 		foreach (SearchResult note in OpenQueries)
 			if (!note.IsActive)
@@ -230,7 +287,7 @@ public partial class Settings : Window
 		e.Handled = true;
 	}
 
-	private void ResetClick(object sender, RoutedEventArgs e)
+	private void ResetClick(object? sender, RoutedEventArgs e)
 	{
 		Common.Settings.AccentBackground = Brushes.PaleGoldenrod;
 		Common.Settings.AccentForeground = Brushes.Blue;
@@ -249,7 +306,7 @@ public partial class Settings : Window
 		DeferUpdateRecentNotes(true);
 	}
 
-	private void Settings_Loaded(object sender, RoutedEventArgs e)
+	private void Settings_Loaded(object? sender, RoutedEventArgs e)
 	{
 		InitColorGrid();
 
@@ -268,24 +325,25 @@ public partial class Settings : Window
 					SortBox.SelectedItem = item;
 	}
 
-	private void SortRibbonChanged(object sender, SelectionChangedEventArgs e)
+	private void SortRibbonChanged(object? sender, SelectionChangedEventArgs e)
 	{
-		var box = (ComboBox)sender;
-		var item = (ComboBoxItem)box.SelectedItem;
+		var box = (ComboBox?)sender;
+		var item = (ComboBoxItem?)box?.SelectedItem;
 
 		EnumConverter cv = new(typeof(SortType));
-		var tag = (SortType?)cv.ConvertFromString((string)item.Tag ?? "ByChange") ?? SortType.ByChange;
+		var tag = (SortType?)cv.ConvertFromString((string?)item?.Tag ?? "ByChange") ?? SortType.ByChange;
 
-		UpdateRecentNotesSorting(tag);
+		RecentEntriesSortMode = tag;
+		DeferUpdateRecentNotes(true);
 	}
 
-	private void StickyRibbonChanged(object sender, SelectionChangedEventArgs e)
+	private void StickyRibbonChanged(object? sender, SelectionChangedEventArgs e)
 	{
-		var box = (ComboBox)sender;
-		var item = (ComboBoxItem)box.SelectedItem;
+		var box = (ComboBox?)sender;
+		var item = (ComboBoxItem?)box?.SelectedItem;
 
 		EnumConverter ev = new(typeof(DisplayType));
-		var tag = (DisplayType?)ev.ConvertFromString((string)item.Tag ?? "Content");
+		var tag = (DisplayType?)ev.ConvertFromString((string?)item?.Tag ?? "Content");
 
 		UpdateRibbonTabs(tag ?? DisplayType.Content);
 	}
