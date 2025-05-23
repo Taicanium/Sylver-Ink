@@ -82,7 +82,7 @@ public partial class Search : Window
 			if (newRecord is null)
 				continue;
 
-			FlowDocument document = (FlowDocument)XamlReader.Parse(newRecord.ToXaml());
+			var document = (FlowDocument)XamlReader.Parse(newRecord.ToXaml());
 			TextPointer? pointer = document.ContentStart;
 			bool textFound = false;
 			while (pointer is not null && pointer.GetPointerContext(LogicalDirection.Forward) != TextPointerContext.None)

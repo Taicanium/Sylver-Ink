@@ -84,7 +84,7 @@ public partial class NoteController : IDisposable
 	public int CreateRecord(string entry)
 	{
 		int Index = NextIndex;
-		string RecordText = XamlWriter.Save(PlaintextToFlowDocument(entry));
+		var RecordText = XamlWriter.Save(PlaintextToFlowDocument(entry));
 		Records.Add(new(Index, RecordText));
 		Changed = true;
 		return Index;
@@ -292,7 +292,7 @@ public partial class NoteController : IDisposable
 				if (record.Equals(OpenQueries[i].ResultRecord))
 					Concurrent(OpenQueries[i].Close);
 
-			FlowDocument document = (FlowDocument)XamlReader.Parse(recordText);
+			var document = (FlowDocument)XamlReader.Parse(recordText);
 			TextPointer? pointer = document.ContentStart;
 			while (pointer is not null && pointer.GetPointerContext(LogicalDirection.Forward) != TextPointerContext.None)
 			{

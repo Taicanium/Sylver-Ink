@@ -16,7 +16,13 @@ public static class ImportUtils
 	private static int Imported;
 	private static double RunningAverage;
 	private static int RunningCount;
-	private static string Target = string.Empty;
+
+	private static void AppendLine(ref string RecordData, string Line, int LineIndex)
+	{
+		if (LineIndex > 0)
+			RecordData += "\r\n";
+		RecordData += Line;
+	}
 
 	private static void FinishImport()
 	{
@@ -65,7 +71,6 @@ public static class ImportUtils
 		if (!ReadFromStream(Common.Settings.ImportTarget))
 		{
 			Common.Settings.ImportTarget = string.Empty;
-			Target = string.Empty;
 			return false;
 		}
 
@@ -184,7 +189,7 @@ public static class ImportUtils
 					recordData = line;
 				}
 				else
-					recordData += "\r\n" + line;
+					AppendLine(ref recordData, line, i);
 			}
 
 			RunningAverage /= RunningCount;
@@ -215,7 +220,7 @@ public static class ImportUtils
 			for (int i = 0; i < DataLines.Count; i++)
 			{
 				var line = DataLines[i];
-				recordData += line + "\r\n";
+				AppendLine(ref recordData, line, i);
 
 				if (line.Trim().Length == 0)
 					blankCount++;
@@ -266,11 +271,11 @@ public static class ImportUtils
 					Imported++;
 					recordData = string.Empty;
 				}
-				recordData += line + "\r\n";
+				AppendLine(ref recordData, line, i);
 				continue;
 			}
 
-			recordData += line + "\r\n";
+			AppendLine(ref recordData, line, i);
 			if (line.Length == 0)
 				blankCount++;
 			else

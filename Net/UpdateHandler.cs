@@ -23,8 +23,7 @@ static class UpdateHandler
 		if (assemblyVersion is null)
 			return;
 
-		var currentExe = Process.GetCurrentProcess().MainModule?.FileName;
-		if (currentExe is null)
+		if (Process.GetCurrentProcess().MainModule?.FileName is null)
 			return;
 
 		try
@@ -33,22 +32,25 @@ static class UpdateHandler
 			if (!httpClient.DefaultRequestHeaders.UserAgent.TryParseAdd("request"))
 				return;
 
-			string response = await httpClient.GetStringAsync(GitReleasesURI);
-			var release = JsonSerializer.Deserialize<JsonArray>(response)?[0]?.AsObject();
+			var release = JsonSerializer.Deserialize<JsonArray>(await httpClient.GetStringAsync(GitReleasesURI))?[0]?.AsObject();
 			if (release is null)
 				return;
-			if (!release.ContainsKey("tag_name") || !release.ContainsKey("assets"))
+
+			if (!release.TryGetPropertyValue("tag_name", out var releaseNode) || !release.TryGetPropertyValue("assets", out var assetNode))
 				return;
 
-			var assetArray = release["assets"]?.AsArray();
-			if (assetArray is null)
-				return;
-
-			var releaseString = release["tag_name"]?.ToString() ?? string.Empty;
+			var releaseString = releaseNode?.ToString() ?? "0.0.0";
 			if (releaseString.StartsWith('v'))
 				releaseString = releaseString[1..];
-			while (releaseString.AsSpan().Count('.') < 2)
+			if (releaseString.AsSpan().Count('.') < 2)
 				releaseString += ".0";
+
+			if (!Version.TryParse(releaseString, out var releaseVersion) || releaseVersion.CompareTo(assemblyVersion) < 1)
+				return;
+
+			var assetArray = assetNode?.AsArray();
+			if (assetArray is null)
+				return;
 
 			string? uriNode = null;
 
@@ -68,10 +70,6 @@ static class UpdateHandler
 			}
 
 			if (uriNode is null)
-				return;
-
-			var releaseVersion = Version.Parse(releaseString);
-			if (releaseVersion.CompareTo(assemblyVersion) <= 0)
 				return;
 
 			if (MessageBox.Show($"A new update is available ({assemblyVersion.ToString(3)} → {releaseString}). Would you like to install it now?", "Sylver Ink: Notification", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.No)
