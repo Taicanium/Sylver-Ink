@@ -118,13 +118,17 @@ public partial class Search : Window
 		if (Mouse.RightButton == MouseButtonState.Pressed)
 			return;
 
-		var box = (ListBox?)sender;
+		var box = (TextBlock?)sender;
 		if (box is null)
 			return;
 
-		var _record = (NoteRecord)box.SelectedItem;
-		if (_record is null)
+		if (box.DataContext is null)
 			return;
+
+		if (box.DataContext is not NoteRecord)
+			return;
+
+		var _record = (NoteRecord)box.DataContext;
 
 		if (_dbMatches.TryGetValue(_record, out var _db))
 		{

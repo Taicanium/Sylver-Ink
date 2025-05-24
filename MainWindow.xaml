@@ -39,19 +39,23 @@
 											<ColumnDefinition Width="Auto"/>
 											<ColumnDefinition Width="*"/>
 										</Grid.ColumnDefinitions>
-										<ListBox AlternationCount="2" BorderThickness="0" HorizontalContentAlignment="Right" ItemsSource="{Binding RecentNotes}" Margin="0,0,1,0" MinWidth="60" SelectionChanged="Menu_SublistChanged"
- ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled" x:Name="ShortChanges">
+										<ListBox AlternationCount="2" BorderThickness="0" HorizontalContentAlignment="Right" ItemsSource="{Binding RecentNotes}" Margin="0,0,1,0" MinWidth="60" MouseUp="Menu_SublistChanged"
+												 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+												 ScrollViewer.VerticalScrollBarVisibility="Disabled"
+												 x:Name="ShortChanges">
 											<ListBox.ItemTemplate>
 												<DataTemplate>
-													<TextBlock HorizontalAlignment="Right" Text="{Binding Path=ShortChange}"/>
+													<TextBlock HorizontalAlignment="Right" MouseUp="Menu_SublistChanged" Text="{Binding Path=ShortChange}"/>
 												</DataTemplate>
 											</ListBox.ItemTemplate>
 										</ListBox>
-										<ListBox AlternationCount="2" BorderThickness="0" Grid.Column="1" ItemsSource="{Binding RecentNotes}" Margin="1,0,0,0" SelectionChanged="Menu_SublistChanged"
- ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled" x:Name="RecentNotes">
+										<ListBox AlternationCount="2" BorderThickness="0" Grid.Column="1" ItemsSource="{Binding RecentNotes}" Margin="1,0,0,0"
+												 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+												 ScrollViewer.VerticalScrollBarVisibility="Disabled"
+												 x:Name="RecentNotes">
 											<ListBox.ItemTemplate>
 												<DataTemplate>
-													<TextBlock Text="{Binding Path=Preview}"/>
+													<TextBlock MouseUp="Menu_SublistChanged" Text="{Binding Path=Preview}"/>
 												</DataTemplate>
 											</ListBox.ItemTemplate>
 										</ListBox>

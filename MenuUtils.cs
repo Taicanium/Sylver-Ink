@@ -128,16 +128,18 @@ namespace SylverInk
 			if (Mouse.RightButton == MouseButtonState.Pressed)
 				return;
 
-			var box = (ListBox?)sender;
-			if (box?.SelectedItem is null)
+			var box = (TextBlock?)sender;
+			if (box is null)
 				return;
 
-			var grid = (Grid)box.Parent;
-			RecentSelection = (NoteRecord)box.SelectedItem;
+			if (box.DataContext is null)
+				return;
 
-			foreach (ListBox item in grid.Children)
-				item.SelectedIndex = box.SelectedIndex;
+			if (box.DataContext is not NoteRecord)
+				return;
 
+			var record = (NoteRecord)box.DataContext;
+			RecentSelection = record;
 			OpenQuery(RecentSelection);
 		}
 

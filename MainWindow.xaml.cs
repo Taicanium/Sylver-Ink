@@ -240,7 +240,7 @@ public partial class MainWindow : Window
 					Erase(GetLockFile(db.DBFile));
 
 				BackgroundWorker exitTask = new();
-				exitTask.DoWork += SaveDatabases;
+				exitTask.DoWork += (_, _) => SaveDatabases();
 				exitTask.RunWorkerCompleted += ExitComplete;
 				exitTask.RunWorkerAsync();
 				return;
@@ -321,12 +321,6 @@ public partial class MainWindow : Window
 	{
 		RegisterHotKey(hWndHelper.Handle, NewNoteHotKeyID, 2, (uint)KeyInterop.VirtualKeyFromKey(Key.N));
 		RegisterHotKey(hWndHelper.Handle, PreviousNoteHotKeyID, 2, (uint)KeyInterop.VirtualKeyFromKey(Key.L));
-	}
-
-	private void SaveDatabases(object? sender, DoWorkEventArgs e)
-	{
-		foreach (Database db in Databases)
-			db.Save();
 	}
 
 	private void UnregisterHotKeys()

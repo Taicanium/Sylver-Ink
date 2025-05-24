@@ -394,8 +394,14 @@ public static partial class Common
 		var tagDB = (Database)((TabItem)control.SelectedItem).Tag;
 
 		foreach (SearchResult result in OpenQueries)
+		{
 			if (result.ResultDatabase?.Equals(tagDB) is true && result.ResultRecord?.Equals(record) is true)
+			{
+				result.Activate();
+				result.Focus();
 				return result;
+			}
+		}
 		
 		SearchResult resultWindow = new()
 		{
@@ -409,6 +415,8 @@ public static partial class Common
 			resultWindow.Show();
 			OpenQueries.Add(resultWindow);
 		}
+
+		DeferUpdateRecentNotes(true);
 
 		return resultWindow;
 	}
@@ -480,6 +488,12 @@ public static partial class Common
 		control.SelectedIndex = Math.Max(0, Math.Min(control.Items.Count - 1, control.SelectedIndex));
 
 		UpdateDatabaseMenu();
+	}
+
+	public static void SaveDatabases()
+	{
+		foreach (Database db in Databases)
+			db.Save();
 	}
 
 	public static void SwitchDatabase(Database db)

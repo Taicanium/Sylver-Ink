@@ -24,10 +24,10 @@
 				<Button Click="CloseClick" Grid.Column="1" Content="Close"/>
 			</Grid>
 		</StackPanel>
-		<ListBox AlternationCount="2" ItemsSource="{Binding SearchResults}" Margin="20,0,20,20" SelectionChanged="SublistChanged" Grid.Row="1" x:Name="Results">
+		<ListBox AlternationCount="2" ItemsSource="{Binding SearchResults}" Margin="20,0,20,20" Grid.Row="1" x:Name="Results">
 			<ListBox.ItemTemplate>
 				<DataTemplate>
-					<TextBlock Text="{Binding Path=Preview}"/>
+					<TextBlock MouseUp="SublistChanged" Text="{Binding Path=Preview}"/>
 				</DataTemplate>
 			</ListBox.ItemTemplate>
 		</ListBox>
