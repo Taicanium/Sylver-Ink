@@ -7,14 +7,6 @@
 		mc:Ignorable="d"
 		d:DataContext="{d:DesignInstance Type=local:ContextSettings}"
 		Background="{Binding MenuBackground}" Foreground="{Binding MenuForeground}" Height="525" MinHeight="275" MinWidth="350" MouseLeftButtonDown="Drag" ResizeMode="NoResize" Title="Sylver Ink: Search" Width="350">
-	<Window.Resources>
-		<ContextMenu x:Key="NoteContextMenu">
-			<MenuItem Header="Note" Focusable="False" IsEnabled="False"/>
-			<Separator Focusable="False" Margin="0,5"/>
-			<MenuItem Header="Delete" Click="NoteDelete"/>
-			<MenuItem Header="Open..." Click="NoteOpen"/>
-		</ContextMenu>
-	</Window.Resources>
 	<Grid>
 		<Grid.RowDefinitions>
 			<RowDefinition Height="150"/>
@@ -32,7 +24,7 @@
 				<Button Click="CloseClick" Grid.Column="1" Content="Close"/>
 			</Grid>
 		</StackPanel>
-		<ListBox AlternationCount="2" ContextMenu="{StaticResource NoteContextMenu}" ItemsSource="{Binding SearchResults}" Margin="20,0,20,20" MouseDoubleClick="SublistOpen" SelectionChanged="SublistChanged" Grid.Row="1" x:Name="Results">
+		<ListBox AlternationCount="2" ItemsSource="{Binding SearchResults}" Margin="20,0,20,20" SelectionChanged="SublistChanged" Grid.Row="1" x:Name="Results">
 			<ListBox.ItemTemplate>
 				<DataTemplate>
 					<TextBlock Text="{Binding Path=Preview}"/>

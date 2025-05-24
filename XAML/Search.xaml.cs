@@ -17,8 +17,8 @@ namespace SylverInk;
 /// </summary>
 public partial class Search : Window
 {
+	private readonly Dictionary<NoteRecord, Database> _dbMatches = [];
 	private string _query = string.Empty;
-	private NoteRecord _recentSelection = new();
 	private readonly List<NoteRecord> _results = [];
 	private string _width = string.Empty;
 
@@ -45,70 +45,50 @@ public partial class Search : Window
 		DoQuery.IsEnabled = true;
 	}
 
-	private void NoteDelete(object? sender, RoutedEventArgs e)
-	{
-		var item = (MenuItem?)sender;
-		var menu = (ContextMenu?)item?.Parent;
-		int index;
-		if (menu?.DataContext.GetType() == typeof(NoteRecord))
-		{
-			var record = (NoteRecord)menu.DataContext;
-			index = record.Index;
-		}
-		else
-			index = _recentSelection.Index;
-
-		Common.Settings.SearchResults.RemoveAt(Common.Settings.SearchResults.ToList().FindIndex(result => result.Index == index));
-		CurrentDatabase.DeleteRecord(index);
-		Results.Items.Refresh();
-	}
-
-	private void NoteOpen(object? sender, RoutedEventArgs e)
-	{
-		var item = (MenuItem?)sender;
-		var menu = (ContextMenu?)item?.Parent;
-		SearchResult result = menu?.DataContext.GetType() == typeof(NoteRecord) ? OpenQuery((NoteRecord)menu.DataContext, false) : OpenQuery(_recentSelection, false);
-		result.AddTabToRibbon();
-	}
-
 	private void PerformSearch(object? sender, DoWorkEventArgs e)
 	{
-		CurrentDatabase.UpdateWordPercentages();
+		_dbMatches.Clear();
 
-		for (int i = 0; i < CurrentDatabase.RecordCount; i++)
+		foreach (Database db in Databases)
 		{
-			var newRecord = CurrentDatabase.GetRecord(i);
-			
-			if (newRecord is null)
-				continue;
+			db.UpdateWordPercentages();
 
-			var document = (FlowDocument)XamlReader.Parse(newRecord.ToXaml());
-			TextPointer? pointer = document.ContentStart;
-			bool textFound = false;
-			while (pointer is not null && pointer.GetPointerContext(LogicalDirection.Forward) != TextPointerContext.None)
+			for (int i = 0; i < db.RecordCount; i++)
 			{
-				while (pointer is not null && pointer.GetPointerContext(LogicalDirection.Forward) != TextPointerContext.Text)
-					pointer = pointer.GetNextContextPosition(LogicalDirection.Forward);
+				var newRecord = db.GetRecord(i);
 
-				if (pointer is null)
-					break;
+				if (newRecord is null)
+					continue;
 
-				string recordText = pointer.GetTextInRun(LogicalDirection.Forward);
-				if (recordText.Contains(_query, StringComparison.OrdinalIgnoreCase))
+				var document = (FlowDocument)XamlReader.Parse(newRecord.ToXaml());
+				TextPointer? pointer = document.ContentStart;
+				bool textFound = false;
+				while (pointer is not null && pointer.GetPointerContext(LogicalDirection.Forward) != TextPointerContext.None)
 				{
-					textFound = true;
-					break;
+					while (pointer is not null && pointer.GetPointerContext(LogicalDirection.Forward) != TextPointerContext.Text)
+						pointer = pointer.GetNextContextPosition(LogicalDirection.Forward);
+
+					if (pointer is null)
+						break;
+
+					string recordText = pointer.GetTextInRun(LogicalDirection.Forward);
+					if (recordText.Contains(_query, StringComparison.OrdinalIgnoreCase))
+					{
+						textFound = true;
+						break;
+					}
+
+					while (pointer.GetPointerContext(LogicalDirection.Forward) == TextPointerContext.Text)
+						pointer = pointer.GetNextContextPosition(LogicalDirection.Forward);
 				}
 
-				while (pointer.GetPointerContext(LogicalDirection.Forward) == TextPointerContext.Text)
-					pointer = pointer.GetNextContextPosition(LogicalDirection.Forward);
+				if (!textFound)
+					continue;
+
+				newRecord.Preview = _width;
+				_results.Add(newRecord);
+				_dbMatches.TryAdd(newRecord, db);
 			}
-
-			if (!textFound)
-				continue;
-
-			newRecord.Preview = _width;
-			_results.Add(newRecord);
 		}
 
 		_results.Sort(new Comparison<NoteRecord>((r1, r2) => r2.MatchTags(_query).CompareTo(r1.MatchTags(_query))));
@@ -135,23 +115,23 @@ public partial class Search : Window
 
 	private void SublistChanged(object? sender, RoutedEventArgs e)
 	{
-		var box = (ListBox?)sender;
-		if (box is null)
-			return;
-
-		_recentSelection = (NoteRecord)box.SelectedItem;
-	}
-
-	private void SublistOpen(object? sender, RoutedEventArgs e)
-	{
 		if (Mouse.RightButton == MouseButtonState.Pressed)
 			return;
 
 		var box = (ListBox?)sender;
-		if (box?.SelectedItem is null)
+		if (box is null)
 			return;
 
-		OpenQuery(_recentSelection);
-		box.SelectedItem = null;
+		var _record = (NoteRecord)box.SelectedItem;
+		if (_record is null)
+			return;
+
+		if (_dbMatches.TryGetValue(_record, out var _db))
+		{
+			OpenQuery(_db, _record);
+			return;
+		}
+
+		OpenQuery(_record);
 	}
 }

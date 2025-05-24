@@ -1,5 +1,6 @@
 ﻿using SylverInk.Net;
 using SylverInk.Notes;
+using SylverInk.XAMLUtils;
 using System;
 using System.ComponentModel;
 using System.Threading;
@@ -18,15 +19,15 @@ namespace SylverInk;
 public partial class SearchResult : Window, IDisposable
 {
 	private readonly BackgroundWorker? AutosaveThread;
-	private bool Dragging;
-	private Point DragMouseCoords = new(0, 0);
+	public bool Dragging;
+	public Point DragMouseCoords = new(0, 0);
 	private bool Edited;
 	private int OriginalRevisionCount = 0;
 	private string OriginalText = string.Empty;
 	public Database? ResultDatabase;
 	public NoteRecord? ResultRecord;
 	public string ResultText = string.Empty;
-	private readonly double SnapTolerance = 20.0;
+	public readonly double SnapTolerance = 20.0;
 	private DateTime TimeSinceAutosave = DateTime.Now;
 
 	public SearchResult()
@@ -38,29 +39,15 @@ public partial class SearchResult : Window, IDisposable
 		{
 			WorkerSupportsCancellation = true
 		};
+
 		AutosaveThread.DoWork += (sender, _) =>
 		{
 			SpinWait.SpinUntil(new(() => DateTime.Now.Subtract(TimeSinceAutosave).Seconds >= 5.0));
 			if (((BackgroundWorker?)sender)?.CancellationPending is true)
 				return;
-			Concurrent(SaveRecord);
-			Concurrent(Autosave);
+			Concurrent(this.SaveRecord);
+			Concurrent(this.Autosave);
 		};
-	}
-
-	public void AddTabToRibbon()
-	{
-		ResultText = XamlWriter.Save(ResultBlock.Document);
-		NoteTab newTab = new(ResultRecord ?? new(), ResultText);
-		newTab.Construct();
-		Close();
-	}
-
-	private static void Autosave()
-	{
-		var lockFile = GetLockFile();
-		Erase(lockFile);
-		CurrentDatabase.Save(lockFile);
 	}
 
 	private void CloseClick(object? sender, RoutedEventArgs e)
@@ -95,32 +82,13 @@ public partial class SearchResult : Window, IDisposable
 		GC.SuppressFinalize(this);
 	}
 
-	private void Drag(object? sender, MouseEventArgs e)
-	{
-		if (!Dragging)
-			return;
-
-		var mouse = PointToScreen(e.GetPosition(null));
-		var newCoords = new Point()
-		{
-			X = DragMouseCoords.X + mouse.X,
-			Y = DragMouseCoords.Y + mouse.Y
-		};
-
-		if (Common.Settings.SnapSearchResults)
-			Snap(ref newCoords);
-
-		Left = newCoords.X;
-		Top = newCoords.Y;
-	}
-
 	private void Result_Closed(object? sender, EventArgs e)
 	{
 		if (AutosaveThread?.IsBusy is true)
 			AutosaveThread?.CancelAsync();
 
 		if (Edited)
-			SaveRecord();
+			this.SaveRecord();
 
 		ResultDatabase?.Transmit(Network.MessageType.RecordUnlock, IntToBytes(ResultRecord?.Index ?? 0));
 
@@ -183,110 +151,10 @@ public partial class SearchResult : Window, IDisposable
 		AutosaveThread?.RunWorkerAsync();
 	}
 
-	private void SaveRecord()
-	{
-		if (ResultRecord is null)
-			return;
-
-		ResultText = XamlWriter.Save(ResultBlock.Document);
-		ResultDatabase?.CreateRevision(ResultRecord, ResultText);
-		LastChangedLabel.Content = ResultRecord?.GetLastChange();
-		DeferUpdateRecentNotes(true);
-	}
-
-	private Point Snap(ref Point Coords)
-	{
-		var Snapped = (false, false);
-
-		foreach (SearchResult other in OpenQueries)
-		{
-			if (Snapped.Item1 && Snapped.Item2)
-				return Coords;
-
-			if (other.ResultRecord == ResultRecord)
-				continue;
-
-			Point LT1 = new(Coords.X, Coords.Y);
-			Point RB1 = new(Coords.X + Width, Coords.Y + Height);
-			Point LT2 = new(other.Left, other.Top);
-			Point RB2 = new(other.Left + other.Width, other.Top + other.Height);
-
-			var dLR = Math.Abs(LT1.X - RB2.X);
-			var dRL = Math.Abs(RB1.X - LT2.X);
-			var dTB = Math.Abs(LT1.Y - RB2.Y);
-			var dBT = Math.Abs(RB1.Y - LT2.Y);
-
-			var dLL = Math.Abs(LT1.X - LT2.X);
-			var dRR = Math.Abs(RB1.X - RB2.X);
-			var dTT = Math.Abs(LT1.Y - LT2.Y);
-			var dBB = Math.Abs(RB1.Y - RB2.Y);
-
-			var XTolerance = (LT1.X >= LT2.X && LT1.X <= RB2.X)
-				|| (RB1.X >= LT2.X && RB1.X <= RB2.X)
-				|| (LT2.X >= LT1.X && LT2.X <= RB1.X)
-				|| (RB2.X >= LT1.X && RB2.X <= RB1.X);
-
-			var YTolerance = (LT1.Y >= LT2.Y && LT1.Y <= RB2.Y)
-				|| (RB1.Y >= LT2.Y && RB1.Y <= RB2.Y)
-				|| (LT2.Y >= LT1.Y && LT2.Y <= RB1.Y)
-				|| (RB2.Y >= LT1.Y && RB2.Y <= RB1.Y);
-
-			if (dLR < SnapTolerance && YTolerance && !Snapped.Item1)
-			{
-				Coords.X = RB2.X;
-				Snapped = (true, Snapped.Item2);
-			}
-
-			if (dRL < SnapTolerance && YTolerance && !Snapped.Item1)
-			{
-				Coords.X = LT2.X - Width;
-				Snapped = (true, Snapped.Item2);
-			}
-
-			if (dTB < SnapTolerance && XTolerance && !Snapped.Item2)
-			{
-				Coords.Y = RB2.Y;
-				Snapped = (Snapped.Item1, true);
-			}
-
-			if (dBT < SnapTolerance && XTolerance && !Snapped.Item2)
-			{
-				Coords.Y = LT2.Y - Height;
-				Snapped = (Snapped.Item1, true);
-			}
-
-			if (dLL < SnapTolerance && !Snapped.Item1 && Snapped.Item2)
-			{
-				Coords.X = LT2.X;
-				Snapped = (true, true);
-			}
-
-			if (dRR < SnapTolerance && !Snapped.Item1 && Snapped.Item2)
-			{
-				Coords.X = RB2.X - Width;
-				Snapped = (true, true);
-			}
-
-			if (dTT < SnapTolerance && Snapped.Item1 && !Snapped.Item2)
-			{
-				Coords.Y = LT2.Y;
-				Snapped = (true, true);
-			}
-
-			if (dBB < SnapTolerance && Snapped.Item1 && !Snapped.Item2)
-			{
-				Coords.Y = RB2.Y - Height;
-				Snapped = (true, true);
-			}
-		}
-
-		return Coords;
-	}
-
 	private void ViewClick(object? sender, RoutedEventArgs e)
 	{
 		SearchWindow?.Close();
-		AddTabToRibbon();
+		this.AddTabToRibbon();
 	}
 
 	private void WindowActivated(object? sender, EventArgs e)
@@ -303,7 +171,7 @@ public partial class SearchResult : Window, IDisposable
 		ViewButton.IsEnabled = false;
 	}
 
-	private void WindowMove(object? sender, MouseEventArgs e) => Drag(sender, e);
+	private void WindowMove(object? sender, MouseEventArgs e) => this.Drag(sender, e);
 
 	private void WindowMouseDown(object? sender, MouseButtonEventArgs e)
 	{

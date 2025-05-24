@@ -1,4 +1,4 @@
-﻿using SylverInk.Notes;
+﻿using SylverInk.XAMLUtils;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;

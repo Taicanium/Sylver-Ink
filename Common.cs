@@ -390,15 +390,16 @@ public static partial class Common
 
 	public static SearchResult OpenQuery(NoteRecord record, bool show = true)
 	{
-		foreach (SearchResult result in OpenQueries)
-			if (result.ResultDatabase?.Equals(CurrentDatabase) is true && result.ResultRecord?.Equals(record) is true)
-				return result;
-
 		var control = (TabControl)Application.Current.MainWindow.FindName("DatabasesPanel");
+		var tagDB = (Database)((TabItem)control.SelectedItem).Tag;
 
+		foreach (SearchResult result in OpenQueries)
+			if (result.ResultDatabase?.Equals(tagDB) is true && result.ResultRecord?.Equals(record) is true)
+				return result;
+		
 		SearchResult resultWindow = new()
 		{
-			ResultDatabase = (Database)((TabItem)control.SelectedItem).Tag,
+			ResultDatabase = tagDB,
 			ResultRecord = record,
 			ResultText = record.Reconstruct()
 		};
@@ -479,6 +480,37 @@ public static partial class Common
 		control.SelectedIndex = Math.Max(0, Math.Min(control.Items.Count - 1, control.SelectedIndex));
 
 		UpdateDatabaseMenu();
+	}
+
+	public static void SwitchDatabase(Database db)
+	{
+		var control = (TabControl)Application.Current.MainWindow.FindName("DatabasesPanel");
+		foreach (TabItem item in control.Items)
+		{
+			if (((Database)item.Tag).Equals(db))
+			{
+				control.SelectedItem = item;
+				CurrentDatabase = (Database)item.Tag;
+			}
+		}
+	}
+
+	public static void SwitchDatabase(string dbID)
+	{
+		var div = dbID.Split(':', 2);
+
+		foreach (Database db in Databases)
+		{
+			var tag = div[0] switch
+			{
+				"~N" => db.Name,
+				"~F" => db.DBFile,
+				_ => string.Empty
+			};
+
+			if (div[1].Equals(tag))
+				SwitchDatabase(db);
+		}
 	}
 
 	public static void UpdateDatabaseMenu()

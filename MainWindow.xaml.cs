@@ -91,14 +91,7 @@ public partial class MainWindow : Window
 
 		CheckInit.RunWorkerCompleted += (_, _) =>
 		{
-			foreach (TabItem item in DatabasesPanel.Items)
-			{
-				if (LastActiveDatabase.Equals(((Database)item.Tag).Name))
-				{
-					DatabasesPanel.SelectedItem = item;
-					CurrentDatabase = (Database)item.Tag;
-				}
-			}
+			SwitchDatabase($"~N:{LastActiveDatabase}");
 
 			foreach (var openNote in LastActiveNotes)
 			{
@@ -192,14 +185,7 @@ public partial class MainWindow : Window
 			return;
 		}
 
-		foreach (TabItem item in DatabasesPanel.Items)
-		{
-			if (wideBreak.Equals(Path.GetFullPath(((Database)item.Tag).DBFile)))
-			{
-				DatabasesPanel.SelectedItem = item;
-				CurrentDatabase = (Database)item.Tag;
-			}
-		}
+		SwitchDatabase($"~F:{wideBreak}");
 	}
 
 	private nint HwndHook(nint hwnd, int msg, nint wParam, nint lParam, ref bool handled)

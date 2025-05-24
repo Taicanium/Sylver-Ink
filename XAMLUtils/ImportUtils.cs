@@ -6,7 +6,7 @@ using System.Text.RegularExpressions;
 using System.Windows;
 using static SylverInk.Common;
 
-namespace SylverInk.Notes;
+namespace SylverInk.XAMLUtils;
 
 public static class ImportUtils
 {
