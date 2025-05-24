@@ -96,47 +96,52 @@ public static class ImportUtils
 				if (string.IsNullOrWhiteSpace(key.Trim()))
 					continue;
 
-				for (int c = 0; c < Math.Max(0, Math.Min(key.Length, length)); c++)
+				for (var (c, t) = (0, 0); c < Math.Max(0, Math.Min(key.Length, length) - 1); t++)
 				{
-					foreach (string type in classes)
+					if (t >= classes.Length)
 					{
-						if (!Regex.IsMatch(key.AsSpan(c, 1), type))
+						c++;
+						t = 0;
+					}
+
+					string type = classes[t];
+
+					if (!Regex.IsMatch(key.AsSpan(c, 1), type))
+						continue;
+
+					for (int k = frequencies.Keys.Count - 1; k > -1; k--)
+					{
+						var pattern = frequencies.Keys.ElementAt(k);
+						if (c + 1 < tokenCounts[pattern])
 							continue;
 
-						for (int k = frequencies.Keys.Count - 1; k > -1; k--)
+						if (pattern.EndsWith(type))
 						{
-							var pattern = frequencies.Keys.ElementAt(k);
-							if (c + 1 < tokenCounts[pattern])
-								continue;
-
-							if (pattern.EndsWith(type))
-							{
-								frequencies[pattern] += 1.0;
-								total++;
-								continue;
-							}
-
-							var pBrute = pattern + type;
-							var keySpan = key.AsSpan(0, Math.Min(c + 1, key.Length));
-
-							if (!Regex.IsMatch(keySpan, pBrute))
-								continue;
-
-							if (!string.IsNullOrWhiteSpace(pBrute.Trim()))
-							{
-								total++;
-
-								if (!frequencies.TryAdd(pBrute, 1.0))
-								{
-									frequencies[pBrute] += 1.0;
-									frequencies.Remove(pattern);
-									tokenCounts.Remove(pattern);
-									continue;
-								}
-
-								tokenCounts.TryAdd(pBrute, tokenCounts[pattern] + 1);
-							}
+							frequencies[pattern] += 1.0;
+							total++;
+							continue;
 						}
+
+						var pBrute = pattern + type;
+						var keySpan = key.AsSpan(0, Math.Min(c + 1, key.Length));
+
+						if (!Regex.IsMatch(keySpan, pBrute))
+							continue;
+
+						if (string.IsNullOrWhiteSpace(pBrute.Trim()))
+							continue;
+
+						total++;
+
+						if (frequencies.TryAdd(pBrute, 1.0))
+						{
+							tokenCounts.TryAdd(pBrute, tokenCounts[pattern] + 1);
+							continue;
+						}
+
+						frequencies[pBrute] += 1.0;
+						frequencies.Remove(pattern);
+						tokenCounts.Remove(pattern);
 					}
 				}
 			}
@@ -178,7 +183,7 @@ public static class ImportUtils
 
 			for (int i = 0; i < DataLines.Count; i++)
 			{
-				var line = DataLines[i];
+				var line = DataLines[i].Trim();
 				if (Regex.IsMatch(line, AdaptivePredicate))
 				{
 					if (!string.IsNullOrWhiteSpace(recordData.Trim()))
