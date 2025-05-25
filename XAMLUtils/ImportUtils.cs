@@ -30,7 +30,7 @@ public static class ImportUtils
 		Common.Settings.ReadyToFinalize = false;
 
 		DataLines.Clear();
-		DeferUpdateRecentNotes(true);
+		DeferUpdateRecentNotes();
 	}
 
 	public static void Import()

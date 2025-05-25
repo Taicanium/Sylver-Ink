@@ -303,7 +303,7 @@ public partial class Settings : Window
 		Common.Settings.SearchResultsOnTop = false;
 		Common.Settings.SnapSearchResults = true;
 
-		DeferUpdateRecentNotes(true);
+		DeferUpdateRecentNotes();
 	}
 
 	private void Settings_Loaded(object? sender, RoutedEventArgs e)
@@ -334,7 +334,7 @@ public partial class Settings : Window
 		var tag = (SortType?)cv.ConvertFromString((string?)item?.Tag ?? "ByChange") ?? SortType.ByChange;
 
 		RecentEntriesSortMode = tag;
-		DeferUpdateRecentNotes(true);
+		DeferUpdateRecentNotes();
 	}
 
 	private void StickyRibbonChanged(object? sender, SelectionChangedEventArgs e)

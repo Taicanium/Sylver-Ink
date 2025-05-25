@@ -128,7 +128,7 @@ namespace SylverInk
 			if (Mouse.RightButton == MouseButtonState.Pressed)
 				return;
 
-			var box = (TextBlock?)sender;
+			var box = (ListBoxItem?)sender;
 			if (box is null)
 				return;
 
@@ -164,7 +164,7 @@ namespace SylverInk
 			}
 
 			UpdateDatabaseMenu();
-			DeferUpdateRecentNotes(true);
+			DeferUpdateRecentNotes();
 		}
 
 		public static void Menu_Unserve(this MainWindow window, object? sender, RoutedEventArgs e) => CurrentDatabase.Server?.Close();

@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
@@ -21,8 +20,6 @@ public partial class Search : Window
 	private string _query = string.Empty;
 	private readonly List<NoteRecord> _results = [];
 	private string _width = string.Empty;
-
-	// TODO: Search capability across all open databases, not just the current one.
 
 	public Search()
 	{
@@ -118,7 +115,7 @@ public partial class Search : Window
 		if (Mouse.RightButton == MouseButtonState.Pressed)
 			return;
 
-		var box = (TextBlock?)sender;
+		var box = (ListBoxItem?)sender;
 		if (box is null)
 			return;
 

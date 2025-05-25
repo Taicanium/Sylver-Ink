@@ -172,7 +172,7 @@ public static partial class Common
 
 	public static T Concurrent<T>(Func<T> callback) => Application.Current.Dispatcher.Invoke(callback);
 
-	public static void DeferUpdateRecentNotes(bool RepeatUpdate = false)
+	public static void DeferUpdateRecentNotes()
 	{
 		if (!CanResize)
 			return;
@@ -229,11 +229,12 @@ public static partial class Common
 			if (MeasureTask?.IsBusy is false && UpdateTask?.IsBusy is false)
 				MeasureTask?.RunWorkerAsync();
 
-			if (RepeatUpdate)
-				DeferUpdateRecentNotes();
+			DeferUpdateRecentNotes();
+			DelayVisualUpdates = false;
 		};
 
 		Concurrent(deferUpdateTask.RunWorkerAsync);
+		DelayVisualUpdates = true;
 	}
 
 	public static string DialogFileSelect(bool outgoing = false, int filterIndex = 3, string? defaultName = null)
@@ -416,7 +417,7 @@ public static partial class Common
 			OpenQueries.Add(resultWindow);
 		}
 
-		DeferUpdateRecentNotes(true);
+		DeferUpdateRecentNotes();
 
 		return resultWindow;
 	}
@@ -424,8 +425,14 @@ public static partial class Common
 	public static SearchResult? OpenQuery(Database db, NoteRecord record, bool show = true)
 	{
 		foreach (SearchResult result in OpenQueries)
+		{
 			if (result.ResultDatabase?.Equals(db) is true && result.ResultRecord?.Equals(record) is true)
+			{
+				result.Activate();
+				result.Focus();
 				return result;
+			}
+		}
 
 		SearchResult resultWindow = new()
 		{

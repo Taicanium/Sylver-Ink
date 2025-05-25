@@ -143,7 +143,7 @@ public partial class NetClient
 				Connected = true;
 				UpdateIndicator();
 				DB?.GetHeader();
-				Concurrent(() => DeferUpdateRecentNotes(true));
+				Concurrent(DeferUpdateRecentNotes);
 
 				break;
 			case MessageType.RecordAdd:
@@ -158,14 +158,14 @@ public partial class NetClient
 				}
 
 				DB?.CreateRecord(bufferString, false);
-				Concurrent(() => DeferUpdateRecentNotes());
+				Concurrent(DeferUpdateRecentNotes);
 				break;
 			case MessageType.RecordLock:
 				DB?.Lock(recordIndex);
 				break;
 			case MessageType.RecordRemove:
 				DB?.DeleteRecord(recordIndex, false);
-				Concurrent(() => DeferUpdateRecentNotes());
+				Concurrent(DeferUpdateRecentNotes);
 				break;
 			case MessageType.RecordReplace:
 				stream.ReadExactly(intBuffer, 0, 4);
@@ -188,7 +188,7 @@ public partial class NetClient
 				stream.ReadExactly(textBuffer, 0, textCount);
 
 				DB?.Replace(bufferString, Encoding.UTF8.GetString(textBuffer), false);
-				Concurrent(() => DeferUpdateRecentNotes());
+				Concurrent(DeferUpdateRecentNotes);
 				break;
 			case MessageType.RecordUnlock:
 				DB?.Unlock(recordIndex);
@@ -205,7 +205,7 @@ public partial class NetClient
 				}
 
 				DB?.CreateRevision(recordIndex, bufferString, false);
-				Concurrent(() => DeferUpdateRecentNotes());
+				Concurrent(DeferUpdateRecentNotes);
 				break;
 		}
 	}

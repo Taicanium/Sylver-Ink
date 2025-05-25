@@ -59,7 +59,7 @@ public static class SearchResultUtils
 		window.ResultText = XamlWriter.Save(window.ResultBlock.Document);
 		window.ResultDatabase?.CreateRevision(window.ResultRecord, window.ResultText);
 		window.LastChangedLabel.Content = window.ResultRecord?.GetLastChange();
-		DeferUpdateRecentNotes(true);
+		DeferUpdateRecentNotes();
 	}
 
 	public static Point Snap(this SearchResult window, ref Point Coords)

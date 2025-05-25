@@ -67,7 +67,7 @@ public partial class SearchResult : Window, IDisposable
 					Edited = false;
 					for (int i = (ResultRecord?.GetNumRevisions() ?? 1) - 1; i >= OriginalRevisionCount; i--)
 						ResultRecord?.DeleteRevision(i);
-					DeferUpdateRecentNotes(true);
+					DeferUpdateRecentNotes();
 					break;
 			}
 		}

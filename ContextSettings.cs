@@ -35,8 +35,8 @@ public partial class ContextSettings : INotifyPropertyChanged
 	public event PropertyChangedEventHandler? PropertyChanged;
 	private bool _readyToFinalize;
 	private bool _readyToReplace;
-	private readonly ObservableCollection<NoteRecord> _recentNotes = [];
-	private readonly ObservableCollection<NoteRecord> _searchResults = [];
+	private ObservableCollection<NoteRecord> _recentNotes = [];
+	private ObservableCollection<NoteRecord> _searchResults = [];
 	private bool _searchResultsOnTop;
 	private bool _snapSearchResults = true;
 	private readonly string _versionString = $"v. {Assembly.GetExecutingAssembly().GetName().Version?.ToString(3)} © Taica, {GetBuildYear(Assembly.GetExecutingAssembly())}";
@@ -59,8 +59,8 @@ public partial class ContextSettings : INotifyPropertyChanged
 	public string NumReplacements { get => _numReplacements; set { _numReplacements = value; OnPropertyChanged(); } }
 	public bool ReadyToFinalize { get => _readyToFinalize; set { _readyToFinalize = value; OnPropertyChanged(); } }
 	public bool ReadyToReplace { get => _readyToReplace; set { _readyToReplace = value; OnPropertyChanged(); } }
-	public ObservableCollection<NoteRecord> RecentNotes => _recentNotes;
-	public ObservableCollection<NoteRecord> SearchResults => _searchResults;
+	public ObservableCollection<NoteRecord> RecentNotes { get => _recentNotes; set { _recentNotes = value; OnPropertyChanged(); } }
+	public ObservableCollection<NoteRecord> SearchResults { get => _searchResults; set { _searchResults = value; OnPropertyChanged(); } }
 	public bool SearchResultsOnTop { get => _searchResultsOnTop; set { _searchResultsOnTop = value; OnPropertyChanged(); } }
 	public bool SnapSearchResults { get => _snapSearchResults; set { _snapSearchResults = value; OnPropertyChanged(); } }
 	public string VersionString => _versionString;

@@ -75,11 +75,13 @@ public partial class NoteRecord
 		get
 		{
 			LastChangeObject = DateTime.FromBinary(LastChange);
+
 			var dtObject = RecentEntriesSortMode switch
 			{
 				SortType.ByCreation => GetCreatedObject(),
 				_ => LastChangeObject,
 			};
+
 			var diff = DateTime.UtcNow - dtObject;
 
 			if (diff.TotalHours < 24.0)

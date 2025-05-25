@@ -140,7 +140,7 @@ public partial class MainWindow : Window
 				ResizeMode = ResizeMode.CanResize;
 				Common.Settings.MainTypeFace = new(Common.Settings.MainFontFamily, FontStyles.Normal, FontWeights.Normal, FontStretches.Normal);
 				PPD = VisualTreeHelper.GetDpi(this).PixelsPerDip;
-				DeferUpdateRecentNotes(true);
+				DeferUpdateRecentNotes();
 			};
 			initialUpdateThread.RunWorkerAsync();
 
@@ -253,7 +253,7 @@ public partial class MainWindow : Window
 		}
 	}
 
-	private void MainWindow_SizeChanged(object? sender, SizeChangedEventArgs e) => DeferUpdateRecentNotes(true);
+	private void MainWindow_SizeChanged(object? sender, SizeChangedEventArgs e) => DeferUpdateRecentNotes();
 
 	private void NewNote_Keydown(object? sender, KeyEventArgs e)
 	{

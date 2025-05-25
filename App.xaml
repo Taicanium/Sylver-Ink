@@ -97,14 +97,20 @@
 				<Setter Property="FontSize" Value="{Binding MainFontSize}"/>
 				<Setter Property="Foreground" Value="{Binding ListForeground}"/>
 			</Style>
-			<Style TargetType="{x:Type ListBoxItem}">
-				<Setter Property="VerticalContentAlignment" Value="Center"/>
+			<Style TargetType="{x:Type ListBoxItem}" x:Key="LBIStyle">
 				<Style.Triggers>
 					<Trigger Property="ListBox.AlternationIndex" Value="1">
 						<Setter Property="Background" Value="{Binding Path=Background, RelativeSource={RelativeSource AncestorType=Window}}"/>
 						<Setter Property="Foreground" Value="{Binding Path=Foreground, RelativeSource={RelativeSource AncestorType=Window}}"/>
 					</Trigger>
 				</Style.Triggers>
+			</Style>
+			<Style TargetType="{x:Type RichTextBox}">
+				<Setter Property="Background" Value="{Binding ListBackground}"/>
+				<Setter Property="BorderBrush" Value="{Binding MenuForeground}"/>
+				<Setter Property="FontFamily" Value="{Binding MainFontFamily}"/>
+				<Setter Property="FontSize" Value="{Binding MainFontSize}"/>
+				<Setter Property="Foreground" Value="{Binding ListForeground}"/>
 			</Style>
 			<Style TargetType="{x:Type TabItem}">
 				<Setter Property="FontFamily" Value="{Binding MainFontFamily}"/>

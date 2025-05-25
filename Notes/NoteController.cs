@@ -458,8 +458,7 @@ public partial class NoteController : IDisposable
 		foreach (string key in WordPercentages.Keys.ToList())
 		{
 			double value = WordPercentages[key];
-			double ratio = 100.0 * value / total;
-			WordPercentages[key] = ratio;
+			WordPercentages[key] = 100.0 * value / total;
 		}
 	}
 

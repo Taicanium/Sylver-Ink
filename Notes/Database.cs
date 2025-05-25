@@ -247,7 +247,7 @@ public partial class Database : IDisposable
 			if (string.IsNullOrWhiteSpace(Name))
 				Name = Path.GetFileNameWithoutExtension(DBFile);
 
-			DeferUpdateRecentNotes(true);
+			DeferUpdateRecentNotes();
 
 			return;
 		}
@@ -258,7 +258,7 @@ public partial class Database : IDisposable
 		if (string.IsNullOrWhiteSpace(Name))
 			Name = Path.GetFileNameWithoutExtension(DBFile);
 
-		DeferUpdateRecentNotes(true);
+		DeferUpdateRecentNotes();
 	}
 
 	public void Lock(int index) => Controller.GetRecord(index).Lock();
