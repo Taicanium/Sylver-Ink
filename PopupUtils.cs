@@ -1,6 +1,5 @@
 ﻿using SylverInk.Notes;
 using System;
-using System.ComponentModel;
 using System.Windows;
 using System.Windows.Input;
 using static SylverInk.Common;
@@ -59,7 +58,7 @@ namespace SylverInk
 				window.RenameDatabase.IsOpen = false;
 		}
 
-		public static void Popup_SaveAddress(this MainWindow window, object? sender, RoutedEventArgs e)
+		public static async void Popup_SaveAddress(this MainWindow window, object? sender, RoutedEventArgs e)
 		{
 			window.ConnectAddress.IsOpen = false;
 
@@ -67,9 +66,7 @@ namespace SylverInk
 			AddDatabase(newDB);
 
 			var addr = window.AddressBox.Text;
-			BackgroundWorker worker = new();
-			worker.DoWork += (_, _) => newDB.Client?.Connect(addr);
-			worker.RunWorkerAsync();
+			await newDB.Client.Connect(addr);
 		}
 	}
 }

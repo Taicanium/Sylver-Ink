@@ -545,8 +545,8 @@ public static partial class Common
 				if (tag.Equals("Always"))
 					continue;
 
-				var client = CurrentDatabase.Client?.Active is true;
-				var server = CurrentDatabase.Server?.Active is true;
+				var client = CurrentDatabase.Client.Active;
+				var server = CurrentDatabase.Server.Active;
 
 				var enable = tag switch
 				{

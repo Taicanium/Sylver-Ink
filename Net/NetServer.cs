@@ -122,8 +122,7 @@ public partial class NetServer
 		WatchTask.CancelAsync();
 		ServerTask.CancelAsync();
 
-		DBServer?.Stop();
-		DBServer?.Dispose();
+		DBServer.Stop();
 
 		Active = false;
 		Serving = false;

@@ -59,7 +59,7 @@ namespace SylverInk
 
 		public static void Menu_Disconnect(this MainWindow window, object? sender, RoutedEventArgs e)
 		{
-			CurrentDatabase.Client?.Disconnect();
+			CurrentDatabase.Client.Disconnect();
 			CurrentDatabase.Changed = true;
 		}
 
@@ -117,7 +117,7 @@ namespace SylverInk
 			CurrentDatabase.Save();
 		}
 
-		public static void Menu_Serve(this MainWindow window, object? sender, RoutedEventArgs e) => CurrentDatabase.Server?.Serve(0);
+		public static void Menu_Serve(this MainWindow window, object? sender, RoutedEventArgs e) => CurrentDatabase.Server.Serve(0);
 
 		public static void Menu_SublistChanged(this MainWindow window, object? sender, RoutedEventArgs e)
 		{
@@ -163,6 +163,6 @@ namespace SylverInk
 			DeferUpdateRecentNotes();
 		}
 
-		public static void Menu_Unserve(this MainWindow window, object? sender, RoutedEventArgs e) => CurrentDatabase.Server?.Close();
+		public static void Menu_Unserve(this MainWindow window, object? sender, RoutedEventArgs e) => CurrentDatabase.Server.Close();
 	}
 }

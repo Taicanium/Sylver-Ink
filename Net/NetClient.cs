@@ -95,9 +95,8 @@ public partial class NetClient
 	public async void Disconnect()
 	{
 		ClientTask.CancelAsync();
-		DBClient?.Close();
-		await Task.Run(() => SpinWait.SpinUntil(new(() => !DBClient?.Connected is true)));
-		DBClient?.Dispose();
+		DBClient.Close();
+		await Task.Run(() => SpinWait.SpinUntil(new(() => !DBClient.Connected)));
 		Active = false;
 		Connected = false;
 		UpdateIndicator();
@@ -228,7 +227,7 @@ public partial class NetClient
 
 	public void UpdateIndicator() => Indicator?.Dispatcher.Invoke(() =>
 	{
-		Indicator.Fill = Connecting ? Brushes.Yellow : DBClient?.Connected is true ? Brushes.Green : Brushes.Orange;
+		Indicator.Fill = Connecting ? Brushes.Yellow : DBClient.Connected ? Brushes.Green : Brushes.Orange;
 		Indicator.Height = 12;
 		Indicator.Margin = new(2, 4, 3, 4);
 		Indicator.Stroke = Common.Settings.MenuForeground;

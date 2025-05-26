@@ -18,13 +18,13 @@ public partial class Database : IDisposable
 	public bool Loaded;
 
 	public bool Changed { get => Controller.Changed; set => Controller.Changed = value; }
-	public NetClient? Client;
+	public NetClient Client;
 	public long? Created;
 	public int Format { get => Controller.Format; set => Controller.Format = value; }
 	private StackPanel? HeaderPanel;
 	public string? Name { get => Controller.Name; set => Controller.Name = value; }
 	public int RecordCount => Controller.RecordCount;
-	public NetServer? Server;
+	public NetServer Server;
 	public string? UUID { get => Controller.UUID; set => Controller.UUID = value; }
 	public Dictionary<string, double> WordPercentages => Controller.WordPercentages;
 
@@ -157,7 +157,7 @@ public partial class Database : IDisposable
 
 	public void Erase()
 	{
-		if (Client?.Connected is true || Server?.Serving is true)
+		if (Client.Connected || Server.Serving)
 			return;
 
 		Controller.EraseDatabase();
@@ -197,7 +197,7 @@ public partial class Database : IDisposable
 				label.Content = headerContent;
 
 				HeaderPanel.Children.RemoveAt(1);
-				HeaderPanel.Children.Add((Client?.Active is true ? Client?.Indicator : Server?.Indicator) ?? new System.Windows.Shapes.Ellipse());
+				HeaderPanel.Children.Add((Client.Active ? Client.Indicator : Server.Indicator) ?? new System.Windows.Shapes.Ellipse());
 				HeaderPanel.ToolTip = Name;
 			});
 
@@ -222,7 +222,7 @@ public partial class Database : IDisposable
 		};
 
 		HeaderPanel.Children.Add(label);
-		HeaderPanel.Children.Add((Client?.Active is true ? Client?.Indicator : Server?.Indicator) ?? new System.Windows.Shapes.Ellipse());
+		HeaderPanel.Children.Add((Client.Active ? Client.Indicator : Server.Indicator) ?? new System.Windows.Shapes.Ellipse());
 
 		return HeaderPanel;
 	}
@@ -439,11 +439,11 @@ public partial class Database : IDisposable
 
 	public void Transmit(Network.MessageType type, byte[] data)
 	{
-		if (Client?.Connected is true)
-			Client?.Send(type, data);
+		if (Client.Connected)
+			Client.Send(type, data);
 
-		if (Server?.Serving is true)
-			Server?.Broadcast(type, data);
+		if (Server.Serving)
+			Server.Broadcast(type, data);
 	}
 
 	public void Unlock(int index) => Controller.GetRecord(index).Unlock();
