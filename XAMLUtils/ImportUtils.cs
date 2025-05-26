@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using System.Windows;
 using static SylverInk.Common;
 
@@ -33,13 +34,13 @@ public static class ImportUtils
 		DeferUpdateRecentNotes();
 	}
 
-	public static void Import()
+	public static async Task Import()
 	{
 		try
 		{
 			Common.Settings.ImportTarget = string.Empty;
-			PerformImport();
-			Concurrent(FinishImport);
+			await PerformImport();
+			FinishImport();
 		}
 		catch (Exception ex)
 		{
@@ -47,7 +48,7 @@ public static class ImportUtils
 		}
 	}
 
-	public static void Measure(bool Adaptive = false)
+	public static async Task Measure(bool Adaptive = false) => await Task.Run(() =>
 	{
 		if (string.IsNullOrWhiteSpace(Common.Settings.ImportTarget))
 			return;
@@ -59,8 +60,12 @@ public static class ImportUtils
 			MeasureNotesManual();
 
 		ReportMeasurement();
-	}
+	});
 
+	/// <summary>
+	/// Attempt to detect recurring patterns in the incoming data that can be used to divide the data into notes. These patterns (referred to here as 'predicates') may consist of timestamps, headings, signatures, or other text structures consisting of letters, numbers, and symbols.
+	/// </summary>
+	/// <returns><c>true</c> if a predicate was successfully detected; <c>false</c> otherwise.</returns>
 	private static bool MeasureNotesAdaptive()
 	{
 		// Letters, numbers, spaces, and punctuation; respectively.
@@ -74,10 +79,11 @@ public static class ImportUtils
 			return false;
 		}
 
-		int LastPredicateSequence = 0;
-		double LastPredicateValue = 0.0;
+		int LastPredicateSequence = 0; // If the same predicate is detected sufficient times in a row, we will halt searching for a longer one.
+		double LastPredicateValue = 0.0; // The more frequent a predicate appears in the note data, the higher priority it will be assigned.
 		double LineTotal = 0.0;
 
+		// Predicates may be anywhere from 3 to 35 characters long.
 		for (int length = 3; length <= 35; length++)
 		{
 			double total = 0.0;
@@ -104,6 +110,7 @@ public static class ImportUtils
 						t = 0;
 					}
 
+					// Build the predicate by appending each of our four Regex classes to a string in turn and matching it to the incoming data line.
 					string type = classes[t];
 
 					if (!Regex.IsMatch(key.AsSpan(c, 1), type))
@@ -115,6 +122,7 @@ public static class ImportUtils
 						if (c + 1 < tokenCounts[pattern])
 							continue;
 
+						// If the current Regex pattern already ends with the class we're checking, don't duplicate it. Increase the predicate's frequency instead.
 						if (pattern.EndsWith(type))
 						{
 							frequencies[pattern] += 1.0;
@@ -152,9 +160,7 @@ public static class ImportUtils
 			foreach (string key in frequencies.Keys)
 				frequencies[key] /= total;
 
-			// tl;dr: We search for note boundaries based on certain strings of characters appearing much more frequently than others at the start of lines.
-			// Think timestamps, for instance.
-			// And to be exact, we're looking for sequences that occur in at least 5% of all lines.
+			// Predicates must occur in at least 5% of all lines.
 			var ordered = frequencies.OrderByDescending(pair => pair.Value).First();
 			if (ordered.Value >= 0.05 && ordered.Value >= LastPredicateValue)
 			{
@@ -206,6 +212,9 @@ public static class ImportUtils
 		return false;
 	}
 
+	/// <summary>
+	/// Manual note measurement consists of dividing the incoming plaintext data by a strict number of blank lines appearing between entries. If a text file contains no empty lines, the entire file will be placed into one Sylver Ink note.
+	/// </summary>
 	private static void MeasureNotesManual()
 	{
 		try
@@ -243,7 +252,7 @@ public static class ImportUtils
 				RunningCount++;
 			}
 
-			if (!recordData.Equals(string.Empty))
+			if (!string.IsNullOrWhiteSpace(recordData))
 			{
 				RunningAverage += recordData.Length;
 				RunningCount++;
@@ -257,7 +266,10 @@ public static class ImportUtils
 		}
 	}
 
-	private static void PerformImport()
+	/// <summary>
+	/// Importing plaintext data proceeds similarly to measuring it. In this method, however, the data is saved to newly created <c>NoteRecord</c>s instead of being discarded.
+	/// </summary>
+	private static async Task PerformImport() => await Task.Run(() =>
 	{
 		int blankCount = 0;
 		DelayVisualUpdates = true;
@@ -304,7 +316,7 @@ public static class ImportUtils
 		}
 
 		DelayVisualUpdates = false;
-	}
+	});
 
 	private static bool ReadFromStream(string filename)
 	{
@@ -321,7 +333,7 @@ public static class ImportUtils
 		return true;
 	}
 
-	public static void Refresh(bool Adaptive)
+	public static async Task Refresh(bool Adaptive)
 	{
 		if (Common.Settings.ImportTarget.EndsWith(".sidb") || Common.Settings.ImportTarget.EndsWith(".sibk"))
 		{
@@ -350,7 +362,7 @@ public static class ImportUtils
 			return;
 		}
 
-		Measure(Adaptive);
+		await Measure(Adaptive);
 	}
 
 	public static void ReportMeasurement()

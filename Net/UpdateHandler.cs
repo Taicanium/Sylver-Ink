@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Net.Http;
 using System.Reflection;
 using System.Text.Json;
@@ -63,35 +62,41 @@ static class UpdateHandler
 				if (nValue is null)
 					continue;
 
-				if (nValue.ToString().EndsWith(".msi"))
+				// Prefer a .msi package only if a .exe is not available.
+				if (nValue.ToString().EndsWith(".msi") && !uriNode?.EndsWith(".exe") is true)
 					uriNode = nValue.ToString();
 			}
 
 			if (uriNode is null)
 				return;
 
-			if (MessageBox.Show($"A new update is available ({assemblyVersion.ToString(3)} → {releaseVersion.ToString(3)}). Would you like to install it now?", "Sylver Ink: Notification", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.No)
+			if (MessageBox.Show($"A new update is available ({assemblyVersion.ToString(3)} → {releaseVersion.ToString(3)}). Would you like to install it now?", "Sylver Ink: Notification", MessageBoxButton.YesNo, MessageBoxImage.Information) == MessageBoxResult.No)
 				return;
 
-			Erase(TempUri);
-			Erase(UpdateLockUri);
-
-			File.Create(UpdateLockUri, 0).Close();
-
-			await httpClient.DownloadFileTaskAsync(uriNode, TempUri);
-
-			ProcessStartInfo inf = new()
-			{
-				FileName = TempUri,
-				UseShellExecute = true,
-			};
-
-			Process.Start(inf);
-			Application.Current.Shutdown();
+			DownloadAndInstallUpdate(httpClient, uriNode);
 		}
 		catch
 		{
 			return;
 		}
+	}
+
+	private static async void DownloadAndInstallUpdate(HttpClient httpClient, string uriNode)
+	{
+		Erase(TempUri);
+		Erase(UpdateLockUri);
+
+		File.Create(UpdateLockUri, 0).Close();
+
+		await httpClient.DownloadFileTaskAsync(uriNode, TempUri);
+
+		ProcessStartInfo inf = new()
+		{
+			FileName = TempUri,
+			UseShellExecute = true,
+		};
+
+		Process.Start(inf);
+		Application.Current.Shutdown();
 	}
 }

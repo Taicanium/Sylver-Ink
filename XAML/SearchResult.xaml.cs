@@ -57,7 +57,7 @@ public partial class SearchResult : Window, IDisposable
 
 		if (Edited)
 		{
-			switch(MessageBox.Show("You have unsaved changes. Save before closing this note?", "Sylver Ink: Notification", MessageBoxButton.YesNoCancel, MessageBoxImage.Question))
+			switch(MessageBox.Show("You have unsaved changes. Save before closing this note?", "Sylver Ink: Notification", MessageBoxButton.YesNoCancel, MessageBoxImage.Information))
 			{
 				case MessageBoxResult.Cancel:
 					return;

@@ -30,8 +30,10 @@ public partial class Properties : Window
 
 		var hour = (ComboBoxItem)Hour.SelectedItem;
 		var minute = (ComboBoxItem)Minute.SelectedItem;
+
 		var hourValue = int.Parse((string)hour.Content);
 		var hourIndex = Hour.SelectedIndex;
+
 		SelectedTime.Content = $"{(hourValue == 0 ? 12 : hourValue < 13 ? hourValue : hourValue - 12)}:{minute.Content} {(hourIndex < 12 ? "AM" : "PM")}";
 
 		if (HourSelected && MinuteSelected)
@@ -50,11 +52,11 @@ public partial class Properties : Window
 
 	private void InitializeProperties()
 	{
-		DBNameLabel.ToolTip = DBNameLabel.Text = DB?.Name;
 		DBCreatedLabel.Content = DB?.GetCreated();
 		DBFormatLabel.Content = $"SIDB v.{DB?.Format}";
-		DBPathLabel.ToolTip = DBPathLabel.Text = $"{DB?.DBFile}";
+		DBNameLabel.ToolTip = DBNameLabel.Text = DB?.Name;
 		DBNotesLabel.Content = $"{DB?.RecordCount:N0} notes";
+		DBPathLabel.ToolTip = DBPathLabel.Text = $"{DB?.DBFile}";
 
 		double noteAvgC = 0.0;
 		double noteAvgW = 0.0;
@@ -62,23 +64,27 @@ public partial class Properties : Window
 		int noteLongestW = 0;
 		int noteTotalC = 0;
 		int noteTotalW = 0;
+
 		for (int i = 0; i < DB?.RecordCount; i++)
 		{
 			var record = DB?.GetRecord(i).ToString();
 			var length = record?.Length ?? 0;
 			var wordCount = NotWhitespace().Matches(record ?? string.Empty).Count;
 
-			noteAvgW += wordCount;
 			noteAvgC += length;
+			noteAvgW += wordCount;
 
 			// The 'longest' note is qualified strictly by character count.
 			if (noteLongestC <= length)
-				noteLongestW = Math.Max(noteLongestW, wordCount);
+			{
+				noteLongestC = length;
+				noteLongestW = wordCount;
+			}
 
-			noteLongestC = Math.Max(noteLongestC, length);
-			noteTotalW += wordCount;
 			noteTotalC += length;
+			noteTotalW += wordCount;
 		}
+
 		noteAvgC /= DB?.RecordCount ?? 1.0;
 		noteAvgW /= DB?.RecordCount ?? 1.0;
 
@@ -117,6 +123,7 @@ public partial class Properties : Window
 
 		var hour = (ComboBoxItem)Hour.SelectedItem;
 		var minute = (ComboBoxItem)Minute.SelectedItem;
+
 		var hourValue = int.Parse((string)hour.Content);
 		var minuteValue = int.Parse((string)minute.Content);
 
@@ -131,9 +138,9 @@ public partial class Properties : Window
 
 	private void SelectTime(object? sender, RoutedEventArgs e)
 	{
-		TimeSelector.IsOpen = true;
 		HourSelected = false;
 		MinuteSelected = false;
+		TimeSelector.IsOpen = true;
 	}
 
 	[GeneratedRegex(@"\S+")]

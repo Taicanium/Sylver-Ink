@@ -236,7 +236,7 @@ public partial class Database : IDisposable
 	public void Load(string dbFile)
 	{
 		var lockFile = GetLockFile(dbFile);
-		if (File.Exists(lockFile) && MessageBox.Show($"{Path.GetFileName(dbFile)} - The database last closed unexpectedly. Do you want to load the most recent autosave?", "Sylver Ink: Notification", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+		if (File.Exists(lockFile) && MessageBox.Show($"{Path.GetFileName(dbFile)} - The database last closed unexpectedly. Do you want to load the most recent autosave?", "Sylver Ink: Notification", MessageBoxButton.YesNo, MessageBoxImage.Information) == MessageBoxResult.Yes)
 		{
 			Controller.Open(lockFile);
 			Controller.DeserializeRecords();

@@ -212,12 +212,15 @@ public partial class NoteRecord
 				if (Tags.Contains(val))
 					continue;
 
-				if (!CurrentDatabase.WordPercentages.ContainsKey(val))
-					continue;
+				foreach (Database db in Databases)
+				{
+					if (!db.WordPercentages.ContainsKey(val))
+						continue;
 
-				// To be treated as a tag, a word must be less common than 0.5% of all words across the entire database.
-				if (CurrentDatabase.WordPercentages[val] < Math.Max(0.5, 100.0 - CurrentDatabase.WordPercentages.Count))
-					Tags.Add(val);
+					// To be treated as a tag, a word must be less common than 0.5% of all words in at least one database.
+					if (db.WordPercentages[val] < Math.Max(0.5, 100.0 - db.WordPercentages.Count))
+						Tags.Add(val);
+				}
 			}
 		}
 

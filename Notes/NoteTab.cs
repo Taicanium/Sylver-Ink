@@ -158,7 +158,7 @@ public class NoteTab
 
 			if (SaveButton.IsEnabled && SaveButton.Content.Equals("Save"))
 			{
-				switch (MessageBox.Show("You have unsaved changes. Save before closing this note?", "Sylver Ink: Notification", MessageBoxButton.YesNoCancel, MessageBoxImage.Question))
+				switch (MessageBox.Show("You have unsaved changes. Save before closing this note?", "Sylver Ink: Notification", MessageBoxButton.YesNoCancel, MessageBoxImage.Information))
 				{
 					case MessageBoxResult.Cancel:
 						return;
@@ -175,7 +175,7 @@ public class NoteTab
 
 		DeleteButton.Click += (sender, _) =>
 		{
-			if (MessageBox.Show("Are you sure you want to permanently delete this note?", "Sylver Ink: Notification", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.No)
+			if (MessageBox.Show("Are you sure you want to permanently delete this note?", "Sylver Ink: Notification", MessageBoxButton.YesNo, MessageBoxImage.Information) == MessageBoxResult.No)
 				return;
 
 			var tag = ((uint, NoteRecord))NoteBox.Tag;

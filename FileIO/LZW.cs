@@ -21,6 +21,9 @@ public partial class LZW
 	private string W = string.Empty;
 	private bool Writing;
 
+	/// <summary>
+	/// Resets the LZW state engine.
+	/// </summary>
 	public void Close()
 	{
 		if (Open && Writing)
@@ -56,6 +59,10 @@ public partial class LZW
 		Writing = false;
 	}
 
+	/// <summary>
+	/// Compresses a range of data.
+	/// </summary>
+	/// <param name="data">An array of uncompressed bytes.</param>
 	public void Compress(byte[] data)
 	{
 		for (int i = 0; i < data.Length; i++)
@@ -76,6 +83,11 @@ public partial class LZW
 		}
 	}
 
+	/// <summary>
+	/// Consumes LZW-compressed data according to a requested number of uncompressed output bytes.
+	/// </summary>
+	/// <param name="byteCount">The desired number of uncompressed bytes to return.</param>
+	/// <returns>A range of uncompressed byte data.</returns>
 	public byte[] Decompress(int byteCount = 1)
 	{
 		if (string.IsNullOrEmpty(W))
@@ -116,6 +128,11 @@ public partial class LZW
 
 	private static string FromChar(char c) => $"{c}";
 
+	/// <summary>
+	/// Initializes the LZW state engine.
+	/// </summary>
+	/// <param name="fileStream">An open filestream to or from which to read or write LZW-compressed data.</param>
+	/// <param name="writing"><c>true</c> if we are compressing data and outputting it to the stream; <c>false</c> if we are reading and consuming LZW-compressed data.</param>
 	public void Init(Stream? fileStream = null, bool writing = false)
 	{
 		FileStream = fileStream ?? FileStream;
@@ -124,6 +141,9 @@ public partial class LZW
 		InitDictionary();
 	}
 
+	/// <summary>
+	/// Initializes the LZW packet and code dictionaries to their default values.
+	/// </summary>
 	private void InitDictionary()
 	{
 		Codes.Clear();
@@ -139,6 +159,10 @@ public partial class LZW
 		}
 	}
 
+	/// <summary>
+	/// Consumes <c>n</c> bits from the LZW stream (where <c>n</c> is the current LZW code range) and formats them as a single LZW code.
+	/// </summary>
+	/// <returns>The LZW code that was consumed from the stream.</returns>
 	private uint ReadCode()
 	{
 		uint code = 0;
@@ -161,6 +185,11 @@ public partial class LZW
 		return code;
 	}
 
+	/// <summary>
+	/// Checks for a need to dynamically expand the LZW code range, and expands it if needed.
+	/// </summary>
+	/// <param name="lastCode">The most recent code that was written to the LZW bit stream.</param>
+	/// <exception cref="OverflowException">The current implementation does not reset the LZW dictionary past a certain size. If it reaches that size, LZW compression ceases to be more efficient than plaintext.</exception>
 	private void UpdateRange(uint lastCode)
 	{
 		for (int i = Range; i <= MaxRange; i++)
@@ -174,6 +203,10 @@ public partial class LZW
 			throw new OverflowException("Serialized database has exceeded the maximum capacity for restricted LZW compression.", new OverflowException());
 	}
 
+	/// <summary>
+	/// Formats an LZW code according to the current range, and writes it to the bit stream.
+	/// </summary>
+	/// <param name="code">The code to be written.</param>
 	private void WriteCode(uint code)
 	{
 		for (int i = 1; i <= Range; i++)

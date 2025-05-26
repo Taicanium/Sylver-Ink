@@ -376,7 +376,7 @@ public partial class NoteController : IDisposable
 			Records[i].Serialize(_serializer);
 
 		if (inMemory)
-			return _serializer?.GetStream();
+			return _serializer?.GetOutgoingStream();
 
 		Changed = false;
 		ReloadSerializer();

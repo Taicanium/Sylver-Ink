@@ -24,6 +24,9 @@ public partial class Serializer : IDisposable
 	public bool Headless { get; private set; }
 	public bool UseLZW { get; private set; }
 
+	/// <summary>
+	/// Clear previous buffers and prepare to perform a compressun test.
+	/// </summary>
 	public void BeginCompressionTest()
 	{
 		Close();
@@ -35,6 +38,9 @@ public partial class Serializer : IDisposable
 		WriteHeader((byte)HighestFormat);
 	}
 
+	/// <summary>
+	/// Clear all current buffers after a compression test.
+	/// </summary>
 	public void ClearCompressionTest()
 	{
 		Close();
@@ -44,6 +50,10 @@ public partial class Serializer : IDisposable
 		_testBuffer = [];
 	}
 
+	/// <summary>
+	/// Flush the open filestream buffer and dispose it.
+	/// </summary>
+	/// <param name="testing"><c>true</c> if we are performing a compression test.</param>
 	public void Close(bool testing = false)
 	{
 		if (!_isOpen)
@@ -70,6 +80,9 @@ public partial class Serializer : IDisposable
 		GC.SuppressFinalize(this);
 	}
 
+	/// <summary>
+	/// Flush the compression test buffers, then read back from them to confirm the test's success.
+	/// </summary>
 	public void EndCompressionTest()
 	{
 		Close(true);
@@ -83,9 +96,11 @@ public partial class Serializer : IDisposable
 		ReadHeader();
 	}
 
-	// WARNING: If writing, do not call until we're done.
-	// It clears the LZW compression data.
-	public List<byte> GetStream()
+	/// <summary>
+	/// WARNING: This method consumes the LZW state buffers. Do not call this method until we are ready to close the stream.
+	/// </summary>
+	/// <returns>The outgoing compression buffer</returns>
+	public List<byte> GetOutgoingStream()
 	{
 		if (_writing)
 		{
@@ -96,6 +111,10 @@ public partial class Serializer : IDisposable
 		return _memoryStream?.ToArray().Concat(_outgoing).ToList() ?? [];
 	}
 
+	/// <summary>
+	/// Initialize the serializer, and optionally the LZW state engine, according to the features available with this database format.
+	/// </summary>
+	/// <param name="format">The format of the database</param>
 	private void HandleFormat(int format = 0)
 	{
 		format = format < 1 ? DatabaseFormat : format;
@@ -109,13 +128,19 @@ public partial class Serializer : IDisposable
 		_lzw.Init(_fileStream, _writing);
 	}
 
-	public bool OpenRead(string path, List<byte>? inMemory = null)
+	/// <summary>
+	/// Initialize the serializer's underlying stream for reading.
+	/// </summary>
+	/// <param name="path">The path to a file to encapsulate in the underlying <c>FileStream</c>. May be <c>null</c> if <paramref name="inMemory"/> is not <c>null</c>.</param>
+	/// <param name="inMemory">If not <c>null</c>, the engine will be initialized with an underlying <c>MemoryStream</c> with <paramref name="inMemory"/> as its buffer, instead of a <c>FileStream</c>.</param>
+	/// <returns></returns>
+	public bool OpenRead(string? path, List<byte>? inMemory = null)
 	{
 		Close();
 
 		try
 		{
-			_fileStream = inMemory is null ? new FileStream(path, FileMode.Open) : new MemoryStream(inMemory?.ToArray() ?? []);
+			_fileStream = inMemory is null ? new FileStream(path ?? string.Empty, FileMode.Open) : new MemoryStream(inMemory?.ToArray() ?? []);
 			_isOpen = true;
 			_writing = false;
 
@@ -129,13 +154,19 @@ public partial class Serializer : IDisposable
 		return true;
 	}
 
-	public bool OpenWrite(string path, bool inMemory = false)
+	/// <summary>
+	/// Initialize the serializer's underlying stream for writing.
+	/// </summary>
+	/// <param name="path">The path to a file to encapsulate in the underlying <c>FileStream</c>. May be <c>null</c> if <paramref name="inMemory"/> is <c>true</c>.</param>
+	/// <param name="inMemory">If <c>true</c>, the engine will be initialized with an underlying <c>MemoryStream</c>, instead of a <c>FileStream</c>.</param>
+	/// <returns></returns>
+	public bool OpenWrite(string? path, bool inMemory = false)
 	{
 		Close();
 
 		try
 		{
-			_fileStream = inMemory ? new MemoryStream() : new FileStream(path, FileMode.Create);
+			_fileStream = inMemory ? new MemoryStream() : new FileStream(path ?? string.Empty, FileMode.Create);
 			_isOpen = true;
 			_writing = true;
 
@@ -149,6 +180,11 @@ public partial class Serializer : IDisposable
 		return true;
 	}
 
+	/// <summary>
+	/// Read a certain number of uncompressed bytes from the stream, and decompress as needed.
+	/// </summary>
+	/// <param name="byteCount"></param>
+	/// <returns></returns>
 	private byte[] ReadBytes(int byteCount)
 	{
 		if (UseLZW)
@@ -159,6 +195,9 @@ public partial class Serializer : IDisposable
 		return _buffer;
 	}
 
+	/// <summary>
+	/// Reads the database header.
+	/// </summary>
 	private void ReadHeader()
 	{
 		_buffer = new byte[5];
@@ -242,6 +281,10 @@ public partial class Serializer : IDisposable
 		_outgoing.AddRange(data);
 	}
 
+	/// <summary>
+	/// Write the database header to the stream.
+	/// </summary>
+	/// <param name="format">The database format.</param>
 	private void WriteHeader(byte format)
 	{
 		_fileStream?.Write(Encoding.UTF8.GetBytes(

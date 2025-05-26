@@ -59,8 +59,8 @@ public partial class NetServer
 						}
 						catch
 						{
-							//TODO: A fault in one connection really shouldn't be grounds for panicking the entire server. This is safe, but it's overkill.
-							Close();
+							Clients[i].Dispose();
+							Clients.RemoveAt(i);
 						}
 					}
 				});
@@ -121,23 +121,24 @@ public partial class NetServer
 	{
 		WatchTask.CancelAsync();
 		ServerTask.CancelAsync();
+
 		DBServer?.Stop();
 		DBServer?.Dispose();
-		Serving = false;
+
 		Active = false;
+		Serving = false;
+
 		UpdateIndicator();
 		UpdateDatabaseMenu();
 	}
 
 	private void ReadFromStream(TcpClient client, Database DB)
 	{
-		int oldData = client.Available;
-		bool dataFinished = false;
+		int oldData;
 		do
 		{
-			dataFinished = !SpinWait.SpinUntil(new(() => client.Available != oldData), 500);
 			oldData = client.Available;
-		} while (!dataFinished);
+		} while (!SpinWait.SpinUntil(new(() => client.Available != oldData), 500));
 
 		var stream = client.GetStream();
 		var outBuffer = new List<byte>();
@@ -145,10 +146,10 @@ public partial class NetServer
 		var type = (MessageType)stream.ReadByte();
 		outBuffer.Add((byte)type);
 
+		var bufferString = string.Empty;
 		var intBuffer = new byte[4];
 		var recordIndex = 0;
 		byte[] textBuffer;
-		var bufferString = string.Empty;
 		var textCount = 0;
 
 		stream.ReadExactly(intBuffer, 0, 4);
@@ -315,6 +316,7 @@ public partial class NetServer
 		Indicator.Stroke = Common.Settings.MenuForeground;
 		Indicator.Width = 12;
 		Indicator.InvalidateVisual();
+
 		UpdateDatabaseMenu();
 	});
 }

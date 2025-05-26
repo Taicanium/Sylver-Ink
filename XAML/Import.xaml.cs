@@ -42,38 +42,34 @@ public partial class Import : Window
 
 	private void Drag(object? sender, MouseButtonEventArgs e) => DragMove();
 
-	private void Finalize_Click(object? sender, RoutedEventArgs e)
+	private async void Finalize_Click(object? sender, RoutedEventArgs e)
 	{
 		AdaptiveCheckBox.IsEnabled = false;
 		CloseButton.IsEnabled = false;
 		DoImport.Content = "Importing...";
 		LTPanel.IsEnabled = false;
 
-		BackgroundWorker worker = new();
-		worker.DoWork += (_, _) => ImportUtils.Import();
-		worker.RunWorkerCompleted += (_, _) =>
-		{
-			AdaptiveCheckBox.IsEnabled = true;
-			CloseButton.IsEnabled = true;
-			DoImport.Content = "Import";
-			Common.Settings.ImportTarget = string.Empty;
-			LTPanel.IsEnabled = true;
-		};
-		worker.RunWorkerAsync();
+		await ImportUtils.Import();
+
+		AdaptiveCheckBox.IsEnabled = true;
+		CloseButton.IsEnabled = true;
+		DoImport.Content = "Import";
+		Common.Settings.ImportTarget = string.Empty;
+		LTPanel.IsEnabled = true;
 	}
 
-	private void LineToleranceChanged(object? sender, RoutedEventArgs e)
+	private async void LineToleranceChanged(object? sender, RoutedEventArgs e)
 	{
 		Common.Settings.LineTolerance += ((Button?)sender)?.Content.Equals("-") is true ? -1 : 1;
-		ImportUtils.Measure(AdaptiveCheckBox.IsChecked is true);
+		await ImportUtils.Measure(AdaptiveCheckBox.IsChecked is true);
 	}
 
-	private void Open_Click(object? sender, RoutedEventArgs e)
+	private async void Open_Click(object? sender, RoutedEventArgs e)
 	{
 		Common.Settings.ImportTarget = DialogFileSelect();
 		Common.Settings.ImportData = string.Empty;
 
-		ImportUtils.Refresh(AdaptiveCheckBox.IsChecked is true);
+		await ImportUtils.Refresh(AdaptiveCheckBox.IsChecked is true);
 	}
 
 	private void Target_TextChanged(object? sender, RoutedEventArgs e)

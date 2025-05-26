@@ -12,7 +12,7 @@
 	<SourceRevisionId>build$([System.DateTime]::UtcNow.ToString("yyyyMMdd"))</SourceRevisionId>
 	<SupportedOSPlatformVersion>7.0</SupportedOSPlatformVersion>
 	<NeutralLanguage>en-US</NeutralLanguage>
-	<Version>1.3.6</Version>
+	<Version>1.3.7</Version>
 	<UseWindowsForms>False</UseWindowsForms>
 	<Title>Sylver Ink</Title>
 	<Authors>taicanium,norvinsk.hunter,milesfarber</Authors>
@@ -49,7 +49,9 @@
   </PropertyGroup>
   
   <ItemGroup>
-	<Content Include="glasses.ico" />
+	<Content Include="glasses.ico">
+	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	</Content>
   </ItemGroup>
   
   <ItemGroup>
@@ -69,6 +71,12 @@
 	  <PackagePath>\</PackagePath>
 	</None>
 	<None Update="readme.rtf">
+	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	</None>
+	<None Update="sibk.ico">
+	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	</None>
+	<None Update="sidb.ico">
 	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	</None>
   </ItemGroup>

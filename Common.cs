@@ -257,10 +257,10 @@ public static partial class Common
 	}
 
 	/// <summary>
-	/// Delete a file if it exists.
+	/// Deletes a file if it exists.
 	/// </summary>
 	/// <param name="filename">The file to be deleted.</param>
-	/// <returns>'true' if the file existed and was deleted; else, 'false'</returns>
+	/// <returns><c>true</c> if the file existed and was deleted; else, <c>false</c>.</returns>
 	public static bool Erase(string filename)
 	{
 		if (!File.Exists(filename))

@@ -105,21 +105,19 @@ public partial class NetClient
 
 	private void ReadFromStream()
 	{
-		int oldData = DBClient.Available;
-		bool dataFinished = false;
+		int oldData;
 		do
 		{
-			dataFinished = !SpinWait.SpinUntil(new(() => DBClient.Available != oldData), 500);
 			oldData = DBClient.Available;
-		} while (!dataFinished);
+		} while (!SpinWait.SpinUntil(new(() => DBClient.Available != oldData), 500));
 
 		var stream = DBClient.GetStream();
 		var type = (MessageType)stream.ReadByte();
 
+		var bufferString = string.Empty;
 		var intBuffer = new byte[4];
 		var recordIndex = 0;
 		byte[] textBuffer;
-		var bufferString = string.Empty;
 		var textCount = 0;
 
 		stream.ReadExactly(intBuffer, 0, 4);
@@ -236,7 +234,9 @@ public partial class NetClient
 		Indicator.Stroke = Common.Settings.MenuForeground;
 		Indicator.Width = 12;
 		Indicator.InvalidateVisual();
+
 		DB?.GetHeader();
+
 		UpdateDatabaseMenu();
 	});
 }
