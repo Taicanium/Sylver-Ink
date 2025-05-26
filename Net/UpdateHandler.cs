@@ -42,8 +42,6 @@ static class UpdateHandler
 			var releaseString = releaseNode?.ToString() ?? "0.0.0";
 			if (releaseString.StartsWith('v'))
 				releaseString = releaseString[1..];
-			if (releaseString.AsSpan().Count('.') < 2)
-				releaseString += ".0";
 
 			if (!Version.TryParse(releaseString, out var releaseVersion) || releaseVersion.CompareTo(assemblyVersion) < 1)
 				return;
@@ -72,7 +70,7 @@ static class UpdateHandler
 			if (uriNode is null)
 				return;
 
-			if (MessageBox.Show($"A new update is available ({assemblyVersion.ToString(3)} → {releaseString}). Would you like to install it now?", "Sylver Ink: Notification", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.No)
+			if (MessageBox.Show($"A new update is available ({assemblyVersion.ToString(3)} → {releaseVersion.ToString(3)}). Would you like to install it now?", "Sylver Ink: Notification", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.No)
 				return;
 
 			Erase(TempUri);

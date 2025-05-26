@@ -101,8 +101,7 @@ public partial class LZW
 			for (int i = 0; i < C.Length; i++)
 				Incoming.Add((byte)C[i]);
 
-			Packets.Add(NextCode, $"{W}{C[0]}");
-			NextCode++;
+			Packets.Add(NextCode++, $"{W}{C[0]}");
 			W = C;
 			UpdateRange(NextCode + 1);
 		}

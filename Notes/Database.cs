@@ -258,6 +258,9 @@ public partial class Database : IDisposable
 		if (string.IsNullOrWhiteSpace(Name))
 			Name = Path.GetFileNameWithoutExtension(DBFile);
 
+		if (DBFile.EndsWith("sibk"))
+			Name = $"Backup: {Name}";
+
 		DeferUpdateRecentNotes();
 	}
 

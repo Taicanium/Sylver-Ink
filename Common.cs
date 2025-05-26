@@ -52,7 +52,7 @@ public static partial class Common
 	public static BackgroundWorker CheckInit { get; } = new();
 	public static Database CurrentDatabase { get; set; } = new();
 	public static bool DatabaseChanged { get; set; }
-	public static List<string> DatabaseFiles { get => Databases.ToList().ConvertAll(new Converter<Database, string>(db => db.DBFile)); }
+	public static List<string> DatabaseFiles { get => [.. Databases.Select(db => db.DBFile)]; }
 	public static int DatabaseCount { get; set; }
 	public static ObservableCollection<Database> Databases { get; set; } = [];
 	public static string DateFormat { get; } = "yyyy-MM-dd HH:mm:ss";
@@ -274,9 +274,7 @@ public static partial class Common
 	{
 		try
 		{
-			if (document.IsInitialized)
-				return new TextRange(document.ContentStart, document.ContentEnd).Text;
-			return string.Empty;
+			return document.IsInitialized ? new TextRange(document.ContentStart, document.ContentEnd).Text : string.Empty;
 		}
 		catch
 		{

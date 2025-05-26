@@ -1,5 +1,6 @@
 ﻿using SylverInk.Notes;
 using System;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -55,21 +56,35 @@ public partial class Properties : Window
 		DBPathLabel.ToolTip = DBPathLabel.Text = $"{DB?.DBFile}";
 		DBNotesLabel.Content = $"{DB?.RecordCount:N0} notes";
 
-		double noteAvg = 0.0;
-		int noteLongest = 0;
-		int noteTotal = 0;
+		double noteAvgC = 0.0;
+		double noteAvgW = 0.0;
+		int noteLongestC = 0;
+		int noteLongestW = 0;
+		int noteTotalC = 0;
+		int noteTotalW = 0;
 		for (int i = 0; i < DB?.RecordCount; i++)
 		{
-			var length = DB?.GetRecord(i).ToString().Length ?? 0;
-			noteAvg += length;
-			noteLongest = Math.Max(noteLongest, length);
-			noteTotal += length;
-		}
-		noteAvg /= DB?.RecordCount ?? 1.0;
+			var record = DB?.GetRecord(i).ToString();
+			var length = record?.Length ?? 0;
+			var wordCount = NotWhitespace().Matches(record ?? string.Empty).Count;
 
-		DBAvgLabel.Content = $"{noteAvg:N1} characters";
-		DBLongestLabel.Content = $"{noteLongest:N0} characters";
-		DBTotalLabel.Content = $"{noteTotal:N0} characters";
+			noteAvgW += wordCount;
+			noteAvgC += length;
+
+			// The 'longest' note is qualified strictly by character count.
+			if (noteLongestC <= length)
+				noteLongestW = Math.Max(noteLongestW, wordCount);
+
+			noteLongestC = Math.Max(noteLongestC, length);
+			noteTotalW += wordCount;
+			noteTotalC += length;
+		}
+		noteAvgC /= DB?.RecordCount ?? 1.0;
+		noteAvgW /= DB?.RecordCount ?? 1.0;
+
+		DBAvgLabel.Content = $"{noteAvgW:N1} words ({noteAvgC:N1} chars.)";
+		DBLongestLabel.Content = $"{noteLongestW:N1} words ({noteLongestC:N0} chars.)";
+		DBTotalLabel.Content = $"{noteTotalW:N1} words ({noteTotalC:N0} chars.)";
 	}
 
 	private void Minute_Selected(object? sender, RoutedEventArgs e)
@@ -120,4 +135,7 @@ public partial class Properties : Window
 		HourSelected = false;
 		MinuteSelected = false;
 	}
+
+	[GeneratedRegex(@"\S+")]
+	private static partial Regex NotWhitespace();
 }

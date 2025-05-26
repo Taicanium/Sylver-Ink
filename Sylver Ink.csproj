@@ -12,14 +12,14 @@
 	<SourceRevisionId>build$([System.DateTime]::UtcNow.ToString("yyyyMMdd"))</SourceRevisionId>
 	<SupportedOSPlatformVersion>7.0</SupportedOSPlatformVersion>
 	<NeutralLanguage>en-US</NeutralLanguage>
-	<Version>1.3.5</Version>
+	<Version>1.3.6</Version>
 	<UseWindowsForms>False</UseWindowsForms>
 	<Title>Sylver Ink</Title>
-	<Authors>Taicanium,milesfarber,norvinsk.hunter</Authors>
+	<Authors>taicanium,norvinsk.hunter,milesfarber</Authors>
 	<PackageIcon>glasses.png</PackageIcon>
 	<ApplicationIcon>glasses.ico</ApplicationIcon>
 	<PackageReadmeFile>README.md</PackageReadmeFile>
-	<Company />
+	<Company>Taica</Company>
 	<PackageProjectUrl>https://github.com/Taicanium/Sylver-Ink</PackageProjectUrl>
 	<AllowUnsafeBlocks>False</AllowUnsafeBlocks>
 	<RepositoryUrl>https://github.com/Taicanium/Sylver-Ink</RepositoryUrl>
@@ -61,9 +61,15 @@
 	  <Pack>True</Pack>
 	  <PackagePath>\</PackagePath>
 	</None>
+	<None Update="license.rtf">
+	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	</None>
 	<None Update="README.md">
 	  <Pack>True</Pack>
 	  <PackagePath>\</PackagePath>
+	</None>
+	<None Update="readme.rtf">
+	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	</None>
   </ItemGroup>
   

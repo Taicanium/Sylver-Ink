@@ -10,10 +10,6 @@ namespace SylverInk
 {
 	public static class MenuUtils
 	{
-		public static void CopyCode(this MainWindow window, object? sender, RoutedEventArgs e) => window.CodePopup.IsOpen = false;
-
-		public static void DatabaseRename(this MainWindow window, object? sender, RoutedEventArgs e) => window.RenameDatabase.IsOpen = false;
-
 		public static void Menu_ShowAbout(this MainWindow window, object? sender, RoutedEventArgs e) => new About().Show();
 
 		public static void Menu_Backup(this MainWindow window, object? sender, RoutedEventArgs e) => CurrentDatabase.MakeBackup();
