@@ -42,23 +42,23 @@
 											<ColumnDefinition Width="Auto"/>
 											<ColumnDefinition Width="*"/>
 										</Grid.ColumnDefinitions>
-										<ListBox AlternationCount="2" BorderThickness="0" ItemsSource="{Binding RecentNotes}" Margin="0,0,1,0" MinWidth="60"
+										<ListBox AlternationCount="2" BorderThickness="0" ItemsSource="{Binding RecentNotes}" Margin="0,0,1,0" ClipToBounds="True" MinWidth="60"
 												 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
 												 ScrollViewer.VerticalScrollBarVisibility="Disabled"
 												 x:Name="ShortChanges">
 											<ListBox.ItemTemplate>
 												<DataTemplate>
-													<TextBlock HorizontalAlignment="Right" Text="{Binding Path=ShortChange}"/>
+													<TextBlock HorizontalAlignment="Right" Text="{Binding ShortChange}"/>
 												</DataTemplate>
 											</ListBox.ItemTemplate>
 										</ListBox>
-										<ListBox AlternationCount="2" BorderThickness="0" Grid.Column="1" ItemsSource="{Binding RecentNotes}" Margin="1,0,0,0"
+										<ListBox AlternationCount="2" BorderThickness="0" Grid.Column="1" ItemsSource="{Binding RecentNotes}" Margin="1,0,0,0" ClipToBounds="True"
 												 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-												 ScrollViewer.VerticalScrollBarVisibility="Disabled"
+												 ScrollViewer.VerticalScrollBarVisibility="Disabled" 
 												 x:Name="RecentNotes">
 											<ListBox.ItemTemplate>
 												<DataTemplate>
-													<TextBlock Text="{Binding Path=Preview}"/>
+													<TextBlock ClipToBounds="True" HorizontalAlignment="Right" Text="{Binding Preview}" TextTrimming="CharacterEllipsis"/>
 												</DataTemplate>
 											</ListBox.ItemTemplate>
 										</ListBox>

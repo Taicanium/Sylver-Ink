@@ -1,13 +1,11 @@
 ﻿using SylverInk.FileIO;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Markup;
-using System.Windows.Media;
 using static SylverInk.Common;
 
 namespace SylverInk.Notes;
@@ -23,18 +21,29 @@ public struct NoteRevision(long created = -1, int startIndex = -1, string? subst
 public partial class NoteRecord
 {
 	private long Created = -1;
-	private bool Dirty = true;
-	private FlowDocument? Document;
+	private FlowDocument? _document;
 	private string? Initial = string.Empty;
 	private long LastChange = -1;
 	private DateTime LastChangeObject = DateTime.UtcNow;
 	private string LastQuery = string.Empty;
-	private string PreviewText = string.Empty;
-	private int PreviewWidth = 375;
+	private string Plaintext = string.Empty;
 	private readonly List<NoteRevision> Revisions = [];
 	private readonly List<string> Tags = [];
 	private bool TagsDirty = true;
 
+	private FlowDocument? Document
+	{
+		get => _document;
+
+		set {
+			_document = value;
+			Plaintext = FlowDocumentToPlaintext(value);
+			DeferUpdateRecentNotes();
+			if (_document is null)
+				return;
+			_document.TextInput += (_, _) => Plaintext = FlowDocumentToPlaintext(value);
+		}
+	}
 	public int Index = -1;
 	public int LastMatchCount { get; private set; }
 	public bool Locked { get; private set; }
@@ -42,32 +51,7 @@ public partial class NoteRecord
 
 	public string Preview
 	{
-		get => PreviewText;
-
-		set
-		{
-			Dirty = false;
-			PreviewText = ToString().Replace("\r", string.Empty).Replace("\n", " ").Replace("\t", " ");
-			if (PreviewText.Length > 225)
-			{
-				PreviewText = PreviewText[..225];
-				Dirty = true;
-			}
-
-			PreviewWidth = (int)Math.Round(double.Parse(value));
-
-			var ft = new FormattedText(PreviewText, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, Common.Settings.MainTypeFace, Common.Settings.MainFontSize, Brushes.Black, PPD);
-
-			while (ft.Width > PreviewWidth)
-			{
-				PreviewText = PreviewText[..^1];
-				Dirty = true;
-				ft = new(PreviewText, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, Common.Settings.MainTypeFace, Common.Settings.MainFontSize, Brushes.Black, PPD);
-			}
-
-			if (Dirty)
-				PreviewText += "...";
-		}
+		get => GetPlaintext().Replace("\r", string.Empty).Replace('\n', ' ').Replace('\t', ' ');
 	}
 
 	public string ShortChange
@@ -242,6 +226,12 @@ public partial class NoteRecord
 
 	public int GetNumRevisions() => Revisions.Count;
 
+	private string GetPlaintext()
+	{
+		GetLatestDocument();
+		return Plaintext;
+	}
+
 	public NoteRevision GetRevision(uint index) => Revisions[Revisions.Count - 1 - (int)index];
 
 	public string GetRevisionTime(uint index) => DateTime.FromBinary(GetRevision(index)._created).ToLocalTime().ToString(DateFormat);
@@ -389,7 +379,7 @@ public partial class NoteRecord
 		ReconstructRevisions(CreatedTags, ReconstructedSubstrings);
 	}
 
-	public override string ToString() => FlowDocumentToPlaintext(GetLatestDocument());
+	public override string ToString() => GetPlaintext();
 
 	public string ToXaml() => Reconstruct(0U);
 

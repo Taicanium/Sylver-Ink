@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -73,9 +74,15 @@ public partial class MainWindow : Window
 		Application.Current.Shutdown();
 	}
 
-	private void HandleCheckInit()
+	private async void HandleCheckInit()
 	{
-		CheckInit.DoWork += (_, _) =>
+		WindowSource = HwndSource.FromHwnd(hWndHelper.Handle);
+		WindowSource.AddHook(HwndHook);
+		RegisterHotKeys();
+
+		HandleShellVerbs();
+
+		await Task.Run(() =>
 		{
 			do
 			{
@@ -87,69 +94,51 @@ public partial class MainWindow : Window
 				if (Concurrent(() => Application.Current.MainWindow.FindName("DatabasesPanel")) is null)
 					InitComplete = false;
 			} while (!InitComplete);
-		};
+		});
 
-		CheckInit.RunWorkerCompleted += (_, _) =>
+		SwitchDatabase($"~N:{LastActiveDatabase}");
+
+		foreach (var openNote in LastActiveNotes)
 		{
-			SwitchDatabase($"~N:{LastActiveDatabase}");
+			var oSplit = openNote.Split(':');
+			if (oSplit.Length < 2)
+				continue;
 
-			foreach (var openNote in LastActiveNotes)
+			if (!int.TryParse(oSplit[1], out var iNote))
+				continue;
+
+			Database? target = null;
+			foreach (Database db in Databases)
+				if (oSplit[0].Equals(db.Name))
+					target = db;
+
+			if (target is null)
+				continue;
+
+			if (target.HasRecord(iNote))
 			{
-				var oSplit = openNote.Split(':');
-				if (oSplit.Length < 2)
+				var result = OpenQuery(target, target.GetRecord(iNote));
+				if (result is null)
 					continue;
 
-				if (!int.TryParse(oSplit[1], out var iNote))
-					continue;
+				if (LastActiveNotesHeight.TryGetValue($"{target.Name}:{iNote}", out var openHeight))
+					result.Height = openHeight;
 
-				Database? target = null;
-				foreach (Database db in Databases)
-					if (oSplit[0].Equals(db.Name))
-						target = db;
+				if (LastActiveNotesLeft.TryGetValue($"{target.Name}:{iNote}", out var openLeft))
+					result.Left = openLeft;
 
-				if (target is null)
-					continue;
+				if (LastActiveNotesTop.TryGetValue($"{target.Name}:{iNote}", out var openTop))
+					result.Top = openTop;
 
-				if (target.HasRecord(iNote))
-				{
-					var result = OpenQuery(target, target.GetRecord(iNote));
-					if (result is null)
-						continue;
-
-					if (LastActiveNotesHeight.TryGetValue($"{target.Name}:{iNote}", out var openHeight))
-						result.Height = openHeight;
-
-					if (LastActiveNotesLeft.TryGetValue($"{target.Name}:{iNote}", out var openLeft))
-						result.Left = openLeft;
-
-					if (LastActiveNotesTop.TryGetValue($"{target.Name}:{iNote}", out var openTop))
-						result.Top = openTop;
-
-					if (LastActiveNotesWidth.TryGetValue($"{target.Name}:{iNote}", out var openWidth))
-						result.Width = openWidth;
-				}
+				if (LastActiveNotesWidth.TryGetValue($"{target.Name}:{iNote}", out var openWidth))
+					result.Width = openWidth;
 			}
+		}
 
-			HandleShellVerbs();
-
-			BackgroundWorker initialUpdateThread = new();
-			initialUpdateThread.DoWork += (_, _) => SpinWait.SpinUntil(new(() => Databases.Count > 0));
-			initialUpdateThread.RunWorkerCompleted += (_, _) =>
-			{
-				CanResize = true;
-				ResizeMode = ResizeMode.CanResize;
-				Common.Settings.MainTypeFace = new(Common.Settings.MainFontFamily, FontStyles.Normal, FontWeights.Normal, FontStretches.Normal);
-				PPD = VisualTreeHelper.GetDpi(this).PixelsPerDip;
-				DeferUpdateRecentNotes();
-			};
-			initialUpdateThread.RunWorkerAsync();
-
-			WindowSource = HwndSource.FromHwnd(hWndHelper.Handle);
-			WindowSource.AddHook(HwndHook);
-			RegisterHotKeys();
-		};
-
-		CheckInit.RunWorkerAsync();
+		CanResize = true;
+		ResizeMode = ResizeMode.CanResize;
+		Common.Settings.MainTypeFace = new(Common.Settings.MainFontFamily, FontStyles.Normal, FontWeights.Normal, FontStretches.Normal);
+		DeferUpdateRecentNotes();
 	}
 
 	private void HandleShellVerbs()
@@ -293,13 +282,13 @@ public partial class MainWindow : Window
 			return;
 		}
 
-		HandleCheckInit();
-
 		Erase(UpdateHandler.UpdateLockUri);
 		Erase(UpdateHandler.TempUri);
 
 		Common.Settings.Load();
 		SettingsLoaded = true;
+
+		HandleCheckInit();
 
 		foreach (var folder in Subfolders)
 			if (!Directory.Exists(folder.Value))

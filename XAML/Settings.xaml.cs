@@ -93,6 +93,7 @@ public partial class Settings : Window
 	{
 		var button = (Button?)sender;
 		Common.Settings.MainFontSize += button?.Content.Equals("-") is true ? -0.5 : 0.5;
+		DeferUpdateRecentNotes();
 	}
 
 	private static uint HSVFromRGB(SolidColorBrush brush)
@@ -261,6 +262,7 @@ public partial class Settings : Window
 	{
 		var item = (ComboBoxItem)MenuFont.SelectedItem;
 		Common.Settings.MainFontFamily = item.FontFamily;
+		DeferUpdateRecentNotes();
 	}
 
 	private void NewCustomColor(object? sender, TextChangedEventArgs e)

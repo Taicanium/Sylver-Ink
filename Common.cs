@@ -8,7 +8,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
@@ -49,7 +49,6 @@ public static partial class Common
 	private static Settings? _settings;
 
 	public static bool CanResize { get; set; }
-	public static BackgroundWorker CheckInit { get; } = new();
 	public static Database CurrentDatabase { get; set; } = new();
 	public static bool DatabaseChanged { get; set; }
 	public static List<string> DatabaseFiles { get => [.. Databases.Select(db => db.DBFile)]; }
@@ -70,12 +69,10 @@ public static partial class Common
 	public static Dictionary<string, double> LastActiveNotesLeft { get; set; } = [];
 	public static Dictionary<string, double> LastActiveNotesTop { get; set; } = [];
 	public static Dictionary<string, double> LastActiveNotesWidth { get; set; } = [];
-	private static BackgroundWorker? MeasureTask { get; set; }
 	public static List<SearchResult> OpenQueries { get; } = [];
 	public static List<NoteTab> OpenTabs { get; } = [];
 	public static double PPD { get; set; } = 1.0;
 	public static NoteRecord? PreviousOpenNote { get; set; }
-	private static int RecentEntries { get; set; } = 10;
 	public static NoteRecord? RecentSelection { get; set; }
 	public static SortType RecentEntriesSortMode { get; set; } = SortType.ByChange;
 	public static Replace? ReplaceWindow { get => _replace; set { _replace?.Close(); _replace = value; _replace?.Show(); } }
@@ -90,9 +87,8 @@ public static partial class Common
 		]);
 	private static double TextHeight { get; set; }
 	public static bool UpdatesChecked { get; set; }
-	private static BackgroundWorker? UpdateTask { get; set; }
-	public static double WindowHeight { get; set; } = 275.0;
-	public static double WindowWidth { get; set; } = 330.0;
+	public static double WindowHeight { get; set; } = 0.0;
+	public static double WindowWidth { get; set; } = 0.0;
 
 	public static void AddDatabase(Database db)
 	{
@@ -172,7 +168,7 @@ public static partial class Common
 
 	public static T Concurrent<T>(Func<T> callback) => Application.Current.Dispatcher.Invoke(callback);
 
-	public static void DeferUpdateRecentNotes()
+	public static async void DeferUpdateRecentNotes()
 	{
 		if (!CanResize)
 			return;
@@ -180,61 +176,27 @@ public static partial class Common
 		if (DelayVisualUpdates)
 			return;
 
-		if (UpdateTask is null)
-		{
-			UpdateTask = new() { WorkerSupportsCancellation = true };
-			UpdateTask.DoWork += (_, _) => UpdateRecentNotes();
-			UpdateTask.RunWorkerCompleted += (_, _) =>
-			{
-				var panel = GetChildPanel("DatabasesPanel");
-				var RecentBox = (ListBox?)panel.Dispatcher.Invoke(() => panel.FindName("RecentNotes"));
-				var ChangesBox = (ListBox?)panel.Dispatcher.Invoke(() => panel.FindName("ShortChanges"));
-
-				if ((RecentBox ?? ChangesBox) is null)
-					return;
-
-				Settings.RecentNotes.Clear();
-				CurrentDatabase.Sort(RecentEntriesSortMode);
-				for (int i = 0; i < Math.Min(RecentEntries, CurrentDatabase.RecordCount); i++)
-					Settings.RecentNotes.Add(CurrentDatabase.GetRecord(i));
-				CurrentDatabase.Sort();
-				RecentBox?.Items.Refresh();
-				ChangesBox?.Items.Refresh();
-				UpdateRibbonTabs(RibbonTabContent);
-			};
-		}
-
-		if (MeasureTask is null)
-		{
-			MeasureTask = new();
-			MeasureTask.DoWork += (_, _) =>
-			{
-				var panel = GetChildPanel("DatabasesPanel");
-				var RecentBox = (ListBox?)panel.Dispatcher.Invoke(() => panel.FindName("RecentNotes"));
-				var ChangesBox = (ListBox?)panel.Dispatcher.Invoke(() => panel.FindName("ShortChanges"));
-
-				if ((RecentBox ?? ChangesBox) is null)
-					return;
-
-				WindowHeight = (RecentBox?.ActualHeight ?? Application.Current.MainWindow.ActualHeight) - 35.0;
-				WindowWidth = (RecentBox?.ActualWidth ?? Application.Current.MainWindow.ActualWidth) - 40.0;
-			};
-			MeasureTask.RunWorkerCompleted += (_, _) => UpdateTask?.RunWorkerAsync();
-		}
-
-		BackgroundWorker deferUpdateTask = new();
-		deferUpdateTask.DoWork += (_, _) => SpinWait.SpinUntil(new(() => !MeasureTask?.IsBusy is true && !UpdateTask?.IsBusy is true), 100);
-		deferUpdateTask.RunWorkerCompleted += (_, _) =>
-		{
-			if (MeasureTask?.IsBusy is false && UpdateTask?.IsBusy is false)
-				MeasureTask?.RunWorkerAsync();
-
-			DeferUpdateRecentNotes();
-			DelayVisualUpdates = false;
-		};
-
-		Concurrent(deferUpdateTask.RunWorkerAsync);
 		DelayVisualUpdates = true;
+
+		await Task.Run(() =>
+		{
+			var panel = GetChildPanel("DatabasesPanel");
+			var RecentBox = (ListBox?)panel.Dispatcher.Invoke(() => panel.FindName("RecentNotes"));
+
+			if (RecentBox is null)
+				return;
+
+			do
+			{
+				WindowHeight = RecentBox.ActualHeight == double.NaN ? Application.Current.MainWindow.ActualHeight : RecentBox.ActualHeight;
+				WindowWidth = RecentBox.ActualWidth == double.NaN ? Application.Current.MainWindow.ActualWidth : RecentBox.ActualWidth;
+			} while (WindowHeight <= 0);
+
+			Concurrent(UpdateRecentNotes);
+			UpdateRibbonTabs(RibbonTabContent);
+		});
+
+		DelayVisualUpdates = false;
 	}
 
 	public static string DialogFileSelect(bool outgoing = false, int filterIndex = 3, string? defaultName = null)
@@ -270,10 +232,13 @@ public static partial class Common
 		return true;
 	}
 
-	public static string FlowDocumentToPlaintext(FlowDocument document)
+	public static string FlowDocumentToPlaintext(FlowDocument? document)
 	{
 		try
 		{
+			if (document is null)
+				return string.Empty;
+
 			return document.IsInitialized ? new TextRange(document.ContentStart, document.ContentEnd).Text : string.Empty;
 		}
 		catch
@@ -414,8 +379,6 @@ public static partial class Common
 			resultWindow.Show();
 			OpenQueries.Add(resultWindow);
 		}
-
-		DeferUpdateRecentNotes();
 
 		return resultWindow;
 	}
@@ -565,21 +528,24 @@ public static partial class Common
 
 	private static void UpdateRecentNotes()
 	{
+		if (Settings.MainTypeFace is null)
+			return;
+
 		Application.Current.Resources["MainFontFamily"] = Settings.MainFontFamily;
 		Application.Current.Resources["MainFontSize"] = Settings.MainFontSize;
 
-		RecentEntries = 0;
-		TextHeight = 0.0;
+		var DpiInfo = VisualTreeHelper.GetDpi(Application.Current.MainWindow);
+		var PixelRatio = Settings.MainFontSize * DpiInfo.PixelsPerInchY / 72.0;
+		var LineHeight = PixelRatio * Settings.MainTypeFace.FontFamily.LineSpacing;
+		var LineRatio = Math.Max(1.0, (WindowHeight / LineHeight) - 0.5);
+
 		CurrentDatabase.Sort(RecentEntriesSortMode);
 
-		while (RecentEntries < CurrentDatabase.RecordCount && TextHeight < WindowHeight)
-		{
-			var record = CurrentDatabase.GetRecord(RecentEntries);
-			Concurrent(() => record.Preview = $"{WindowWidth}");
+		while (Settings.RecentNotes.Count < LineRatio && Settings.RecentNotes.Count < CurrentDatabase.RecordCount)
+			Settings.RecentNotes.Add(CurrentDatabase.GetRecord(Settings.RecentNotes.Count));
 
-			RecentEntries++;
-			TextHeight += new FormattedText(record.Preview, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, Settings.MainTypeFace, Settings.MainFontSize, Brushes.Black, PPD).Height * 1.25;
-		}
+		while (Settings.RecentNotes.Count > LineRatio)
+			Settings.RecentNotes.RemoveAt(Settings.RecentNotes.Count - 1);
 
 		CurrentDatabase.Sort();
 	}

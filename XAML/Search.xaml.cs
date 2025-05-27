@@ -82,7 +82,6 @@ public partial class Search : Window
 				if (!textFound)
 					continue;
 
-				newRecord.Preview = _width;
 				_results.Add(newRecord);
 				_dbMatches.TryAdd(newRecord, db);
 			}
