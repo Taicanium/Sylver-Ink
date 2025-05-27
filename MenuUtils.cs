@@ -124,17 +124,12 @@ public static class MenuUtils
 		if (Mouse.RightButton == MouseButtonState.Pressed)
 			return;
 
-		var box = (ListBoxItem?)sender;
-		if (box is null)
+		if (sender is not ListBoxItem box)
 			return;
 
-		if (box.DataContext is null)
+		if (box.DataContext is not NoteRecord record)
 			return;
 
-		if (box.DataContext is not NoteRecord)
-			return;
-
-		var record = (NoteRecord)box.DataContext;
 		RecentSelection = record;
 		OpenQuery(RecentSelection);
 	}

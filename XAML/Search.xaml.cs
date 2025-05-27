@@ -76,24 +76,18 @@ public partial class Search : Window
 		if (Mouse.RightButton == MouseButtonState.Pressed)
 			return;
 
-		var box = (ListBoxItem?)sender;
-		if (box is null)
+		if (sender is not ListBoxItem box)
 			return;
 
-		if (box.DataContext is null)
+		if (box.DataContext is not NoteRecord record)
 			return;
 
-		if (box.DataContext is not NoteRecord)
-			return;
-
-		var _record = (NoteRecord)box.DataContext;
-
-		if (DBMatches.TryGetValue(_record, out var _db))
+		if (DBMatches.TryGetValue(record, out var _db))
 		{
-			OpenQuery(_db, _record);
+			OpenQuery(_db, record);
 			return;
 		}
 
-		OpenQuery(_record);
+		OpenQuery(record);
 	}
 }

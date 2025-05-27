@@ -164,8 +164,18 @@ public static partial class Common
 		return $"{data?.Color.R:X2}{data?.Color.G:X2}{data?.Color.B:X2}";
 	}
 
+	/// <summary>
+	/// Dispatch an action to the main thread for synchronous execution.
+	/// </summary>
+	/// <param name="callback">The action to be performed on the main thread</param>
 	public static void Concurrent(Action callback) => Application.Current.Dispatcher.Invoke(callback);
 
+	/// <summary>
+	/// Dispatch a function with no arguments to the main thread for synchronous execution, and return the result of that execution.
+	/// </summary>
+	/// <typeparam name="T">Type of object returned by <paramref name="callback"/></typeparam>
+	/// <param name="callback">The function to be executed on the main thread</param>
+	/// <returns></returns>
 	public static T Concurrent<T>(Func<T> callback) => Application.Current.Dispatcher.Invoke(callback);
 
 	public static async void DeferUpdateRecentNotes()
@@ -178,23 +188,22 @@ public static partial class Common
 
 		DelayVisualUpdates = true;
 
+		var panel = GetChildPanel("DatabasesPanel");
+
+		if (await panel.Dispatcher.InvokeAsync(() => panel.FindName("RecentNotes")) is not ListBox RecentBox)
+			return;
+
 		await Task.Run(() =>
 		{
-			var panel = GetChildPanel("DatabasesPanel");
-			var RecentBox = (ListBox?)panel.Dispatcher.Invoke(() => panel.FindName("RecentNotes"));
-
-			if (RecentBox is null)
-				return;
-
 			do
 			{
 				WindowHeight = RecentBox.ActualHeight == double.NaN ? Application.Current.MainWindow.ActualHeight : RecentBox.ActualHeight;
 				WindowWidth = RecentBox.ActualWidth == double.NaN ? Application.Current.MainWindow.ActualWidth : RecentBox.ActualWidth;
 			} while (WindowHeight <= 0);
-
-			Concurrent(UpdateRecentNotes);
-			Concurrent(UpdateRibbonTabs);
 		});
+
+		await UpdateRecentNotes();
+		Concurrent(UpdateRibbonTabs);
 
 		DelayVisualUpdates = false;
 	}
@@ -512,7 +521,7 @@ public static partial class Common
 		}
 	}
 
-	private static void UpdateRecentNotes()
+	private static async Task UpdateRecentNotes()
 	{
 		if (Settings.MainTypeFace is null)
 			return;
@@ -520,23 +529,29 @@ public static partial class Common
 		Application.Current.Resources["MainFontFamily"] = Settings.MainFontFamily;
 		Application.Current.Resources["MainFontSize"] = Settings.MainFontSize;
 
-		var DpiInfo = VisualTreeHelper.GetDpi(Application.Current.MainWindow);
-		var PixelRatio = Settings.MainFontSize * DpiInfo.PixelsPerInchY / 72.0;
-		var LineHeight = PixelRatio * Settings.MainTypeFace.FontFamily.LineSpacing;
-		var LineRatio = Math.Max(1.0, (WindowHeight / LineHeight) - 0.5);
-
 		if (RecentNotesDirty)
-			Settings.RecentNotes.Clear();
+			Concurrent(Settings.RecentNotes.Clear);
 
-		CurrentDatabase.Sort(RecentEntriesSortMode);
+		await Task.Run(() =>
+		{
+			var DpiInfo = Concurrent(() => VisualTreeHelper.GetDpi(Application.Current.MainWindow));
+			var PixelRatio = Settings.MainFontSize * DpiInfo.PixelsPerInchY * 0.013888888889;
+			var LineHeight = PixelRatio * Settings.MainTypeFace.FontFamily.LineSpacing;
+			var LineRatio = Math.Max(1.0, (WindowHeight / LineHeight) - 0.5);
 
-		while (Settings.RecentNotes.Count < LineRatio && Settings.RecentNotes.Count < CurrentDatabase.RecordCount)
-			Settings.RecentNotes.Add(CurrentDatabase.GetRecord(Settings.RecentNotes.Count));
+			CurrentDatabase.Sort(RecentEntriesSortMode);
 
-		while (Settings.RecentNotes.Count > LineRatio)
-			Settings.RecentNotes.RemoveAt(Settings.RecentNotes.Count - 1);
+			Concurrent(() =>
+			{
+				while (Settings.RecentNotes.Count < LineRatio && Settings.RecentNotes.Count < CurrentDatabase.RecordCount)
+					Settings.RecentNotes.Add(CurrentDatabase.GetRecord(Settings.RecentNotes.Count));
 
-		CurrentDatabase.Sort();
+				while (Settings.RecentNotes.Count > LineRatio)
+					Settings.RecentNotes.RemoveAt(Settings.RecentNotes.Count - 1);
+			});
+
+			CurrentDatabase.Sort();
+		});
 
 		RecentNotesDirty = false;
 	}
