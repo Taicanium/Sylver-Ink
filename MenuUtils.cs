@@ -156,6 +156,7 @@ namespace SylverInk
 					return;
 
 				CurrentDatabase = newDB;
+				Common.Settings.RecentNotes.Clear();
 				Common.Settings.SearchResults.Clear();
 			}
 
