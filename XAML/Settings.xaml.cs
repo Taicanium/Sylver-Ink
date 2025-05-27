@@ -16,10 +16,10 @@ namespace SylverInk;
 public partial class Settings : Window
 {
 	private static int ArialIndex;
-	private static string? ColorTag;
+	private string? ColorTag;
 	public Brush? LastColorSelection { get; set; }
-	private static List<SolidColorBrush> AvailableBrushes { get; } = [];
-	private static List<FontFamily> AvailableFonts { get; } = [];
+	private List<SolidColorBrush> AvailableBrushes { get; } = [];
+	private List<FontFamily> AvailableFonts { get; } = [];
 
 	public Settings()
 	{
@@ -29,7 +29,7 @@ public partial class Settings : Window
 
 	private void CloseClick(object? sender, RoutedEventArgs e) => Close();
 
-	private static void ColorChanged(string? ColorTag, Brush ColorSelection)
+	private void ColorChanged(string? ColorTag, Brush ColorSelection)
 	{
 		if (ColorTag is null)
 			return;
@@ -93,7 +93,6 @@ public partial class Settings : Window
 	{
 		var button = (Button?)sender;
 		Common.Settings.MainFontSize += button?.Content.Equals("-") is true ? -0.5 : 0.5;
-		DeferUpdateRecentNotes();
 	}
 
 	private static uint HSVFromRGB(SolidColorBrush brush)
@@ -262,7 +261,6 @@ public partial class Settings : Window
 	{
 		var item = (ComboBoxItem)MenuFont.SelectedItem;
 		Common.Settings.MainFontFamily = item.FontFamily;
-		DeferUpdateRecentNotes();
 	}
 
 	private void NewCustomColor(object? sender, TextChangedEventArgs e)
