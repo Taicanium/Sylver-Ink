@@ -275,9 +275,16 @@ public static partial class Common
 			if (!File.Exists(uuidFile))
 			{
 				Database tmpDB = new();
-				tmpDB.Load(dbFile);
-				if (tmpDB.UUID?.Equals(db.UUID) is true)
-					return dbFile;
+				try
+				{
+					tmpDB.Load(dbFile);
+					if (tmpDB.UUID?.Equals(db.UUID) is true)
+						return dbFile;
+				}
+				catch
+				{
+					return string.Empty;
+				}
 			}
 
 			index++;

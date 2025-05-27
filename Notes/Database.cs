@@ -241,6 +241,12 @@ public partial class Database : IDisposable
 			Controller.Open(lockFile);
 			Controller.DeserializeRecords();
 
+			if (Controller.EnforceNoForwardCompatibility)
+			{
+				Loaded = false;
+				throw new NotSupportedException($"The program attempted to load a .sidb file with a newer format than it supports.");
+			}
+
 			Loaded = Controller.Loaded = true;
 			Changed = true;
 
@@ -253,6 +259,13 @@ public partial class Database : IDisposable
 		}
 
 		Controller = new(DBFile = dbFile);
+
+		if (Controller.EnforceNoForwardCompatibility)
+		{
+			Loaded = false;
+			throw new NotSupportedException($"The program attempted to load a .sidb file with a newer format than it supports.");
+		}
+
 		Loaded = Controller.Loaded;
 
 		if (string.IsNullOrWhiteSpace(Name))

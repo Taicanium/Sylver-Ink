@@ -28,6 +28,7 @@ public partial class NoteController : IDisposable
 		}
 	}
 
+	public bool EnforceNoForwardCompatibility;
 	public int Format = HighestFormat;
 	public bool Loaded;
 	public string? Name;
@@ -156,6 +157,14 @@ public partial class NoteController : IDisposable
 			_serializer?.OpenRead(string.Empty, inMemory);
 
 		Format = _serializer?.DatabaseFormat ?? HighestFormat;
+
+		if (Format > HighestFormat)
+		{
+			EnforceNoForwardCompatibility = true;
+			_serializer?.Close();
+			MessageBox.Show($"This database was created in a newer format than this version of Sylver Ink supports. Please update your installation before opening this database.", "Sylver Ink: Error", MessageBoxButton.OK, MessageBoxImage.Error);
+			return;
+		}
 
 		if (Format >= 7)
 		{
