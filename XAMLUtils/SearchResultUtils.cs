@@ -62,7 +62,7 @@ public static class SearchResultUtils
 		DeferUpdateRecentNotes();
 	}
 
-	public static Point Snap(this SearchResult window, ref Point Coords)
+	private static Point Snap(this SearchResult window, ref Point Coords)
 	{
 		var Snapped = (false, false);
 

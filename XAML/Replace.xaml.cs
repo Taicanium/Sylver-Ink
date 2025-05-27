@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+﻿using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -27,7 +27,7 @@ public partial class Replace : Window
 
 	private void Drag(object? sender, MouseButtonEventArgs e) => DragMove();
 
-	private void FinishReplace(object? sender, RunWorkerCompletedEventArgs e)
+	private void FinishReplace()
 	{
 		Common.Settings.NumReplacements = $"Replaced {_counts.Item1:N0} occurrences in {_counts.Item2:N0} notes.";
 		DeferUpdateRecentNotes();
@@ -36,11 +36,11 @@ public partial class Replace : Window
 		DoReplace.IsEnabled = true;
 	}
 
-	private void PerformReplace(object? sender, DoWorkEventArgs e) => _counts = CurrentDatabase.Replace(_oldText, _newText);
+	private async Task PerformReplace() => await Task.Run(() => _counts = CurrentDatabase.Replace(_oldText, _newText));
 
 	private void ReplaceTextChanged(object? sender, TextChangedEventArgs e) => Common.Settings.ReadyToReplace = !string.IsNullOrWhiteSpace(OldText.Text);
 
-	private void Replace_Click(object? sender, RoutedEventArgs e)
+	private async void Replace_Click(object? sender, RoutedEventArgs e)
 	{
 		var button = (Button?)sender;
 		if (button is null)
@@ -53,9 +53,7 @@ public partial class Replace : Window
 		_newText = NewText.Text;
 		_oldText = OldText.Text;
 
-		BackgroundWorker replaceTask = new();
-		replaceTask.DoWork += PerformReplace;
-		replaceTask.RunWorkerCompleted += FinishReplace;
-		replaceTask.RunWorkerAsync();
+		await PerformReplace();
+		FinishReplace();
 	}
 }

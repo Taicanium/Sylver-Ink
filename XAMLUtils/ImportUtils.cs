@@ -48,7 +48,7 @@ public static class ImportUtils
 		}
 	}
 
-	public static async Task Measure(bool Adaptive = false) => await Task.Run(() =>
+	public static async Task Measure(bool Adaptive = false)
 	{
 		if (string.IsNullOrWhiteSpace(Common.Settings.ImportTarget))
 			return;
@@ -56,17 +56,17 @@ public static class ImportUtils
 		AdaptiveImport = Adaptive;
 		Common.Settings.ReadyToFinalize = false;
 
-		if (!Adaptive || !MeasureNotesAdaptive())
-			MeasureNotesManual();
+		if (!(Adaptive && await MeasureNotesAdaptive()))
+			await MeasureNotesManual();
 
 		ReportMeasurement();
-	});
+	}
 
 	/// <summary>
 	/// Attempt to detect recurring patterns in the incoming data that can be used to divide the data into notes. These patterns (referred to here as 'predicates') may consist of timestamps, headings, signatures, or other text structures consisting of letters, numbers, and symbols.
 	/// </summary>
 	/// <returns><c>true</c> if a predicate was successfully detected; <c>false</c> otherwise.</returns>
-	private static bool MeasureNotesAdaptive()
+	private static async Task<bool> MeasureNotesAdaptive() => await Task.Run(() =>
 	{
 		// Letters, numbers, spaces, and punctuation; respectively.
 		string[] classes = [@"\p{L}+", @"\p{Nd}+", @"[\p{Zs}\t]+", @"[\p{P}\p{S}]+"];
@@ -210,12 +210,12 @@ public static class ImportUtils
 		MessageBox.Show("Failed to autodetect the note format.", "Sylver Ink: Error", MessageBoxButton.OK);
 		AdaptivePredicate = string.Empty;
 		return false;
-	}
+	});
 
 	/// <summary>
 	/// Manual note measurement consists of dividing the incoming plaintext data by a strict number of blank lines appearing between entries. If a text file contains no empty lines, the entire file will be placed into one Sylver Ink note.
 	/// </summary>
-	private static void MeasureNotesManual()
+	private static async Task MeasureNotesManual() => await Task.Run(() =>
 	{
 		try
 		{
@@ -264,7 +264,7 @@ public static class ImportUtils
 		{
 			MessageBox.Show($"Could not open file: {Common.Settings.ImportTarget}", "Sylver Ink: Error", MessageBoxButton.OK, MessageBoxImage.Error);
 		}
-	}
+	});
 
 	/// <summary>
 	/// Importing plaintext data proceeds similarly to measuring it. In this method, however, the data is saved to newly created <c>NoteRecord</c>s instead of being discarded.
@@ -365,7 +365,7 @@ public static class ImportUtils
 		await Measure(Adaptive);
 	}
 
-	public static void ReportMeasurement()
+	private static void ReportMeasurement()
 	{
 		Common.Settings.ImportData = $"Estimated new notes: {RunningCount:N0}\nAverage length: {RunningAverage:N0} characters per note\n\nRemember to press Import to finalize your changes!";
 		Common.Settings.ReadyToFinalize = RunningCount > 0;

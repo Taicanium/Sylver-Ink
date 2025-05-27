@@ -1,12 +1,11 @@
 ﻿using SylverInk.Notes;
+using SylverInk.XAMLUtils;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Markup;
 using static SylverInk.Common;
 
 namespace SylverInk;
@@ -16,10 +15,9 @@ namespace SylverInk;
 /// </summary>
 public partial class Search : Window
 {
-	private readonly Dictionary<NoteRecord, Database> _dbMatches = [];
-	private string _query = string.Empty;
-	private readonly List<NoteRecord> _results = [];
-	private string _width = string.Empty;
+	public readonly Dictionary<NoteRecord, Database> DBMatches = [];
+	public string Query = string.Empty;
+	public readonly List<NoteRecord> ResultsList = [];
 
 	public Search()
 	{
@@ -31,66 +29,33 @@ public partial class Search : Window
 
 	private void Drag(object? sender, MouseButtonEventArgs e) => DragMove();
 
-	private void FinishSearch(object? sender, RunWorkerCompletedEventArgs e)
+	private void OnClose(object? sender, EventArgs e)
+	{
+		Common.Settings.SearchResults.Clear();
+	}
+
+	private async Task PerformSearch()
+	{
+		DBMatches.Clear();
+
+		foreach (Database db in Databases)
+			await this.SearchDatabase(db);
+
+		ResultsList.Sort(new Comparison<NoteRecord>((r1, r2) => r2.MatchTags(Query).CompareTo(r1.MatchTags(Query))));
+	}
+
+	private void PostResults()
 	{
 		Common.Settings.SearchResults.Clear();
 
-		for (int i = 0; i < _results.Count; i++)
-			Common.Settings.SearchResults.Add(_results[i]);
+		for (int i = 0; i < ResultsList.Count; i++)
+			Common.Settings.SearchResults.Add(ResultsList[i]);
 
 		DoQuery.Content = "Query";
 		DoQuery.IsEnabled = true;
 	}
 
-	private void PerformSearch(object? sender, DoWorkEventArgs e)
-	{
-		_dbMatches.Clear();
-
-		foreach (Database db in Databases)
-		{
-			db.UpdateWordPercentages();
-
-			for (int i = 0; i < db.RecordCount; i++)
-			{
-				var newRecord = db.GetRecord(i);
-
-				if (newRecord is null)
-					continue;
-
-				var document = (FlowDocument)XamlReader.Parse(newRecord.ToXaml());
-				TextPointer? pointer = document.ContentStart;
-				bool textFound = false;
-				while (pointer is not null && pointer.GetPointerContext(LogicalDirection.Forward) != TextPointerContext.None)
-				{
-					while (pointer is not null && pointer.GetPointerContext(LogicalDirection.Forward) != TextPointerContext.Text)
-						pointer = pointer.GetNextContextPosition(LogicalDirection.Forward);
-
-					if (pointer is null)
-						break;
-
-					string recordText = pointer.GetTextInRun(LogicalDirection.Forward);
-					if (recordText.Contains(_query, StringComparison.OrdinalIgnoreCase))
-					{
-						textFound = true;
-						break;
-					}
-
-					while (pointer.GetPointerContext(LogicalDirection.Forward) == TextPointerContext.Text)
-						pointer = pointer.GetNextContextPosition(LogicalDirection.Forward);
-				}
-
-				if (!textFound)
-					continue;
-
-				_results.Add(newRecord);
-				_dbMatches.TryAdd(newRecord, db);
-			}
-		}
-
-		_results.Sort(new Comparison<NoteRecord>((r1, r2) => r2.MatchTags(_query).CompareTo(r1.MatchTags(_query))));
-	}
-
-	private void QueryClick(object? sender, RoutedEventArgs e)
+	private async void QueryClick(object? sender, RoutedEventArgs e)
 	{
 		var button = (Button?)sender;
 		if (button is null)
@@ -99,14 +64,11 @@ public partial class Search : Window
 		button.Content = "Querying...";
 		button.IsEnabled = false;
 
-		_query = SearchText.Text ?? string.Empty;
-		_results.Clear();
-		_width = $"{Math.Floor(Width - 115.0)}";
+		Query = SearchText.Text ?? string.Empty;
+		ResultsList.Clear();
 
-		BackgroundWorker queryTask = new();
-		queryTask.DoWork += PerformSearch;
-		queryTask.RunWorkerCompleted += FinishSearch;
-		queryTask.RunWorkerAsync();
+		await PerformSearch();
+		PostResults();
 	}
 
 	private void SublistChanged(object? sender, RoutedEventArgs e)
@@ -126,7 +88,7 @@ public partial class Search : Window
 
 		var _record = (NoteRecord)box.DataContext;
 
-		if (_dbMatches.TryGetValue(_record, out var _db))
+		if (DBMatches.TryGetValue(_record, out var _db))
 		{
 			OpenQuery(_db, _record);
 			return;

@@ -16,7 +16,7 @@
 			<RowDefinition Height="50"/>
 		</Grid.RowDefinitions>
 		<TextBlock FontFamily="{Binding MainFontFamily}" FontSize="{Binding MainFontSize}" Margin="15" TextWrapping="WrapWithOverflow">
-			<Bold>Sylver Ink</Bold> is released under the MIT permissive software license. You are free to modify and redistribute Sylver Ink as you see fit, provided no claim is made to patent rights.<LineBreak/><LineBreak/>
+			<Bold>Sylver Ink</Bold> is released under the MIT software license. You are free to modify and redistribute Sylver Ink as you see fit, provided no claim is made to patent rights.<LineBreak/><LineBreak/>
 			With thanks to <Bold>Miles Farber</Bold> for the priceless contribution of encouraging words and helpful brainstorming;<LineBreak/>
 			and to <Bold>Norvinsk Hunter</Bold> for his invaluable insight into the wants and needs of our target audience.<LineBreak/><LineBreak/>
 			<Hyperlink NavigateUri="https://github.com/Taicanium/Sylver-Ink" RequestNavigate="FollowHyperlink">Visit us on Github.</Hyperlink>

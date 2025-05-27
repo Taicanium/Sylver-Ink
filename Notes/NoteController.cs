@@ -1,4 +1,5 @@
 ﻿using SylverInk.FileIO;
+using SylverInk.XAMLUtils;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -225,6 +226,12 @@ public partial class NoteController : IDisposable
 	{
 		try
 		{
+			if (index < 0)
+				return false;
+
+			if (index >= Records.Count)
+				return false;
+
 			return Records.ElementAt(index) != null;	
 		}
 		catch
@@ -290,15 +297,22 @@ public partial class NoteController : IDisposable
 		var newVersion = string.Empty;
 		int NoteCount = 0;
 		int ReplaceCount = 0;
-		foreach (NoteRecord record in Records)
+
+		for (int i = 0; i < Records.Count; i++)
 		{
+			var record = Records[i];
 			var recordText = record.ToXaml();
 			if (!recordText.Contains(oldText, StringComparison.OrdinalIgnoreCase))
 				continue;
 
-			for (int i = OpenQueries.Count - 1; i > -1; i--)
-				if (record.Equals(OpenQueries[i].ResultRecord))
-					Concurrent(OpenQueries[i].Close);
+			for (int j = OpenQueries.Count - 1; j > -1; j--)
+			{
+				if (record.Equals(OpenQueries[j].ResultRecord))
+				{
+					Concurrent(OpenQueries[j].SaveRecord);
+					Concurrent(OpenQueries[j].Close);
+				}
+			}
 
 			var document = (FlowDocument)XamlReader.Parse(recordText);
 			TextPointer? pointer = document.ContentStart;

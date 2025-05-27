@@ -1,5 +1,4 @@
 ﻿using SylverInk.XAMLUtils;
-using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -18,7 +17,7 @@ public partial class Import : Window
 		Common.Settings.ReadyToFinalize = false;
 	}
 
-	private void AdaptiveChecked(object? sender, RoutedEventArgs e)
+	private async void AdaptiveChecked(object? sender, RoutedEventArgs e)
 	{
 		AdaptiveCheckBox.IsEnabled = false;
 		CloseButton.IsEnabled = false;
@@ -26,16 +25,12 @@ public partial class Import : Window
 		LTPanel.IsEnabled = false;
 		Common.Settings.ReadyToFinalize = false;
 
-		BackgroundWorker worker = new();
-		worker.DoWork += (_, _) => Concurrent(() => ImportUtils.Measure(AdaptiveCheckBox.IsChecked is true));
-		worker.RunWorkerCompleted += (_, _) =>
-		{
-			AdaptiveCheckBox.IsEnabled = true;
-			CloseButton.IsEnabled = true;
-			DoImport.Content = "Import";
-			LTPanel.IsEnabled = AdaptiveCheckBox.IsChecked is false;
-		};
-		worker.RunWorkerAsync();
+		await ImportUtils.Measure(AdaptiveCheckBox.IsChecked is true);
+
+		AdaptiveCheckBox.IsEnabled = true;
+		CloseButton.IsEnabled = true;
+		DoImport.Content = "Import";
+		LTPanel.IsEnabled = AdaptiveCheckBox.IsChecked is false;
 	}
 
 	private void CloseClick(object? sender, RoutedEventArgs e) => Close();
