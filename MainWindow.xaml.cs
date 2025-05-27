@@ -5,13 +5,11 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Interop;
-using System.Windows.Media;
 using static SylverInk.Common;
 
 namespace SylverInk;
@@ -266,7 +264,25 @@ public partial class MainWindow : Window
 		base.OnClosed(e);
 	}
 
-	private static void OnNewNoteHotkey() => OpenQuery(CurrentDatabase.GetRecord(CurrentDatabase.CreateRecord(string.Empty)));
+	private static void OnNewNoteHotkey()
+	{
+		var firstRecord = CurrentDatabase.GetRecord(0);
+		var lastRecord = CurrentDatabase.GetRecord(CurrentDatabase.RecordCount - 1);
+
+		if (string.IsNullOrEmpty(firstRecord.ToString()))
+		{
+			OpenQuery(firstRecord);
+			return;
+		}
+
+		if (string.IsNullOrEmpty(lastRecord.ToString()))
+		{
+			OpenQuery(lastRecord);
+			return;
+		}
+
+		OpenQuery(CurrentDatabase.GetRecord(CurrentDatabase.CreateRecord(string.Empty)));
+	}
 
 	private static void OnPreviousNoteHotkey() => OpenQuery(PreviousOpenNote ?? CurrentDatabase.GetRecord(CurrentDatabase.CreateRecord(string.Empty)));
 

@@ -38,9 +38,13 @@ public partial class NoteRecord
 		set {
 			_document = value;
 			Plaintext = FlowDocumentToPlaintext(value);
+
+			RecentNotesDirty = true;
 			DeferUpdateRecentNotes();
+
 			if (_document is null)
 				return;
+
 			_document.TextInput += (_, _) => Plaintext = FlowDocumentToPlaintext(value);
 		}
 	}
@@ -85,6 +89,7 @@ public partial class NoteRecord
 		Initial = string.Empty;
 		LastChange = Created;
 		LastChangeObject = DateTime.FromBinary(LastChange);
+		RecentNotesDirty = true;
 		UUID = MakeUUID();
 	}
 
@@ -95,6 +100,7 @@ public partial class NoteRecord
 		this.Initial = Initial;
 		LastChange = this.Created;
 		LastChangeObject = DateTime.FromBinary(LastChange);
+		RecentNotesDirty = true;
 		this.UUID = UUID ?? MakeUUID();
 	}
 
@@ -122,6 +128,7 @@ public partial class NoteRecord
 		Index = 0;
 		Initial = string.Empty;
 		LastChange = DateTime.UtcNow.ToBinary();
+		RecentNotesDirty = true;
 		Revisions.Clear();
 		TagsDirty = true;
 	}
@@ -133,9 +140,11 @@ public partial class NoteRecord
 			return;
 
 		Revisions.RemoveAt(index);
+
 		Document = (FlowDocument)XamlReader.Parse(Reconstruct());
 		LastChange = GetNumRevisions() == 0 ? Created : Revisions[GetNumRevisions() - 1]._created;
 		LastChangeObject = DateTime.FromBinary(LastChange);
+		RecentNotesDirty = true;
 	}
 
 	public NoteRecord Deserialize(Serializer? serializer)

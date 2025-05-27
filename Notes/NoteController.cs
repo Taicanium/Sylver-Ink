@@ -85,9 +85,8 @@ public partial class NoteController : IDisposable
 	{
 		int Index = NextIndex;
 		var RecordText = XamlWriter.Save(PlaintextToFlowDocument(entry));
-		Records.Add(new(Index, RecordText));
 		Changed = true;
-		return Index;
+		return AddRecord(new(Index, RecordText));
 	}
 
 	public void CreateRevision(int index, string NewVersion)

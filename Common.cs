@@ -3,7 +3,6 @@ using SylverInk.Notes;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -73,6 +72,7 @@ public static partial class Common
 	public static List<NoteTab> OpenTabs { get; } = [];
 	public static double PPD { get; set; } = 1.0;
 	public static NoteRecord? PreviousOpenNote { get; set; }
+	public static bool RecentNotesDirty { get; set; }
 	public static NoteRecord? RecentSelection { get; set; }
 	public static SortType RecentEntriesSortMode { get; set; } = SortType.ByChange;
 	public static Replace? ReplaceWindow { get => _replace; set { _replace?.Close(); _replace = value; _replace?.Show(); } }
@@ -193,7 +193,7 @@ public static partial class Common
 			} while (WindowHeight <= 0);
 
 			Concurrent(UpdateRecentNotes);
-			UpdateRibbonTabs(RibbonTabContent);
+			Concurrent(UpdateRibbonTabs);
 		});
 
 		DelayVisualUpdates = false;
@@ -352,35 +352,12 @@ public static partial class Common
 		return uuid;
 	}
 
-	public static SearchResult OpenQuery(NoteRecord record, bool show = true)
+	public static SearchResult? OpenQuery(NoteRecord record, bool show = true)
 	{
 		var control = (TabControl)Application.Current.MainWindow.FindName("DatabasesPanel");
 		var tagDB = (Database)((TabItem)control.SelectedItem).Tag;
 
-		foreach (SearchResult result in OpenQueries)
-		{
-			if (result.ResultDatabase?.Equals(tagDB) is true && result.ResultRecord?.Equals(record) is true)
-			{
-				result.Activate();
-				result.Focus();
-				return result;
-			}
-		}
-		
-		SearchResult resultWindow = new()
-		{
-			ResultDatabase = tagDB,
-			ResultRecord = record,
-			ResultText = record.Reconstruct()
-		};
-
-		if (show)
-		{
-			resultWindow.Show();
-			OpenQueries.Add(resultWindow);
-		}
-
-		return resultWindow;
+		return OpenQuery(tagDB, record, show);
 	}
 
 	public static SearchResult? OpenQuery(Database db, NoteRecord record, bool show = true)
@@ -407,6 +384,8 @@ public static partial class Common
 			resultWindow.Show();
 			OpenQueries.Add(resultWindow);
 		}
+
+		DeferUpdateRecentNotes();
 
 		return resultWindow;
 	}
@@ -539,6 +518,9 @@ public static partial class Common
 		var LineHeight = PixelRatio * Settings.MainTypeFace.FontFamily.LineSpacing;
 		var LineRatio = Math.Max(1.0, (WindowHeight / LineHeight) - 0.5);
 
+		if (RecentNotesDirty)
+			Settings.RecentNotes.Clear();
+
 		CurrentDatabase.Sort(RecentEntriesSortMode);
 
 		while (Settings.RecentNotes.Count < LineRatio && Settings.RecentNotes.Count < CurrentDatabase.RecordCount)
@@ -548,12 +530,12 @@ public static partial class Common
 			Settings.RecentNotes.RemoveAt(Settings.RecentNotes.Count - 1);
 
 		CurrentDatabase.Sort();
+
+		RecentNotesDirty = false;
 	}
 
-	public static void UpdateRibbonTabs(DisplayType protocol)
+	public static void UpdateRibbonTabs()
 	{
-		RibbonTabContent = protocol;
-
 		foreach (var item in OpenTabs)
 		{
 			var tag = item.Tab.Tag;

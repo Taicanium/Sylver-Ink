@@ -309,9 +309,7 @@ public partial class Settings : Window
 	private void Settings_Loaded(object? sender, RoutedEventArgs e)
 	{
 		InitColorGrid();
-
 		InitBrushes();
-
 		InitFonts();
 
 		if (RibbonBox.SelectedItem is null)
@@ -334,6 +332,7 @@ public partial class Settings : Window
 		var tag = (SortType?)cv.ConvertFromString((string?)item?.Tag ?? "ByChange") ?? SortType.ByChange;
 
 		RecentEntriesSortMode = tag;
+		RecentNotesDirty = true;
 		DeferUpdateRecentNotes();
 	}
 
@@ -344,8 +343,9 @@ public partial class Settings : Window
 
 		EnumConverter ev = new(typeof(DisplayType));
 		var tag = (DisplayType?)ev.ConvertFromString((string?)item?.Tag ?? "Content");
+		RibbonTabContent = tag ?? DisplayType.Content;
 
-		UpdateRibbonTabs(tag ?? DisplayType.Content);
+		UpdateRibbonTabs();
 	}
 
 	[GeneratedRegex(@"\p{Lu}")]
