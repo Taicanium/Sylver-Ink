@@ -155,7 +155,6 @@ public static class MenuUtils
 			Common.Settings.SearchResults.Clear();
 		}
 
-		UpdateDatabaseMenu();
 		DeferUpdateRecentNotes();
 	}
 

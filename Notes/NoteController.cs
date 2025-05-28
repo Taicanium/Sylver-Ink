@@ -224,7 +224,8 @@ public partial class NoteController : IDisposable
 	public void InitializeRecords(bool newDatabase = true)
 	{
 		for (int i = (OpenQueries ?? []).Count; i > 0; i--)
-			OpenQueries?[i - 1].Close();
+			if (Equals(OpenQueries?[i - 1].ResultDatabase))
+				OpenQueries?[i - 1].Close();
 
 		if (newDatabase)
 			Records.Clear();
@@ -245,7 +246,7 @@ public partial class NoteController : IDisposable
 		SerializeRecords();
 		ReloadSerializer();
 	}
-
+	
 	public bool Open(string path, bool writing = false)
 	{
 		_serializer = new();

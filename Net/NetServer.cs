@@ -126,7 +126,6 @@ public partial class NetServer
 		Serving = false;
 
 		UpdateIndicator();
-		UpdateDatabaseMenu();
 	}
 
 	private async void ReadFromStream(TcpClient client, Database DB)
@@ -294,7 +293,6 @@ public partial class NetServer
 		WatchTask.RunWorkerAsync();
 		ServerTask.RunWorkerAsync();
 		UpdateIndicator();
-		UpdateDatabaseMenu();
 
 		var codePopup = (Popup?)Application.Current.MainWindow.FindName("CodePopup");
 		if (codePopup is null)
@@ -317,6 +315,7 @@ public partial class NetServer
 		Indicator.Width = 12;
 		Indicator.InvalidateVisual();
 
-		UpdateDatabaseMenu();
+		RecentNotesDirty = true;
+		DeferUpdateRecentNotes();
 	});
 }

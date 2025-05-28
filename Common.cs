@@ -132,7 +132,6 @@ public static partial class Common
 		control.Items.Add(item);
 		control.SelectedItem = item;
 
-		UpdateDatabaseMenu();
 		DeferUpdateRecentNotes();
 	}
 
@@ -206,6 +205,8 @@ public static partial class Common
 			});
 
 			await UpdateRecentNotes();
+
+			Concurrent(UpdateDatabaseMenu);
 			Concurrent(UpdateRibbonTabs);
 		}
 		catch
@@ -515,7 +516,8 @@ public static partial class Common
 		control.Items.RemoveAt(control.SelectedIndex);
 		control.SelectedIndex = Math.Max(0, Math.Min(control.Items.Count - 1, control.SelectedIndex));
 
-		UpdateDatabaseMenu();
+		RecentNotesDirty = true;
+		DeferUpdateRecentNotes();
 	}
 
 	public static void SaveDatabases()
@@ -555,7 +557,7 @@ public static partial class Common
 		}
 	}
 
-	public static void UpdateDatabaseMenu()
+	private static void UpdateDatabaseMenu()
 	{
 		var control = (TabControl)Application.Current.MainWindow.FindName("DatabasesPanel");
 		var menu = (Menu)Application.Current.MainWindow.FindName("DatabaseMenu");

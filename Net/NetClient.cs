@@ -240,6 +240,7 @@ public partial class NetClient
 
 		DB?.GetHeader();
 
-		UpdateDatabaseMenu();
+		RecentNotesDirty = true;
+		DeferUpdateRecentNotes();
 	});
 }

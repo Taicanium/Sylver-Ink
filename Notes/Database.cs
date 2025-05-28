@@ -239,7 +239,7 @@ public partial class Database : IDisposable
 		if (File.Exists(lockFile) && MessageBox.Show($"{Path.GetFileName(dbFile)} - The database last closed unexpectedly. Do you want to load the most recent autosave?", "Sylver Ink: Notification", MessageBoxButton.YesNo, MessageBoxImage.Information) == MessageBoxResult.Yes)
 		{
 			Controller.Open(lockFile);
-			Controller.DeserializeRecords();
+			Initialize();
 
 			if (Controller.EnforceNoForwardCompatibility)
 			{
