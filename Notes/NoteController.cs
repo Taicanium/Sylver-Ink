@@ -7,7 +7,6 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Documents;
-using System.Windows.Markup;
 using static SylverInk.Common;
 
 namespace SylverInk.Notes;
@@ -35,6 +34,7 @@ public partial class NoteController : IDisposable
 	public string? Name;
 	public int RecordCount => Records.Count;
 	private List<NoteRecord> Records { get; } = [];
+	private byte? Structure { get; set; }
 	public string? UUID { get; set; } = MakeUUID(UUIDType.Database);
 	public Dictionary<string, double> WordPercentages { get; } = [];
 
@@ -86,7 +86,7 @@ public partial class NoteController : IDisposable
 	public int CreateRecord(string entry)
 	{
 		int Index = NextIndex;
-		var RecordText = XamlWriter.Save(PlaintextToFlowDocument(entry));
+		var RecordText = PlaintextToXaml(entry);
 		Changed = true;
 		return AddRecord(new(Index, RecordText));
 	}
@@ -111,7 +111,8 @@ public partial class NoteController : IDisposable
 		{
 			_created = DateTime.UtcNow.ToBinary(),
 			_startIndex = StartIndex,
-			_substring = StartIndex >= NewVersion.Length ? string.Empty : NewVersion[StartIndex..]
+			_substring = StartIndex >= NewVersion.Length ? string.Empty : NewVersion[StartIndex..],
+			_uuid = MakeUUID(UUIDType.Revision)
 		});
 	}
 
@@ -135,7 +136,8 @@ public partial class NoteController : IDisposable
 		{
 			_created = DateTime.UtcNow.ToBinary(),
 			_startIndex = StartIndex,
-			_substring = StartIndex >= NewVersion.Length ? string.Empty : NewVersion[StartIndex..]
+			_substring = StartIndex >= NewVersion.Length ? string.Empty : NewVersion[StartIndex..],
+			_uuid = MakeUUID(UUIDType.Revision)
 		});
 	}
 
@@ -163,7 +165,7 @@ public partial class NoteController : IDisposable
 		{
 			EnforceNoForwardCompatibility = true;
 			_serializer?.Close();
-			MessageBox.Show($"This database was created in a newer format than this version of Sylver Ink supports. Please update your installation before opening this database.", "Sylver Ink: Error", MessageBoxButton.OK, MessageBoxImage.Error);
+			MessageBox.Show($"This database was created in a newer format than the current version of Sylver Ink supports. Please update your installation before opening this database.", "Sylver Ink: Error", MessageBoxButton.OK, MessageBoxImage.Error);
 			return;
 		}
 
@@ -178,6 +180,9 @@ public partial class NoteController : IDisposable
 			string? _name = string.Empty;
 			Name = _serializer?.ReadString(ref _name);
 		}
+
+		if (Format >= 9)
+			Structure = _serializer?.ReadByte();
 
 		int recordCount = 0;
 		_serializer?.ReadInt32(ref recordCount);
@@ -314,7 +319,7 @@ public partial class NoteController : IDisposable
 				}
 			}
 
-			var document = (FlowDocument)XamlReader.Parse(recordText);
+			var document = XamlToFlowDocument(recordText);
 			TextPointer? pointer = document.ContentStart;
 			while (pointer is not null && pointer.GetPointerContext(LogicalDirection.Forward) != TextPointerContext.None)
 			{
@@ -332,7 +337,7 @@ public partial class NoteController : IDisposable
 				while (pointer.GetPointerContext(LogicalDirection.Forward) == TextPointerContext.Text)
 					pointer = pointer.GetNextContextPosition(LogicalDirection.Forward);
 			}
-			newVersion = XamlWriter.Save(document);
+			newVersion = FlowDocumentToXaml(document);
 			if (!newVersion.Equals(recordText))
 			{
 				CreateRevision(record.Index, newVersion);
@@ -393,6 +398,9 @@ public partial class NoteController : IDisposable
 		if (!_serializer?.Headless is true)
 			_serializer?.WriteString(Name);
 
+		if (_serializer?.DatabaseFormat >= 9)
+			_serializer?.WriteByte(Structure ??= 0);
+
 		_serializer?.WriteInt32(Records.Count);
 		for (int i = 0; i < Records.Count; i++)
 			Records[i].Serialize(_serializer);
@@ -424,6 +432,7 @@ public partial class NoteController : IDisposable
 		try
 		{
 			string? _name = Name;
+			byte? _structure = Structure;
 			int recordCount = 0;
 
 			_serializer?.BeginCompressionTest();
@@ -432,6 +441,7 @@ public partial class NoteController : IDisposable
 			for (int i = 0; i < Records.Count; i++)
 				Records[i].Serialize(_serializer);
 			_serializer?.WriteString(_name);
+			_serializer?.WriteByte(_structure ??= 1);
 
 			_serializer?.EndCompressionTest();
 
@@ -442,6 +452,7 @@ public partial class NoteController : IDisposable
 				record.Deserialize(_serializer);
 			}
 			_serializer?.ReadString(ref _name);
+			_structure = _serializer?.ReadByte();
 		}
 		catch
 		{

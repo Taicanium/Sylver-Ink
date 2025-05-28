@@ -2,7 +2,6 @@
 using System;
 using System.Windows;
 using System.Windows.Input;
-using System.Windows.Markup;
 using static SylverInk.Common;
 
 namespace SylverInk.XAMLUtils;
@@ -19,7 +18,7 @@ public static class SearchResultUtils
 
 		SwitchDatabase(window.ResultDatabase);
 
-		window.ResultText = XamlWriter.Save(window.ResultBlock.Document);
+		window.ResultText = FlowDocumentToXaml(window.ResultBlock.Document);
 		NoteTab newTab = new(window.ResultRecord ?? new(), window.ResultText);
 		newTab.Construct();
 		window.Close();
@@ -56,7 +55,7 @@ public static class SearchResultUtils
 		if (window.ResultRecord is null)
 			return;
 
-		window.ResultText = XamlWriter.Save(window.ResultBlock.Document);
+		window.ResultText = FlowDocumentToXaml(window.ResultBlock.Document);
 		window.ResultDatabase?.CreateRevision(window.ResultRecord, window.ResultText);
 		window.LastChangedLabel.Content = window.ResultRecord?.GetLastChange();
 		DeferUpdateRecentNotes();

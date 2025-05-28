@@ -5,7 +5,6 @@ using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
-using System.Windows.Markup;
 using static SylverInk.Common;
 
 namespace SylverInk.Notes;
@@ -21,33 +20,14 @@ public struct NoteRevision(long created = -1, int startIndex = -1, string? subst
 public partial class NoteRecord
 {
 	private long Created = -1;
-	private FlowDocument? _document;
 	private string? Initial = string.Empty;
 	private long LastChange = -1;
 	private DateTime LastChangeObject = DateTime.UtcNow;
 	private string LastQuery = string.Empty;
-	private string Plaintext = string.Empty;
 	private readonly List<NoteRevision> Revisions = [];
 	private readonly List<string> Tags = [];
 	private bool TagsDirty = true;
 
-	private FlowDocument? Document
-	{
-		get => _document;
-
-		set {
-			_document = value;
-			Plaintext = FlowDocumentToPlaintext(value);
-
-			RecentNotesDirty = true;
-			DeferUpdateRecentNotes();
-
-			if (_document is null)
-				return;
-
-			_document.TextInput += (_, _) => Plaintext = FlowDocumentToPlaintext(value);
-		}
-	}
 	public int Index = -1;
 	public int LastMatchCount { get; private set; }
 	public bool Locked { get; private set; }
@@ -104,23 +84,21 @@ public partial class NoteRecord
 		this.UUID = UUID ?? MakeUUID();
 	}
 
-	public void Add(NoteRevision revision, bool Rich = true)
+	public void Add(NoteRevision revision)
 	{
-		Revisions.Add(revision);
-		TagsDirty = true;
-
 		if (revision._created == -1)
 			revision._created = DateTime.UtcNow.ToBinary();
 
-		var revisionTime = DateTime.FromBinary(revision._created);
-
-		if (revisionTime.CompareTo(LastChangeObject) > 0)
+		if (DateTime.FromBinary(revision._created).CompareTo(LastChangeObject) > 0)
 		{
-			if (Rich)
-				Document = (FlowDocument)XamlReader.Parse(Reconstruct());
 			LastChange = revision._created;
 			LastChangeObject = DateTime.FromBinary(LastChange);
 		}
+
+		revision._uuid ??= MakeUUID(UUIDType.Revision);
+
+		Revisions.Add(revision);
+		TagsDirty = true;
 	}
 
 	public void Delete()
@@ -141,7 +119,6 @@ public partial class NoteRecord
 
 		Revisions.RemoveAt(index);
 
-		Document = (FlowDocument)XamlReader.Parse(Reconstruct());
 		LastChange = GetNumRevisions() == 0 ? Created : Revisions[GetNumRevisions() - 1]._created;
 		LastChangeObject = DateTime.FromBinary(LastChange);
 		RecentNotesDirty = true;
@@ -166,7 +143,7 @@ public partial class NoteRecord
 			serializer?.ReadLong(ref _revision._created);
 			serializer?.ReadInt32(ref _revision._startIndex);
 			serializer?.ReadString(ref _revision._substring);
-			Add(_revision, false);
+			Add(_revision);
 		}
 
 		// SIDB v.9 introduced XAML rich text formatting. Its absence in earlier versions must be accounted for.
@@ -210,8 +187,8 @@ public partial class NoteRecord
 					if (!db.WordPercentages.ContainsKey(val))
 						continue;
 
-					// To be treated as a tag, a word must be less common than 0.5% of all words in at least one database.
-					if (db.WordPercentages[val] < Math.Max(0.5, 100.0 - db.WordPercentages.Count))
+					// To be treated as a tag, a word must be less common than 0.1% of all words in at least one database.
+					if (db.WordPercentages[val] < Math.Max(0.1, 100.0 - db.WordPercentages.Count))
 						Tags.Add(val);
 				}
 			}
@@ -225,21 +202,17 @@ public partial class NoteRecord
 
 	public DateTime GetCreatedObject() => DateTime.FromBinary(Created);
 
-	public override int GetHashCode() => int.Parse((UUID ??= MakeUUID())[^4..], System.Globalization.NumberStyles.HexNumber);
+	public override int GetHashCode() => int.Parse((UUID ??= MakeUUID())[^8..], System.Globalization.NumberStyles.HexNumber);
 
 	public DateTime GetLastChangeObject() => DateTime.FromBinary(LastChange);
 
 	public string GetLastChange() => GetLastChangeObject().ToLocalTime().ToString(DateFormat);
 
-	public FlowDocument GetLatestDocument() => Document ??= (FlowDocument)XamlReader.Parse(Reconstruct());
+	public FlowDocument GetDocument(uint backsteps = 0U) => XamlToFlowDocument(Reconstruct(backsteps));
 
 	public int GetNumRevisions() => Revisions.Count;
 
-	private string GetPlaintext()
-	{
-		GetLatestDocument();
-		return Plaintext;
-	}
+	private string GetPlaintext() => XamlToPlaintext(Reconstruct());
 
 	public NoteRevision GetRevision(uint index) => Revisions[Revisions.Count - 1 - (int)index];
 
@@ -320,7 +293,8 @@ public partial class NoteRecord
 			{
 				_created = Created,
 				_startIndex = StartIndex,
-				_substring = Substring
+				_substring = Substring,
+				_uuid = MakeUUID(UUIDType.Revision)
 			});
 		}
 	}
@@ -351,7 +325,7 @@ public partial class NoteRecord
 	private void TargetPlaintext()
 	{
 		List<long> CreatedTags = [];
-		var ParsedInitial = FlowDocumentToPlaintext((FlowDocument)XamlReader.Parse(Initial));
+		var ParsedInitial = XamlToPlaintext(Initial ??= string.Empty);
 		var RCount = Revisions.Count;
 		List<string> ReconstructedSubstrings = [];
 
@@ -359,7 +333,7 @@ public partial class NoteRecord
 		{
 			var oldText = Reconstruct((uint)i);
 			CreatedTags.Add(Revisions[i]._created);
-			ReconstructedSubstrings.Add(FlowDocumentToPlaintext((FlowDocument)XamlReader.Parse(oldText)));
+			ReconstructedSubstrings.Add(XamlToPlaintext(oldText));
 		}
 
 		Revisions.Clear();
@@ -371,7 +345,7 @@ public partial class NoteRecord
 	private void TargetXaml()
 	{
 		List<long> CreatedTags = [];
-		var ParsedInitial = XamlWriter.Save(PlaintextToFlowDocument(Initial ?? string.Empty));
+		var ParsedInitial = PlaintextToXaml(Initial ?? string.Empty);
 		var RCount = Revisions.Count;
 		List<string> ReconstructedSubstrings = [];
 
@@ -379,7 +353,7 @@ public partial class NoteRecord
 		{
 			var oldText = Reconstruct((uint)i);
 			CreatedTags.Add(Revisions[i]._created);
-			ReconstructedSubstrings.Add(XamlWriter.Save(PlaintextToFlowDocument(oldText)));
+			ReconstructedSubstrings.Add(PlaintextToXaml(oldText));
 		}
 
 		Revisions.Clear();
@@ -407,15 +381,15 @@ public partial class NoteRecord
 
 		foreach (var item in OpenTabs)
 		{
-			if (Index != (int)(item.Tab.Tag ?? -1))
+			if (!item.Tab.Tag.Equals(this))
 				continue;
 
 			var grid = (Grid)item.Tab.Content;
 			foreach (UIElement child in grid.Children)
 			{
 				child.SetValue(UIElement.IsEnabledProperty, true);
-				if (child.GetType().Equals(typeof(Label)))
-					((Label)child).Content = "Entry last modified: " + GetLastChange();
+				if (child is Label label)
+					label.Content = "Entry last modified: " + GetLastChange();
 			}
 		}
 	}

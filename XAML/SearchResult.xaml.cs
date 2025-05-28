@@ -6,9 +6,7 @@ using System.ComponentModel;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Markup;
 using static SylverInk.Common;
 
 namespace SylverInk;
@@ -62,11 +60,12 @@ public partial class SearchResult : Window, IDisposable
 				case MessageBoxResult.Cancel:
 					return;
 				case MessageBoxResult.No:
-					ResultBlock.Document = (FlowDocument)XamlReader.Parse(OriginalText);
+					ResultBlock.Document = XamlToFlowDocument(OriginalText);
 					ResultText = OriginalText;
 					Edited = false;
 					for (int i = (ResultRecord?.GetNumRevisions() ?? 1) - 1; i >= OriginalRevisionCount; i--)
 						ResultRecord?.DeleteRevision(i);
+					RecentNotesDirty = true;
 					DeferUpdateRecentNotes();
 					break;
 			}
@@ -117,12 +116,11 @@ public partial class SearchResult : Window, IDisposable
 
 		try
 		{
-			ResultBlock.Document = (FlowDocument)XamlReader.Parse(ResultText);
+			ResultBlock.Document = XamlToFlowDocument(ResultText);
 		}
 		catch
 		{
-			ResultText = ResultRecord?.ToXaml() ?? string.Empty;
-			ResultBlock.Document = (FlowDocument)XamlReader.Parse(ResultText);
+			ResultBlock.Document = PlaintextToFlowDocument(ResultText);
 		}
 
 		Edited = false;
@@ -133,18 +131,18 @@ public partial class SearchResult : Window, IDisposable
 		for (int i = tabPanel.Items.Count - 1; i > 0; i--)
 		{
 			var item = (TabItem)tabPanel.Items[i];
+			if (item.Tag is not NoteRecord record)
+				continue;
 
-			if (((NoteRecord?)item.Tag)?.Equals(ResultRecord) is true)
+			if (record.Equals(ResultRecord) is true)
 				tabPanel.Items.RemoveAt(i);
 		}
 	}
 
 	private void ResultBlock_TextChanged(object? sender, TextChangedEventArgs e)
 	{
-		var plainText = FlowDocumentToPlaintext(ResultBlock.Document);
-		Edited = !plainText.Equals(ResultRecord?.ToString());
-		if (!Edited)
-			return;
+		Edited = true;
+		RecentNotesDirty = true;
 		if (AutosaveThread?.IsBusy is true)
 			return;
 		TimeSinceAutosave = DateTime.Now;

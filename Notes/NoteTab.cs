@@ -93,7 +93,7 @@ public class NoteTab
 			Tag = Record
 		};
 
-		NoteBox.Document = (FlowDocument)XamlReader.Parse(content);
+		NoteBox.Document = XamlToFlowDocument(content ?? string.Empty);
 		ChildPanel.SelectedIndex = ChildPanel.Items.Add(Tab);
 	}
 
@@ -124,7 +124,7 @@ public class NoteTab
 			tag.Item1 -= 1U;
 			revisionTime = tag.Item1 == 0U ? tag.Item2.GetLastChange() : tag.Item2.GetRevisionTime(tag.Item1);
 
-			NoteBox.Document = (FlowDocument)XamlReader.Parse(tag.Item2.Reconstruct(tag.Item1));
+			NoteBox.Document = tag.Item2.GetDocument(tag.Item1);
 			NoteBox.Tag = (tag.Item1, tag.Item2);
 			NoteBox.IsReadOnly = tag.Item1 != 0;
 			((Button)sender).IsEnabled = tag.Item1 > 0;
@@ -163,7 +163,7 @@ public class NoteTab
 					case MessageBoxResult.Cancel:
 						return;
 					case MessageBoxResult.Yes:
-						CurrentDatabase.CreateRevision(tag.Item2, XamlWriter.Save(NoteBox.Document));
+						CurrentDatabase.CreateRevision(tag.Item2, FlowDocumentToXaml(NoteBox.Document));
 						DeferUpdateRecentNotes();
 						break;
 				}
@@ -188,7 +188,7 @@ public class NoteTab
 		{
 			var tag = ((uint, NoteRecord))NoteBox.Tag;
 
-			CurrentDatabase.CreateRevision(tag.Item2, XamlWriter.Save(NoteBox.Document));
+			CurrentDatabase.CreateRevision(tag.Item2, FlowDocumentToXaml(NoteBox.Document));
 			DeferUpdateRecentNotes();
 
 			NoteBox.Tag = (0U, tag.Item2);

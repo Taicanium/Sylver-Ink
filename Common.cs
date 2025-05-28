@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
+using System.Windows.Markup;
 using System.Windows.Media;
 
 namespace SylverInk;
@@ -269,7 +270,12 @@ public static partial class Common
 				switch (pointer.GetPointerContext(LogicalDirection.Forward))
 				{
 					case TextPointerContext.Text:
-						content += pointer.GetTextInRun(LogicalDirection.Forward).Replace("{}{", "{"); // Xaml escape sequences aren't handled by XamlReader.Parse, which is very frustrating.
+						var runText = pointer.GetTextInRun(LogicalDirection.Forward);
+
+						// Xaml escape sequences aren't handled by XamlReader.Parse, which is very frustrating.
+						runText = runText.Replace("{}{", "{");
+
+						content += runText;
 						pointer = pointer.GetPositionAtOffset(pointer.GetTextRunLength(LogicalDirection.Forward));
 						break;
 					case TextPointerContext.ElementStart:
@@ -298,6 +304,13 @@ public static partial class Common
 		{
 			return string.Empty;
 		}
+	}
+	
+	public static string FlowDocumentToXaml(FlowDocument document)
+	{
+		var content = XamlWriter.Save(document);
+		content = content.Replace("{}{", "{");
+		return content;
 	}
 
 	public static string GetBackupPath(Database db) => Path.Join(Subfolders["Databases"], db.Name, db.Name);
@@ -440,7 +453,7 @@ public static partial class Common
 		{
 			ResultDatabase = db,
 			ResultRecord = record,
-			ResultText = record.Reconstruct()
+			ResultText = record.ToXaml()
 		};
 
 		if (show)
@@ -481,6 +494,8 @@ public static partial class Common
 		}
 		return document;
 	}
+
+	public static string PlaintextToXaml(string content) => FlowDocumentToXaml(PlaintextToFlowDocument(content));
 
 	public static void RemoveDatabase(Database db)
 	{
@@ -617,6 +632,18 @@ public static partial class Common
 			item.Tab.Header = GetRibbonHeader((NoteRecord)tag);
 		}
 	}
+
+	public static FlowDocument XamlToFlowDocument(string xaml)
+	{
+		if (string.IsNullOrWhiteSpace(xaml))
+			return new();
+
+		xaml = xaml.Replace("{}{", "{");
+
+		return (FlowDocument)XamlReader.Parse(xaml);
+	}
+
+	public static string XamlToPlaintext(string xaml) => FlowDocumentToPlaintext(XamlToFlowDocument(xaml));
 
 	[GeneratedRegex(@"\((\p{Nd}+)\)$")]
 	private static partial Regex IndexDigits();
