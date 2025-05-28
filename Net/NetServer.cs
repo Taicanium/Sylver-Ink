@@ -7,6 +7,7 @@ using System.Net.Http;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -43,27 +44,24 @@ public partial class NetServer
 			var task = (BackgroundWorker?)sender;
 			while (!task?.CancellationPending is true)
 			{
-				Concurrent(() =>
+				for (int i = Clients.Count - 1; i > -1; i--)
 				{
-					for (int i = Clients.Count - 1; i > -1; i--)
+					try
 					{
-						try
-						{
-							var client = Clients[i];
+						var client = Clients[i];
 
-							if (client.Available > 0)
-								ReadFromStream(client, DB);
+						if (client.Available > 0)
+							ReadFromStream(client, DB);
 
-							if (!client.Connected || !client.GetStream().Socket.Connected)
-								Clients.RemoveAt(i);
-						}
-						catch
-						{
-							Clients[i].Dispose();
+						if (!client.Connected || !client.GetStream().Socket.Connected)
 							Clients.RemoveAt(i);
-						}
 					}
-				});
+					catch
+					{
+						Clients[i].Close();
+						Clients.RemoveAt(i);
+					}
+				}
 			}
 		};
 
@@ -131,13 +129,16 @@ public partial class NetServer
 		UpdateDatabaseMenu();
 	}
 
-	private void ReadFromStream(TcpClient client, Database DB)
+	private async void ReadFromStream(TcpClient client, Database DB)
 	{
 		int oldData;
-		do
-		{
-			oldData = client.Available;
-		} while (!SpinWait.SpinUntil(new(() => client.Available != oldData), 500));
+
+		await Task.Run(() => {
+			do
+			{
+				oldData = client.Available;
+			} while (SpinWait.SpinUntil(new(() => client.Available != oldData), 500));
+		});
 
 		var stream = client.GetStream();
 		var outBuffer = new List<byte>();
@@ -170,15 +171,15 @@ public partial class NetServer
 					bufferString = Encoding.UTF8.GetString(textBuffer);
 				}
 
-				DB?.CreateRecord(bufferString, false);
-				Concurrent(DeferUpdateRecentNotes);
+				Concurrent(() => DB?.CreateRecord(bufferString, false));
+				DeferUpdateRecentNotes();
 				break;
 			case MessageType.RecordLock:
-				DB?.Lock(recordIndex);
+				Concurrent(() => DB?.Lock(recordIndex));
 				break;
 			case MessageType.RecordRemove:
-				DB?.DeleteRecord(recordIndex, false);
-				Concurrent(DeferUpdateRecentNotes);
+				Concurrent(() => DB?.DeleteRecord(recordIndex, false));
+				DeferUpdateRecentNotes();
 				break;
 			case MessageType.RecordReplace:
 				stream.ReadExactly(intBuffer, 0, 4);
@@ -200,11 +201,11 @@ public partial class NetServer
 				textBuffer = new byte[textCount];
 				stream.ReadExactly(textBuffer, 0, textCount);
 
-				DB?.Replace(bufferString, Encoding.UTF8.GetString(textBuffer), false);
-				Concurrent(DeferUpdateRecentNotes);
+				Concurrent(() => DB?.Replace(bufferString, Encoding.UTF8.GetString(textBuffer), false));
+				DeferUpdateRecentNotes();
 				break;
 			case MessageType.RecordUnlock:
-				DB?.Unlock(recordIndex);
+				Concurrent(() => DB?.Unlock(recordIndex));
 				break;
 			case MessageType.TextInsert:
 				stream.ReadExactly(intBuffer, 0, 4);
@@ -219,8 +220,8 @@ public partial class NetServer
 					bufferString = Encoding.UTF8.GetString(textBuffer);
 				}
 
-				DB?.CreateRevision(recordIndex, bufferString, false);
-				Concurrent(DeferUpdateRecentNotes);
+				Concurrent(() => DB?.CreateRevision(recordIndex, bufferString, false));
+				DeferUpdateRecentNotes();
 				break;
 		}
 

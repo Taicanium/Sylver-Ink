@@ -82,12 +82,6 @@ public partial class Search : Window
 		if (box.DataContext is not NoteRecord record)
 			return;
 
-		if (DBMatches.TryGetValue(record, out var _db))
-		{
-			OpenQuery(_db, record);
-			return;
-		}
-
 		OpenQuery(record);
 	}
 }

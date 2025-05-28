@@ -181,10 +181,22 @@ public partial class Serializer : IDisposable
 	}
 
 	/// <summary>
+	/// Read a single uncompressed byte from the stream, and decompress as needed.
+	/// </summary>
+	public byte ReadByte()
+	{
+		if (UseLZW)
+			return _lzw.Decompress()[0];
+
+		_buffer = new byte[1];
+		_fileStream?.Read(_buffer, 0, 1);
+		return _buffer[0];
+	}
+
+	/// <summary>
 	/// Read a certain number of uncompressed bytes from the stream, and decompress as needed.
 	/// </summary>
 	/// <param name="byteCount"></param>
-	/// <returns></returns>
 	private byte[] ReadBytes(int byteCount)
 	{
 		if (UseLZW)
@@ -273,6 +285,13 @@ public partial class Serializer : IDisposable
 	}
 
 	private uint ReadUInt32() => (uint)IntFromBytes(ReadBytes(4));
+
+	public void WriteByte(byte data)
+	{
+		if (UseLZW)
+			_lzw.Compress([data]);
+		_outgoing.AddRange([data]);
+	}
 
 	private void WriteBytes(byte[] data)
 	{

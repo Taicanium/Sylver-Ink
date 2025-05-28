@@ -277,7 +277,18 @@ public partial class Database : IDisposable
 		DeferUpdateRecentNotes();
 	}
 
-	public void Lock(int index) => Controller.GetRecord(index).Lock();
+	public void Lock(int index, bool local = false)
+	{
+		var record = Controller.GetRecord(index);
+
+		if (local)
+		{
+			Transmit(Network.MessageType.RecordLock, [.. IntToBytes(index)]);
+			return;
+		}
+
+		record.Lock();
+	}
 
 	public void MakeBackup(bool auto = false)
 	{
@@ -459,7 +470,19 @@ public partial class Database : IDisposable
 			Server.Broadcast(type, data);
 	}
 
-	public void Unlock(int index) => Controller.GetRecord(index).Unlock();
+	public void Unlock(int index, bool local = false)
+	{
+		if (index == -1)
+			return;
+
+		if (local)
+		{
+			Transmit(Network.MessageType.RecordUnlock, [.. IntToBytes(index)]);
+			return;
+		}
+
+		Controller.GetRecord(index).Unlock();
+	}
 
 	public void UpdateWordPercentages() => Controller.UpdateWordPercentages();
 }

@@ -190,22 +190,31 @@ public static partial class Common
 
 		var panel = GetChildPanel("DatabasesPanel");
 
-		if (await panel.Dispatcher.InvokeAsync(() => panel.FindName("RecentNotes")) is not ListBox RecentBox)
+		if (panel.Dispatcher.Invoke(() => panel.FindName("RecentNotes")) is not ListBox RecentBox)
 			return;
 
-		await Task.Run(() =>
+		try
 		{
-			do
+			await Task.Run(() =>
 			{
-				WindowHeight = RecentBox.ActualHeight == double.NaN ? Application.Current.MainWindow.ActualHeight : RecentBox.ActualHeight;
-				WindowWidth = RecentBox.ActualWidth == double.NaN ? Application.Current.MainWindow.ActualWidth : RecentBox.ActualWidth;
-			} while (WindowHeight <= 0);
-		});
+				do
+				{
+					WindowHeight = RecentBox.ActualHeight == double.NaN ? Application.Current.MainWindow.ActualHeight : RecentBox.ActualHeight;
+					WindowWidth = RecentBox.ActualWidth == double.NaN ? Application.Current.MainWindow.ActualWidth : RecentBox.ActualWidth;
+				} while (WindowHeight <= 0);
+			});
 
-		await UpdateRecentNotes();
-		Concurrent(UpdateRibbonTabs);
-
-		DelayVisualUpdates = false;
+			await UpdateRecentNotes();
+			Concurrent(UpdateRibbonTabs);
+		}
+		catch
+		{
+			return;
+		}
+		finally
+		{
+			DelayVisualUpdates = false;
+		}
 	}
 
 	public static string DialogFileSelect(bool outgoing = false, int filterIndex = 3, string? defaultName = null)
@@ -248,7 +257,42 @@ public static partial class Common
 			if (document is null)
 				return string.Empty;
 
-			return document.IsInitialized ? new TextRange(document.ContentStart, document.ContentEnd).Text : string.Empty;
+			if (!document.IsInitialized)
+				return string.Empty;
+
+			var begun = false;
+			var content = string.Empty;
+			var pointer = document.ContentStart;
+
+			while (pointer is not null && pointer.GetPointerContext(LogicalDirection.Forward) != TextPointerContext.None)
+			{
+				switch (pointer.GetPointerContext(LogicalDirection.Forward))
+				{
+					case TextPointerContext.Text:
+						content += pointer.GetTextInRun(LogicalDirection.Forward).Replace("{}{", "{"); // Xaml escape sequences aren't handled by XamlReader.Parse, which is very frustrating.
+						pointer = pointer.GetPositionAtOffset(pointer.GetTextRunLength(LogicalDirection.Forward));
+						break;
+					case TextPointerContext.ElementStart:
+						if (pointer.GetAdjacentElement(LogicalDirection.Forward) is LineBreak)
+							content += "\r\n";
+						if (pointer.GetAdjacentElement(LogicalDirection.Forward) is Paragraph)
+						{
+							if (begun)
+								content += "\r\n\r\n";
+							begun = true;
+						}
+						pointer = pointer.GetNextContextPosition(LogicalDirection.Forward);
+						break;
+					default:
+						pointer = pointer.GetNextContextPosition(LogicalDirection.Forward);
+						break;
+				}
+
+				if (pointer is null)
+					continue;
+			}
+
+			return content.Trim();
 		}
 		catch
 		{
@@ -264,6 +308,16 @@ public static partial class Common
 		var dbItem = (TabItem)db.SelectedItem;
 		return (TabControl)dbItem.Content;
 	});
+
+	public static Database? GetDatabaseFromRecord(NoteRecord target)
+	{
+		foreach (Database db in Databases)
+			for (int i = 0; i < db.RecordCount; i++)
+				if (db.GetRecord(i).Equals(target))
+					return db;
+
+		return null;
+	}
 
 	public static string GetDatabasePath(Database db)
 	{
@@ -370,14 +424,8 @@ public static partial class Common
 
 	public static SearchResult? OpenQuery(NoteRecord record, bool show = true)
 	{
-		var control = (TabControl)Application.Current.MainWindow.FindName("DatabasesPanel");
-		var tagDB = (Database)((TabItem)control.SelectedItem).Tag;
+		var db = GetDatabaseFromRecord(record);
 
-		return OpenQuery(tagDB, record, show);
-	}
-
-	public static SearchResult? OpenQuery(Database db, NoteRecord record, bool show = true)
-	{
 		foreach (SearchResult result in OpenQueries)
 		{
 			if (result.ResultDatabase?.Equals(db) is true && result.ResultRecord?.Equals(record) is true)
@@ -399,6 +447,8 @@ public static partial class Common
 		{
 			resultWindow.Show();
 			OpenQueries.Add(resultWindow);
+			if (!record.Locked)
+				db?.Lock(record.Index, true);
 		}
 
 		DeferUpdateRecentNotes();

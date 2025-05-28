@@ -115,7 +115,7 @@ public partial class MainWindow : Window
 
 			if (target.HasRecord(iNote))
 			{
-				var result = OpenQuery(target, target.GetRecord(iNote));
+				var result = OpenQuery(target.GetRecord(iNote));
 				if (result is null)
 					continue;
 
