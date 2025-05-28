@@ -62,8 +62,7 @@ static class UpdateHandler
 				if (nValue is null)
 					continue;
 
-				// Prefer a .msi package only if a .exe is not available.
-				if (nValue.ToString().EndsWith(".msi") && !uriNode?.EndsWith(".exe") is true)
+				if (nValue.ToString().EndsWith(".msi"))
 					uriNode = nValue.ToString();
 			}
 
