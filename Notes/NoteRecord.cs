@@ -98,6 +98,7 @@ public partial class NoteRecord
 		revision._uuid ??= MakeUUID(UUIDType.Revision);
 
 		Revisions.Add(revision);
+		RecentNotesDirty = true;
 		TagsDirty = true;
 	}
 

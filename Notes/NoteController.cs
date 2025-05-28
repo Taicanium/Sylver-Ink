@@ -79,42 +79,18 @@ public partial class NoteController : IDisposable
 
 	private int AddRecord(NoteRecord record)
 	{
+		RecentNotesDirty = true;
 		Records.Add(record);
 		return record.Index;
 	}
 
 	public int CreateRecord(string entry)
 	{
-		int Index = NextIndex;
-		var RecordText = PlaintextToXaml(entry);
 		Changed = true;
-		return AddRecord(new(Index, RecordText));
+		return AddRecord(new(NextIndex, PlaintextToXaml(entry)));
 	}
 
-	public void CreateRevision(int index, string NewVersion)
-	{
-		string Current = Records[index].ToXaml();
-		int StartIndex = 0;
-
-		if (NewVersion.Equals(Current))
-			return;
-
-		for (int i = 0; i < Math.Min(Current.Length, NewVersion.Length); i++)
-		{
-			if (!Current[i].Equals(NewVersion[i]))
-				break;
-			StartIndex = i + 1;
-		}
-
-		Changed = true;
-		Records[index].Add(new()
-		{
-			_created = DateTime.UtcNow.ToBinary(),
-			_startIndex = StartIndex,
-			_substring = StartIndex >= NewVersion.Length ? string.Empty : NewVersion[StartIndex..],
-			_uuid = MakeUUID(UUIDType.Revision)
-		});
-	}
+	public void CreateRevision(int index, string NewVersion) => CreateRevision(GetRecord(index), NewVersion);
 
 	public void CreateRevision(NoteRecord record, string NewVersion)
 	{
@@ -378,6 +354,7 @@ public partial class NoteController : IDisposable
 			}
 		}
 
+		RecentNotesDirty = true;
 		PropagateIndices();
 		DeferUpdateRecentNotes();
 	}

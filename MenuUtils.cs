@@ -10,8 +10,6 @@ namespace SylverInk;
 
 public static class MenuUtils
 {
-	public static void Menu_ShowAbout(this MainWindow window, object? sender, RoutedEventArgs e) => new About().Show();
-
 	public static void Menu_Backup(this MainWindow window, object? sender, RoutedEventArgs e) => CurrentDatabase.MakeBackup();
 
 	public static void Menu_Close(this MainWindow window, object? sender, RoutedEventArgs e)
@@ -118,6 +116,8 @@ public static class MenuUtils
 	}
 
 	public static void Menu_Serve(this MainWindow window, object? sender, RoutedEventArgs e) => CurrentDatabase.Server.Serve(0);
+
+	public static void Menu_ShowAbout(this MainWindow window, object? sender, RoutedEventArgs e) => new About().Show();
 
 	public static void Menu_SublistChanged(this MainWindow window, object? sender, RoutedEventArgs e)
 	{

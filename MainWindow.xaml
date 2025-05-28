@@ -172,7 +172,7 @@
 				<MenuItem Click="Menu_Serve" Header="Open to Network" Tag="NotServing"/>
 			</MenuItem>
 			<MenuItem Header="Help" Height="25">
-				<MenuItem Click="Menu_ShowAbout" Header="About..."/>
+				<MenuItem Click="Menu_ShowAbout" Header="About..." Tag="Always"/>
 			</MenuItem>
 		</Menu>
 
