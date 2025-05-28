@@ -132,6 +132,7 @@ public static partial class Common
 		control.Items.Add(item);
 		control.SelectedItem = item;
 
+		RecentNotesDirty = true;
 		DeferUpdateRecentNotes();
 	}
 

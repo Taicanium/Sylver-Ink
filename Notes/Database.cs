@@ -1,10 +1,10 @@
 ﻿using SylverInk.Net;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using static SylverInk.Common;
@@ -36,32 +36,15 @@ public partial class Database : IDisposable
 		Server = new(this);
 	}
 
-	public static void Create(string dbFile, bool threaded = false)
+	public static async void Create(string dbFile, bool threaded = false)
 	{
-		Database db = new();
-		if (threaded)
-		{
-			BackgroundWorker worker = new();
-			worker.DoWork += (_, _) =>
-			{
-				try
-				{
-					db.Load(dbFile);
-				}
-				catch
-				{
-					MessageBox.Show($"Could not load database: {dbFile}", "Sylver Ink: Error", MessageBoxButton.OK);
-				}
-			};
-			worker.RunWorkerCompleted += (_, _) => AddDatabase(db);
-			worker.RunWorkerAsync();
-
-			return;
-		}
-
 		try
 		{
-			db.Load(dbFile);
+			Database db = new();
+			if (threaded)
+				await Task.Run(() => db.Load(dbFile));
+			else
+				db.Load(dbFile);
 			AddDatabase(db);
 		}
 		catch

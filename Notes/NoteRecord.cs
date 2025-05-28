@@ -112,7 +112,7 @@ public partial class NoteRecord
 		TagsDirty = true;
 	}
 
-	// In its current state, this function is only well-behaved when also removing all revisions following it.
+	// In its current state, this function is only well-behaved when removing all subsequent revisions in addition to the one marked for deletion.
 	public void DeleteRevision(int index)
 	{
 		if (index >= GetNumRevisions())
