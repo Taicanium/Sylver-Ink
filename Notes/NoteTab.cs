@@ -239,6 +239,9 @@ public class NoteTab
 
 	public void Deconstruct()
 	{
+		if (!Record.Locked)
+			GetDatabaseFromRecord(Record)?.Unlock(Record.Index, true);
+
 		var ChildPanel = GetChildPanel("DatabasesPanel");
 
 		for (int i = OpenTabs.Count - 1; i > -1; i--)
