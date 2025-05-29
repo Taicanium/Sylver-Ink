@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:SylverInk"
         mc:Ignorable="d"
 		d:DataContext="{d:DesignInstance Type=local:ContextSettings}"
-        Title="Sylver Ink: Properties" Height="575" Width="350" Loaded="Properties_Loaded" MouseLeftButtonDown="Drag">
+        Title="Sylver Ink: Properties" Height="575" Width="350" Loaded="Properties_Loaded" MouseLeftButtonDown="Drag" ShowInTaskbar="False" Topmost="True">
 	<Grid Background="{Binding MenuBackground}">
 		<Grid.RowDefinitions>
 			<RowDefinition Height="*"/>

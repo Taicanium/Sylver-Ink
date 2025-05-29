@@ -6,7 +6,7 @@
 		xmlns:local="clr-namespace:SylverInk"
 		mc:Ignorable="d"
 		d:DataContext="{d:DesignInstance Type=local:ContextSettings}"
-		Background="{Binding MenuBackground}" Foreground="{Binding MenuForeground}" Height="550" Loaded="Settings_Loaded" MinHeight="525" MinWidth="300" MouseLeftButtonDown="Drag" Title="Sylver Ink: Settings" Width="325">
+		Background="{Binding MenuBackground}" Foreground="{Binding MenuForeground}" Height="550" Loaded="Settings_Loaded" MinHeight="525" MinWidth="300" MouseLeftButtonDown="Drag" ShowInTaskbar="False" Title="Sylver Ink: Settings" Topmost="True" Width="325">
 	<Grid>
 		<Grid.RowDefinitions>
 			<RowDefinition Height="Auto"/>
