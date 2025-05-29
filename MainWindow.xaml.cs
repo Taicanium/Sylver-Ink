@@ -4,7 +4,9 @@ using System;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Pipes;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -26,16 +28,23 @@ public partial class MainWindow : Window
 	private static extern bool UnregisterHotKey(nint hWnd, int id);
 
 	private bool _ABORT;
+	public const int HWND_BROADCAST = 0xFFFF;
+	private readonly WindowInteropHelper hWndHelper;
+	private Mutex? mutex;
+	private readonly string MutexName = $"SylverInk/{typeof(MainWindow).GUID}";
 	private const int NewNoteHotKeyID = 5911;
 	private const int PreviousNoteHotKeyID = 37193;
+	private bool ShellVerbsPassed;
 	private HwndSource? WindowSource;
-	private readonly WindowInteropHelper hWndHelper;
 
 	public MainWindow()
 	{
 		InitializeComponent();
 		DataContext = Common.Settings;
 		hWndHelper = new WindowInteropHelper(this);
+		mutex = new Mutex(true, MutexName, out bool mutexCreated);
+
+		HandleMutex(mutexCreated);
 	}
 
 	private void Button_Click(object? sender, RoutedEventArgs e)
@@ -74,12 +83,6 @@ public partial class MainWindow : Window
 
 	private async void HandleCheckInit()
 	{
-		WindowSource = HwndSource.FromHwnd(hWndHelper.Handle);
-		WindowSource.AddHook(HwndHook);
-		RegisterHotKeys();
-
-		HandleShellVerbs();
-
 		await Task.Run(() =>
 		{
 			do
@@ -139,10 +142,52 @@ public partial class MainWindow : Window
 		DeferUpdateRecentNotes();
 	}
 
-	private void HandleShellVerbs()
+	/// <summary>
+	/// Mutex management in Sylver Ink allows passing shell verbs through a named pipe to an existing open instance. If the user has Sylver Ink open and clicks on a database file, we have the arcane power to open that database even if Sylver Ink is currently running.
+	/// </summary>
+	/// <param name="mutexCreated"></param>
+	private void HandleMutex(bool mutexCreated)
 	{
-		var args = Environment.GetCommandLineArgs();
-		if (args.Length < 2)
+		if (!mutexCreated)
+		{
+			mutex = null;
+
+			var client = new NamedPipeClientStream(MutexName);
+			client.Connect();
+
+			using (StreamWriter writer = new(client))
+				writer.Write(string.Join("\t", Environment.GetCommandLineArgs()));
+
+			ShellVerbsPassed = true;
+			return;
+		}
+
+		Task.Factory.StartNew(() =>
+		{
+			while (mutex != null)
+			{
+				using var server = new NamedPipeServerStream(MutexName);
+				server.WaitForConnection();
+
+				using StreamReader reader = new(server);
+				string[] args = [.. reader.ReadToEnd().Split("\t", StringSplitOptions.RemoveEmptyEntries)];
+				bool activated;
+				var now = DateTime.UtcNow;
+
+				do
+				{
+					activated = Concurrent(Activate);
+					Concurrent(Focus);
+				} while (!activated && (DateTime.UtcNow - now).Seconds < 2);
+
+				Concurrent(() => HandleShellVerbs(args));
+			}
+		}, TaskCreationOptions.LongRunning);
+	}
+
+	private void HandleShellVerbs(string[]? args = null)
+	{
+		if ((args ??= Environment.GetCommandLineArgs()).Length < 2)
 			return;
 
 		switch (args[1])
@@ -177,18 +222,24 @@ public partial class MainWindow : Window
 
 	private nint HwndHook(nint hwnd, int msg, nint wParam, nint lParam, ref bool handled)
 	{
-		if (msg != 0x0312) // WM_HOTKEY
-			return default;
+		switch (msg)
+		{
+			case 0x0312: // WM_HOTKEY
+				if (wParam.ToInt32() == NewNoteHotKeyID)
+					OnNewNoteHotkey();
 
-		if (wParam.ToInt32() == NewNoteHotKeyID)
-			OnNewNoteHotkey();
-
-		if (wParam.ToInt32() == PreviousNoteHotKeyID)
-			OnPreviousNoteHotkey();
+				if (wParam.ToInt32() == PreviousNoteHotKeyID)
+					OnPreviousNoteHotkey();
+				break;
+			default:
+				return default;
+		}
 
 		handled = true;
 		return default;
 	}
+
+	private static bool InstanceRunning() => Process.GetProcessesByName("Sylver Ink").Length > 1 && !File.Exists(UpdateHandler.UpdateLockUri);
 
 	public static bool IsShuttingDown()
 	{
@@ -290,11 +341,20 @@ public partial class MainWindow : Window
 	{
 		base.OnSourceInitialized(e);
 
-		if (Process.GetProcessesByName("Sylver Ink").Length > 1 && !File.Exists(UpdateHandler.UpdateLockUri))
+		WindowSource = HwndSource.FromHwnd(hWndHelper.Handle);
+		WindowSource.AddHook(HwndHook);
+		RegisterHotKeys();
+
+		HandleCheckInit();
+		HandleShellVerbs();
+
+		if (InstanceRunning())
 		{
+			if (!ShellVerbsPassed) // Otherwise, close the program silently before a head is established.
+				MessageBox.Show("Another instance of Sylver Ink is already running.", "Sylver Ink: Error", MessageBoxButton.OK, MessageBoxImage.Error);
+
 			_ABORT = true;
-			MessageBox.Show("Another instance of Sylver Ink is already running.", "Sylver Ink: Error", MessageBoxButton.OK, MessageBoxImage.Error);
-			Application.Current.Shutdown();
+			Close();
 			return;
 		}
 
@@ -303,8 +363,6 @@ public partial class MainWindow : Window
 
 		Common.Settings.Load();
 		SettingsLoaded = true;
-
-		HandleCheckInit();
 
 		foreach (var folder in Subfolders)
 			if (!Directory.Exists(folder.Value))
