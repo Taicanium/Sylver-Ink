@@ -43,7 +43,7 @@ static class UpdateHandler
 			if (releaseString.StartsWith('v'))
 				releaseString = releaseString[1..];
 
-			if (!Version.TryParse(releaseString, out var releaseVersion)/* || releaseVersion.CompareTo(assemblyVersion) < 1*/)
+			if (!Version.TryParse(releaseString, out var releaseVersion) || releaseVersion.CompareTo(assemblyVersion) < 1)
 				return;
 
 			var assetArray = assetNode?.AsArray();
