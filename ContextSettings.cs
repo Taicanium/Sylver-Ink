@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 using static SylverInk.Common;
@@ -80,7 +81,7 @@ public partial class ContextSettings : INotifyPropertyChanged
 		return default;
 	}
 
-	public void Load()
+	public async Task Load()
 	{
 		if (!File.Exists(SettingsFile))
 			return;
@@ -162,11 +163,11 @@ public partial class ContextSettings : INotifyPropertyChanged
 					LastDatabases = [.. keyValue[1].Replace("?\\", DocumentsFolder).Split(';').Distinct().Where(File.Exists)];
 					DatabaseCount = Math.Max(1, LastDatabases.Count);
 					foreach (var file in LastDatabases)
-						Database.Create(file, true);
+						await Database.Create(file);
 					if (LastDatabases.Count == 0 && Databases.Count == 0)
 					{
 						DatabaseCount = 1;
-						Database.Create(Path.Join(Subfolders["Databases"], DefaultDatabase, $"{DefaultDatabase}.sidb"));
+						await Database.Create(Path.Join(Subfolders["Databases"], DefaultDatabase, $"{DefaultDatabase}.sidb"));
 					}
 					break;
 				case "ListBackground":

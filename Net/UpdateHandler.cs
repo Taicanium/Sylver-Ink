@@ -5,6 +5,7 @@ using System.Net.Http;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Threading.Tasks;
 using System.Windows;
 using static SylverInk.Common;
 
@@ -16,7 +17,7 @@ static class UpdateHandler
 	public static string TempUri { get; } = Path.Join(DocumentsFolder, "SylverInk_Setup.msi");
 	public static string UpdateLockUri { get; } = Path.Join(DocumentsFolder, "~si_update.lock");
 
-	public static async void CheckForUpdates()
+	public static async Task CheckForUpdates()
 	{
 		var assemblyVersion = Assembly.GetExecutingAssembly().GetName().Version;
 		if (assemblyVersion is null)
@@ -42,7 +43,7 @@ static class UpdateHandler
 			if (releaseString.StartsWith('v'))
 				releaseString = releaseString[1..];
 
-			if (!Version.TryParse(releaseString, out var releaseVersion) || releaseVersion.CompareTo(assemblyVersion) < 1)
+			if (!Version.TryParse(releaseString, out var releaseVersion)/* || releaseVersion.CompareTo(assemblyVersion) < 1*/)
 				return;
 
 			var assetArray = assetNode?.AsArray();
@@ -72,7 +73,7 @@ static class UpdateHandler
 			if (MessageBox.Show($"A new update is available ({assemblyVersion.ToString(3)} → {releaseVersion.ToString(3)}). Would you like to install it now?", "Sylver Ink: Notification", MessageBoxButton.YesNo, MessageBoxImage.Information) == MessageBoxResult.No)
 				return;
 
-			DownloadAndInstallUpdate(httpClient, uriNode);
+			await DownloadAndInstallUpdate(httpClient, uriNode);
 		}
 		catch
 		{
@@ -80,7 +81,7 @@ static class UpdateHandler
 		}
 	}
 
-	private static async void DownloadAndInstallUpdate(HttpClient httpClient, string uriNode)
+	private static async Task DownloadAndInstallUpdate(HttpClient httpClient, string uriNode)
 	{
 		Erase(TempUri);
 		Erase(UpdateLockUri);

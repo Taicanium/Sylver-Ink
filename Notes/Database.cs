@@ -36,15 +36,12 @@ public partial class Database : IDisposable
 		Server = new(this);
 	}
 
-	public static async void Create(string dbFile, bool threaded = false)
+	public static async Task Create(string dbFile)
 	{
 		try
 		{
 			Database db = new();
-			if (threaded)
-				await Task.Run(() => db.Load(dbFile));
-			else
-				db.Load(dbFile);
+			await Task.Run(() => db.Load(dbFile));
 			AddDatabase(db);
 		}
 		catch

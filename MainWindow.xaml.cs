@@ -83,7 +83,10 @@ public partial class MainWindow : Window
 
 	private async void HandleCheckInit()
 	{
-		await Task.Run(() =>
+		using var tokenSource = new CancellationTokenSource();
+		var token = tokenSource.Token;
+
+		var initTask = Task.Run(() =>
 		{
 			do
 			{
@@ -94,8 +97,10 @@ public partial class MainWindow : Window
 
 				if (Concurrent(() => Application.Current.MainWindow.FindName("DatabasesPanel")) is null)
 					InitComplete = false;
-			} while (!InitComplete);
-		});
+			} while (!InitComplete && !token.IsCancellationRequested);
+		}, token);
+
+		await initTask;
 
 		SwitchDatabase($"~N:{LastActiveDatabase}");
 
@@ -201,7 +206,7 @@ public partial class MainWindow : Window
 		}
 	}
 
-	private void HandleVerbOpen(string filename)
+	private async void HandleVerbOpen(string filename)
 	{
 		if (string.IsNullOrWhiteSpace(filename))
 			return;
@@ -213,7 +218,7 @@ public partial class MainWindow : Window
 
 		if (string.IsNullOrWhiteSpace(wideBreak))
 		{
-			Database.Create(filename);
+			await Database.Create(filename);
 			return;
 		}
 
@@ -337,7 +342,7 @@ public partial class MainWindow : Window
 
 	private static void OnPreviousNoteHotkey() => OpenQuery(PreviousOpenNote ?? CurrentDatabase.GetRecord(CurrentDatabase.CreateRecord(string.Empty)));
 
-	protected override void OnSourceInitialized(EventArgs e)
+	protected override async void OnSourceInitialized(EventArgs e)
 	{
 		base.OnSourceInitialized(e);
 
@@ -361,14 +366,14 @@ public partial class MainWindow : Window
 		Erase(UpdateHandler.UpdateLockUri);
 		Erase(UpdateHandler.TempUri);
 
-		Common.Settings.Load();
+		await Common.Settings.Load();
 		SettingsLoaded = true;
 
 		foreach (var folder in Subfolders)
 			if (!Directory.Exists(folder.Value))
 				Directory.CreateDirectory(folder.Value);
 
-		UpdateHandler.CheckForUpdates();
+		await UpdateHandler.CheckForUpdates();
 
 		if (!IsShuttingDown())
 			UpdatesChecked = true;
@@ -376,7 +381,7 @@ public partial class MainWindow : Window
 		if (FirstRun)
 		{
 			DatabaseCount = 1;
-			Database.Create(Path.Join(Subfolders["Databases"], DefaultDatabase, $"{DefaultDatabase}.sidb"));
+			await Database.Create(Path.Join(Subfolders["Databases"], DefaultDatabase, $"{DefaultDatabase}.sidb"));
 		}
 	}
 

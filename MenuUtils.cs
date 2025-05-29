@@ -61,7 +61,7 @@ public static class MenuUtils
 		CurrentDatabase.Changed = true;
 	}
 
-	public static void Menu_Open(this MainWindow window, object? sender, RoutedEventArgs e)
+	public static async void Menu_Open(this MainWindow window, object? sender, RoutedEventArgs e)
 	{
 		string dbFile = DialogFileSelect(filterIndex: 2);
 		if (string.IsNullOrWhiteSpace(dbFile))
@@ -81,7 +81,7 @@ public static class MenuUtils
 			return;
 		}
 
-		Database.Create(dbFile, true);
+		await Database.Create(dbFile);
 		DeferUpdateRecentNotes();
 	}
 
