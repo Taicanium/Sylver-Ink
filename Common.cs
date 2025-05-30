@@ -628,11 +628,10 @@ public static partial class Common
 	{
 		foreach (var item in OpenTabs)
 		{
-			var tag = item.Tab.Tag;
-			if (tag is null)
+			if (item.Tab.Tag is not NoteRecord tag)
 				continue;
 
-			item.Tab.Header = GetRibbonHeader((NoteRecord)tag);
+			item.Tab.Header = GetRibbonHeader(tag);
 		}
 	}
 

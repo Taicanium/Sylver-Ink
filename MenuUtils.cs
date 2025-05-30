@@ -33,6 +33,8 @@ public static class MenuUtils
 		window.AddressBox.Text = string.Empty;
 	}
 
+	public static void Menu_CopyCode(this MainWindow window, object? sender, RoutedEventArgs e) => Clipboard.SetText(CurrentDatabase.Server?.AddressCode);
+
 	public static void Menu_Create(this MainWindow window, object? sender, RoutedEventArgs e)
 	{
 		AddDatabase(new());
@@ -136,14 +138,12 @@ public static class MenuUtils
 
 	public static void Menu_TabChanged(this MainWindow window, object? sender, SelectionChangedEventArgs e)
 	{
-		var control = (TabControl?)sender;
-		if (control is null)
+		if (sender is not TabControl control)
 			return;
 
 		if (control.Name.Equals("DatabasesPanel"))
 		{
-			var item = (TabItem)control.SelectedItem;
-			if (item is null)
+			if (control.SelectedItem is not TabItem item)
 				return;
 
 			var newDB = (Database)item.Tag;

@@ -14,9 +14,11 @@ public static class PopupUtils
 			window.ConnectAddress.IsOpen = false;
 	}
 
-	public static void Popup_CodeClosed(this MainWindow window, object? sender, EventArgs e) => Clipboard.SetText(window.CodeBox.Text);
-
-	public static void Popup_CopyCode(this MainWindow window, object? sender, RoutedEventArgs e) => window.CodePopup.IsOpen = false;
+	public static void Popup_CodeClosed(this MainWindow window, object? sender, EventArgs e)
+	{
+		Clipboard.SetText(CurrentDatabase.Server?.AddressCode);
+		window.CodePopup.IsOpen = false;
+	}
 
 	public static void Popup_RenameClosed(this MainWindow window, object? sender, EventArgs e)
 	{

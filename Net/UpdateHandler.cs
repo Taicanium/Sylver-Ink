@@ -19,8 +19,7 @@ static class UpdateHandler
 
 	public static async Task CheckForUpdates()
 	{
-		var assemblyVersion = Assembly.GetExecutingAssembly().GetName().Version;
-		if (assemblyVersion is null)
+		if (Assembly.GetExecutingAssembly().GetName().Version is not Version assemblyVersion)
 			return;
 
 		if (Process.GetCurrentProcess().MainModule?.FileName is null)
@@ -32,8 +31,7 @@ static class UpdateHandler
 			if (!httpClient.DefaultRequestHeaders.UserAgent.TryParseAdd("request"))
 				return;
 
-			var release = JsonSerializer.Deserialize<JsonArray>(await httpClient.GetStringAsync(GitReleasesURI))?[0]?.AsObject();
-			if (release is null)
+			if (JsonSerializer.Deserialize<JsonArray>(await httpClient.GetStringAsync(GitReleasesURI))?[0]?.AsObject() is not JsonObject release)
 				return;
 
 			if (!release.TryGetPropertyValue("tag_name", out var releaseNode) || !release.TryGetPropertyValue("assets", out var assetNode))
@@ -46,8 +44,7 @@ static class UpdateHandler
 			if (!Version.TryParse(releaseString, out var releaseVersion) || releaseVersion.CompareTo(assemblyVersion) < 1)
 				return;
 
-			var assetArray = assetNode?.AsArray();
-			if (assetArray is null)
+			if (assetNode?.AsArray() is not JsonArray assetArray)
 				return;
 
 			string? uriNode = null;

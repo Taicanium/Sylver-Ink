@@ -13,9 +13,7 @@ public static class SearchUtils
 
 		for (int i = 0; i < db.RecordCount; i++)
 		{
-			var newRecord = db.GetRecord(i);
-
-			if (newRecord is null)
+			if (db.GetRecord(i) is not NoteRecord newRecord)
 				continue;
 
 			bool textFound = await SearchRecord(window, newRecord);

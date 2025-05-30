@@ -258,10 +258,10 @@ public class NoteTab
 		{
 			var item = (TabItem)ChildPanel.Items[i];
 
-			if (item.Tag is null)
+			if (item.Tag is not NoteRecord record)
 				continue;
 
-			if (!((NoteRecord)item.Tag).Equals(Record))
+			if (!record.Equals(Record))
 				continue;
 
 			if (ChildPanel.SelectedIndex == i)

@@ -4,11 +4,9 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Media;
 using static SylverInk.Common;
 using static SylverInk.Net.Network;
 
@@ -16,22 +14,21 @@ namespace SylverInk.Net;
 
 public partial class NetClient
 {
-	public bool Active { get; set; }
-	public IPAddress? Address { get; set; }
-	public string? AddressCode { get; set; }
+	public bool Active { get; private set; }
+	private IPAddress? Address { get; set; }
 	private BackgroundWorker ClientTask { get; set; } = new() { WorkerSupportsCancellation = true };
 	public bool Connected { get; private set; }
-	public bool Connecting { get; private set; }
-	public Database? DB { get; set; }
+	private Database? DB { get; set; }
 	private TcpClient DBClient { get; set; } = new();
-	public byte? Flags;
-	public System.Windows.Shapes.Ellipse? Indicator { get; set; }
+	private byte? Flags;
+	public System.Windows.Shapes.Ellipse? Indicator { get; private set; }
 
 	public NetClient(Database DB)
 	{
 		this.DB = DB;
 
 		Indicator = new() { StrokeThickness = 1.0 };
+		Indicator.LayoutUpdated += (_, _) => this.DB.GetHeader();
 
 		ClientTask.DoWork += async (sender, _) =>
 		{
@@ -41,7 +38,7 @@ public partial class NetClient
 				try
 				{
 					if (DBClient.Available > 0)
-						await ReadFromStream();
+						await ReadFromStream(DBClient, this.DB);
 
 					if (!DBClient.Connected || !DBClient.GetStream().Socket.Connected)
 						Concurrent(Disconnect);
@@ -62,13 +59,11 @@ public partial class NetClient
 		Active = true;
 
 		Address = CodeToAddress(code, out Flags);
-		AddressCode = CodeFromAddress(Address, Flags);
 
 		if (DBClient.Connected)
 			Disconnect();
 
-		Connecting = true;
-		UpdateIndicator();
+		UpdateIndicator(Indicator, IndicatorStatus.Connecting);
 
 		DBClient = new()
 		{
@@ -99,116 +94,7 @@ public partial class NetClient
 		await Task.Run(() => SpinWait.SpinUntil(new(() => !DBClient.Connected)));
 		Active = false;
 		Connected = false;
-		UpdateIndicator();
-	}
-
-	private async Task ReadFromStream()
-	{
-		int oldData;
-
-		await Task.Run(() =>
-		{
-			do
-			{
-				oldData = DBClient.Available;
-			} while (SpinWait.SpinUntil(new(() => oldData != DBClient.Available), 500));
-		});
-
-		var stream = DBClient.GetStream();
-		var type = (MessageType)stream.ReadByte();
-
-		var bufferString = string.Empty;
-		var intBuffer = new byte[4];
-		var recordIndex = 0;
-		byte[] textBuffer;
-		var textCount = 0;
-
-		stream.ReadExactly(intBuffer, 0, 4);
-		recordIndex = IntFromBytes(intBuffer);
-
-		switch (type)
-		{
-			case MessageType.DatabaseInit:
-				stream.ReadExactly(intBuffer, 0, 4);
-				textCount = IntFromBytes(intBuffer);
-
-				if (textCount <= 0)
-					break;
-
-				textBuffer = new byte[textCount];
-				stream.ReadExactly(textBuffer, 0, textCount);
-
-				DB?.DeserializeRecords([.. textBuffer]);
-
-				Connecting = false;
-				Connected = true;
-				UpdateIndicator();
-				DB?.GetHeader();
-				DeferUpdateRecentNotes();
-
-				break;
-			case MessageType.RecordAdd:
-				stream.ReadExactly(intBuffer, 0, 4);
-				textCount = IntFromBytes(intBuffer);
-
-				if (textCount > 0)
-				{
-					textBuffer = new byte[textCount];
-					stream.ReadExactly(textBuffer, 0, textCount);
-					bufferString = Encoding.UTF8.GetString(textBuffer);
-				}
-
-				Concurrent(() => DB?.CreateRecord(bufferString, false));
-				DeferUpdateRecentNotes();
-				break;
-			case MessageType.RecordLock:
-				Concurrent(() => DB?.Lock(recordIndex));
-				break;
-			case MessageType.RecordRemove:
-				Concurrent(() => DB?.DeleteRecord(recordIndex, false));
-				DeferUpdateRecentNotes();
-				break;
-			case MessageType.RecordReplace:
-				stream.ReadExactly(intBuffer, 0, 4);
-				textCount = IntFromBytes(intBuffer);
-
-				if (textCount <= 0)
-					break;
-
-				textBuffer = new byte[textCount];
-				stream.ReadExactly(textBuffer, 0, textCount);
-				bufferString = Encoding.UTF8.GetString(textBuffer);
-
-				stream.ReadExactly(intBuffer, 0, 4);
-				textCount = IntFromBytes(intBuffer);
-
-				if (textCount <= 0)
-					break;
-
-				textBuffer = new byte[textCount];
-				stream.ReadExactly(textBuffer, 0, textCount);
-
-				Concurrent(() => DB?.Replace(bufferString, Encoding.UTF8.GetString(textBuffer), false));
-				DeferUpdateRecentNotes();
-				break;
-			case MessageType.RecordUnlock:
-				Concurrent(() => DB?.Unlock(recordIndex));
-				break;
-			case MessageType.TextInsert:
-				stream.ReadExactly(intBuffer, 0, 4);
-				textCount = IntFromBytes(intBuffer);
-
-				if (textCount > 0)
-				{
-					textBuffer = new byte[textCount];
-					stream.ReadExactly(textBuffer, 0, textCount);
-					bufferString = Encoding.UTF8.GetString(textBuffer);
-				}
-
-				Concurrent(() => DB?.CreateRevision(recordIndex, bufferString, false));
-				DeferUpdateRecentNotes();
-				break;
-		}
+		UpdateIndicator(Indicator, IndicatorStatus.Inactive);
 	}
 
 	public async void Send(MessageType type, byte[] data)
@@ -228,19 +114,4 @@ public partial class NetClient
 			Disconnect();
 		}
 	}
-
-	public void UpdateIndicator() => Indicator?.Dispatcher.Invoke(() =>
-	{
-		Indicator.Fill = Connecting ? Brushes.Yellow : DBClient.Connected ? Brushes.Green : Brushes.Orange;
-		Indicator.Height = 12;
-		Indicator.Margin = new(2, 4, 3, 4);
-		Indicator.Stroke = Common.Settings.MenuForeground;
-		Indicator.Width = 12;
-		Indicator.InvalidateVisual();
-
-		DB?.GetHeader();
-
-		RecentNotesDirty = true;
-		DeferUpdateRecentNotes();
-	});
 }

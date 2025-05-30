@@ -1,6 +1,15 @@
-﻿using System.Collections.Generic;
+﻿using SylverInk.Notes;
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.Sockets;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows.Media;
+using System.Windows.Shapes;
+using static SylverInk.Common;
 
 namespace SylverInk.Net;
 
@@ -9,6 +18,14 @@ namespace SylverInk.Net;
 /// </summary>
 public static class Network
 {
+	public enum IndicatorStatus
+	{
+		Connected,
+		Connecting,
+		Inactive,
+		Serving,
+	}
+
 	public enum MessageType
 	{
 		DatabaseInit,
@@ -60,4 +77,125 @@ public static class Network
 
 		return new([..convertedList]);
 	}
+
+	public static async Task<byte[]> ReadFromStream(TcpClient client, Database? DB)
+	{
+		int oldData;
+
+		await Task.Run(() =>
+		{
+			do
+			{
+				oldData = client.Available;
+			} while (SpinWait.SpinUntil(new(() => oldData != client.Available), 500));
+		});
+
+		var stream = client.GetStream();
+		var outBuffer = new List<byte>();
+
+		var type = (MessageType)stream.ReadByte();
+		outBuffer.Add((byte)type);
+
+		var bufferString = string.Empty;
+		var intBuffer = new byte[4];
+		var recordIndex = 0;
+		byte[] textBuffer;
+		var textCount = 0;
+
+		stream.ReadExactly(intBuffer, 0, 4);
+		recordIndex = IntFromBytes(intBuffer);
+		outBuffer.AddRange(intBuffer);
+
+		switch (type)
+		{
+			case MessageType.RecordAdd:
+				stream.ReadExactly(intBuffer, 0, 4);
+				textCount = IntFromBytes(intBuffer);
+				outBuffer.AddRange(intBuffer);
+
+				if (textCount > 0)
+				{
+					textBuffer = new byte[textCount];
+					stream.ReadExactly(textBuffer, 0, textCount);
+					outBuffer.AddRange(textBuffer);
+					bufferString = Encoding.UTF8.GetString(textBuffer);
+				}
+
+				Concurrent(() => DB?.CreateRecord(bufferString, false));
+				DeferUpdateRecentNotes();
+				break;
+			case MessageType.RecordLock:
+				Concurrent(() => DB?.Lock(recordIndex));
+				break;
+			case MessageType.RecordRemove:
+				Concurrent(() => DB?.DeleteRecord(recordIndex, false));
+				DeferUpdateRecentNotes();
+				break;
+			case MessageType.RecordReplace:
+				stream.ReadExactly(intBuffer, 0, 4);
+				textCount = IntFromBytes(intBuffer);
+
+				if (textCount <= 0)
+					break;
+
+				textBuffer = new byte[textCount];
+				stream.ReadExactly(textBuffer, 0, textCount);
+				bufferString = Encoding.UTF8.GetString(textBuffer);
+
+				stream.ReadExactly(intBuffer, 0, 4);
+				textCount = IntFromBytes(intBuffer);
+
+				if (textCount <= 0)
+					break;
+
+				textBuffer = new byte[textCount];
+				stream.ReadExactly(textBuffer, 0, textCount);
+
+				Concurrent(() => DB?.Replace(bufferString, Encoding.UTF8.GetString(textBuffer), false));
+				DeferUpdateRecentNotes();
+				break;
+			case MessageType.RecordUnlock:
+				Concurrent(() => DB?.Unlock(recordIndex));
+				break;
+			case MessageType.TextInsert:
+				stream.ReadExactly(intBuffer, 0, 4);
+				textCount = IntFromBytes(intBuffer);
+				outBuffer.AddRange(intBuffer);
+
+				if (textCount > 0)
+				{
+					textBuffer = new byte[textCount];
+					stream.ReadExactly(textBuffer, 0, textCount);
+					outBuffer.AddRange(textBuffer);
+					bufferString = Encoding.UTF8.GetString(textBuffer);
+				}
+
+				Concurrent(() => DB?.CreateRevision(recordIndex, bufferString, false));
+				DeferUpdateRecentNotes();
+				break;
+		}
+
+		return [.. outBuffer];
+	}
+
+	public static void UpdateIndicator(Ellipse? Indicator, IndicatorStatus Status) => Indicator?.Dispatcher.Invoke(() =>
+	{
+		Indicator.Fill = Status switch
+		{
+			IndicatorStatus.Connected => Brushes.Green,
+			IndicatorStatus.Connecting => Brushes.Yellow,
+			IndicatorStatus.Serving => Brushes.MediumPurple,
+			IndicatorStatus.Inactive => Brushes.Orange,
+			_ => Brushes.Transparent
+		};
+
+		Indicator.Height = 12;
+		Indicator.Margin = new(2, 4, 3, 4);
+		Indicator.Stroke = Common.Settings.MenuForeground;
+		Indicator.Width = 12;
+		Indicator.InvalidateVisual();
+
+		RecentNotesDirty = true;
+		DeferUpdateRecentNotes();
+	});
 }

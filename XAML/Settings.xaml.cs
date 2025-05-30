@@ -267,8 +267,7 @@ public partial class Settings : Window
 
 	private void NewCustomColor(object? sender, TextChangedEventArgs e)
 	{
-		var box = (TextBox?)sender;
-		if (box is null)
+		if (sender is not TextBox box)
 			return;
 
 		var text = box.Text.StartsWith('#') ? box.Text[1..] : box.Text;

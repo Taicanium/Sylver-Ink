@@ -123,8 +123,7 @@ public partial class MainWindow : Window
 
 			if (target.HasRecord(iNote))
 			{
-				var result = OpenQuery(target.GetRecord(iNote));
-				if (result is null)
+				if (OpenQuery(target.GetRecord(iNote)) is not SearchResult result)
 					continue;
 
 				if (LastActiveNotesHeight.TryGetValue($"{target.Name}:{iNote}", out var openHeight))
@@ -246,7 +245,7 @@ public partial class MainWindow : Window
 
 	private static bool InstanceRunning() => Process.GetProcessesByName("Sylver Ink").Length > 1 && !File.Exists(UpdateHandler.UpdateLockUri);
 
-	public static bool IsShuttingDown()
+	private static bool IsShuttingDown()
 	{
 		try
 		{
@@ -303,8 +302,7 @@ public partial class MainWindow : Window
 		if (e.Key != Key.Enter)
 			return;
 
-		var box = (TextBox?)sender;
-		if (box is null)
+		if (sender is not TextBox box)
 			return;
 
 		CurrentDatabase.CreateRecord(box.Text);

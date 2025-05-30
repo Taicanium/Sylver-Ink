@@ -42,8 +42,7 @@ public partial class Replace : Window
 
 	private async void Replace_Click(object? sender, RoutedEventArgs e)
 	{
-		var button = (Button?)sender;
-		if (button is null)
+		if (sender is not Button button)
 			return;
 
 		button.Content = "Replacing...";

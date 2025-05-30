@@ -324,8 +324,7 @@ public static class ImportUtils
 		if (fileStream is null || fileStream.EndOfStream)
 			return false;
 
-		var lines = fileStream?.ReadToEnd().Split('\n');
-		if (lines is null)
+		if (fileStream?.ReadToEnd().Split('\n') is not string[] lines)
 			return false;
 
 		DataLines.Clear();

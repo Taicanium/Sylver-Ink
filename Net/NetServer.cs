@@ -5,13 +5,11 @@ using System.ComponentModel;
 using System.Net;
 using System.Net.Http;
 using System.Net.Sockets;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
-using System.Windows.Media;
 using static SylverInk.Common;
 using static SylverInk.Net.Network;
 
@@ -19,27 +17,28 @@ namespace SylverInk.Net;
 
 public partial class NetServer
 {
-	public bool Active { get; set; }
-	public IPAddress? Address { get; set; }
-	public string? AddressCode { get; set; }
-	public List<TcpClient> Clients { get; } = [];
+	public bool Active { get; private set; }
+	private IPAddress? Address { get; set; }
+	public string? AddressCode { get; private set; }
+	private List<TcpClient> Clients { get; } = [];
 	private TcpListener DBServer { get; set; } = new(IPAddress.Any, TcpPort);
-	public static string[] DNSAddresses { get; } = [
+	private static string[] DNSAddresses { get; } = [
 		"http://checkip.dyndns.org",
 		"https://ifconfig.me/ip",
 		"https://icanhazip.com"
 	];
-	public byte? Flags;
-	public System.Windows.Shapes.Ellipse? Indicator { get; set; }
-	public BackgroundWorker ServerTask { get; set; } = new() { WorkerSupportsCancellation = true };
+	private byte? Flags;
+	public System.Windows.Shapes.Ellipse? Indicator { get; private set; }
+	private BackgroundWorker ServerTask { get; set; } = new() { WorkerSupportsCancellation = true };
 	public bool Serving { get; private set; }
-	public BackgroundWorker WatchTask { get; set; } = new() { WorkerSupportsCancellation = true };
+	private BackgroundWorker WatchTask { get; set; } = new() { WorkerSupportsCancellation = true };
 
 	public NetServer(Database DB)
 	{
 		Indicator = new() { StrokeThickness = 1.0 };
+		Indicator.LayoutUpdated += (_, _) => DB.GetHeader();
 
-		ServerTask.DoWork += (sender, _) =>
+		ServerTask.DoWork += async (sender, _) =>
 		{
 			var task = (BackgroundWorker?)sender;
 			while (!task?.CancellationPending is true)
@@ -50,11 +49,14 @@ public partial class NetServer
 					{
 						var client = Clients[i];
 
-						if (client.Available > 0)
-							ReadFromStream(client, DB);
-
 						if (!client.Connected || !client.GetStream().Socket.Connected)
+						{
 							Clients.RemoveAt(i);
+							continue;
+						}
+
+						if (client.Available > 0)
+							await ReadFromStream(client, DB);
 					}
 					catch
 					{
@@ -125,117 +127,26 @@ public partial class NetServer
 		Active = false;
 		Serving = false;
 
-		UpdateIndicator();
+		UpdateIndicator(Indicator, IndicatorStatus.Inactive);
 	}
 
-	private async void ReadFromStream(TcpClient client, Database DB)
+	private async Task ReadFromStream(TcpClient client, Database DB)
 	{
-		int oldData;
+		var outBuffer = await Network.ReadFromStream(client, DB);
 
-		await Task.Run(() => {
-			do
-			{
-				oldData = client.Available;
-			} while (SpinWait.SpinUntil(new(() => client.Available != oldData), 500));
-		});
-
-		var stream = client.GetStream();
-		var outBuffer = new List<byte>();
-
-		var type = (MessageType)stream.ReadByte();
-		outBuffer.Add((byte)type);
-
-		var bufferString = string.Empty;
-		var intBuffer = new byte[4];
-		var recordIndex = 0;
-		byte[] textBuffer;
-		var textCount = 0;
-
-		stream.ReadExactly(intBuffer, 0, 4);
-		recordIndex = IntFromBytes(intBuffer);
-		outBuffer.AddRange(intBuffer);
-
-		switch (type)
+		for (int i = Clients.Count - 1; i > -1; i--)
 		{
-			case MessageType.RecordAdd:
-				stream.ReadExactly(intBuffer, 0, 4);
-				textCount = IntFromBytes(intBuffer);
-				outBuffer.AddRange(intBuffer);
-
-				if (textCount > 0)
-				{
-					textBuffer = new byte[textCount];
-					stream.ReadExactly(textBuffer, 0, textCount);
-					outBuffer.AddRange(textBuffer);
-					bufferString = Encoding.UTF8.GetString(textBuffer);
-				}
-
-				Concurrent(() => DB?.CreateRecord(bufferString, false));
-				DeferUpdateRecentNotes();
-				break;
-			case MessageType.RecordLock:
-				Concurrent(() => DB?.Lock(recordIndex));
-				break;
-			case MessageType.RecordRemove:
-				Concurrent(() => DB?.DeleteRecord(recordIndex, false));
-				DeferUpdateRecentNotes();
-				break;
-			case MessageType.RecordReplace:
-				stream.ReadExactly(intBuffer, 0, 4);
-				textCount = IntFromBytes(intBuffer);
-
-				if (textCount <= 0)
-					break;
-
-				textBuffer = new byte[textCount];
-				stream.ReadExactly(textBuffer, 0, textCount);
-				bufferString = Encoding.UTF8.GetString(textBuffer);
-
-				stream.ReadExactly(intBuffer, 0, 4);
-				textCount = IntFromBytes(intBuffer);
-
-				if (textCount <= 0)
-					break;
-
-				textBuffer = new byte[textCount];
-				stream.ReadExactly(textBuffer, 0, textCount);
-
-				Concurrent(() => DB?.Replace(bufferString, Encoding.UTF8.GetString(textBuffer), false));
-				DeferUpdateRecentNotes();
-				break;
-			case MessageType.RecordUnlock:
-				Concurrent(() => DB?.Unlock(recordIndex));
-				break;
-			case MessageType.TextInsert:
-				stream.ReadExactly(intBuffer, 0, 4);
-				textCount = IntFromBytes(intBuffer);
-				outBuffer.AddRange(intBuffer);
-
-				if (textCount > 0)
-				{
-					textBuffer = new byte[textCount];
-					stream.ReadExactly(textBuffer, 0, textCount);
-					outBuffer.AddRange(textBuffer);
-					bufferString = Encoding.UTF8.GetString(textBuffer);
-				}
-
-				Concurrent(() => DB?.CreateRevision(recordIndex, bufferString, false));
-				DeferUpdateRecentNotes();
-				break;
-		}
-
-		foreach (var otherClient in Clients)
-		{
-			if (otherClient.Equals(client))
+			if (Clients[i].Equals(client))
 				continue;
 
 			try
 			{
-				otherClient.GetStream().Write(outBuffer.ToArray());
+				Clients[i].GetStream().Write(outBuffer);
 			}
 			catch
 			{
-				otherClient.Close();
+				Clients[i].Close();
+				Clients.RemoveAt(i);
 			}
 		}
 	}
@@ -245,8 +156,8 @@ public partial class NetServer
 		Active = true;
 		Address = IPAddress.Loopback;
 		Serving = false;
-		UpdateIndicator();
-
+		UpdateIndicator(Indicator, IndicatorStatus.Inactive);
+		
 		this.Flags = Math.Min((byte)15, Flags);
 
 		for (int i = 0; i < DNSAddresses.Length; i++)
@@ -288,34 +199,19 @@ public partial class NetServer
 			return;
 		}
 
-		Serving = true;
-
 		WatchTask.RunWorkerAsync();
 		ServerTask.RunWorkerAsync();
-		UpdateIndicator();
 
-		var codePopup = (Popup?)Application.Current.MainWindow.FindName("CodePopup");
-		if (codePopup is null)
+		Serving = true;
+		UpdateIndicator(Indicator, IndicatorStatus.Serving);
+
+		if (Application.Current.MainWindow.FindName("CodePopup") is not Popup codePopup)
 			return;
 
-		var codeBox = (TextBox)codePopup.FindName("CodeBox");
-		if (codeBox is null)
+		if (codePopup.FindName("CodeBox") is not TextBox codeBox)
 			return;
 
 		codePopup.IsOpen = true;
 		codeBox.Text = AddressCode ?? "Vm000G";
 	}
-
-	public void UpdateIndicator() => Indicator?.Dispatcher.Invoke(() =>
-	{
-		Indicator.Fill = Serving ? Brushes.MediumPurple : Brushes.Orange;
-		Indicator.Height = 12;
-		Indicator.Margin = new(2, 4, 3, 4);
-		Indicator.Stroke = Common.Settings.MenuForeground;
-		Indicator.Width = 12;
-		Indicator.InvalidateVisual();
-
-		RecentNotesDirty = true;
-		DeferUpdateRecentNotes();
-	});
 }
