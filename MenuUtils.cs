@@ -10,9 +10,9 @@ namespace SylverInk;
 
 public static class MenuUtils
 {
-	public static void Menu_Backup(this MainWindow window, object? sender, RoutedEventArgs e) => CurrentDatabase.MakeBackup();
+	public static void MenuBackup(this MainWindow window, object? sender, RoutedEventArgs e) => CurrentDatabase.MakeBackup();
 
-	public static void Menu_Close(this MainWindow window, object? sender, RoutedEventArgs e)
+	public static void MenuClose(this MainWindow window, object? sender, RoutedEventArgs e)
 	{
 		if (CurrentDatabase.Changed)
 		{
@@ -27,22 +27,22 @@ public static class MenuUtils
 		DeferUpdateRecentNotes();
 	}
 
-	public static void Menu_Connect(this MainWindow window, object? sender, RoutedEventArgs e)
+	public static void MenuConnect(this MainWindow window, object? sender, RoutedEventArgs e)
 	{
 		window.ConnectAddress.IsOpen = true;
 		window.AddressBox.Text = string.Empty;
 	}
 
-	public static void Menu_CopyCode(this MainWindow window, object? sender, RoutedEventArgs e) => Clipboard.SetText(CurrentDatabase.Server?.AddressCode);
+	public static void MenuCopyCode(this MainWindow window, object? sender, RoutedEventArgs e) => Clipboard.SetText(CurrentDatabase.Server?.AddressCode);
 
-	public static void Menu_Create(this MainWindow window, object? sender, RoutedEventArgs e)
+	public static void MenuCreate(this MainWindow window, object? sender, RoutedEventArgs e)
 	{
 		AddDatabase(new());
 		window.DatabasesPanel.SelectedIndex = window.DatabasesPanel.Items.Count - 1;
 		DeferUpdateRecentNotes();
 	}
 
-	public static void Menu_Delete(this MainWindow window, object? sender, RoutedEventArgs e)
+	public static void MenuDelete(this MainWindow window, object? sender, RoutedEventArgs e)
 	{
 		if (MessageBox.Show("Are you sure you want to permanently delete this database?", "Sylver Ink: Warning", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.No)
 			return;
@@ -57,13 +57,13 @@ public static class MenuUtils
 		DeferUpdateRecentNotes();
 	}
 
-	public static void Menu_Disconnect(this MainWindow window, object? sender, RoutedEventArgs e)
+	public static void MenuDisconnect(this MainWindow window, object? sender, RoutedEventArgs e)
 	{
 		CurrentDatabase.Client.Disconnect();
 		CurrentDatabase.Changed = true;
 	}
 
-	public static async void Menu_Open(this MainWindow window, object? sender, RoutedEventArgs e)
+	public static async void MenuOpen(this MainWindow window, object? sender, RoutedEventArgs e)
 	{
 		string dbFile = DialogFileSelect(filterIndex: 2);
 		if (string.IsNullOrWhiteSpace(dbFile))
@@ -87,13 +87,13 @@ public static class MenuUtils
 		DeferUpdateRecentNotes();
 	}
 
-	public static void Menu_Properties(this MainWindow window, object? sender, RoutedEventArgs e)
+	public static void MenuProperties(this MainWindow window, object? sender, RoutedEventArgs e)
 	{
 		Properties properties = new() { DB = CurrentDatabase };
 		properties.Show();
 	}
 
-	public static void Menu_Rename(this MainWindow window, object? sender, RoutedEventArgs e)
+	public static void MenuRename(this MainWindow window, object? sender, RoutedEventArgs e)
 	{
 		window.RenameDatabase.IsOpen = true;
 		window.DatabaseNameBox.Text = CurrentDatabase.Name;
@@ -101,7 +101,7 @@ public static class MenuUtils
 		window.DatabaseNameBox.CaretIndex = window.DatabaseNameBox.Text?.Length ?? 0;
 	}
 
-	public static void Menu_SaveAs(this MainWindow window, object? sender, RoutedEventArgs e)
+	public static void MenuSaveAs(this MainWindow window, object? sender, RoutedEventArgs e)
 	{
 		var newPath = DialogFileSelect(true, 2, CurrentDatabase.Name);
 		if (!string.IsNullOrWhiteSpace(newPath))
@@ -109,7 +109,7 @@ public static class MenuUtils
 		CurrentDatabase.Format = HighestFormat;
 	}
 
-	public static void Menu_SaveLocal(this MainWindow window, object? sender, RoutedEventArgs e)
+	public static void MenuSaveLocal(this MainWindow window, object? sender, RoutedEventArgs e)
 	{
 		CurrentDatabase.Changed = true;
 		CurrentDatabase.DBFile = Path.Join(Subfolders["Databases"], Path.GetFileNameWithoutExtension(CurrentDatabase.DBFile), Path.GetFileName(CurrentDatabase.DBFile));
@@ -117,11 +117,11 @@ public static class MenuUtils
 		CurrentDatabase.Save();
 	}
 
-	public static void Menu_Serve(this MainWindow window, object? sender, RoutedEventArgs e) => CurrentDatabase.Server.Serve(0);
+	public static void MenuServe(this MainWindow window, object? sender, RoutedEventArgs e) => CurrentDatabase.Server.Serve(0);
 
-	public static void Menu_ShowAbout(this MainWindow window, object? sender, RoutedEventArgs e) => new About().Show();
+	public static void MenuShowAbout(this MainWindow window, object? sender, RoutedEventArgs e) => new About().Show();
 
-	public static void Menu_SublistChanged(this MainWindow window, object? sender, RoutedEventArgs e)
+	public static void MenuSublistChanged(this MainWindow window, object? sender, RoutedEventArgs e)
 	{
 		if (Mouse.RightButton == MouseButtonState.Pressed)
 			return;
@@ -136,7 +136,7 @@ public static class MenuUtils
 		OpenQuery(RecentSelection);
 	}
 
-	public static void Menu_TabChanged(this MainWindow window, object? sender, SelectionChangedEventArgs e)
+	public static void MenuTabChanged(this MainWindow window, object? sender, SelectionChangedEventArgs e)
 	{
 		if (sender is not TabControl control)
 			return;
@@ -158,5 +158,5 @@ public static class MenuUtils
 		DeferUpdateRecentNotes();
 	}
 
-	public static void Menu_Unserve(this MainWindow window, object? sender, RoutedEventArgs e) => CurrentDatabase.Server.Close();
+	public static void MenuUnserve(this MainWindow window, object? sender, RoutedEventArgs e) => CurrentDatabase.Server.Close();
 }

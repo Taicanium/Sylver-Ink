@@ -28,10 +28,10 @@ public partial class NoteController : IDisposable
 		}
 	}
 
-	public bool EnforceNoForwardCompatibility;
-	public int Format = HighestFormat;
-	public bool Loaded;
-	public string? Name;
+	public bool EnforceNoForwardCompatibility { get; private set; }
+	public int Format { get; set; } = HighestFormat;
+	public bool Loaded { get; set; }
+	public string? Name { get; set; }
 	public int RecordCount => Records.Count;
 	private List<NoteRecord> Records { get; } = [];
 	private byte? Structure { get; set; }
@@ -110,10 +110,10 @@ public partial class NoteController : IDisposable
 		Changed = true;
 		record.Add(new()
 		{
-			_created = DateTime.UtcNow.ToBinary(),
-			_startIndex = StartIndex,
-			_substring = StartIndex >= NewVersion.Length ? string.Empty : NewVersion[StartIndex..],
-			_uuid = MakeUUID(UUIDType.Revision)
+			Created = DateTime.UtcNow.ToBinary(),
+			StartIndex = StartIndex,
+			Substring = StartIndex >= NewVersion.Length ? string.Empty : NewVersion[StartIndex..],
+			Uuid = MakeUUID(UUIDType.Revision)
 		});
 	}
 
@@ -146,22 +146,15 @@ public partial class NoteController : IDisposable
 		}
 
 		if (Format >= 7)
-		{
-			string? _uuid = string.Empty;
-			UUID = _serializer?.ReadString(ref _uuid);
-		}
+			UUID = _serializer?.ReadString();
 
 		if (!_serializer?.Headless is true)
-		{
-			string? _name = string.Empty;
-			Name = _serializer?.ReadString(ref _name);
-		}
+			Name = _serializer?.ReadString();
 
 		if (Format >= 9)
 			Structure = _serializer?.ReadByte();
 
-		int recordCount = 0;
-		_serializer?.ReadInt32(ref recordCount);
+		int recordCount = _serializer?.ReadInt32() ?? 0;
 		for (int i = 0; i < recordCount; i++)
 		{
 			NoteRecord record = new();
@@ -345,7 +338,7 @@ public partial class NoteController : IDisposable
 
 			for (int j = Records[i].GetNumRevisions(); j > 0; j--)
 			{
-				var RevisionDate = DateTime.FromBinary(Records[i].GetRevision((uint)j - 1U)._created).ToLocalTime();
+				var RevisionDate = DateTime.FromBinary(Records[i].GetRevision((uint)j - 1U).Created).ToLocalTime();
 				comparison = RevisionDate.CompareTo(targetDate);
 				if (comparison <= 0)
 					continue;
@@ -423,13 +416,13 @@ public partial class NoteController : IDisposable
 
 			_serializer?.EndCompressionTest();
 
-			_serializer?.ReadInt32(ref recordCount);
+			recordCount = _serializer?.ReadInt32() ?? 0;
 			for (int i = 0; i < recordCount; i++)
 			{
 				NoteRecord record = new();
 				record.Deserialize(_serializer);
 			}
-			_serializer?.ReadString(ref _name);
+			_serializer?.ReadString();
 			_structure = _serializer?.ReadByte();
 		}
 		catch
@@ -454,7 +447,7 @@ public partial class NoteController : IDisposable
 		foreach (NoteRecord record in Records)
 		{
 			string recordText = record.ToString();
-			var matches = Lowercase().Matches(recordText.ToLower());
+			var matches = Lowercase().Matches(recordText.ToLowerInvariant());
 			foreach (Match m in matches)
 			{
 				foreach (Group group in m.Groups.Values)

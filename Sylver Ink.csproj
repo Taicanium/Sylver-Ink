@@ -24,7 +24,7 @@
 	<AllowUnsafeBlocks>False</AllowUnsafeBlocks>
 	<RepositoryUrl>https://github.com/Taicanium/Sylver-Ink</RepositoryUrl>
 	<IncludeSymbols>False</IncludeSymbols>
-	<AnalysisLevel>none</AnalysisLevel>
+	<AnalysisLevel>latest-recommended</AnalysisLevel>
 	<ProduceReferenceAssembly>True</ProduceReferenceAssembly>
 	<PackageLicenseFile>LICENSE</PackageLicenseFile>
 	<PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>

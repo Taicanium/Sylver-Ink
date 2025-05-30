@@ -14,17 +14,17 @@ namespace SylverInk.Notes;
 public partial class Database : IDisposable
 {
 	private NoteController Controller = new();
-	public string DBFile = string.Empty;
-	public bool Loaded;
+	public string DBFile { get; set; } = string.Empty;
+	public bool Loaded { get; private set; }
 
 	public bool Changed { get => Controller.Changed; set => Controller.Changed = value; }
-	public NetClient Client;
-	public long? Created;
+	public NetClient Client { get; private set; }
+	public long? Created { get; private set; }
 	public int Format { get => Controller.Format; set => Controller.Format = value; }
 	private StackPanel? HeaderPanel;
 	public string? Name { get => Controller.Name; set => Controller.Name = value; }
 	public int RecordCount => Controller.RecordCount;
-	public NetServer Server;
+	public NetServer Server { get; private set; }
 	public string? UUID { get => Controller.UUID; set => Controller.UUID = value; }
 	public Dictionary<string, double> WordPercentages => Controller.WordPercentages;
 

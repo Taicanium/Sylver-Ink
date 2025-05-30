@@ -41,7 +41,6 @@ public partial class ContextSettings : INotifyPropertyChanged
 	private bool _searchResultsOnTop;
 	private bool _searchResultsInTaskbar;
 	private bool _snapSearchResults = true;
-	private readonly string _versionString = $"v. {Assembly.GetExecutingAssembly().GetName().Version?.ToString(3)} © Taica, {GetBuildYear(Assembly.GetExecutingAssembly())}";
 
 	public Brush? AccentBackground { get => _accentBackgound; set { _accentBackgound = value; OnPropertyChanged(); } }
 	public Brush? AccentForeground { get => _accentForegound; set { _accentForegound = value; OnPropertyChanged(); } }
@@ -66,7 +65,7 @@ public partial class ContextSettings : INotifyPropertyChanged
 	public bool SearchResultsOnTop { get => _searchResultsOnTop; set { _searchResultsOnTop = value; SearchResultsInTaskbar = !value; OnPropertyChanged(); } }
 	public bool SearchResultsInTaskbar { get => _searchResultsInTaskbar; private set { _searchResultsInTaskbar = value; OnPropertyChanged(); } }
 	public bool SnapSearchResults { get => _snapSearchResults; set { _snapSearchResults = value; OnPropertyChanged(); } }
-	public string VersionString => _versionString;
+	public string VersionString { get; } = $"v. {Assembly.GetExecutingAssembly().GetName().Version?.ToString(3)} © Taica, {GetBuildYear(Assembly.GetExecutingAssembly())}";
 
 	private static int GetBuildYear(Assembly assembly)
 	{

@@ -19,7 +19,7 @@ namespace SylverInk;
 /// <summary>
 /// Interaction logic for MainWindow.xaml
 /// </summary>
-public partial class MainWindow : Window
+public partial class MainWindow : Window, IDisposable
 {
 	[DllImport("User32.dll")]
 	private static extern bool RegisterHotKey(nint hWnd, int id, uint fsModifiers, uint vk);
@@ -28,7 +28,7 @@ public partial class MainWindow : Window
 	private static extern bool UnregisterHotKey(nint hWnd, int id);
 
 	private bool _ABORT;
-	public const int HWND_BROADCAST = 0xFFFF;
+	public const int HWNDBROADCAST = 0xFFFF;
 	private readonly WindowInteropHelper hWndHelper;
 	private Mutex? mutex;
 	private readonly string MutexName = $"SylverInk/{typeof(MainWindow).GUID}";
@@ -69,6 +69,12 @@ public partial class MainWindow : Window
 				Close();
 				break;
 		}
+	}
+
+	public void Dispose()
+	{
+		mutex?.Dispose();
+		GC.SuppressFinalize(this);
 	}
 
 	private void Drag(object? sender, MouseButtonEventArgs e) => DragMove();
@@ -189,7 +195,7 @@ public partial class MainWindow : Window
 		}, TaskCreationOptions.LongRunning);
 	}
 
-	private void HandleShellVerbs(string[]? args = null)
+	private static void HandleShellVerbs(string[]? args = null)
 	{
 		if ((args ??= Environment.GetCommandLineArgs()).Length < 2)
 			return;
@@ -205,7 +211,7 @@ public partial class MainWindow : Window
 		}
 	}
 
-	private async void HandleVerbOpen(string filename)
+	private async static void HandleVerbOpen(string filename)
 	{
 		if (string.IsNullOrWhiteSpace(filename))
 			return;

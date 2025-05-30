@@ -15,9 +15,9 @@ namespace SylverInk;
 /// </summary>
 public partial class Search : Window
 {
-	public readonly Dictionary<NoteRecord, Database> DBMatches = [];
-	public string Query = string.Empty;
-	public readonly List<NoteRecord> ResultsList = [];
+	public Dictionary<NoteRecord, Database> DBMatches { get; } = [];
+	public string Query { get; private set; } = string.Empty;
+	public List<NoteRecord> ResultsList { get; } = [];
 
 	public Search()
 	{

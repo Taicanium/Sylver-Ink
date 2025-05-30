@@ -11,7 +11,7 @@ namespace SylverInk.XAMLUtils;
 
 public static class ImportUtils
 {
-	private static bool AdaptiveImport = false;
+	private static bool AdaptiveImport;
 	private static string AdaptivePredicate = string.Empty;
 	private static List<string> DataLines { get; } = [];
 	private static int Imported;

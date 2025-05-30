@@ -20,7 +20,8 @@ public class NoteTab
 	private readonly Button ReturnButton;
 	private readonly Label RevisionLabel;
 	private readonly Button SaveButton;
-	public TabItem Tab;
+
+	public TabItem Tab { get; set; }
 
 	public NoteTab(NoteRecord Record, string? content = null)
 	{

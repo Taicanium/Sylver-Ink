@@ -56,7 +56,7 @@ public static partial class Common
 	public static ObservableCollection<Database> Databases { get; set; } = [];
 	public static string DateFormat { get; } = "yyyy-MM-dd HH:mm:ss";
 	public static string DefaultDatabase { get; } = "New";
-	public static bool DelayVisualUpdates { get; set; } = false;
+	public static bool DelayVisualUpdates { get; set; }
 	public static string DocumentsFolder { get; } = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Sylver Ink");
 	public static bool FirstRun { get; set; } = true;
 	public static int HighestFormat { get; } = 10;
@@ -86,10 +86,9 @@ public static partial class Common
 	public static Dictionary<string, string> Subfolders { get; } = new([
 		new("Databases", Path.Join(DocumentsFolder, "Databases"))
 		]);
-	private static double TextHeight { get; set; }
 	public static bool UpdatesChecked { get; set; }
-	public static double WindowHeight { get; set; } = 0.0;
-	public static double WindowWidth { get; set; } = 0.0;
+	public static double WindowHeight { get; set; }
+	public static double WindowWidth { get; set; }
 
 	public static void AddDatabase(Database db)
 	{
@@ -200,8 +199,8 @@ public static partial class Common
 			{
 				do
 				{
-					WindowHeight = RecentBox.ActualHeight == double.NaN ? Application.Current.MainWindow.ActualHeight : RecentBox.ActualHeight;
-					WindowWidth = RecentBox.ActualWidth == double.NaN ? Application.Current.MainWindow.ActualWidth : RecentBox.ActualWidth;
+					WindowHeight = double.IsNaN(RecentBox.ActualHeight) ? Application.Current.MainWindow.ActualHeight : RecentBox.ActualHeight;
+					WindowWidth = double.IsNaN(RecentBox.ActualWidth) ? Application.Current.MainWindow.ActualWidth : RecentBox.ActualWidth;
 				} while (WindowHeight <= 0);
 			});
 

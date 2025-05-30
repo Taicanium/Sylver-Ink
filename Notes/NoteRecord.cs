@@ -11,10 +11,10 @@ namespace SylverInk.Notes;
 
 public struct NoteRevision(long created = -1, int startIndex = -1, string? substring = null, string? uuid = null)
 {
-	public long _created = created;
-	public int _startIndex = startIndex;
-	public string? _substring = substring;
-	public string? _uuid = uuid ?? MakeUUID(UUIDType.Revision);
+	public long Created { get; set; } = created;
+	public int StartIndex { get; set; } = startIndex;
+	public string? Substring { get; set; } = substring;
+	public string? Uuid { readonly get; set; } = uuid ?? MakeUUID(UUIDType.Revision);
 }
 
 public partial class NoteRecord
@@ -28,10 +28,10 @@ public partial class NoteRecord
 	private readonly List<string> Tags = [];
 	private bool TagsDirty = true;
 
-	public int Index = -1;
-	public int LastMatchCount { get; private set; }
-	public bool Locked { get; private set; }
-	public string? UUID;
+	private int index = -1;
+	public int LastMatchCount { get; set; }
+	public bool Locked { get; set; }
+	private string? uuid;
 
 	public string Preview
 	{
@@ -62,6 +62,9 @@ public partial class NoteRecord
 		}
 	}
 
+	public int Index { get => index; set => index = value; }
+	public string? UUID { get => uuid; set => uuid = value; }
+
 	public NoteRecord()
 	{
 		Created = DateTime.UnixEpoch.ToBinary();
@@ -86,16 +89,16 @@ public partial class NoteRecord
 
 	public void Add(NoteRevision revision)
 	{
-		if (revision._created == -1)
-			revision._created = DateTime.UtcNow.ToBinary();
+		if (revision.Created == -1)
+			revision.Created = DateTime.UtcNow.ToBinary();
 
-		if (DateTime.FromBinary(revision._created).CompareTo(LastChangeObject) > 0)
+		if (DateTime.FromBinary(revision.Created).CompareTo(LastChangeObject) > 0)
 		{
-			LastChange = revision._created;
+			LastChange = revision.Created;
 			LastChangeObject = DateTime.FromBinary(LastChange);
 		}
 
-		revision._uuid ??= MakeUUID(UUIDType.Revision);
+		revision.Uuid ??= MakeUUID(UUIDType.Revision);
 
 		Revisions.Add(revision);
 		RecentNotesDirty = true;
@@ -120,7 +123,7 @@ public partial class NoteRecord
 
 		Revisions.RemoveAt(index);
 
-		LastChange = GetNumRevisions() == 0 ? Created : Revisions[GetNumRevisions() - 1]._created;
+		LastChange = GetNumRevisions() == 0 ? Created : Revisions[GetNumRevisions() - 1].Created;
 		LastChangeObject = DateTime.FromBinary(LastChange);
 		RecentNotesDirty = true;
 	}
@@ -128,22 +131,21 @@ public partial class NoteRecord
 	public NoteRecord Deserialize(Serializer? serializer)
 	{
 		if (serializer?.DatabaseFormat >= 5)
-			serializer?.ReadString(ref UUID);
-		serializer?.ReadLong(ref Created);
-		serializer?.ReadInt32(ref Index);
-		serializer?.ReadString(ref Initial);
-		serializer?.ReadLong(ref LastChange);
+			UUID = serializer?.ReadString();
+		Created = serializer?.ReadLong() ?? DateTime.UtcNow.ToBinary();
+		Index = serializer?.ReadInt32() ?? -1;
+		Initial = serializer?.ReadString();
+		LastChange = serializer?.ReadLong() ?? DateTime.UtcNow.ToBinary();
 
-		int RevisionsCount = 0;
-		serializer?.ReadInt32(ref RevisionsCount);
+		int RevisionsCount = serializer?.ReadInt32() ?? 0;
 		for (int i = 0; i < RevisionsCount; i++)
 		{
 			NoteRevision _revision = new();
 			if (serializer?.DatabaseFormat >= 7)
-				serializer?.ReadString(ref _revision._uuid);
-			serializer?.ReadLong(ref _revision._created);
-			serializer?.ReadInt32(ref _revision._startIndex);
-			serializer?.ReadString(ref _revision._substring);
+				_revision.Uuid = serializer?.ReadString();
+			_revision.Created = serializer?.ReadLong() ?? DateTime.UtcNow.ToBinary();
+			_revision.StartIndex = serializer?.ReadInt32() ?? 0;
+			_revision.Substring = serializer?.ReadString();
 			Add(_revision);
 		}
 
@@ -173,12 +175,12 @@ public partial class NoteRecord
 		Tags.Clear();
 
 		var recordText = ToString();
-		var matches = Lowercase().Matches(recordText.ToLower());
+		var matches = Lowercase().Matches(recordText.ToLowerInvariant());
 		foreach (Match match in matches)
 		{
 			foreach (Group group in match.Groups.Values)
 			{
-				var val = group.Value.ToLower();
+				var val = group.Value.ToLowerInvariant();
 
 				if (Tags.Contains(val))
 					continue;
@@ -217,7 +219,7 @@ public partial class NoteRecord
 
 	public NoteRevision GetRevision(uint index) => Revisions[Revisions.Count - 1 - (int)index];
 
-	public string GetRevisionTime(uint index) => DateTime.FromBinary(GetRevision(index)._created).ToLocalTime().ToString(DateFormat);
+	public string GetRevisionTime(uint index) => DateTime.FromBinary(GetRevision(index).Created).ToLocalTime().ToString(DateFormat);
 
 	public void Lock()
 	{
@@ -230,14 +232,14 @@ public partial class NoteRecord
 		if (!TagsDirty && format.Equals(LastQuery))
 			return LastMatchCount;
 
-		var matches = Lowercase().Matches(format.ToLower());
+		var matches = Lowercase().Matches(format.ToLowerInvariant());
 		int outCount = 0;
 
 		ExtractTags();
 
 		foreach (Match match in matches)
 			foreach (Group group in match.Groups.Values)
-				if (Tags.Contains(group.Value.ToLower()))
+				if (Tags.Contains(group.Value.ToLowerInvariant()))
 					outCount++;
 
 		LastQuery = format;
@@ -259,10 +261,10 @@ public partial class NoteRecord
 
 		for (int i = 0; i < Revisions.Count - Math.Min(backsteps, Revisions.Count); i++)
 		{
-			if (Revisions[i]._startIndex > -1 && Revisions[i]._startIndex < latest.Length)
-				latest = latest[..Revisions[i]._startIndex];
+			if (Revisions[i].StartIndex > -1 && Revisions[i].StartIndex < latest.Length)
+				latest = latest[..Revisions[i].StartIndex];
 
-			latest += Revisions[i]._substring;
+			latest += Revisions[i].Substring;
 		}
 
 		return latest ?? string.Empty;
@@ -292,10 +294,10 @@ public partial class NoteRecord
 
 			Add(new NoteRevision()
 			{
-				_created = Created,
-				_startIndex = StartIndex,
-				_substring = Substring,
-				_uuid = MakeUUID(UUIDType.Revision)
+				Created = Created,
+				StartIndex = StartIndex,
+				Substring = Substring,
+				Uuid = MakeUUID(UUIDType.Revision)
 			});
 		}
 	}
@@ -316,10 +318,10 @@ public partial class NoteRecord
 		for (int i = 0; i < Revisions.Count; i++)
 		{
 			if (serializer?.DatabaseFormat >= 7)
-				serializer?.WriteString(Revisions[i]._uuid);
-			serializer?.WriteLong(Revisions[i]._created);
-			serializer?.WriteInt32(Revisions[i]._startIndex);
-			serializer?.WriteString(Revisions[i]._substring);
+				serializer?.WriteString(Revisions[i].Uuid);
+			serializer?.WriteLong(Revisions[i].Created);
+			serializer?.WriteInt32(Revisions[i].StartIndex);
+			serializer?.WriteString(Revisions[i].Substring);
 		}
 	}
 
@@ -333,7 +335,7 @@ public partial class NoteRecord
 		for (int i = RCount - 1; i > -1; i--)
 		{
 			var oldText = Reconstruct((uint)i);
-			CreatedTags.Add(Revisions[i]._created);
+			CreatedTags.Add(Revisions[i].Created);
 			ReconstructedSubstrings.Add(XamlToPlaintext(oldText));
 		}
 
@@ -353,7 +355,7 @@ public partial class NoteRecord
 		for (int i = RCount - 1; i > -1; i--)
 		{
 			var oldText = Reconstruct((uint)i);
-			CreatedTags.Add(Revisions[i]._created);
+			CreatedTags.Add(Revisions[i].Created);
 			ReconstructedSubstrings.Add(PlaintextToXaml(oldText));
 		}
 

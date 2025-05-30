@@ -29,7 +29,7 @@ public partial class Settings : Window
 
 	private void CloseClick(object? sender, RoutedEventArgs e) => Close();
 
-	private void ColorChanged(string? ColorTag, Brush ColorSelection)
+	private static void ColorChanged(string? ColorTag, Brush ColorSelection)
 	{
 		if (ColorTag is null)
 			return;

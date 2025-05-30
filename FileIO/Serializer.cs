@@ -221,66 +221,69 @@ public partial class Serializer : IDisposable
 		HandleFormat();
 	}
 
-	public int ReadInt32(ref int item)
+	public int? ReadInt32()
 	{
 		if (!_isOpen)
-			return item;
+			return null;
 
 		int nextSize = (int)ReadUInt32();
 		if (nextSize == 0)
-			return item;
+			return null;
 
 		try
 		{
 			_buffer = ReadBytes(nextSize);
-			item = int.Parse(Encoding.UTF8.GetString(_buffer));
-			return item;
+			if (int.TryParse(Encoding.UTF8.GetString(_buffer), out int item))
+				return item;
+
+			return null;
 		}
 		catch
 		{
-			return item;
+			return null;
 		}
 	}
 
-	public long ReadLong(ref long item)
+	public long? ReadLong()
 	{
 		if (!_isOpen)
-			return item;
+			return null;
 
 		int nextSize = (int)ReadUInt32();
 		if (nextSize == 0)
-			return item;
+			return null;
 
 		try
 		{
 			_buffer = ReadBytes(nextSize);
-			item = long.Parse(Encoding.UTF8.GetString(_buffer));
-			return item;
+			if (long.TryParse(Encoding.UTF8.GetString(_buffer), out long item))
+				return item;
+
+			return null;
 		}
 		catch
 		{
-			return item;
+			return null;
 		}
 	}
 
-	public string? ReadString(ref string? item)
+	public string? ReadString()
 	{
 		if (!_isOpen)
-			return item;
+			return null;
 
 		int nextSize = (int)ReadUInt32();
 		if (nextSize == 0)
-			return item;
+			return null;
 
 		try
 		{
 			_buffer = ReadBytes(nextSize);
-			item = Encoding.UTF8.GetString(_buffer);
-			return item;
+			return Encoding.UTF8.GetString(_buffer);
 		}
 		catch
 		{
-			return item;
+			return null;
 		}
 	}
 

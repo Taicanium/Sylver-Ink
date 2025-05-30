@@ -8,19 +8,19 @@ namespace SylverInk;
 
 public static class PopupUtils
 {
-	public static void Popup_AddressKeyDown(this MainWindow window, object? sender, KeyEventArgs e)
+	public static void PopupAddressKeyDown(this MainWindow window, object? sender, KeyEventArgs e)
 	{
 		if (e.Key == Key.Enter)
 			window.ConnectAddress.IsOpen = false;
 	}
 
-	public static void Popup_CodeClosed(this MainWindow window, object? sender, EventArgs e)
+	public static void PopupCodeClosed(this MainWindow window, object? sender, EventArgs e)
 	{
 		Clipboard.SetText(CurrentDatabase.Server?.AddressCode);
 		window.CodePopup.IsOpen = false;
 	}
 
-	public static void Popup_RenameClosed(this MainWindow window, object? sender, EventArgs e)
+	public static void PopupRenameClosed(this MainWindow window, object? sender, EventArgs e)
 	{
 		if (!window.RenameDatabase.IsOpen)
 			return;
@@ -54,13 +54,13 @@ public static class PopupUtils
 		CurrentDatabase.Rename(window.DatabaseNameBox.Text);
 	}
 
-	public static void Popup_RenameKeyDown(this MainWindow window, object? sender, KeyEventArgs e)
+	public static void PopupRenameKeyDown(this MainWindow window, object? sender, KeyEventArgs e)
 	{
 		if (e.Key == Key.Enter)
 			window.RenameDatabase.IsOpen = false;
 	}
 
-	public static async void Popup_SaveAddress(this MainWindow window, object? sender, RoutedEventArgs e)
+	public static async void PopupSaveAddress(this MainWindow window, object? sender, RoutedEventArgs e)
 	{
 		window.ConnectAddress.IsOpen = false;
 
