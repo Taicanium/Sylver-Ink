@@ -1,4 +1,5 @@
 ﻿using SylverInk.XAMLUtils;
+using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -8,6 +9,13 @@ namespace SylverInk;
 
 public partial class Import : Window
 {
+	public bool AdaptiveImport { get; set; }
+	public string AdaptivePredicate { get; set; } = string.Empty;
+	public List<string> DataLines { get; } = [];
+	public int Imported { get; set; }
+	public double RunningAverage { get; set; }
+	public int RunningCount { get; set; }
+
 	public Import()
 	{
 		InitializeComponent();
@@ -25,7 +33,7 @@ public partial class Import : Window
 		LTPanel.IsEnabled = false;
 		Common.Settings.ReadyToFinalize = false;
 
-		await ImportUtils.Measure(AdaptiveCheckBox.IsChecked is true);
+		await this.Measure(AdaptiveCheckBox.IsChecked is true);
 
 		AdaptiveCheckBox.IsEnabled = true;
 		CloseButton.IsEnabled = true;
@@ -44,7 +52,7 @@ public partial class Import : Window
 		DoImport.Content = "Importing...";
 		LTPanel.IsEnabled = false;
 
-		await ImportUtils.Import();
+		await this.Import();
 
 		AdaptiveCheckBox.IsEnabled = true;
 		CloseButton.IsEnabled = true;
@@ -56,15 +64,14 @@ public partial class Import : Window
 	private async void LineToleranceChanged(object? sender, RoutedEventArgs e)
 	{
 		Common.Settings.LineTolerance += ((Button?)sender)?.Content.Equals("-") is true ? -1 : 1;
-		await ImportUtils.Measure(AdaptiveCheckBox.IsChecked is true);
+		await this.Measure(AdaptiveCheckBox.IsChecked is true);
 	}
 
 	private async void Open_Click(object? sender, RoutedEventArgs e)
 	{
 		Common.Settings.ImportTarget = DialogFileSelect();
-		Common.Settings.ImportData = string.Empty;
 
-		await ImportUtils.Refresh(AdaptiveCheckBox.IsChecked is true);
+		await this.Refresh(AdaptiveCheckBox.IsChecked is true);
 	}
 
 	private void Target_TextChanged(object? sender, RoutedEventArgs e)

@@ -44,11 +44,11 @@ public static class PopupUtils
 
 		foreach (char pc in InvalidPathChars)
 		{
-			if (window.DatabaseNameBox.Text.Contains(pc))
-			{
-				MessageBox.Show($"Provided name contains invalid character: {pc}", "Sylver Ink: Error", MessageBoxButton.OK, MessageBoxImage.Error);
-				return;
-			}
+			if (!window.DatabaseNameBox.Text.Contains(pc))
+				continue;
+
+			MessageBox.Show($"Provided name contains invalid character: {pc}", "Sylver Ink: Error", MessageBoxButton.OK, MessageBoxImage.Error);
+			return;
 		}
 
 		CurrentDatabase.Rename(window.DatabaseNameBox.Text);

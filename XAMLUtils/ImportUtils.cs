@@ -11,13 +11,6 @@ namespace SylverInk.XAMLUtils;
 
 public static class ImportUtils
 {
-	private static bool AdaptiveImport;
-	private static string AdaptivePredicate = string.Empty;
-	private static List<string> DataLines { get; } = [];
-	private static int Imported;
-	private static double RunningAverage;
-	private static int RunningCount;
-
 	private static void AppendLine(ref string RecordData, string Line, int LineIndex)
 	{
 		if (LineIndex > 0)
@@ -25,22 +18,21 @@ public static class ImportUtils
 		RecordData += Line;
 	}
 
-	private static void FinishImport()
+	private static void FinishImport(this Import window)
 	{
-		Common.Settings.ImportData = $"Notes imported: {Imported:N0}";
+		Common.Settings.ImportData = $"Notes imported: {window.Imported:N0}";
 		Common.Settings.ReadyToFinalize = false;
 
-		DataLines.Clear();
+		window.DataLines.Clear();
 		DeferUpdateRecentNotes();
 	}
 
-	public static async Task Import()
+	public static async Task Import(this Import window)
 	{
 		try
 		{
-			Common.Settings.ImportTarget = string.Empty;
-			await PerformImport();
-			FinishImport();
+			await window.PerformImport();
+			window.FinishImport();
 		}
 		catch (Exception ex)
 		{
@@ -48,32 +40,34 @@ public static class ImportUtils
 		}
 	}
 
-	public static async Task Measure(bool Adaptive = false)
+	public static async Task Measure(this Import window, bool Adaptive = false)
 	{
 		if (string.IsNullOrWhiteSpace(Common.Settings.ImportTarget))
 			return;
 
-		AdaptiveImport = Adaptive;
+		window.AdaptiveImport = Adaptive;
 		Common.Settings.ReadyToFinalize = false;
 
-		if (!(Adaptive && await MeasureNotesAdaptive()))
-			await MeasureNotesManual();
+		if (!(Adaptive && await window.MeasureNotesAdaptive()))
+			await window.MeasureNotesManual();
 
-		ReportMeasurement();
+		window.ReportMeasurement();
 	}
 
 	/// <summary>
 	/// Attempt to detect recurring patterns in the incoming data that can be used to divide the data into notes. These patterns (referred to here as 'predicates') may consist of timestamps, headings, signatures, or other text structures consisting of letters, numbers, and symbols.
 	/// </summary>
 	/// <returns><c>true</c> if a predicate was successfully detected; <c>false</c> otherwise.</returns>
-	private static async Task<bool> MeasureNotesAdaptive() => await Task.Run(() =>
+	private static async Task<bool> MeasureNotesAdaptive(this Import window) => await Task.Run(() =>
 	{
 		// Letters, numbers, spaces, and punctuation; respectively.
 		string[] classes = [@"\p{L}+", @"\p{Nd}+", @"[\p{Zs}\t]+", @"[\p{P}\p{S}]+"];
 		Dictionary<string, double> frequencies = [];
 		Dictionary<string, int> tokenCounts = [];
 
-		if (!ReadFromStream(Common.Settings.ImportTarget))
+		Common.Settings.ImportData = $"Adaptive scanning...";
+
+		if (!window.ReadFromStream(Common.Settings.ImportTarget))
 		{
 			Common.Settings.ImportTarget = string.Empty;
 			return false;
@@ -94,11 +88,9 @@ public static class ImportUtils
 			tokenCounts.Clear();
 			tokenCounts.Add(string.Empty, 0);
 
-			for (int line = 0; line < DataLines.Count; line++, LineTotal++)
+			for (int line = 0; line < window.DataLines.Count; line++, LineTotal++)
 			{
-				Common.Settings.ImportData = $"Adaptive scanning...";
-
-				var key = DataLines[line];
+				var key = window.DataLines[line];
 				if (string.IsNullOrWhiteSpace(key.Trim()))
 					continue;
 
@@ -165,12 +157,12 @@ public static class ImportUtils
 			if (ordered.Value >= 0.05 && ordered.Value >= LastPredicateValue)
 			{
 				var NewPredicate = "^" + ordered.Key;
-				if (AdaptivePredicate.Equals(NewPredicate))
+				if (window.AdaptivePredicate.Equals(NewPredicate))
 				{
 					LastPredicateSequence++;
 					continue;
 				}
-				AdaptivePredicate = NewPredicate;
+				window.AdaptivePredicate = NewPredicate;
 				LastPredicateSequence = 0;
 				LastPredicateValue = ordered.Value;
 			}
@@ -181,21 +173,21 @@ public static class ImportUtils
 				break;
 		}
 
-		if (!string.IsNullOrWhiteSpace(AdaptivePredicate.Trim()))
+		if (!string.IsNullOrWhiteSpace(window.AdaptivePredicate.Trim()))
 		{
 			string recordData = string.Empty;
-			RunningAverage = 0.0;
-			RunningCount = 0;
+			window.RunningAverage = 0.0;
+			window.RunningCount = 0;
 
-			for (int i = 0; i < DataLines.Count; i++)
+			for (int i = 0; i < window.DataLines.Count; i++)
 			{
-				var line = DataLines[i].Trim();
-				if (Regex.IsMatch(line, AdaptivePredicate))
+				var line = window.DataLines[i].Trim();
+				if (Regex.IsMatch(line, window.AdaptivePredicate))
 				{
 					if (!string.IsNullOrWhiteSpace(recordData.Trim()))
 					{
-						RunningAverage += recordData.Length;
-						RunningCount++;
+						window.RunningAverage += recordData.Length;
+						window.RunningCount++;
 					}
 					recordData = line;
 				}
@@ -203,23 +195,23 @@ public static class ImportUtils
 					AppendLine(ref recordData, line, i);
 			}
 
-			RunningAverage /= RunningCount;
+			window.RunningAverage /= window.RunningCount;
 			return true;
 		}
 
 		MessageBox.Show("Failed to autodetect the note format.", "Sylver Ink: Error", MessageBoxButton.OK);
-		AdaptivePredicate = string.Empty;
+		window.AdaptivePredicate = string.Empty;
 		return false;
 	});
 
 	/// <summary>
 	/// Manual note measurement consists of dividing the incoming plaintext data by a strict number of blank lines appearing between entries. If a text file contains no empty lines, the entire file will be placed into one Sylver Ink note.
 	/// </summary>
-	private static async Task MeasureNotesManual() => await Task.Run(() =>
+	private static async Task MeasureNotesManual(this Import window) => await Task.Run(() =>
 	{
 		try
 		{
-			if (!ReadFromStream(Common.Settings.ImportTarget))
+			if (!window.ReadFromStream(Common.Settings.ImportTarget))
 			{
 				Common.Settings.ImportTarget = string.Empty;
 				return;
@@ -227,13 +219,13 @@ public static class ImportUtils
 
 			int blankCount = 0;
 			string recordData = string.Empty;
-			RunningAverage = 0.0;
-			RunningCount = 0;
-			ReadFromStream(Common.Settings.ImportTarget);
+			window.RunningAverage = 0.0;
+			window.RunningCount = 0;
+			window.ReadFromStream(Common.Settings.ImportTarget);
 
-			for (int i = 0; i < DataLines.Count; i++)
+			for (int i = 0; i < window.DataLines.Count; i++)
 			{
-				var line = DataLines[i];
+				var line = window.DataLines[i];
 				AppendLine(ref recordData, line, i);
 
 				if (line.Trim().Length == 0)
@@ -241,24 +233,25 @@ public static class ImportUtils
 				else
 					blankCount = 0;
 
-				Common.Settings.ImportData = $"{i * 100.0 / DataLines.Count:N2}% scanned...";
+				if (i % 100 == 0)
+					Common.Settings.ImportData = $"{i * 100.0 / window.DataLines.Count:N2}% scanned...";
 
 				if (recordData.Length == 0 || blankCount < Common.Settings.LineTolerance)
 					continue;
 
 				blankCount = 0;
-				RunningAverage += recordData.Length;
+				window.RunningAverage += recordData.Length;
 				recordData = string.Empty;
-				RunningCount++;
+				window.RunningCount++;
 			}
 
 			if (!string.IsNullOrWhiteSpace(recordData))
 			{
-				RunningAverage += recordData.Length;
-				RunningCount++;
+				window.RunningAverage += recordData.Length;
+				window.RunningCount++;
 			}
 
-			RunningAverage /= RunningCount;
+			window.RunningAverage /= window.RunningCount;
 		}
 		catch
 		{
@@ -269,23 +262,23 @@ public static class ImportUtils
 	/// <summary>
 	/// Importing plaintext data proceeds similarly to measuring it. In this method, however, the data is saved to newly created <c>NoteRecord</c>s instead of being discarded.
 	/// </summary>
-	private static async Task PerformImport() => await Task.Run(() =>
+	private static async Task PerformImport(this Import window) => await Task.Run(() =>
 	{
 		int blankCount = 0;
 		DelayVisualUpdates = true;
-		Imported = 0;
+		window.Imported = 0;
 		string recordData = string.Empty;
 
-		for (int i = 0; i < DataLines.Count; i++)
+		for (int i = 0; i < window.DataLines.Count; i++)
 		{
-			string line = DataLines[i];
+			string line = window.DataLines[i];
 
-			if (AdaptiveImport)
+			if (window.AdaptiveImport)
 			{
-				if (Regex.IsMatch(line, AdaptivePredicate) && !string.IsNullOrWhiteSpace(recordData.Trim()))
+				if (Regex.IsMatch(line, window.AdaptivePredicate) && !string.IsNullOrWhiteSpace(recordData.Trim()))
 				{
 					CurrentDatabase.CreateRecord(recordData);
-					Imported++;
+					window.Imported++;
 					recordData = string.Empty;
 				}
 				AppendLine(ref recordData, line, i);
@@ -298,13 +291,13 @@ public static class ImportUtils
 			else
 				blankCount = 0;
 
-			Common.Settings.ImportData = $"{i * 100.0 / DataLines.Count:N2}% imported...";
+			Common.Settings.ImportData = $"{i * 100.0 / window.DataLines.Count:N2}% imported...";
 
-			if (blankCount < Common.Settings.LineTolerance && i < DataLines.Count - 1)
+			if (blankCount < Common.Settings.LineTolerance && i < window.DataLines.Count - 1)
 				continue;
 
 			CurrentDatabase.CreateRecord(recordData);
-			Imported++;
+			window.Imported++;
 			recordData = string.Empty;
 			blankCount = 0;
 		}
@@ -312,13 +305,13 @@ public static class ImportUtils
 		if (!string.IsNullOrWhiteSpace(recordData))
 		{
 			CurrentDatabase.CreateRecord(recordData);
-			Imported++;
+			window.Imported++;
 		}
 
 		DelayVisualUpdates = false;
 	});
 
-	private static bool ReadFromStream(string filename)
+	private static bool ReadFromStream(this Import window, string filename)
 	{
 		using StreamReader? fileStream = new(filename);
 		if (fileStream is null || fileStream.EndOfStream)
@@ -327,12 +320,12 @@ public static class ImportUtils
 		if (fileStream?.ReadToEnd().Split('\n') is not string[] lines)
 			return false;
 
-		DataLines.Clear();
-		DataLines.AddRange(lines);
+		window.DataLines.Clear();
+		window.DataLines.AddRange(lines);
 		return true;
 	}
 
-	public static async Task Refresh(bool Adaptive)
+	public static async Task Refresh(this Import window, bool Adaptive)
 	{
 		if (Common.Settings.ImportTarget.EndsWith(".sidb") || Common.Settings.ImportTarget.EndsWith(".sibk"))
 		{
@@ -355,18 +348,18 @@ public static class ImportUtils
 
 			CurrentDatabase.Initialize(false);
 
-			Imported = CurrentDatabase.RecordCount;
-			FinishImport();
+			window.Imported = CurrentDatabase.RecordCount;
+			window.FinishImport();
 
 			return;
 		}
 
-		await Measure(Adaptive);
+		await Measure(window, Adaptive);
 	}
 
-	private static void ReportMeasurement()
+	private static void ReportMeasurement(this Import window)
 	{
-		Common.Settings.ImportData = $"Estimated new notes: {RunningCount:N0}\nAverage length: {RunningAverage:N0} characters per note\n\nRemember to press Import to finalize your changes!";
-		Common.Settings.ReadyToFinalize = RunningCount > 0;
+		Common.Settings.ImportData = $"Estimated new notes: {window.RunningCount:N0}\nAverage length: {window.RunningAverage:N0} characters per note\n\nRemember to press Import to finalize your changes!";
+		Common.Settings.ReadyToFinalize = window.RunningCount > 0;
 	}
 }

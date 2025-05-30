@@ -6,7 +6,7 @@
 		xmlns:local="clr-namespace:SylverInk"
 		mc:Ignorable="d"
 		d:DataContext="{d:DesignInstance Type=local:ContextSettings}"
-		Background="{Binding MenuBackground}" Foreground="{Binding MenuForeground}" Height="525" MinHeight="325" MinWidth="250" MouseLeftButtonDown="Drag" ResizeMode="CanResize" ShowInTaskbar="False" Title="Sylver Ink: Import" Topmost="True" Width="350">
+		Background="{Binding MenuBackground}" Foreground="{Binding MenuForeground}" Height="375" MinHeight="325" MinWidth="200" MouseLeftButtonDown="Drag" ResizeMode="CanResize" ShowInTaskbar="False" Title="Sylver Ink: Import" Topmost="True" Width="300">
 	<Grid>
 		<Grid.ColumnDefinitions>
 			<ColumnDefinition Width="*"/>
@@ -59,7 +59,10 @@
 			<Label Grid.Column="2" Content="(?)" Foreground="{Binding AccentForeground}" Grid.Row="2" ToolTip="The number of blank lines to look for when separating the file into different notes."/>
 		</Grid>
 		<Border BorderBrush="{Binding MenuForeground}" BorderThickness="1" Grid.Row="2" Margin="20,5,20,20">
-			<TextBlock Background="{Binding ListBackground}" FontFamily="{Binding MainFontFamily}" FontSize="{Binding MainFontSize}" Foreground="{Binding ListForeground}" Text="{Binding ImportData}" TextWrapping="WrapWithOverflow"/>
+			<ScrollViewer HorizontalScrollBarVisibility="Disabled"  VerticalScrollBarVisibility="Auto" >
+				<TextBlock Background="{Binding ListBackground}" FontFamily="{Binding MainFontFamily}" FontSize="{Binding MainFontSize}" Foreground="{Binding ListForeground}"
+						   Text="{Binding ImportData}" TextWrapping="WrapWithOverflow"/>
+			</ScrollViewer>
 		</Border>
 	</Grid>
 </Window>

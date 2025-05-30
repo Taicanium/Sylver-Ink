@@ -147,6 +147,11 @@ public partial class MainWindow : Window, IDisposable
 		}
 
 		CanResize = true;
+		LastActiveNotes.Clear();
+		LastActiveNotesHeight.Clear();
+		LastActiveNotesLeft.Clear();
+		LastActiveNotesTop.Clear();
+		LastActiveNotesWidth.Clear();
 		ResizeMode = ResizeMode.CanResize;
 		Common.Settings.MainTypeFace = new(Common.Settings.MainFontFamily, FontStyles.Normal, FontWeights.Normal, FontStretches.Normal);
 		DeferUpdateRecentNotes();

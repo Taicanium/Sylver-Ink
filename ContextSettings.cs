@@ -208,7 +208,7 @@ public partial class ContextSettings : INotifyPropertyChanged
 		}
 	}
 
-	protected void OnPropertyChanged([CallerMemberName] string? name = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+	protected void OnPropertyChanged([CallerMemberName] string? name = null) => Concurrent(() => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name)));
 
 	public void Save() => File.WriteAllLines(SettingsFile, [
 		$"AccentBackground:{BytesFromBrush(AccentBackground)}",
