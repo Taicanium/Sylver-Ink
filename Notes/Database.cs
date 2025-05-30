@@ -1,6 +1,7 @@
 ﻿using SylverInk.Net;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -146,7 +147,7 @@ public partial class Database : IDisposable
 	public string GetCreated()
 	{
 		if (Created is not null)
-			return DateTime.FromBinary((long)Created).ToString(DateFormat);
+			return DateTime.FromBinary((long)Created).ToString(DateFormat, CultureInfo.InvariantCulture);
 
 		var CreatedObject = DateTime.UtcNow;
 		for (int i = 0; i < RecordCount; i++)
@@ -157,7 +158,7 @@ public partial class Database : IDisposable
 		}
 
 		Created = CreatedObject.ToBinary();
-		return CreatedObject.ToString(DateFormat);
+		return CreatedObject.ToString(DateFormat, CultureInfo.InvariantCulture);
 	}
 
 	public object GetHeader()

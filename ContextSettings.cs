@@ -100,7 +100,7 @@ public partial class ContextSettings : INotifyPropertyChanged
 					MainFontFamily = new(keyValue[1]);
 					break;
 				case "FontSize":
-					MainFontSize = double.Parse(keyValue[1]);
+					MainFontSize = double.Parse(keyValue[1], CultureInfo.InvariantCulture);
 					break;
 				case "LastActiveDatabase":
 					LastActiveDatabase = keyValue[1];

@@ -48,7 +48,7 @@
 												 x:Name="ShortChanges">
 											<ListBox.ItemTemplate>
 												<DataTemplate>
-													<TextBlock HorizontalAlignment="Right" Text="{Binding ShortChange}"/>
+													<TextBlock HorizontalAlignment="Right" Text="{Binding ShortChange}" ToolTip="{Binding FullDateChange}" ToolTipService.InitialShowDelay="250"/>
 												</DataTemplate>
 											</ListBox.ItemTemplate>
 										</ListBox>

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -321,7 +322,7 @@ public partial class Serializer : IDisposable
 		if (!_isOpen)
 			return;
 
-		_buffer = Encoding.UTF8.GetBytes(value.ToString());
+		_buffer = Encoding.UTF8.GetBytes(value.ToString(NumberFormatInfo.InvariantInfo));
 		WriteUInt32((uint)_buffer.Length);
 		WriteBytes(_buffer);
 	}
@@ -331,7 +332,7 @@ public partial class Serializer : IDisposable
 		if (!_isOpen)
 			return;
 
-		_buffer = Encoding.UTF8.GetBytes(value.ToString());
+		_buffer = Encoding.UTF8.GetBytes(value.ToString(NumberFormatInfo.InvariantInfo));
 		WriteUInt32((uint)_buffer.Length);
 		WriteBytes(_buffer);
 	}

@@ -1,5 +1,6 @@
 ﻿using SylverInk.Notes;
 using System;
+using System.Globalization;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
@@ -31,7 +32,7 @@ public partial class Properties : Window
 		var hour = (ComboBoxItem)Hour.SelectedItem;
 		var minute = (ComboBoxItem)Minute.SelectedItem;
 
-		var hourValue = int.Parse((string)hour.Content);
+		var hourValue = int.Parse((string)hour.Content, NumberFormatInfo.InvariantInfo);
 		var hourIndex = Hour.SelectedIndex;
 
 		SelectedTime.Content = $"{(hourValue == 0 ? 12 : hourValue < 13 ? hourValue : hourValue - 12)}:{minute.Content} {(hourIndex < 12 ? "AM" : "PM")}";
@@ -124,8 +125,8 @@ public partial class Properties : Window
 		var hour = (ComboBoxItem)Hour.SelectedItem;
 		var minute = (ComboBoxItem)Minute.SelectedItem;
 
-		var hourValue = int.Parse((string)hour.Content);
-		var minuteValue = int.Parse((string)minute.Content);
+		var hourValue = int.Parse((string)hour.Content, NumberFormatInfo.InvariantInfo);
+		var minuteValue = int.Parse((string)minute.Content, NumberFormatInfo.InvariantInfo);
 
 		DateTime reversion = ReversionDate?.SelectedDate ?? DateTime.Now;
 		reversion = reversion.Date.AddHours(hourValue).AddMinutes(minuteValue);

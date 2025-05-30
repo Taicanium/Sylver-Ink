@@ -1,6 +1,7 @@
 ﻿using SylverInk.FileIO;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
@@ -32,6 +33,24 @@ public partial class NoteRecord
 	public int LastMatchCount { get; set; }
 	public bool Locked { get; set; }
 	private string? uuid;
+
+	public string FullDateChange
+	{
+		get
+		{
+			LastChangeObject = DateTime.FromBinary(LastChange);
+
+			var dtObject = RecentEntriesSortMode switch
+			{
+				SortType.ByCreation => GetCreatedObject(),
+				_ => LastChangeObject,
+			};
+
+			dtObject = dtObject.ToLocalTime();
+
+			return $"{dtObject.ToShortDateString()} {dtObject.ToShortTimeString()}";
+		}
+	}
 
 	public string Preview
 	{
@@ -72,7 +91,6 @@ public partial class NoteRecord
 		Initial = string.Empty;
 		LastChange = Created;
 		LastChangeObject = DateTime.FromBinary(LastChange);
-		RecentNotesDirty = true;
 		UUID = MakeUUID();
 	}
 
@@ -83,7 +101,6 @@ public partial class NoteRecord
 		this.Initial = Initial;
 		LastChange = this.Created;
 		LastChangeObject = DateTime.FromBinary(LastChange);
-		RecentNotesDirty = true;
 		this.UUID = UUID ?? MakeUUID();
 	}
 
@@ -101,8 +118,10 @@ public partial class NoteRecord
 		revision.Uuid ??= MakeUUID(UUIDType.Revision);
 
 		Revisions.Add(revision);
-		RecentNotesDirty = true;
 		TagsDirty = true;
+
+		RecentNotesDirty = true;
+		DeferUpdateRecentNotes();
 	}
 
 	public void Delete()
@@ -110,9 +129,11 @@ public partial class NoteRecord
 		Index = 0;
 		Initial = string.Empty;
 		LastChange = DateTime.UtcNow.ToBinary();
-		RecentNotesDirty = true;
 		Revisions.Clear();
 		TagsDirty = true;
+
+		RecentNotesDirty = true;
+		DeferUpdateRecentNotes();
 	}
 
 	// In its current state, this function is only well-behaved when removing all subsequent revisions in addition to the one marked for deletion.
@@ -125,7 +146,9 @@ public partial class NoteRecord
 
 		LastChange = GetNumRevisions() == 0 ? Created : Revisions[GetNumRevisions() - 1].Created;
 		LastChangeObject = DateTime.FromBinary(LastChange);
+
 		RecentNotesDirty = true;
+		DeferUpdateRecentNotes();
 	}
 
 	public NoteRecord Deserialize(Serializer? serializer)
@@ -201,15 +224,15 @@ public partial class NoteRecord
 		return Tags.Count;
 	}
 
-	public string GetCreated() => GetCreatedObject().ToLocalTime().ToString(DateFormat);
+	public string GetCreated() => GetCreatedObject().ToLocalTime().ToString(DateFormat, CultureInfo.InvariantCulture);
 
 	public DateTime GetCreatedObject() => DateTime.FromBinary(Created);
 
-	public override int GetHashCode() => int.Parse((UUID ??= MakeUUID())[^8..], System.Globalization.NumberStyles.HexNumber);
+	public override int GetHashCode() => int.Parse((UUID ??= MakeUUID())[^8..], NumberStyles.HexNumber, NumberFormatInfo.InvariantInfo);
 
 	public DateTime GetLastChangeObject() => DateTime.FromBinary(LastChange);
 
-	public string GetLastChange() => GetLastChangeObject().ToLocalTime().ToString(DateFormat);
+	public string GetLastChange() => GetLastChangeObject().ToLocalTime().ToString(DateFormat, CultureInfo.InvariantCulture);
 
 	public FlowDocument GetDocument(uint backsteps = 0U) => XamlToFlowDocument(Reconstruct(backsteps));
 
@@ -219,7 +242,7 @@ public partial class NoteRecord
 
 	public NoteRevision GetRevision(uint index) => Revisions[Revisions.Count - 1 - (int)index];
 
-	public string GetRevisionTime(uint index) => DateTime.FromBinary(GetRevision(index).Created).ToLocalTime().ToString(DateFormat);
+	public string GetRevisionTime(uint index) => DateTime.FromBinary(GetRevision(index).Created).ToLocalTime().ToString(DateFormat, CultureInfo.InvariantCulture);
 
 	public void Lock()
 	{

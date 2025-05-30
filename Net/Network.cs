@@ -195,7 +195,6 @@ public static class Network
 		Indicator.Width = 12;
 		Indicator.InvalidateVisual();
 
-		RecentNotesDirty = true;
 		DeferUpdateRecentNotes();
 	});
 }

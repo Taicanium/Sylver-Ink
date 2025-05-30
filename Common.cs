@@ -106,7 +106,7 @@ public static partial class Common
 			var index = 1;
 			Match match = IndexDigits().Match(db.Name);
 			if (match.Success)
-				index = int.Parse(match.Groups[1].Value);
+				index = int.Parse(match.Groups[1].Value, NumberFormatInfo.InvariantInfo);
 			while (tabs.Where(item => PanelLabel(item).Equals($"{db.Name} ({index})")).Any())
 				index++;
 			db.Name = $"{db.Name} ({index})";
@@ -147,10 +147,10 @@ public static partial class Common
 		{
 			return new(new()
 			{
-				A = byte.Parse(data[..2], NumberStyles.HexNumber),
-				R = byte.Parse(data[2..4], NumberStyles.HexNumber),
-				G = byte.Parse(data[4..6], NumberStyles.HexNumber),
-				B = byte.Parse(data[6..8], NumberStyles.HexNumber)
+				A = byte.Parse(data[..2], NumberStyles.HexNumber, NumberFormatInfo.InvariantInfo),
+				R = byte.Parse(data[2..4], NumberStyles.HexNumber, NumberFormatInfo.InvariantInfo),
+				G = byte.Parse(data[4..6], NumberStyles.HexNumber, NumberFormatInfo.InvariantInfo),
+				B = byte.Parse(data[6..8], NumberStyles.HexNumber, NumberFormatInfo.InvariantInfo)
 			});
 		}
 		catch { return Brushes.Transparent; }
@@ -338,7 +338,7 @@ public static partial class Common
 		var index = 0;
 		Match match;
 		if ((match = IndexDigits().Match(db.Name ?? string.Empty)).Success)
-			index = int.Parse(match.Groups[1].Value);
+			index = int.Parse(match.Groups[1].Value, NumberFormatInfo.InvariantInfo);
 
 		var path = Path.Join(Subfolders["Databases"], db.Name);
 		var dbFile = Path.Join(path, $"{db.Name}.sidb");
