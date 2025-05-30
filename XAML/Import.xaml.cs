@@ -22,7 +22,6 @@ public partial class Import : Window
 		DataContext = Common.Settings;
 
 		Common.Settings.ImportTarget = string.Empty;
-		Common.Settings.ReadyToFinalize = false;
 	}
 
 	private async void AdaptiveChecked(object? sender, RoutedEventArgs e)
@@ -30,8 +29,8 @@ public partial class Import : Window
 		AdaptiveCheckBox.IsEnabled = false;
 		CloseButton.IsEnabled = false;
 		DoImport.Content = "Scanning...";
+		DoImport.IsEnabled = false;
 		LTPanel.IsEnabled = false;
-		Common.Settings.ReadyToFinalize = false;
 
 		await this.Measure(AdaptiveCheckBox.IsChecked is true);
 
@@ -50,6 +49,7 @@ public partial class Import : Window
 		AdaptiveCheckBox.IsEnabled = false;
 		CloseButton.IsEnabled = false;
 		DoImport.Content = "Importing...";
+		DoImport.IsEnabled = false;
 		LTPanel.IsEnabled = false;
 
 		await this.Import();
@@ -76,6 +76,6 @@ public partial class Import : Window
 
 	private void Target_TextChanged(object? sender, RoutedEventArgs e)
 	{
-		Common.Settings.ReadyToFinalize = !string.IsNullOrWhiteSpace(Common.Settings.ImportTarget);
+		DoImport.IsEnabled = !string.IsNullOrWhiteSpace(Common.Settings.ImportTarget);
 	}
 }

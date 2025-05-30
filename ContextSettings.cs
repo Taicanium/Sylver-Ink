@@ -34,7 +34,6 @@ public partial class ContextSettings : INotifyPropertyChanged
 	private double _noteTransparency = 100.0;
 	private string _numReplacements = string.Empty;
 	public event PropertyChangedEventHandler? PropertyChanged;
-	private bool _readyToFinalize;
 	private bool _readyToReplace;
 	private ObservableCollection<NoteRecord> _recentNotes = [];
 	private ObservableCollection<NoteRecord> _searchResults = [];
@@ -58,7 +57,6 @@ public partial class ContextSettings : INotifyPropertyChanged
 	public Brush? MenuForeground { get => _menuForegound; set { _menuForegound = value; OnPropertyChanged(); } }
 	public double NoteTransparency { get => _noteTransparency; set { _noteTransparency = value; OnPropertyChanged(); } }
 	public string NumReplacements { get => _numReplacements; set { _numReplacements = value; OnPropertyChanged(); } }
-	public bool ReadyToFinalize { get => _readyToFinalize; set { _readyToFinalize = value; OnPropertyChanged(); } }
 	public bool ReadyToReplace { get => _readyToReplace; set { _readyToReplace = value; OnPropertyChanged(); } }
 	public ObservableCollection<NoteRecord> RecentNotes { get => _recentNotes; set { _recentNotes = value; OnPropertyChanged(); } }
 	public ObservableCollection<NoteRecord> SearchResults { get => _searchResults; set { _searchResults = value; OnPropertyChanged(); } }

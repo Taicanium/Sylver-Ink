@@ -21,8 +21,6 @@ public static class ImportUtils
 	private static void FinishImport(this Import window)
 	{
 		Common.Settings.ImportData = $"Notes imported: {window.Imported:N0}";
-		Common.Settings.ReadyToFinalize = false;
-
 		window.DataLines.Clear();
 		DeferUpdateRecentNotes();
 	}
@@ -46,8 +44,6 @@ public static class ImportUtils
 			return;
 
 		window.AdaptiveImport = Adaptive;
-		Common.Settings.ReadyToFinalize = false;
-
 		if (!(Adaptive && await window.MeasureNotesAdaptive()))
 			await window.MeasureNotesManual();
 
@@ -360,6 +356,6 @@ public static class ImportUtils
 	private static void ReportMeasurement(this Import window)
 	{
 		Common.Settings.ImportData = $"Estimated new notes: {window.RunningCount:N0}\nAverage length: {window.RunningAverage:N0} characters per note\n\nRemember to press Import to finalize your changes!";
-		Common.Settings.ReadyToFinalize = window.RunningCount > 0;
+		window.DoImport.IsEnabled = window.RunningCount > 0;
 	}
 }
