@@ -7,6 +7,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using static SylverInk.CommonUtils;
+using static SylverInk.Notes.DatabaseUtils;
 
 namespace SylverInk;
 
