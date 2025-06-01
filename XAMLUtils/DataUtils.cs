@@ -15,7 +15,10 @@ namespace SylverInk.XAMLUtils;
 /// </summary>
 public static class DataUtils
 {
+	public static bool CanResize { get; set; }
 	public static bool DelayVisualUpdates { get; set; }
+	public static bool RecentNotesDirty { get; set; }
+	public static SortType RecentEntriesSortMode { get; set; } = SortType.ByChange;
 	public static DisplayType RibbonTabContent { get; set; } = DisplayType.Change;
 	public static List<NoteTab> OpenTabs { get; } = [];
 	public static double PPD { get; set; } = 1.0;

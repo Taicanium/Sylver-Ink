@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -17,7 +18,10 @@ namespace SylverInk.Notes;
 public static partial class DatabaseUtils
 {
 	public static Database CurrentDatabase { get; set; } = new();
+	public static bool DatabaseChanged { get; set; }
+	public static int DatabaseCount { get; set; }
 	public static List<string> DatabaseFiles { get => [.. Databases.Select(db => db.DBFile)]; }
+	public static ObservableCollection<Database> Databases { get; } = [];
 	public static string DefaultDatabase { get; } = "New";
 	public static string LastActiveDatabase { get; set; } = string.Empty;
 

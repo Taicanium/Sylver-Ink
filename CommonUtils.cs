@@ -3,11 +3,9 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
-using System.IO;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Media;
-using static SylverInk.FileIO.FileUtils;
 using static SylverInk.Notes.DatabaseUtils;
 using static SylverInk.XAMLUtils.DataUtils;
 
@@ -45,10 +43,6 @@ public static partial class CommonUtils
 	private static Search? _search;
 	private static Settings? _settings;
 
-	public static bool CanResize { get; set; }
-	public static bool DatabaseChanged { get; set; }
-	public static int DatabaseCount { get; set; }
-	public static ObservableCollection<Database> Databases { get; } = [];
 	public static string DateFormat { get; } = "yyyy-MM-dd HH:mm:ss";
 	public static bool FirstRun { get; set; } = true;
 	public static Import? ImportWindow { get => _import; set { _import?.Close(); _import = value; _import?.Show(); } }
@@ -60,9 +54,7 @@ public static partial class CommonUtils
 	public static Dictionary<string, double> LastActiveNotesWidth { get; } = [];
 	public static List<SearchResult> OpenQueries { get; } = [];
 	public static NoteRecord? PreviousOpenNote { get; set; }
-	public static bool RecentNotesDirty { get; set; }
 	public static NoteRecord? RecentSelection { get; set; }
-	public static SortType RecentEntriesSortMode { get; set; } = SortType.ByChange;
 	public static Replace? ReplaceWindow { get => _replace; set { _replace?.Close(); _replace = value; _replace?.Show(); } }
 	public static Search? SearchWindow { get => _search; set { _search?.Close(); _search = value; _search?.Show(); } }
 	public static ContextSettings Settings { get; } = new();
