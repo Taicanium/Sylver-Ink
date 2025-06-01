@@ -12,15 +12,16 @@ using static SylverInk.Net.Network;
 
 namespace SylverInk.Net;
 
-public partial class NetClient
+public partial class NetClient : IDisposable
 {
-	public bool Active { get; private set; }
-	private IPAddress? Address { get; set; }
-	private BackgroundWorker ClientTask { get; set; } = new() { WorkerSupportsCancellation = true };
-	public bool Connected { get; private set; }
-	private Database? DB { get; set; }
-	private TcpClient DBClient { get; set; } = new();
+	private IPAddress? Address;
+	private readonly BackgroundWorker ClientTask = new() { WorkerSupportsCancellation = true };
+	private readonly Database? DB;
+	private TcpClient DBClient = new();
 	private byte? Flags;
+
+	public bool Active { get; private set; }
+	public bool Connected { get; private set; }
 	public System.Windows.Shapes.Ellipse? Indicator { get; private set; }
 
 	public NetClient(Database DB)
@@ -95,6 +96,18 @@ public partial class NetClient
 		Active = false;
 		Connected = false;
 		UpdateIndicator(Indicator, IndicatorStatus.Inactive);
+	}
+
+	protected virtual void Dispose(bool disposing)
+	{
+		ClientTask.Dispose();
+		DBClient.Dispose();
+	}
+
+	public void Dispose()
+	{
+		Dispose(true);
+		GC.SuppressFinalize(this);
 	}
 
 	public async void Send(MessageType type, byte[] data)

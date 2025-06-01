@@ -16,10 +16,11 @@ namespace SylverInk;
 public partial class Settings : Window
 {
 	private static int ArialIndex;
+	private readonly List<SolidColorBrush> AvailableBrushes = [];
+	private readonly List<FontFamily> AvailableFonts = [];
 	private string? ColorTag;
+
 	public Brush? LastColorSelection { get; set; }
-	private List<SolidColorBrush> AvailableBrushes { get; } = [];
-	private List<FontFamily> AvailableFonts { get; } = [];
 
 	public Settings()
 	{

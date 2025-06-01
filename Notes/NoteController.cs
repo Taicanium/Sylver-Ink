@@ -16,7 +16,9 @@ public partial class NoteController : IDisposable
 	private short _canCompress; // -1 = Cannot compress, 1 = Can compress, 0 = Not tested.
 	private bool _changed;
 	private int _nextIndex;
+	private readonly List<NoteRecord> Records = [];
 	private Serializer? _serializer;
+	private byte? Structure;
 
 	public bool Changed
 	{
@@ -33,8 +35,6 @@ public partial class NoteController : IDisposable
 	public bool Loaded { get; set; }
 	public string? Name { get; set; }
 	public int RecordCount => Records.Count;
-	private List<NoteRecord> Records { get; } = [];
-	private byte? Structure { get; set; }
 	public string? UUID { get; set; } = MakeUUID(UUIDType.Database);
 	public Dictionary<string, double> WordPercentages { get; } = [];
 

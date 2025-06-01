@@ -19,10 +19,9 @@ public partial class ContextSettings : INotifyPropertyChanged
 {
 	private Brush? _accentBackgound = Brushes.PaleGoldenrod;
 	private Brush? _accentForegound = Brushes.Blue;
-	private double _headerFontSize = 12.5;
 	private string _importData = string.Empty;
 	private string _importTarget = string.Empty;
-	private List<string> _lastDatabases = [];
+	private readonly List<string> _lastDatabases = [];
 	private int _lineTolerance = 2;
 	private Brush? _listBackgound = Brushes.White;
 	private Brush? _listForegound = Brushes.Black;
@@ -35,31 +34,30 @@ public partial class ContextSettings : INotifyPropertyChanged
 	private string _numReplacements = string.Empty;
 	public event PropertyChangedEventHandler? PropertyChanged;
 	private bool _readyToReplace;
-	private ObservableCollection<NoteRecord> _recentNotes = [];
-	private ObservableCollection<NoteRecord> _searchResults = [];
+	private readonly ObservableCollection<NoteRecord> _recentNotes = [];
+	private readonly ObservableCollection<NoteRecord> _searchResults = [];
 	private bool _searchResultsOnTop;
 	private bool _searchResultsInTaskbar;
 	private bool _snapSearchResults = true;
 
 	public Brush? AccentBackground { get => _accentBackgound; set { _accentBackgound = value; OnPropertyChanged(); } }
 	public Brush? AccentForeground { get => _accentForegound; set { _accentForegound = value; OnPropertyChanged(); } }
-	public double HeaderFontSize { get => _headerFontSize; set { _headerFontSize = value; OnPropertyChanged(); } }
 	public string ImportData { get => _importData; set { _importData = value; OnPropertyChanged(); } }
 	public string ImportTarget { get => _importTarget; set { _importTarget = value; OnPropertyChanged(); } }
-	public List<string> LastDatabases { get => _lastDatabases; set { _lastDatabases = value; OnPropertyChanged(); } }
+	public List<string> LastDatabases { get => _lastDatabases; }
 	public int LineTolerance { get => _lineTolerance; set { _lineTolerance = Math.Min(36, Math.Max(0, value)); OnPropertyChanged(); } }
 	public Brush? ListBackground { get => _listBackgound; set { _listBackgound = value; OnPropertyChanged(); } }
 	public Brush? ListForeground { get => _listForegound; set { _listForegound = value; OnPropertyChanged(); } }
 	public FontFamily? MainFontFamily { get => _mainFontFamily; set { _mainFontFamily = value; MainTypeFace = new(value, FontStyles.Normal, FontWeights.Normal, FontStretches.Normal); OnPropertyChanged(); } }
-	public double MainFontSize { get => _mainFontSize; set { _mainFontSize = Math.Min(24.0, Math.Max(10.0, value)); HeaderFontSize = _mainFontSize + 1.5; OnPropertyChanged(); } }
+	public double MainFontSize { get => _mainFontSize; set { _mainFontSize = Math.Min(24.0, Math.Max(10.0, value)); OnPropertyChanged(); } }
 	public Typeface? MainTypeFace { get => _mainTypeFace; set { _mainTypeFace = value; OnPropertyChanged(); } }
 	public Brush? MenuBackground { get => _menuBackgound; set { _menuBackgound = value; OnPropertyChanged(); } }
 	public Brush? MenuForeground { get => _menuForegound; set { _menuForegound = value; OnPropertyChanged(); } }
 	public double NoteTransparency { get => _noteTransparency; set { _noteTransparency = value; OnPropertyChanged(); } }
 	public string NumReplacements { get => _numReplacements; set { _numReplacements = value; OnPropertyChanged(); } }
 	public bool ReadyToReplace { get => _readyToReplace; set { _readyToReplace = value; OnPropertyChanged(); } }
-	public ObservableCollection<NoteRecord> RecentNotes { get => _recentNotes; set { _recentNotes = value; OnPropertyChanged(); } }
-	public ObservableCollection<NoteRecord> SearchResults { get => _searchResults; set { _searchResults = value; OnPropertyChanged(); } }
+	public ObservableCollection<NoteRecord> RecentNotes { get => _recentNotes; }
+	public ObservableCollection<NoteRecord> SearchResults { get => _searchResults; }
 	public bool SearchResultsOnTop { get => _searchResultsOnTop; set { _searchResultsOnTop = value; SearchResultsInTaskbar = !value; OnPropertyChanged(); } }
 	public bool SearchResultsInTaskbar { get => _searchResultsInTaskbar; private set { _searchResultsInTaskbar = value; OnPropertyChanged(); } }
 	public bool SnapSearchResults { get => _snapSearchResults; set { _snapSearchResults = value; OnPropertyChanged(); } }
@@ -157,7 +155,7 @@ public partial class ContextSettings : INotifyPropertyChanged
 					break;
 				case "LastDatabases":
 					FirstRun = false;
-					LastDatabases = [.. keyValue[1].Replace("?\\", DocumentsFolder).Split(';').Distinct().Where(File.Exists)];
+					LastDatabases.AddRange(keyValue[1].Replace("?\\", DocumentsFolder).Split(';').Distinct().Where(File.Exists));
 					DatabaseCount = Math.Max(1, LastDatabases.Count);
 					foreach (var file in LastDatabases)
 						await Database.Create(file);

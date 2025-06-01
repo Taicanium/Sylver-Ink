@@ -47,7 +47,7 @@ public partial class Serializer : IDisposable
 		Close();
 
 		_fileStream = null;
-		_outgoing = [];
+		_outgoing.Clear();
 		_testBuffer = [];
 	}
 

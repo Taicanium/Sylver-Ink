@@ -15,7 +15,7 @@ public struct NoteRevision(long created = -1, int startIndex = -1, string? subst
 	public long Created { get; set; } = created;
 	public int StartIndex { get; set; } = startIndex;
 	public string? Substring { get; set; } = substring;
-	public string? Uuid { readonly get; set; } = uuid ?? MakeUUID(UUIDType.Revision);
+	public string? Uuid { get; set; } = uuid ?? MakeUUID(UUIDType.Revision);
 }
 
 public partial class NoteRecord

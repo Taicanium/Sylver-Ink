@@ -7,19 +7,19 @@ namespace SylverInk.FileIO;
 public partial class LZW
 {
 	private string? C = string.Empty;
-	private List<byte> BitStream { get; } = [];
-	private Dictionary<string, uint> Codes { get; } = [];
-
+	private readonly List<byte> BitStream = [];
+	private readonly Dictionary<string, uint> Codes = [];
 	private Stream? FileStream;
-	private List<byte> Incoming { get; } = [];
-	private int MaxRange { get; } = 24;
+	private readonly List<byte> Incoming = [];
+	private readonly int MaxRange = 24;
 	private uint NextCode = 258U;
 	private bool Open;
-	public List<byte> Outgoing { get; } = [];
-	private Dictionary<uint, string> Packets { get; } = [];
+	private readonly Dictionary<uint, string> Packets = [];
 	private int Range = 9;
 	private string W = string.Empty;
 	private bool Writing;
+
+	public List<byte> Outgoing { get; } = [];
 
 	/// <summary>
 	/// Resets the LZW state engine.

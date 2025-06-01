@@ -17,16 +17,17 @@ namespace SylverInk;
 public partial class SearchResult : Window, IDisposable
 {
 	private readonly BackgroundWorker? AutosaveThread;
-	public bool Dragging { get; private set; }
-	public Point DragMouseCoords { get; private set; } = new(0, 0);
 	private bool Edited;
 	private int OriginalRevisionCount;
 	private string OriginalText = string.Empty;
+	private DateTime TimeSinceAutosave = DateTime.Now;
+
+	public bool Dragging { get; private set; }
+	public Point DragMouseCoords { get; private set; } = new(0, 0);
 	public Database? ResultDatabase { get; set; }
 	public NoteRecord? ResultRecord { get; set; }
 	public string ResultText { get; set; } = string.Empty;
 	public double SnapTolerance { get; } = 20.0;
-	private DateTime TimeSinceAutosave = DateTime.Now;
 
 	public SearchResult()
 	{

@@ -15,8 +15,8 @@ public class NoteTab
 	private readonly Grid MainGrid;
 	private readonly Button NextButton;
 	private readonly RichTextBox NoteBox;
-	private readonly NoteRecord Record;
 	private readonly Button PreviousButton;
+	private readonly NoteRecord Record;
 	private readonly Button ReturnButton;
 	private readonly Label RevisionLabel;
 	private readonly Button SaveButton;

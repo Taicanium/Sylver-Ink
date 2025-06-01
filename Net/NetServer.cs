@@ -15,23 +15,24 @@ using static SylverInk.Net.Network;
 
 namespace SylverInk.Net;
 
-public partial class NetServer
+public partial class NetServer : IDisposable
 {
-	public bool Active { get; private set; }
-	private IPAddress? Address { get; set; }
-	public string? AddressCode { get; private set; }
-	private List<TcpClient> Clients { get; } = [];
-	private TcpListener DBServer { get; set; } = new(IPAddress.Any, TcpPort);
-	private static string[] DNSAddresses { get; } = [
+	private IPAddress? Address;
+	private readonly List<TcpClient> Clients = [];
+	private TcpListener DBServer = new(IPAddress.Any, TcpPort);
+	private readonly static string[] DNSAddresses = [
 		"http://checkip.dyndns.org",
 		"https://ifconfig.me/ip",
 		"https://icanhazip.com"
 	];
 	private byte? Flags;
+	private readonly BackgroundWorker ServerTask = new() { WorkerSupportsCancellation = true };
+	private readonly BackgroundWorker WatchTask = new() { WorkerSupportsCancellation = true };
+
+	public bool Active { get; private set; }
+	public string? AddressCode { get; private set; }
 	public System.Windows.Shapes.Ellipse? Indicator { get; private set; }
-	private BackgroundWorker ServerTask { get; set; } = new() { WorkerSupportsCancellation = true };
 	public bool Serving { get; private set; }
-	private BackgroundWorker WatchTask { get; set; } = new() { WorkerSupportsCancellation = true };
 
 	public NetServer(Database DB)
 	{
@@ -128,6 +129,19 @@ public partial class NetServer
 		Serving = false;
 
 		UpdateIndicator(Indicator, IndicatorStatus.Inactive);
+	}
+
+	protected virtual void Dispose(bool disposing)
+	{
+		DBServer.Dispose();
+		ServerTask.Dispose();
+		WatchTask.Dispose();
+	}
+
+	public void Dispose()
+	{
+		Dispose(true);
+		GC.SuppressFinalize(this);
 	}
 
 	private async Task ReadFromStream(TcpClient client, Database DB)

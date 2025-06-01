@@ -53,7 +53,7 @@ public static partial class Common
 	public static bool DatabaseChanged { get; set; }
 	public static List<string> DatabaseFiles { get => [.. Databases.Select(db => db.DBFile)]; }
 	public static int DatabaseCount { get; set; }
-	public static ObservableCollection<Database> Databases { get; set; } = [];
+	public static ObservableCollection<Database> Databases { get; } = [];
 	public static string DateFormat { get; } = "yyyy-MM-dd HH:mm:ss";
 	public static string DefaultDatabase { get; } = "New";
 	public static bool DelayVisualUpdates { get; set; }
@@ -64,11 +64,11 @@ public static partial class Common
 	public static bool InitComplete { get; set; }
 	public static char[] InvalidPathChars { get; } = ['/', '\\', ':', '*', '"', '?', '<', '>', '|'];
 	public static string LastActiveDatabase { get; set; } = string.Empty;
-	public static List<string> LastActiveNotes { get; set; } = [];
-	public static Dictionary<string, double> LastActiveNotesHeight { get; set; } = [];
-	public static Dictionary<string, double> LastActiveNotesLeft { get; set; } = [];
-	public static Dictionary<string, double> LastActiveNotesTop { get; set; } = [];
-	public static Dictionary<string, double> LastActiveNotesWidth { get; set; } = [];
+	public static List<string> LastActiveNotes { get; } = [];
+	public static Dictionary<string, double> LastActiveNotesHeight { get; } = [];
+	public static Dictionary<string, double> LastActiveNotesLeft { get; } = [];
+	public static Dictionary<string, double> LastActiveNotesTop { get; } = [];
+	public static Dictionary<string, double> LastActiveNotesWidth { get; } = [];
 	public static List<SearchResult> OpenQueries { get; } = [];
 	public static List<NoteTab> OpenTabs { get; } = [];
 	public static double PPD { get; set; } = 1.0;
