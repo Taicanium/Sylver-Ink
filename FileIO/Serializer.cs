@@ -4,7 +4,8 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
-using static SylverInk.Common;
+using static SylverInk.CommonUtils;
+using static SylverInk.FileIO.FileUtils;
 
 namespace SylverInk.FileIO;
 
@@ -21,7 +22,7 @@ public partial class Serializer : IDisposable
 	/// <summary>
 	/// See SIDB.md for a file format description.
 	/// </summary>
-	public byte DatabaseFormat { get; set; } = (byte)HighestFormat;
+	public byte DatabaseFormat { get; set; } = (byte)HighestSIDBFormat;
 	public bool Headless { get; private set; }
 	public bool UseLZW { get; private set; }
 
@@ -36,7 +37,7 @@ public partial class Serializer : IDisposable
 		_isOpen = true;
 		_writing = true;
 
-		WriteHeader((byte)HighestFormat);
+		WriteHeader((byte)HighestSIDBFormat);
 	}
 
 	/// <summary>

@@ -6,7 +6,9 @@ using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
-using static SylverInk.Common;
+using static SylverInk.CommonUtils;
+using static SylverInk.XAMLUtils.DataUtils;
+using static SylverInk.XAMLUtils.TextUtils;
 
 namespace SylverInk.Notes;
 

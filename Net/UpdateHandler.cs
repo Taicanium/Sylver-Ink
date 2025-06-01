@@ -7,7 +7,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using System.Windows;
-using static SylverInk.Common;
+using static SylverInk.FileIO.FileUtils;
 
 namespace SylverInk.Net;
 

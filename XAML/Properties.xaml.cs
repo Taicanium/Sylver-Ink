@@ -21,7 +21,7 @@ public partial class Properties : Window
 	public Properties()
 	{
 		InitializeComponent();
-		DataContext = Common.Settings;
+		DataContext = CommonUtils.Settings;
 	}
 
 	private void ApplyTime()

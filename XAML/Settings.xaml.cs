@@ -6,7 +6,8 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
-using static SylverInk.Common;
+using static SylverInk.CommonUtils;
+using static SylverInk.XAMLUtils.DataUtils;
 
 namespace SylverInk;
 
@@ -25,7 +26,7 @@ public partial class Settings : Window
 	public Settings()
 	{
 		InitializeComponent();
-		DataContext = Common.Settings;
+		DataContext = CommonUtils.Settings;
 	}
 
 	private void CloseClick(object? sender, RoutedEventArgs e) => Close();
@@ -38,22 +39,22 @@ public partial class Settings : Window
 		switch (ColorTag)
 		{
 			case "P1F":
-				Common.Settings.MenuForeground = ColorSelection;
+				CommonUtils.Settings.MenuForeground = ColorSelection;
 				break;
 			case "P1B":
-				Common.Settings.MenuBackground = ColorSelection;
+				CommonUtils.Settings.MenuBackground = ColorSelection;
 				break;
 			case "P2F":
-				Common.Settings.ListForeground = ColorSelection;
+				CommonUtils.Settings.ListForeground = ColorSelection;
 				break;
 			case "P2B":
-				Common.Settings.ListBackground = ColorSelection;
+				CommonUtils.Settings.ListBackground = ColorSelection;
 				break;
 			case "P3F":
-				Common.Settings.AccentForeground = ColorSelection;
+				CommonUtils.Settings.AccentForeground = ColorSelection;
 				break;
 			case "P3B":
-				Common.Settings.AccentBackground = ColorSelection;
+				CommonUtils.Settings.AccentBackground = ColorSelection;
 				break;
 		}
 	}
@@ -76,12 +77,12 @@ public partial class Settings : Window
 	{
 		Brush? color = ColorTag switch
 		{
-			"P1F" => Common.Settings.MenuForeground,
-			"P1B" => Common.Settings.MenuBackground,
-			"P2F" => Common.Settings.ListForeground,
-			"P2B" => Common.Settings.ListBackground,
-			"P3F" => Common.Settings.AccentForeground,
-			"P3B" => Common.Settings.AccentBackground,
+			"P1F" => CommonUtils.Settings.MenuForeground,
+			"P1B" => CommonUtils.Settings.MenuBackground,
+			"P2F" => CommonUtils.Settings.ListForeground,
+			"P2B" => CommonUtils.Settings.ListBackground,
+			"P3F" => CommonUtils.Settings.AccentForeground,
+			"P3B" => CommonUtils.Settings.AccentBackground,
 			_ => Brushes.Transparent
 		};
 		CustomColor.Fill = color;
@@ -93,7 +94,7 @@ public partial class Settings : Window
 	private void FontSizeChanged(object? sender, RoutedEventArgs e)
 	{
 		var button = (Button?)sender;
-		Common.Settings.MainFontSize += button?.Content.Equals("-") is true ? -0.5 : 0.5;
+		CommonUtils.Settings.MainFontSize += button?.Content.Equals("-") is true ? -0.5 : 0.5;
 		DeferUpdateRecentNotes();
 	}
 
@@ -248,7 +249,7 @@ public partial class Settings : Window
 			};
 			MenuFont.Items.Add(item);
 
-			if (font.Source.Equals(Common.Settings.MainFontFamily?.Source))
+			if (font.Source.Equals(CommonUtils.Settings.MainFontFamily?.Source))
 				MenuFont.SelectedItem = item;
 
 			if (font.Source.Equals("Arial"))
@@ -262,7 +263,7 @@ public partial class Settings : Window
 	private void MenuFontChanged(object? sender, SelectionChangedEventArgs e)
 	{
 		var item = (ComboBoxItem)MenuFont.SelectedItem;
-		Common.Settings.MainFontFamily = item.FontFamily;
+		CommonUtils.Settings.MainFontFamily = item.FontFamily;
 		DeferUpdateRecentNotes();
 	}
 
@@ -289,19 +290,19 @@ public partial class Settings : Window
 
 	private void ResetClick(object? sender, RoutedEventArgs e)
 	{
-		Common.Settings.AccentBackground = Brushes.PaleGoldenrod;
-		Common.Settings.AccentForeground = Brushes.Blue;
-		Common.Settings.ListBackground = Brushes.White;
-		Common.Settings.ListForeground = Brushes.Black;
+		CommonUtils.Settings.AccentBackground = Brushes.PaleGoldenrod;
+		CommonUtils.Settings.AccentForeground = Brushes.Blue;
+		CommonUtils.Settings.ListBackground = Brushes.White;
+		CommonUtils.Settings.ListForeground = Brushes.Black;
 		MenuFont.SelectedIndex = ArialIndex;
-		Common.Settings.MainFontFamily = ((ComboBoxItem)MenuFont.SelectedItem).FontFamily;
-		Common.Settings.MainFontSize = 11.0;
-		Common.Settings.MenuBackground = Brushes.Beige;
-		Common.Settings.MenuForeground = Brushes.Black;
+		CommonUtils.Settings.MainFontFamily = ((ComboBoxItem)MenuFont.SelectedItem).FontFamily;
+		CommonUtils.Settings.MainFontSize = 11.0;
+		CommonUtils.Settings.MenuBackground = Brushes.Beige;
+		CommonUtils.Settings.MenuForeground = Brushes.Black;
 		RecentEntriesSortMode = SortType.ByChange;
 		RibbonTabContent = DisplayType.Content;
-		Common.Settings.SearchResultsOnTop = false;
-		Common.Settings.SnapSearchResults = true;
+		CommonUtils.Settings.SearchResultsOnTop = false;
+		CommonUtils.Settings.SnapSearchResults = true;
 
 		DeferUpdateRecentNotes();
 	}

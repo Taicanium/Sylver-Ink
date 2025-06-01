@@ -8,7 +8,10 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using static SylverInk.Common;
+using static SylverInk.CommonUtils;
+using static SylverInk.FileIO.FileUtils;
+using static SylverInk.Notes.DatabaseUtils;
+using static SylverInk.XAMLUtils.DataUtils;
 
 namespace SylverInk.Notes;
 
@@ -408,7 +411,7 @@ public partial class Database : IDisposable
 		if (DBFile.Contains(Subfolders["Databases"]))
 			File.WriteAllText(Path.Join(Path.GetDirectoryName(DBFile), "uuid.dat"), UUID);
 
-		Common.Erase(GetLockFile(DBFile));
+		SylverInk.FileIO.FileUtils.Erase(GetLockFile(DBFile));
 	}
 
 	public void Save(string targetFile)

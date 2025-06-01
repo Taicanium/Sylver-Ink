@@ -2,7 +2,8 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using static SylverInk.Common;
+using static SylverInk.Notes.DatabaseUtils;
+using static SylverInk.XAMLUtils.DataUtils;
 
 namespace SylverInk;
 
@@ -18,9 +19,9 @@ public partial class Replace : Window
 	public Replace()
 	{
 		InitializeComponent();
-		DataContext = Common.Settings;
+		DataContext = CommonUtils.Settings;
 
-		Common.Settings.NumReplacements = string.Empty;
+		CommonUtils.Settings.NumReplacements = string.Empty;
 	}
 
 	private void CloseClick(object? sender, RoutedEventArgs e) => Close();
@@ -29,7 +30,7 @@ public partial class Replace : Window
 
 	private void FinishReplace()
 	{
-		Common.Settings.NumReplacements = $"Replaced {_counts.Item1:N0} occurrences in {_counts.Item2:N0} notes.";
+		CommonUtils.Settings.NumReplacements = $"Replaced {_counts.Item1:N0} occurrences in {_counts.Item2:N0} notes.";
 		DeferUpdateRecentNotes();
 
 		DoReplace.Content = "Replace";
@@ -38,7 +39,7 @@ public partial class Replace : Window
 
 	private async Task PerformReplace() => await Task.Run(() => _counts = CurrentDatabase.Replace(_oldText, _newText));
 
-	private void ReplaceTextChanged(object? sender, TextChangedEventArgs e) => Common.Settings.ReadyToReplace = !string.IsNullOrWhiteSpace(OldText.Text);
+	private void ReplaceTextChanged(object? sender, TextChangedEventArgs e) => CommonUtils.Settings.ReadyToReplace = !string.IsNullOrWhiteSpace(OldText.Text);
 
 	private async void Replace_Click(object? sender, RoutedEventArgs e)
 	{

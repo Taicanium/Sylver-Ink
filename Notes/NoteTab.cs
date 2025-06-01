@@ -4,7 +4,10 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Markup;
-using static SylverInk.Common;
+using static SylverInk.CommonUtils;
+using static SylverInk.Notes.DatabaseUtils;
+using static SylverInk.XAMLUtils.DataUtils;
+using static SylverInk.XAMLUtils.TextUtils;
 
 namespace SylverInk.Notes;
 

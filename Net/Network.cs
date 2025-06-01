@@ -9,7 +9,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Media;
 using System.Windows.Shapes;
-using static SylverInk.Common;
+using static SylverInk.CommonUtils;
+using static SylverInk.XAMLUtils.DataUtils;
 
 namespace SylverInk.Net;
 
@@ -191,7 +192,7 @@ public static class Network
 
 		Indicator.Height = 12;
 		Indicator.Margin = new(2, 4, 3, 4);
-		Indicator.Stroke = Common.Settings.MenuForeground;
+		Indicator.Stroke = CommonUtils.Settings.MenuForeground;
 		Indicator.Width = 12;
 		Indicator.InvalidateVisual();
 

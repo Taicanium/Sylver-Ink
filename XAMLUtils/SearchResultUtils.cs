@@ -2,7 +2,11 @@
 using System;
 using System.Windows;
 using System.Windows.Input;
-using static SylverInk.Common;
+using static SylverInk.CommonUtils;
+using static SylverInk.FileIO.FileUtils;
+using static SylverInk.Notes.DatabaseUtils;
+using static SylverInk.XAMLUtils.DataUtils;
+using static SylverInk.XAMLUtils.TextUtils;
 
 namespace SylverInk.XAMLUtils;
 
@@ -43,7 +47,7 @@ public static class SearchResultUtils
 			Y = window.DragMouseCoords.Y + mouse.Y
 		};
 
-		if (Common.Settings.SnapSearchResults)
+		if (CommonUtils.Settings.SnapSearchResults)
 			window.Snap(ref newCoords);
 
 		window.Left = newCoords.X;

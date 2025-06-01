@@ -12,7 +12,7 @@ public partial class About : Window
 	public About()
 	{
 		InitializeComponent();
-		DataContext = Common.Settings;
+		DataContext = CommonUtils.Settings;
 	}
 
 	private void CloseClick(object? sender, RoutedEventArgs e) => Close();

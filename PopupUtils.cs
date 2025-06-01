@@ -2,10 +2,15 @@
 using System;
 using System.Windows;
 using System.Windows.Input;
-using static SylverInk.Common;
+using static SylverInk.CommonUtils;
+using static SylverInk.FileIO.FileUtils;
+using static SylverInk.Notes.DatabaseUtils;
 
 namespace SylverInk;
 
+/// <summary>
+/// Extension methods serving popups attached to the main application window.
+/// </summary>
 public static class PopupUtils
 {
 	public static void PopupAddressKeyDown(this MainWindow window, object? sender, KeyEventArgs e)

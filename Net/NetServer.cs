@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
-using static SylverInk.Common;
+using static SylverInk.CommonUtils;
 using static SylverInk.Net.Network;
 
 namespace SylverInk.Net;

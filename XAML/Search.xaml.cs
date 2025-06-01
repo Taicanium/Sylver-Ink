@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using static SylverInk.Common;
+using static SylverInk.CommonUtils;
 
 namespace SylverInk;
 
@@ -22,7 +22,7 @@ public partial class Search : Window
 	public Search()
 	{
 		InitializeComponent();
-		DataContext = Common.Settings;
+		DataContext = CommonUtils.Settings;
 	}
 
 	private void CloseClick(object? sender, RoutedEventArgs e) => Close();
@@ -31,7 +31,7 @@ public partial class Search : Window
 
 	private void OnClose(object? sender, EventArgs e)
 	{
-		Common.Settings.SearchResults.Clear();
+		CommonUtils.Settings.SearchResults.Clear();
 	}
 
 	private async Task PerformSearch()
@@ -46,10 +46,10 @@ public partial class Search : Window
 
 	private void PostResults()
 	{
-		Common.Settings.SearchResults.Clear();
+		CommonUtils.Settings.SearchResults.Clear();
 
 		for (int i = 0; i < ResultsList.Count; i++)
-			Common.Settings.SearchResults.Add(ResultsList[i]);
+			CommonUtils.Settings.SearchResults.Add(ResultsList[i]);
 
 		DoQuery.Content = "Query";
 		DoQuery.IsEnabled = true;

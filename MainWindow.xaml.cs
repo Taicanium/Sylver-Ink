@@ -12,7 +12,10 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Interop;
-using static SylverInk.Common;
+using static SylverInk.CommonUtils;
+using static SylverInk.FileIO.FileUtils;
+using static SylverInk.Notes.DatabaseUtils;
+using static SylverInk.XAMLUtils.DataUtils;
 
 namespace SylverInk;
 
@@ -39,7 +42,7 @@ public partial class MainWindow : Window, IDisposable
 	public MainWindow()
 	{
 		InitializeComponent();
-		DataContext = Common.Settings;
+		DataContext = CommonUtils.Settings;
 		hWndHelper = new WindowInteropHelper(this);
 		mutex = new Mutex(true, MutexName, out bool mutexCreated);
 
@@ -83,7 +86,7 @@ public partial class MainWindow : Window, IDisposable
 	{
 		DatabaseChanged = false;
 		MainGrid.IsEnabled = true;
-		Common.Settings.Save();
+		CommonUtils.Settings.Save();
 		Application.Current.Shutdown();
 	}
 
@@ -153,7 +156,7 @@ public partial class MainWindow : Window, IDisposable
 		LastActiveNotesTop.Clear();
 		LastActiveNotesWidth.Clear();
 		ResizeMode = ResizeMode.CanResize;
-		Common.Settings.MainTypeFace = new(Common.Settings.MainFontFamily, FontStyles.Normal, FontWeights.Normal, FontStretches.Normal);
+		CommonUtils.Settings.MainTypeFace = new(CommonUtils.Settings.MainFontFamily, FontStyles.Normal, FontWeights.Normal, FontStretches.Normal);
 		DeferUpdateRecentNotes();
 	}
 
@@ -224,7 +227,7 @@ public partial class MainWindow : Window, IDisposable
 			return;
 
 		var wideBreak = string.Empty;
-		foreach (string dbFile in Common.Settings.LastDatabases)
+		foreach (string dbFile in CommonUtils.Settings.LastDatabases)
 			if (Path.GetFullPath(dbFile).Equals(Path.GetFullPath(filename)))
 				wideBreak = Path.GetFullPath(dbFile);
 
@@ -274,7 +277,7 @@ public partial class MainWindow : Window, IDisposable
 	private void MainWindow_Closing(object? sender, CancelEventArgs e)
 	{
 		if (!_ABORT)
-			Common.Settings.Save();
+			CommonUtils.Settings.Save();
 
 		if (_ABORT || !DatabaseChanged)
 		{
@@ -377,7 +380,7 @@ public partial class MainWindow : Window, IDisposable
 		Erase(UpdateHandler.UpdateLockUri);
 		Erase(UpdateHandler.TempUri);
 
-		await Common.Settings.Load();
+		await CommonUtils.Settings.Load();
 		SettingsLoaded = true;
 
 		foreach (var folder in Subfolders)

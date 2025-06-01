@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using static SylverInk.Common;
+using static SylverInk.FileIO.FileUtils;
 
 namespace SylverInk;
 
@@ -19,9 +19,9 @@ public partial class Import : Window
 	public Import()
 	{
 		InitializeComponent();
-		DataContext = Common.Settings;
+		DataContext = CommonUtils.Settings;
 
-		Common.Settings.ImportTarget = string.Empty;
+		CommonUtils.Settings.ImportTarget = string.Empty;
 	}
 
 	private async void AdaptiveChecked(object? sender, RoutedEventArgs e)
@@ -57,25 +57,25 @@ public partial class Import : Window
 		AdaptiveCheckBox.IsEnabled = true;
 		CloseButton.IsEnabled = true;
 		DoImport.Content = "Import";
-		Common.Settings.ImportTarget = string.Empty;
+		CommonUtils.Settings.ImportTarget = string.Empty;
 		LTPanel.IsEnabled = true;
 	}
 
 	private async void LineToleranceChanged(object? sender, RoutedEventArgs e)
 	{
-		Common.Settings.LineTolerance += ((Button?)sender)?.Content.Equals("-") is true ? -1 : 1;
+		CommonUtils.Settings.LineTolerance += ((Button?)sender)?.Content.Equals("-") is true ? -1 : 1;
 		await this.Measure(AdaptiveCheckBox.IsChecked is true);
 	}
 
 	private async void Open_Click(object? sender, RoutedEventArgs e)
 	{
-		Common.Settings.ImportTarget = DialogFileSelect();
+		CommonUtils.Settings.ImportTarget = DialogFileSelect();
 
 		await this.Refresh(AdaptiveCheckBox.IsChecked is true);
 	}
 
 	private void Target_TextChanged(object? sender, RoutedEventArgs e)
 	{
-		DoImport.IsEnabled = !string.IsNullOrWhiteSpace(Common.Settings.ImportTarget);
+		DoImport.IsEnabled = !string.IsNullOrWhiteSpace(CommonUtils.Settings.ImportTarget);
 	}
 }

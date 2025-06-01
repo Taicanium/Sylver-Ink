@@ -4,10 +4,16 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using static SylverInk.Common;
+using static SylverInk.CommonUtils;
+using static SylverInk.FileIO.FileUtils;
+using static SylverInk.Notes.DatabaseUtils;
+using static SylverInk.XAMLUtils.DataUtils;
 
 namespace SylverInk;
 
+/// <summary>
+/// Extension methods serving needs tied to context menus (and the application toolbar) on the main application window.
+/// </summary>
 public static class MenuUtils
 {
 	public static void MenuBackup(this MainWindow window, object? sender, RoutedEventArgs e) => CurrentDatabase.MakeBackup();
@@ -106,14 +112,14 @@ public static class MenuUtils
 		var newPath = DialogFileSelect(true, 2, CurrentDatabase.Name);
 		if (!string.IsNullOrWhiteSpace(newPath))
 			CurrentDatabase.DBFile = newPath;
-		CurrentDatabase.Format = HighestFormat;
+		CurrentDatabase.Format = HighestSIDBFormat;
 	}
 
 	public static void MenuSaveLocal(this MainWindow window, object? sender, RoutedEventArgs e)
 	{
 		CurrentDatabase.Changed = true;
 		CurrentDatabase.DBFile = Path.Join(Subfolders["Databases"], Path.GetFileNameWithoutExtension(CurrentDatabase.DBFile), Path.GetFileName(CurrentDatabase.DBFile));
-		CurrentDatabase.Format = HighestFormat;
+		CurrentDatabase.Format = HighestSIDBFormat;
 		CurrentDatabase.Save();
 	}
 
@@ -152,7 +158,7 @@ public static class MenuUtils
 
 			CurrentDatabase = newDB;
 			RecentNotesDirty = true;
-			Common.Settings.SearchResults.Clear();
+			CommonUtils.Settings.SearchResults.Clear();
 		}
 
 		DeferUpdateRecentNotes();

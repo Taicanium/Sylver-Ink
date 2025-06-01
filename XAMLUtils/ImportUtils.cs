@@ -5,7 +5,8 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
-using static SylverInk.Common;
+using static SylverInk.Notes.DatabaseUtils;
+using static SylverInk.XAMLUtils.DataUtils;
 
 namespace SylverInk.XAMLUtils;
 
@@ -20,7 +21,7 @@ public static class ImportUtils
 
 	private static void FinishImport(this Import window)
 	{
-		Common.Settings.ImportData = $"Notes imported: {window.Imported:N0}";
+		CommonUtils.Settings.ImportData = $"Notes imported: {window.Imported:N0}";
 		window.DataLines.Clear();
 		DeferUpdateRecentNotes();
 	}
@@ -40,7 +41,7 @@ public static class ImportUtils
 
 	public static async Task Measure(this Import window, bool Adaptive = false)
 	{
-		if (string.IsNullOrWhiteSpace(Common.Settings.ImportTarget))
+		if (string.IsNullOrWhiteSpace(CommonUtils.Settings.ImportTarget))
 			return;
 
 		window.AdaptiveImport = Adaptive;
@@ -61,11 +62,11 @@ public static class ImportUtils
 		Dictionary<string, double> frequencies = [];
 		Dictionary<string, int> tokenCounts = [];
 
-		Common.Settings.ImportData = $"Adaptive scanning...";
+		CommonUtils.Settings.ImportData = $"Adaptive scanning...";
 
-		if (!window.ReadFromStream(Common.Settings.ImportTarget))
+		if (!window.ReadFromStream(CommonUtils.Settings.ImportTarget))
 		{
-			Common.Settings.ImportTarget = string.Empty;
+			CommonUtils.Settings.ImportTarget = string.Empty;
 			return false;
 		}
 
@@ -207,9 +208,9 @@ public static class ImportUtils
 	{
 		try
 		{
-			if (!window.ReadFromStream(Common.Settings.ImportTarget))
+			if (!window.ReadFromStream(CommonUtils.Settings.ImportTarget))
 			{
-				Common.Settings.ImportTarget = string.Empty;
+				CommonUtils.Settings.ImportTarget = string.Empty;
 				return;
 			}
 
@@ -217,7 +218,7 @@ public static class ImportUtils
 			string recordData = string.Empty;
 			window.RunningAverage = 0.0;
 			window.RunningCount = 0;
-			window.ReadFromStream(Common.Settings.ImportTarget);
+			window.ReadFromStream(CommonUtils.Settings.ImportTarget);
 
 			for (int i = 0; i < window.DataLines.Count; i++)
 			{
@@ -230,9 +231,9 @@ public static class ImportUtils
 					blankCount = 0;
 
 				if (i % 100 == 0)
-					Common.Settings.ImportData = $"{i * 100.0 / window.DataLines.Count:N2}% scanned...";
+					CommonUtils.Settings.ImportData = $"{i * 100.0 / window.DataLines.Count:N2}% scanned...";
 
-				if (recordData.Length == 0 || blankCount < Common.Settings.LineTolerance)
+				if (recordData.Length == 0 || blankCount < CommonUtils.Settings.LineTolerance)
 					continue;
 
 				blankCount = 0;
@@ -251,7 +252,7 @@ public static class ImportUtils
 		}
 		catch
 		{
-			MessageBox.Show($"Could not open file: {Common.Settings.ImportTarget}", "Sylver Ink: Error", MessageBoxButton.OK, MessageBoxImage.Error);
+			MessageBox.Show($"Could not open file: {CommonUtils.Settings.ImportTarget}", "Sylver Ink: Error", MessageBoxButton.OK, MessageBoxImage.Error);
 		}
 	});
 
@@ -287,9 +288,9 @@ public static class ImportUtils
 			else
 				blankCount = 0;
 
-			Common.Settings.ImportData = $"{i * 100.0 / window.DataLines.Count:N2}% imported...";
+			CommonUtils.Settings.ImportData = $"{i * 100.0 / window.DataLines.Count:N2}% imported...";
 
-			if (blankCount < Common.Settings.LineTolerance && i < window.DataLines.Count - 1)
+			if (blankCount < CommonUtils.Settings.LineTolerance && i < window.DataLines.Count - 1)
 				continue;
 
 			CurrentDatabase.CreateRecord(recordData);
@@ -323,7 +324,7 @@ public static class ImportUtils
 
 	public static async Task Refresh(this Import window, bool Adaptive)
 	{
-		if (Common.Settings.ImportTarget.EndsWith(".sidb") || Common.Settings.ImportTarget.EndsWith(".sibk"))
+		if (CommonUtils.Settings.ImportTarget.EndsWith(".sidb") || CommonUtils.Settings.ImportTarget.EndsWith(".sibk"))
 		{
 			var result = MessageBox.Show("You have selected an existing Sylver Ink database. Its contents will be merged with your current database.\n\nDo you want to overwrite your current database instead?", "Sylver Ink: Warning", MessageBoxButton.YesNoCancel, MessageBoxImage.Warning);
 
@@ -336,7 +337,7 @@ public static class ImportUtils
 				CurrentDatabase.Erase();
 			}
 
-			if (!CurrentDatabase.Open(Common.Settings.ImportTarget))
+			if (!CurrentDatabase.Open(CommonUtils.Settings.ImportTarget))
 			{
 				MessageBox.Show($"Failed to import the selected file.", "Sylver Ink: Error", MessageBoxButton.OK);
 				return;
@@ -355,7 +356,7 @@ public static class ImportUtils
 
 	private static void ReportMeasurement(this Import window)
 	{
-		Common.Settings.ImportData = $"Estimated new notes: {window.RunningCount:N0}\nAverage length: {window.RunningAverage:N0} characters per note\n\nRemember to press Import to finalize your changes!";
+		CommonUtils.Settings.ImportData = $"Estimated new notes: {window.RunningCount:N0}\nAverage length: {window.RunningAverage:N0} characters per note\n\nRemember to press Import to finalize your changes!";
 		window.DoImport.IsEnabled = window.RunningCount > 0;
 	}
 }

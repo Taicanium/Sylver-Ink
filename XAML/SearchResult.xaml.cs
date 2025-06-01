@@ -7,7 +7,9 @@ using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using static SylverInk.Common;
+using static SylverInk.CommonUtils;
+using static SylverInk.XAMLUtils.DataUtils;
+using static SylverInk.XAMLUtils.TextUtils;
 
 namespace SylverInk;
 
@@ -32,7 +34,7 @@ public partial class SearchResult : Window, IDisposable
 	public SearchResult()
 	{
 		InitializeComponent();
-		DataContext = Common.Settings;
+		DataContext = CommonUtils.Settings;
 
 		AutosaveThread = new()
 		{
@@ -166,7 +168,7 @@ public partial class SearchResult : Window, IDisposable
 	private void WindowDeactivated(object? sender, EventArgs e)
 	{
 		CloseButton.IsEnabled = false;
-		Opacity = 1.0 - (Common.Settings.NoteTransparency / 100.0);
+		Opacity = 1.0 - (CommonUtils.Settings.NoteTransparency / 100.0);
 		ViewButton.IsEnabled = false;
 	}
 

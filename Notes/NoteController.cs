@@ -7,7 +7,10 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Documents;
-using static SylverInk.Common;
+using static SylverInk.CommonUtils;
+using static SylverInk.FileIO.FileUtils;
+using static SylverInk.XAMLUtils.DataUtils;
+using static SylverInk.XAMLUtils.TextUtils;
 
 namespace SylverInk.Notes;
 
@@ -31,7 +34,7 @@ public partial class NoteController : IDisposable
 	}
 
 	public bool EnforceNoForwardCompatibility { get; private set; }
-	public int Format { get; set; } = HighestFormat;
+	public int Format { get; set; } = HighestSIDBFormat;
 	public bool Loaded { get; set; }
 	public string? Name { get; set; }
 	public int RecordCount => Records.Count;
@@ -135,9 +138,9 @@ public partial class NoteController : IDisposable
 		if (inMemory is not null)
 			_serializer?.OpenRead(string.Empty, inMemory);
 
-		Format = _serializer?.DatabaseFormat ?? HighestFormat;
+		Format = _serializer?.DatabaseFormat ?? HighestSIDBFormat;
 
-		if (Format > HighestFormat)
+		if (Format > HighestSIDBFormat)
 		{
 			EnforceNoForwardCompatibility = true;
 			_serializer?.Close();
