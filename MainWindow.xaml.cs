@@ -28,7 +28,6 @@ public partial class MainWindow : Window, IDisposable
 	private static extern bool UnregisterHotKey(nint hWnd, int id);
 
 	private bool _ABORT;
-	public const int HWNDBROADCAST = 0xFFFF;
 	private readonly WindowInteropHelper hWndHelper;
 	private Mutex? mutex;
 	private readonly string MutexName = $"SylverInk/{typeof(MainWindow).GUID}";
@@ -73,6 +72,7 @@ public partial class MainWindow : Window, IDisposable
 
 	public void Dispose()
 	{
+		WindowSource?.Dispose();
 		mutex?.Dispose();
 		GC.SuppressFinalize(this);
 	}
@@ -158,22 +158,24 @@ public partial class MainWindow : Window, IDisposable
 	}
 
 	/// <summary>
-	/// Mutex management in Sylver Ink allows passing shell verbs through a named pipe to an existing open instance. If the user has Sylver Ink open and clicks on a database file, we have the arcane power to open that database even if Sylver Ink is currently running.
+	/// Mutex management in Sylver Ink allows passing shell verbs through a named pipe to an existing open instance.
 	/// </summary>
-	/// <param name="mutexCreated"></param>
 	private void HandleMutex(bool mutexCreated)
 	{
 		if (!mutexCreated)
 		{
 			mutex = null;
+			var args = Environment.GetCommandLineArgs();
 
 			var client = new NamedPipeClientStream(MutexName);
 			client.Connect();
 
 			using (StreamWriter writer = new(client))
-				writer.Write(string.Join("\t", Environment.GetCommandLineArgs()));
+				writer.Write(string.Join("\t", args));
 
-			ShellVerbsPassed = true;
+			if (args.Length > 1)
+				ShellVerbsPassed = true;
+
 			return;
 		}
 
@@ -193,7 +195,7 @@ public partial class MainWindow : Window, IDisposable
 				{
 					activated = Concurrent(Activate);
 					Concurrent(Focus);
-				} while (!activated && (DateTime.UtcNow - now).Seconds < 2);
+				} while (!activated && !IsFocused && (DateTime.UtcNow - now).Seconds < 2);
 
 				Concurrent(() => HandleShellVerbs(args));
 			}
