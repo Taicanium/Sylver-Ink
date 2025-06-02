@@ -36,8 +36,10 @@ public partial class NetServer : IDisposable
 
 	public NetServer(Database DB)
 	{
-		Indicator = new() { StrokeThickness = 1.0 };
-		Indicator.LayoutUpdated += (_, _) => DB.GetHeader();
+		Indicator = new() {
+			StrokeThickness = 1.0,
+			Tag = DB
+		};
 
 		ServerTask.DoWork += async (sender, _) =>
 		{

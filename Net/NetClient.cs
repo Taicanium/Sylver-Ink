@@ -29,8 +29,11 @@ public partial class NetClient : IDisposable
 	{
 		this.DB = DB;
 
-		Indicator = new() { StrokeThickness = 1.0 };
-		Indicator.LayoutUpdated += (_, _) => this.DB.GetHeader();
+		Indicator = new()
+		{
+			StrokeThickness = 1.0,
+			Tag = this.DB
+		};
 
 		ClientTask.DoWork += async (sender, _) =>
 		{

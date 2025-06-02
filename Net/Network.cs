@@ -181,6 +181,9 @@ public static class Network
 
 	public static void UpdateIndicator(Ellipse? Indicator, IndicatorStatus Status) => Indicator?.Dispatcher.Invoke(() =>
 	{
+		if (Indicator.Tag is not Database DB)
+			return;
+
 		Indicator.Fill = Status switch
 		{
 			IndicatorStatus.Connected => Brushes.Green,
@@ -195,6 +198,8 @@ public static class Network
 		Indicator.Stroke = CommonUtils.Settings.MenuForeground;
 		Indicator.Width = 12;
 		Indicator.InvalidateVisual();
+
+		DB.GetHeader();
 
 		DeferUpdateRecentNotes();
 	});
