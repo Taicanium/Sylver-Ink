@@ -111,7 +111,7 @@ public partial class MainWindow : Window, IDisposable
 
 		await initTask;
 
-		SwitchDatabase($"~N:{LastActiveDatabase}");
+		SwitchDatabase($"~N:{CommonUtils.Settings.LastActiveDatabase}");
 
 		foreach (var openNote in LastActiveNotes)
 		{

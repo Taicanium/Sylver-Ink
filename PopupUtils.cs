@@ -2,6 +2,7 @@
 using System;
 using System.Windows;
 using System.Windows.Input;
+using static SylverInk.CommonUtils;
 using static SylverInk.FileIO.FileUtils;
 using static SylverInk.Notes.DatabaseUtils;
 
@@ -20,12 +21,18 @@ public static class PopupUtils
 
 	public static void PopupCodeClosed(this MainWindow window, object? sender, EventArgs e)
 	{
+		if (CurrentDatabase is null)
+			return;
+
 		Clipboard.SetText(CurrentDatabase.Server?.AddressCode);
 		window.CodePopup.IsOpen = false;
 	}
 
 	public static void PopupRenameClosed(this MainWindow window, object? sender, EventArgs e)
 	{
+		if (CurrentDatabase is null)
+			return;
+
 		if (!window.RenameDatabase.IsOpen)
 			return;
 

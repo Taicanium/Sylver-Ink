@@ -24,6 +24,7 @@ public partial class ContextSettings : INotifyPropertyChanged
 	private Brush? _accentForegound = Brushes.Blue;
 	private string _importData = string.Empty;
 	private string _importTarget = string.Empty;
+	private string _lastActiveDatabase = string.Empty;
 	private readonly List<string> _lastDatabases = [];
 	private int _lineTolerance = 2;
 	private Brush? _listBackgound = Brushes.White;
@@ -47,6 +48,7 @@ public partial class ContextSettings : INotifyPropertyChanged
 	public Brush? AccentForeground { get => _accentForegound; set { _accentForegound = value; OnPropertyChanged(); } }
 	public string ImportData { get => _importData; set { _importData = value; OnPropertyChanged(); } }
 	public string ImportTarget { get => _importTarget; set { _importTarget = value; OnPropertyChanged(); } }
+	public string LastActiveDatabase { get => _lastActiveDatabase; set => _lastActiveDatabase = value; }
 	public List<string> LastDatabases { get => _lastDatabases; }
 	public int LineTolerance { get => _lineTolerance; set { _lineTolerance = Math.Min(36, Math.Max(0, value)); OnPropertyChanged(); } }
 	public Brush? ListBackground { get => _listBackgound; set { _listBackgound = value; OnPropertyChanged(); } }
@@ -103,9 +105,6 @@ public partial class ContextSettings : INotifyPropertyChanged
 					break;
 				case "LastActiveDatabase":
 					LastActiveDatabase = keyValue[1];
-					foreach (var db in Databases)
-						if (LastActiveDatabase.Equals(db.Name))
-							CurrentDatabase = db;
 					break;
 				case "LastActiveNotes":
 					var notes = keyValue[1].Split(';').Distinct();

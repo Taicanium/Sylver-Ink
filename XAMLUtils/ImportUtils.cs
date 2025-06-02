@@ -5,8 +5,9 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
-using static SylverInk.Notes.DatabaseUtils;
+using static SylverInk.CommonUtils;
 using static SylverInk.XAMLUtils.DataUtils;
+using static SylverInk.Notes.DatabaseUtils;
 
 namespace SylverInk.XAMLUtils;
 
@@ -261,6 +262,9 @@ public static class ImportUtils
 	/// </summary>
 	private static async Task PerformImport(this Import window) => await Task.Run(() =>
 	{
+		if (CurrentDatabase is null)
+			return;
+
 		int blankCount = 0;
 		DelayVisualUpdates = true;
 		window.Imported = 0;
@@ -324,6 +328,9 @@ public static class ImportUtils
 
 	public static async Task Refresh(this Import window, bool Adaptive)
 	{
+		if (CurrentDatabase is null)
+			return;
+
 		if (CommonUtils.Settings.ImportTarget.EndsWith(".sidb") || CommonUtils.Settings.ImportTarget.EndsWith(".sibk"))
 		{
 			var result = MessageBox.Show("You have selected an existing Sylver Ink database. Its contents will be merged with your current database.\n\nDo you want to overwrite your current database instead?", "Sylver Ink: Warning", MessageBoxButton.YesNoCancel, MessageBoxImage.Warning);

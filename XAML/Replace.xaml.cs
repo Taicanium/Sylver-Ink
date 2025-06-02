@@ -2,8 +2,9 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using static SylverInk.Notes.DatabaseUtils;
+using static SylverInk.CommonUtils;
 using static SylverInk.XAMLUtils.DataUtils;
+using static SylverInk.Notes.DatabaseUtils;
 
 namespace SylverInk;
 
@@ -37,7 +38,13 @@ public partial class Replace : Window
 		DoReplace.IsEnabled = true;
 	}
 
-	private async Task PerformReplace() => await Task.Run(() => _counts = CurrentDatabase.Replace(_oldText, _newText));
+	private async Task PerformReplace()
+	{
+		if (CurrentDatabase is null)
+			return;
+
+		await Task.Run(() => _counts = CurrentDatabase.Replace(_oldText, _newText));
+	}
 
 	private void ReplaceTextChanged(object? sender, TextChangedEventArgs e) => CommonUtils.Settings.ReadyToReplace = !string.IsNullOrWhiteSpace(OldText.Text);
 

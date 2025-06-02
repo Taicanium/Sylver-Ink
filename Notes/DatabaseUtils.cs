@@ -15,15 +15,16 @@ namespace SylverInk.Notes;
 /// <summary>
 /// Static functions serving general-purpose access to the roster of databases.
 /// </summary>
-public static partial class DatabaseUtils
+public static class DatabaseUtils
 {
-	public static Database CurrentDatabase { get; set; } = new();
+	private static Database? _currentDatabase;
+
+	public static Database CurrentDatabase { get => _currentDatabase ??= new(); set => _currentDatabase = value; }
 	public static bool DatabaseChanged { get; set; }
 	public static int DatabaseCount { get; set; }
 	public static List<string> DatabaseFiles { get => [.. Databases.Select(db => db.DBFile)]; }
-	public static ObservableCollection<Database> Databases { get; } = [];
+	public static List<Database> Databases { get; } = [];
 	public static string DefaultDatabase { get; } = "New";
-	public static string LastActiveDatabase { get; set; } = string.Empty;
 
 	public static void AddDatabase(Database db)
 	{
