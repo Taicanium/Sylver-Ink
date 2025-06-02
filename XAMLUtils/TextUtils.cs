@@ -70,9 +70,9 @@ public static class TextUtils
 		return content;
 	}
 
-	public static FlowDocument PlaintextToFlowDocument(string content)
+	public static FlowDocument PlaintextToFlowDocument(FlowDocument document, string content)
 	{
-		FlowDocument document = new();
+		document.Blocks.Clear();
 		TextPointer pointer = document.ContentStart;
 		var lineSplit = content.Replace("\r", string.Empty).Split('\n') ?? [];
 		for (int i = 0; i < lineSplit.Length; i++)
@@ -96,7 +96,7 @@ public static class TextUtils
 		return document;
 	}
 
-	public static string PlaintextToXaml(string content) => FlowDocumentToXaml(PlaintextToFlowDocument(content));
+	public static string PlaintextToXaml(string content) => FlowDocumentToXaml(PlaintextToFlowDocument(new(), content));
 
 	public static FlowDocument XamlToFlowDocument(string xaml)
 	{

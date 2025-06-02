@@ -12,7 +12,7 @@
 	<SourceRevisionId>build$([System.DateTime]::UtcNow.ToString("yyyyMMdd"))</SourceRevisionId>
 	<SupportedOSPlatformVersion>7.0</SupportedOSPlatformVersion>
 	<NeutralLanguage>en-US</NeutralLanguage>
-	<Version>1.4.2</Version>
+	<Version>1.4.3</Version>
 	<UseWindowsForms>False</UseWindowsForms>
 	<Title>Sylver Ink</Title>
 	<Authors>taicanium,norvinsk.hunter,milesfarber</Authors>
@@ -28,7 +28,7 @@
 	<ProduceReferenceAssembly>True</ProduceReferenceAssembly>
 	<PackageLicenseFile>LICENSE</PackageLicenseFile>
 	<PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
-	<TargetFramework>net8.0-windows10.0.26100.0</TargetFramework>
+	<TargetFramework>net9.0-windows10.0.26100.0</TargetFramework>
 	<PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
   

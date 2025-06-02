@@ -2,8 +2,6 @@
 using SylverInk.Notes;
 using SylverInk.XAMLUtils;
 using System;
-using System.ComponentModel;
-using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -16,13 +14,12 @@ namespace SylverInk;
 /// <summary>
 /// Interaction logic for SearchResult.xaml
 /// </summary>
-public partial class SearchResult : Window, IDisposable
+public partial class SearchResult : Window
 {
-	private readonly BackgroundWorker? AutosaveThread;
 	private bool Edited;
 	private int OriginalRevisionCount;
 	private string OriginalText = string.Empty;
-	private DateTime TimeSinceAutosave = DateTime.Now;
+	private DateTime TimeSinceAutosave = DateTime.UtcNow;
 
 	public bool Dragging { get; private set; }
 	public Point DragMouseCoords { get; private set; } = new(0, 0);
@@ -35,27 +32,10 @@ public partial class SearchResult : Window, IDisposable
 	{
 		InitializeComponent();
 		DataContext = CommonUtils.Settings;
-
-		AutosaveThread = new()
-		{
-			WorkerSupportsCancellation = true
-		};
-
-		AutosaveThread.DoWork += (sender, _) =>
-		{
-			SpinWait.SpinUntil(new(() => DateTime.Now.Subtract(TimeSinceAutosave).Seconds >= 5.0));
-			if (((BackgroundWorker?)sender)?.CancellationPending is true)
-				return;
-			Concurrent(this.SaveRecord);
-			Concurrent(this.Autosave);
-		};
 	}
 
 	private void CloseClick(object? sender, RoutedEventArgs e)
 	{
-		if (AutosaveThread?.IsBusy is true)
-			AutosaveThread?.CancelAsync();
-
 		if (Edited)
 		{
 			switch(MessageBox.Show("You have unsaved changes. Save before closing this note?", "Sylver Ink: Notification", MessageBoxButton.YesNoCancel, MessageBoxImage.Information))
@@ -78,17 +58,8 @@ public partial class SearchResult : Window, IDisposable
 		Close();
 	}
 
-	public void Dispose()
-	{
-		AutosaveThread?.Dispose();
-		GC.SuppressFinalize(this);
-	}
-
 	private void Result_Closed(object? sender, EventArgs e)
 	{
-		if (AutosaveThread?.IsBusy is true)
-			AutosaveThread?.CancelAsync();
-
 		if (Edited)
 			this.SaveRecord();
 
@@ -123,7 +94,7 @@ public partial class SearchResult : Window, IDisposable
 		}
 		catch
 		{
-			ResultBlock.Document = PlaintextToFlowDocument(ResultText);
+			PlaintextToFlowDocument(ResultBlock.Document, ResultText);
 		}
 
 		Edited = false;
@@ -145,11 +116,10 @@ public partial class SearchResult : Window, IDisposable
 	private void ResultBlock_TextChanged(object? sender, TextChangedEventArgs e)
 	{
 		Edited = true;
-		RecentNotesDirty = true;
-		if (AutosaveThread?.IsBusy is true)
+		if ((DateTime.UtcNow - TimeSinceAutosave).Seconds < 5)
 			return;
-		TimeSinceAutosave = DateTime.Now;
-		AutosaveThread?.RunWorkerAsync();
+		RecentNotesDirty = true;
+		TimeSinceAutosave = DateTime.UtcNow;
 	}
 
 	private void ViewClick(object? sender, RoutedEventArgs e)

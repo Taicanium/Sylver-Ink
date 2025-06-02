@@ -9,7 +9,7 @@
 		Background="{Binding MenuBackground}" Closing="MainWindow_Closing" Foreground="{Binding MenuForeground}" Height="625" MinHeight="450" MinWidth="400" MouseLeftButtonDown="Drag" ResizeMode="NoResize" SizeChanged="MainWindow_SizeChanged" Title="Sylver Ink" Width="450">
 	<Window.Resources>
 		<ResourceDictionary>
-			<Style BasedOn="{StaticResource ResourceKey=LBIStyle}" TargetType="{x:Type ListBoxItem}">
+			<Style BasedOn="{StaticResource LBIStyle}" TargetType="{x:Type ListBoxItem}">
 				<EventSetter Event="MouseUp" Handler="MenuSublistChanged" />
 			</Style>
 			<DataTemplate x:Key="DatabaseContentTemplate">
