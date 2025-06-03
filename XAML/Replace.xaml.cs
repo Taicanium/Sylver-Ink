@@ -2,9 +2,8 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using static SylverInk.CommonUtils;
-using static SylverInk.XAMLUtils.DataUtils;
 using static SylverInk.Notes.DatabaseUtils;
+using static SylverInk.XAMLUtils.DataUtils;
 
 namespace SylverInk;
 

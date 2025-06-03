@@ -5,9 +5,8 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
-using static SylverInk.CommonUtils;
-using static SylverInk.XAMLUtils.DataUtils;
 using static SylverInk.Notes.DatabaseUtils;
+using static SylverInk.XAMLUtils.DataUtils;
 
 namespace SylverInk.XAMLUtils;
 
