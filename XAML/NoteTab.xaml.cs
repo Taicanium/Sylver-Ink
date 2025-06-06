@@ -51,7 +51,7 @@ namespace SylverInk.XAML
 			PreviousButton.IsEnabled = RevisionIndex < Record.GetNumRevisions();
 			RevisionLabel.Content = (RevisionIndex == 0U ? "Entry last modified: " : $"Revision {Record.GetNumRevisions() - RevisionIndex} from ") + revisionTime;
 			SaveButton.Content = RevisionIndex == 0 ? "Save" : "Restore";
-			SaveButton.IsEnabled = !Record.ToString().Equals(FlowDocumentToPlaintext(NoteBox.Document));
+			SaveButton.IsEnabled = !OriginalText.Equals(FlowDocumentToXaml(NoteBox.Document));
 		}
 
 		private void ClickPrevious(object sender, RoutedEventArgs e)
@@ -70,7 +70,7 @@ namespace SylverInk.XAML
 			RevisionLabel.Content = (RevisionIndex == Record.GetNumRevisions() ? "Entry created " : $"Revision {Record.GetNumRevisions() - RevisionIndex} from ") + revisionTime;
 			NextButton.IsEnabled = RevisionIndex > 0;
 			SaveButton.Content = "Restore";
-			SaveButton.IsEnabled = !Record.ToString().Equals(FlowDocumentToPlaintext(NoteBox.Document));
+			SaveButton.IsEnabled = !OriginalText.Equals(FlowDocumentToXaml(NoteBox.Document));
 		}
 
 		private void ClickReturn(object sender, RoutedEventArgs e)
@@ -123,7 +123,7 @@ namespace SylverInk.XAML
 				RevisionLabel.Content = "Note locked by another user";
 			}
 
-			OriginalText = Record.ToString();
+			OriginalText = Record.ToXaml();
 			NoteBox.Document = Record.GetDocument();
 
 			FinishedLoading = true;
@@ -172,7 +172,7 @@ namespace SylverInk.XAML
 			if (sender is not RichTextBox box)
 				return;
 
-			SaveButton.IsEnabled = !FlowDocumentToPlaintext(box.Document).Equals(OriginalText);
+			SaveButton.IsEnabled = !OriginalText.Equals(FlowDocumentToXaml(box.Document));
 		}
 	}
 }

@@ -6,17 +6,42 @@
 			 xmlns:local="clr-namespace:SylverInk.XAML" xmlns:sylverink="clr-namespace:SylverInk"
 			 mc:Ignorable="d"
 			 Loaded="Construct">
+	<UserControl.Resources>
+		<ResourceDictionary>
+			<Style x:Key="ToolbarButton" TargetType="Button">
+				<Setter Property="Background" Value="{Binding ListBackground}"/>
+				<Setter Property="CommandTarget" Value="{Binding ElementName=NoteBox}"/>
+				<Setter Property="Foreground" Value="{Binding ListForeground}"/>
+				<Setter Property="Width" Value="30"/>
+			</Style>
+		</ResourceDictionary>
+	</UserControl.Resources>
     <Grid Margin="2" x:Name="MainGrid">
 		<Grid.RowDefinitions>
+			<RowDefinition Height="Auto"/>
 			<RowDefinition Height="Auto"/>
 			<RowDefinition Height="*"/>
 			<RowDefinition Height="Auto"/>
 		</Grid.RowDefinitions>
 		<Label FontStyle="Italic" HorizontalAlignment="Right" Margin="0,0,10,0" VerticalAlignment="Bottom" x:Name="RevisionLabel"/>
-		<RichTextBox AcceptsReturn="True" Margin="5" Grid.Row="1" TextChanged="NoteBox_TextChanged" UndoLimit="10"
-					 VerticalContentAlignment="Top" VerticalScrollBarVisibility="Auto"
-					 x:Name="NoteBox"/>
-		<Grid HorizontalAlignment="Center" Margin="0,20" Grid.Row="2" x:Name="ButtonGrid">
+		<StackPanel Grid.Row="1" Orientation="Horizontal" x:Name="NoteToolbar">
+			<Button Style="{StaticResource ToolbarButton}" Command="ApplicationCommands.Undo" Content="↶" ToolTip="Undo"/>
+			<Button Style="{StaticResource ToolbarButton}" Command="ApplicationCommands.Redo" Content="↷" ToolTip="Redo"/>
+
+			<Button Style="{StaticResource ToolbarButton}" Command="EditingCommands.ToggleBold" ToolTip="Bold">
+				<TextBlock FontWeight="Bold">B</TextBlock>
+			</Button>
+			<Button Style="{StaticResource ToolbarButton}" Command="EditingCommands.ToggleItalic" ToolTip="Italic">
+				<TextBlock FontStyle="Italic" FontWeight="Bold">I</TextBlock>
+			</Button>
+			<Button Style="{StaticResource ToolbarButton}" Command="EditingCommands.ToggleUnderline" ToolTip="Underline">
+				<TextBlock TextDecorations="Underline" FontWeight="Bold">U</TextBlock>
+			</Button>
+		</StackPanel>
+		<RichTextBox AcceptsReturn="True" Grid.Row="2" TextChanged="NoteBox_TextChanged" UndoLimit="10"
+					VerticalScrollBarVisibility="Auto"
+					x:Name="NoteBox"/>
+		<Grid HorizontalAlignment="Center" Margin="0,20" Grid.Row="3" x:Name="ButtonGrid">
 			<Grid.ColumnDefinitions>
 				<ColumnDefinition Width="*"/>
 				<ColumnDefinition Width="*"/>

@@ -107,13 +107,11 @@ public partial class ContextSettings : INotifyPropertyChanged
 					LastActiveDatabase = keyValue[1];
 					break;
 				case "LastActiveNotes":
-					var notes = keyValue[1].Split(';').Distinct();
-					foreach (var note in notes)
+					foreach (var note in keyValue[1].Split(';').Distinct())
 						LastActiveNotes.Add(note);
 					break;
 				case "LastActiveNotesHeight":
-					var nHeight = keyValue[1].Split(';').Distinct();
-					foreach (var sHeight in nHeight)
+					foreach (var sHeight in keyValue[1].Split(';').Distinct())
 					{
 						var hSplit = sHeight.Split(':');
 						if (hSplit.Length < 3)
@@ -123,8 +121,7 @@ public partial class ContextSettings : INotifyPropertyChanged
 					}
 					break;
 				case "LastActiveNotesLeft":
-					var nLeft = keyValue[1].Split(';').Distinct();
-					foreach (var sLeft in nLeft)
+					foreach (var sLeft in keyValue[1].Split(';').Distinct())
 					{
 						var lSplit = sLeft.Split(':');
 						if (lSplit.Length < 3)
@@ -134,8 +131,7 @@ public partial class ContextSettings : INotifyPropertyChanged
 					}
 					break;
 				case "LastActiveNotesTop":
-					var nTop = keyValue[1].Split(';').Distinct();
-					foreach (var sTop in nTop)
+					foreach (var sTop in keyValue[1].Split(';').Distinct())
 					{
 						var tSplit = sTop.Split(':');
 						if (tSplit.Length < 3)
@@ -145,8 +141,7 @@ public partial class ContextSettings : INotifyPropertyChanged
 					}
 					break;
 				case "LastActiveNotesWidth":
-					var nWidth = keyValue[1].Split(';').Distinct();
-					foreach (var sWidth in nWidth)
+					foreach (var sWidth in keyValue[1].Split(';').Distinct())
 					{
 						var wSplit = sWidth.Split(':');
 						if (wSplit.Length < 3)
@@ -159,13 +154,15 @@ public partial class ContextSettings : INotifyPropertyChanged
 					FirstRun = false;
 					LastDatabases.AddRange(keyValue[1].Replace("?\\", DocumentsFolder).Split(';').Distinct().Where(File.Exists));
 					DatabaseCount = Math.Max(1, LastDatabases.Count);
+
 					foreach (var file in LastDatabases)
 						await Database.Create(file);
-					if (LastDatabases.Count == 0 && Databases.Count == 0)
-					{
-						DatabaseCount = 1;
-						await Database.Create(Path.Join(Subfolders["Databases"], DefaultDatabase, $"{DefaultDatabase}.sidb"));
-					}
+
+					if (LastDatabases.Count != 0 || Databases.Count != 0)
+						break;
+
+					DatabaseCount = 1;
+					await Database.Create(Path.Join(Subfolders["Databases"], DefaultDatabase, $"{DefaultDatabase}.sidb"));
 					break;
 				case "ListBackground":
 					ListBackground = BrushFromBytes(keyValue[1]);
