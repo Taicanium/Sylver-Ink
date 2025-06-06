@@ -36,14 +36,16 @@ public static class TextUtils
 						pointer = pointer.GetPositionAtOffset(pointer.GetTextRunLength(LogicalDirection.Forward));
 						break;
 					case TextPointerContext.ElementStart:
-						if (pointer.GetAdjacentElement(LogicalDirection.Forward) is LineBreak)
-							content += "\r\n";
 						if (pointer.GetAdjacentElement(LogicalDirection.Forward) is Paragraph)
 						{
 							if (begun)
 								content += "\r\n\r\n";
 							begun = true;
 						}
+
+						if (pointer.GetAdjacentElement(LogicalDirection.Forward) is LineBreak)
+							content += "\r\n";
+
 						pointer = pointer.GetNextContextPosition(LogicalDirection.Forward);
 						break;
 					default:
@@ -78,20 +80,20 @@ public static class TextUtils
 		for (int i = 0; i < lineSplit.Length; i++)
 		{
 			var line = lineSplit[i];
-			if (!string.IsNullOrEmpty(line))
-			{
-				pointer.InsertTextInRun(line);
-				while (pointer.GetPointerContext(LogicalDirection.Forward) != TextPointerContext.ElementEnd)
-					pointer = pointer.GetNextContextPosition(LogicalDirection.Forward);
-				if (i < lineSplit.Length - 1)
-				{
-					if (string.IsNullOrEmpty(lineSplit[i + 1]))
-						pointer = pointer.InsertParagraphBreak();
-					else
-						pointer = pointer.InsertLineBreak();
-				}
+			if (string.IsNullOrEmpty(line))
 				continue;
-			}
+
+			pointer.InsertTextInRun(line);
+			while (pointer.GetPointerContext(LogicalDirection.Forward) != TextPointerContext.ElementEnd)
+				pointer = pointer.GetNextContextPosition(LogicalDirection.Forward);
+
+			if (i >= lineSplit.Length - 1)
+				continue;
+
+			if (string.IsNullOrEmpty(lineSplit[i + 1]))
+				pointer = pointer.InsertParagraphBreak();
+			else
+				pointer = pointer.InsertLineBreak();
 		}
 		return document;
 	}

@@ -20,7 +20,7 @@ public static class DataUtils
 	public static bool RecentNotesDirty { get; set; }
 	public static SortType RecentEntriesSortMode { get; set; } = SortType.ByChange;
 	public static DisplayType RibbonTabContent { get; set; } = DisplayType.Change;
-	public static List<NoteTab> OpenTabs { get; } = [];
+	public static List<TabItem> OpenTabs { get; } = [];
 	public static double PPD { get; set; } = 1.0;
 
 	public static async void DeferUpdateRecentNotes()
@@ -169,10 +169,10 @@ public static class DataUtils
 	{
 		foreach (var item in OpenTabs)
 		{
-			if (item.Tab.Tag is not NoteRecord tag)
+			if (item.Tag is not NoteRecord tag)
 				continue;
 
-			item.Tab.Header = GetRibbonHeader(tag);
+			item.Header = GetRibbonHeader(tag);
 		}
 	}
 }

@@ -183,7 +183,7 @@ public partial class Serializer : IDisposable
 	}
 
 	/// <summary>
-	/// Read a single uncompressed byte from the stream, and decompress as needed.
+	/// Consume a single uncompressed byte from the stream, and decompress as needed.
 	/// </summary>
 	public byte ReadByte()
 	{
@@ -196,7 +196,7 @@ public partial class Serializer : IDisposable
 	}
 
 	/// <summary>
-	/// Read a certain number of uncompressed bytes from the stream, and decompress as needed.
+	/// Consume a certain number of uncompressed bytes from the stream, and decompress as needed.
 	/// </summary>
 	/// <param name="byteCount"></param>
 	private byte[] ReadBytes(int byteCount)
@@ -210,7 +210,7 @@ public partial class Serializer : IDisposable
 	}
 
 	/// <summary>
-	/// Reads the database header.
+	/// Parse the database header.
 	/// </summary>
 	private void ReadHeader()
 	{
@@ -308,7 +308,7 @@ public partial class Serializer : IDisposable
 	/// <summary>
 	/// Write the database header to the stream.
 	/// </summary>
-	/// <param name="format">The database format.</param>
+	/// <param name="format">The SIDB version number</param>
 	private void WriteHeader(byte format)
 	{
 		_fileStream?.Write(Encoding.UTF8.GetBytes(

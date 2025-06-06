@@ -1,0 +1,38 @@
+﻿<UserControl x:Class="SylverInk.XAML.NoteTab"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+			 xmlns:local="clr-namespace:SylverInk.XAML" xmlns:sylverink="clr-namespace:SylverInk"
+			 mc:Ignorable="d"
+			 Loaded="Construct">
+    <Grid Margin="2" x:Name="MainGrid">
+		<Grid.RowDefinitions>
+			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="*"/>
+			<RowDefinition Height="Auto"/>
+		</Grid.RowDefinitions>
+		<Label FontStyle="Italic" HorizontalAlignment="Right" Margin="0,0,10,0" VerticalAlignment="Bottom" x:Name="RevisionLabel"/>
+		<RichTextBox AcceptsReturn="True" Margin="5" Grid.Row="1" TextChanged="NoteBox_TextChanged" UndoLimit="10"
+					 VerticalContentAlignment="Top" VerticalScrollBarVisibility="Auto"
+					 x:Name="NoteBox"/>
+		<Grid HorizontalAlignment="Center" Margin="0,20" Grid.Row="2" x:Name="ButtonGrid">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="*"/>
+				<ColumnDefinition Width="*"/>
+				<ColumnDefinition Width="*"/>
+			</Grid.ColumnDefinitions>
+			<Grid.RowDefinitions>
+				<RowDefinition Height="Auto"/>
+				<RowDefinition Height="15"/>
+				<RowDefinition Height="Auto"/>
+			</Grid.RowDefinitions>
+			<Button Click="ClickPrevious" Grid.ColumnSpan="2" Content="←" Width="50" x:Name="PreviousButton"/>
+			<Button Click="ClickNext" Grid.Column="1" Grid.ColumnSpan="2" Content="→" Width="50" x:Name="NextButton"/>
+			
+			<Button Click="ClickDelete" Content="Delete" Grid.Row="2" x:Name="DeleteButton"/>
+			<Button Click="ClickSave" Grid.Column="1" Content="Save" Margin="20,0" Grid.Row="2" x:Name="SaveButton"/>
+			<Button Click="ClickReturn" Grid.Column="2" Content="Return" Grid.Row="2" x:Name="ReturnButton"/>
+		</Grid>
+	</Grid>
+</UserControl>

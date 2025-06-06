@@ -1,4 +1,5 @@
 ﻿using SylverInk.FileIO;
+using SylverInk.XAML;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -410,10 +411,15 @@ public partial class NoteRecord
 
 		foreach (var item in OpenTabs)
 		{
-			if (!item.Tab.Tag.Equals(this))
+			if (!item.Tag.Equals(this))
 				continue;
 
-			var grid = (Grid)item.Tab.Content;
+			if (item.Content is not NoteTab tab)
+				continue;
+
+			if (tab.Content is not Grid grid)
+				continue;
+
 			foreach (UIElement child in grid.Children)
 			{
 				child.SetValue(UIElement.IsEnabledProperty, true);
