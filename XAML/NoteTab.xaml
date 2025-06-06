@@ -27,7 +27,7 @@
 		<StackPanel Grid.Row="1" Orientation="Horizontal" x:Name="NoteToolbar">
 			<Button Style="{StaticResource ToolbarButton}" Command="ApplicationCommands.Undo" Content="↶" ToolTip="Undo"/>
 			<Button Style="{StaticResource ToolbarButton}" Command="ApplicationCommands.Redo" Content="↷" ToolTip="Redo"/>
-
+			<Button Style="{StaticResource ToolbarButton}" BorderThickness="0" IsEnabled="False"/>
 			<Button Style="{StaticResource ToolbarButton}" Command="EditingCommands.ToggleBold" ToolTip="Bold">
 				<TextBlock FontWeight="Bold">B</TextBlock>
 			</Button>
