@@ -6,7 +6,6 @@ namespace SylverInk.FileIO;
 
 public partial class LZW
 {
-	private string? C = string.Empty;
 	private readonly List<byte> BitStream = [];
 	private readonly Dictionary<string, uint> Codes = [];
 	private Stream? FileStream;
@@ -53,7 +52,6 @@ public partial class LZW
 		}
 
 		BitStream.Clear();
-		C = string.Empty;
 		Codes.Clear();
 		Open = false;
 		Packets.Clear();
@@ -69,18 +67,17 @@ public partial class LZW
 	{
 		for (int i = 0; i < data.Length; i++)
 		{
-			C = FromByte(data[i]);
-			string wc = W + C;
+			string entry = FromByte(data[i]);
+			string wc = W + entry;
 			if (!Codes.TryAdd(wc, NextCode))
 			{
 				W = wc;
 				continue;
 			}
 
-			var entry = Codes[W];
-			WriteCode(entry);
+			WriteCode(Codes[W]);
 			NextCode++;
-			W = C;
+			W = entry;
 
 			if (Format >= 11 && NextCode > 4094U)
 			{
@@ -119,14 +116,14 @@ public partial class LZW
 				continue;
 			}
 
-			if (!Packets.TryGetValue(LastCode, out C))
-				C = $"{W}{W[0]}";
+			if (!Packets.TryGetValue(LastCode, out string? entry))
+				entry = $"{W}{W[0]}";
 
-			for (int i = 0; i < C.Length; i++)
-				Incoming.Add((byte)C[i]);
+			for (int i = 0; i < entry.Length; i++)
+				Incoming.Add((byte)entry[i]);
 
-			Packets.Add(NextCode++, $"{W}{C[0]}");
-			W = C;
+			Packets.Add(NextCode++, $"{W}{entry[0]}");
+			W = entry;
 			UpdateRange(NextCode + 1);
 		}
 
