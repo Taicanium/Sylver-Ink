@@ -190,17 +190,19 @@ public static class ImportUtils
 			for (int i = 0; i < window.DataLines.Count; i++)
 			{
 				var line = window.DataLines[i].Trim();
-				if (Regex.IsMatch(line, window.AdaptivePredicate))
+				if (!Regex.IsMatch(line, window.AdaptivePredicate))
 				{
-					if (!string.IsNullOrWhiteSpace(recordData.Trim()))
-					{
-						window.RunningAverage += recordData.Length;
-						window.RunningCount++;
-					}
-					recordData = line;
-				}
-				else
 					AppendLine(ref recordData, line, i);
+					continue;
+				}
+
+				if (!string.IsNullOrWhiteSpace(recordData.Trim()))
+				{
+					window.RunningAverage += recordData.Length;
+					window.RunningCount++;
+				}
+
+				recordData = line;
 			}
 
 			window.RunningAverage /= window.RunningCount;
@@ -243,7 +245,7 @@ public static class ImportUtils
 				if (i % 100 == 0)
 					CommonUtils.Settings.ImportData = $"{i * 100.0 / window.DataLines.Count:N2}% scanned...";
 
-				if (recordData.Length == 0 || blankCount < CommonUtils.Settings.LineTolerance)
+				if (string.IsNullOrWhiteSpace(recordData) || blankCount < CommonUtils.Settings.LineTolerance)
 					continue;
 
 				blankCount = 0;
@@ -304,6 +306,9 @@ public static class ImportUtils
 			CommonUtils.Settings.ImportData = $"{i * 100.0 / window.DataLines.Count:N2}% imported...";
 
 			if (blankCount < CommonUtils.Settings.LineTolerance && i < window.DataLines.Count - 1)
+				continue;
+
+			if (string.IsNullOrWhiteSpace(recordData))
 				continue;
 
 			CurrentDatabase.CreateRecord(recordData);
