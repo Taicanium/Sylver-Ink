@@ -144,6 +144,7 @@ public static class ImportUtils
 						if (frequencies.TryAdd(pBrute, 1.0))
 						{
 							tokenCounts.TryAdd(pBrute, tokenCounts[pattern] + 1);
+							frequencies.Remove(string.Empty);
 							continue;
 						}
 
@@ -190,19 +191,18 @@ public static class ImportUtils
 			for (int i = 0; i < window.DataLines.Count; i++)
 			{
 				var line = window.DataLines[i].Trim();
-				if (!Regex.IsMatch(line, window.AdaptivePredicate))
+				if (Regex.IsMatch(line, window.AdaptivePredicate))
 				{
+					if (!string.IsNullOrWhiteSpace(recordData.Trim()))
+					{
+						window.RunningAverage += recordData.Length;
+						window.RunningCount++;
+					}
+
+					recordData = line;
+				}
+				else
 					AppendLine(ref recordData, line, i);
-					continue;
-				}
-
-				if (!string.IsNullOrWhiteSpace(recordData.Trim()))
-				{
-					window.RunningAverage += recordData.Length;
-					window.RunningCount++;
-				}
-
-				recordData = line;
 			}
 
 			window.RunningAverage /= window.RunningCount;

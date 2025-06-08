@@ -135,8 +135,13 @@ public partial class Properties : Window
 		var hourValue = int.Parse((string)hour.Content, NumberFormatInfo.InvariantInfo);
 		var minuteValue = int.Parse((string)minute.Content, NumberFormatInfo.InvariantInfo);
 
-		DateTime reversion = ReversionDate?.SelectedDate ?? DateTime.Now;
+		DateTime reversion = ReversionDate.SelectedDate ?? DateTime.Now;
 		reversion = reversion.Date.AddHours(hourValue).AddMinutes(minuteValue);
+
+		CloseButton.IsEnabled = false;
+		RestoreButton.IsEnabled = false;
+		ReversionDate.IsEnabled = false;
+		SelectedTime.IsEnabled = false;
 
 		DB?.Revert(reversion);
 		InitializeProperties();
