@@ -11,6 +11,7 @@ public partial class LZW
 	private readonly Dictionary<string, uint> Codes = [];
 	private Stream? FileStream;
 	private readonly List<byte> Incoming = [];
+	private uint LastCode;
 	private readonly int MaxRange = 24;
 	private uint NextCode = 258U;
 	private bool Open;
@@ -102,20 +103,23 @@ public partial class LZW
 		if (string.IsNullOrEmpty(W))
 			ReadFirstCode();
 
+		if (LastCode == 257U)
+			return [];
+
 		while (Incoming.Count == 0 || Incoming.Count < byteCount)
 		{
-			var k = ReadCode();
-			if (k == 257U)
+			LastCode = ReadCode();
+			if (LastCode == 257U)
 				break;
 
-			if (Format >= 11 && k == 256U)
+			if (Format >= 11 && LastCode == 256U)
 			{
 				InitDictionary();
 				ReadFirstCode();
 				continue;
 			}
 
-			if (!Packets.TryGetValue(k, out C))
+			if (!Packets.TryGetValue(LastCode, out C))
 				C = $"{W}{W[0]}";
 
 			for (int i = 0; i < C.Length; i++)
@@ -196,13 +200,13 @@ public partial class LZW
 
 	private void ReadFirstCode()
 	{
-		var k = ReadCode();
-		if (k != 257U)
-		{
-			W = Packets[k];
-			for (int i = 0; i < W.Length; i++)
-				Incoming.Add((byte)W[i]);
-		}
+		LastCode = ReadCode();
+		if (LastCode == 257U)
+			return;
+
+		W = Packets[LastCode];
+		for (int i = 0; i < W.Length; i++)
+			Incoming.Add((byte)W[i]);
 	}
 
 	/// <summary>
