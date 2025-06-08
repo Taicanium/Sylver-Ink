@@ -28,6 +28,8 @@ public static class ImportUtils
 
 	public static async Task Import(this Import window)
 	{
+		window.CloseButton.IsEnabled = false;
+
 		try
 		{
 			await window.PerformImport();
@@ -37,12 +39,21 @@ public static class ImportUtils
 		{
 			MessageBox.Show($"Failed to import the selected file: {ex.Message}", "Sylver Ink: Error", MessageBoxButton.OK);
 		}
+		finally
+		{
+			window.CloseButton.IsEnabled = true;
+		}
 	}
 
 	public static async Task Measure(this Import window, bool Adaptive = false)
 	{
 		if (string.IsNullOrWhiteSpace(CommonUtils.Settings.ImportTarget))
 			return;
+
+		window.AdaptiveCheckBox.IsEnabled = false;
+		window.CloseButton.IsEnabled = false;
+		window.LTPanel.IsEnabled = false;
+		window.DoImport.IsEnabled = false;
 
 		window.AdaptiveImport = Adaptive;
 		if (!(Adaptive && await window.MeasureNotesAdaptive()))
@@ -363,6 +374,9 @@ public static class ImportUtils
 	private static void ReportMeasurement(this Import window)
 	{
 		CommonUtils.Settings.ImportData = $"Estimated new notes: {window.RunningCount:N0}\nAverage length: {window.RunningAverage:N0} characters per note\n\nRemember to press Import to finalize your changes!";
+		window.AdaptiveCheckBox.IsEnabled = true;
+		window.CloseButton.IsEnabled = true;
 		window.DoImport.IsEnabled = window.RunningCount > 0;
+		window.LTPanel.IsEnabled = !window.AdaptiveCheckBox.IsChecked is true;
 	}
 }

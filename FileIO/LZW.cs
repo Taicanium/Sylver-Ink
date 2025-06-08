@@ -19,6 +19,7 @@ public partial class LZW
 	private string W = string.Empty;
 	private bool Writing;
 
+	public int Format { get; private set; }
 	public List<byte> Outgoing { get; } = [];
 
 	/// <summary>
@@ -79,6 +80,14 @@ public partial class LZW
 			WriteCode(entry);
 			NextCode++;
 			W = C;
+
+			if (Format >= 11 && NextCode > 4094U)
+			{
+				WriteCode(256U);
+				InitDictionary();
+				continue;
+			}	
+
 			UpdateRange(NextCode);
 		}
 	}
@@ -91,21 +100,20 @@ public partial class LZW
 	public byte[] Decompress(int byteCount = 1)
 	{
 		if (string.IsNullOrEmpty(W))
-		{
-			var k = ReadCode();
-			if (k != 257U)
-			{
-				W = Packets[k];
-				for (int i = 0; i < W.Length; i++)
-					Incoming.Add((byte)W[i]);
-			}
-		}
+			ReadFirstCode();
 
 		while (Incoming.Count == 0 || Incoming.Count < byteCount)
 		{
 			var k = ReadCode();
 			if (k == 257U)
 				break;
+
+			if (Format >= 11 && k == 256U)
+			{
+				InitDictionary();
+				ReadFirstCode();
+				continue;
+			}
 
 			if (!Packets.TryGetValue(k, out C))
 				C = $"{W}{W[0]}";
@@ -133,9 +141,10 @@ public partial class LZW
 	/// </summary>
 	/// <param name="fileStream">An open filestream to or from which to read or write LZW-compressed data.</param>
 	/// <param name="writing"><c>true</c> if we are compressing data and outputting it to the stream; <c>false</c> if we are reading and consuming LZW-compressed data.</param>
-	public void Init(Stream? fileStream = null, bool writing = false)
+	public void Init(int format, Stream? fileStream = null, bool writing = false)
 	{
 		FileStream = fileStream ?? FileStream;
+		Format = format;
 		Open = true;
 		Writing = writing;
 		InitDictionary();
@@ -183,6 +192,17 @@ public partial class LZW
 		BitStream.RemoveRange(0, Range);
 
 		return code;
+	}
+
+	private void ReadFirstCode()
+	{
+		var k = ReadCode();
+		if (k != 257U)
+		{
+			W = Packets[k];
+			for (int i = 0; i < W.Length; i++)
+				Incoming.Add((byte)W[i]);
+		}
 	}
 
 	/// <summary>

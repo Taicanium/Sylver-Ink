@@ -95,7 +95,7 @@ public partial class NetServer : IDisposable
 				data?.Insert(0, (byte)MessageType.DatabaseInit);
 				data?.InsertRange(1, [
 					0, 0, 0, 0,
-						.. IntToBytes(dataLength)
+					.. IntToBytes(dataLength)
 				]);
 
 				if (dataLength > 0)
@@ -180,15 +180,17 @@ public partial class NetServer : IDisposable
 		{
 			try
 			{
-				var DNSAddress = DNSAddresses[i];
-				if (IPAddress.TryParse(await new HttpClient().GetStringAsync(DNSAddress), out var address))
+				if (IPAddress.TryParse(await new HttpClient().GetStringAsync(DNSAddresses[i]), out var address))
 				{
 					AddressCode = CodeFromAddress(address, this.Flags);
 					Address = CodeToAddress(AddressCode, out this.Flags);
 					break;
 				}
 			}
-			catch { }
+			catch
+			{
+				continue;
+			}
 		}
 
 		if (Address.Equals(IPAddress.Loopback))

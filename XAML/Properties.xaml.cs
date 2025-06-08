@@ -2,6 +2,7 @@
 using System;
 using System.Globalization;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -51,13 +52,16 @@ public partial class Properties : Window
 		ApplyTime();
 	}
 
-	private void InitializeProperties()
+	private async void InitializeProperties()
 	{
+		DBAvgLabel.Content = "...";
 		DBCreatedLabel.Content = DB?.GetCreated();
 		DBFormatLabel.Content = $"SIDB v.{DB?.Format}";
+		DBLongestLabel.Content = "...";
 		DBNameLabel.ToolTip = DBNameLabel.Text = DB?.Name;
 		DBNotesLabel.Content = $"{DB?.RecordCount:N0} notes";
 		DBPathLabel.ToolTip = DBPathLabel.Text = $"{DB?.DBFile}";
+		DBTotalLabel.Content = "...";
 
 		double noteAvgC = 0.0;
 		double noteAvgW = 0.0;
@@ -66,32 +70,35 @@ public partial class Properties : Window
 		int noteTotalC = 0;
 		int noteTotalW = 0;
 
-		for (int i = 0; i < DB?.RecordCount; i++)
+		await Task.Run(() =>
 		{
-			var record = DB?.GetRecord(i).ToString();
-			var length = record?.Length ?? 0;
-			var wordCount = NotWhitespace().Matches(record ?? string.Empty).Count;
-
-			noteAvgC += length;
-			noteAvgW += wordCount;
-
-			// The 'longest' note is qualified strictly by character count.
-			if (noteLongestC <= length)
+			for (int i = 0; i < DB?.RecordCount; i++)
 			{
-				noteLongestC = length;
-				noteLongestW = wordCount;
+				var record = DB?.GetRecord(i).ToString();
+				var length = record?.Length ?? 0;
+				var wordCount = NotWhitespace().Matches(record ?? string.Empty).Count;
+
+				noteAvgC += length;
+				noteAvgW += wordCount;
+
+				// The 'longest' note is qualified strictly by character count.
+				if (noteLongestC <= length)
+				{
+					noteLongestC = length;
+					noteLongestW = wordCount;
+				}
+
+				noteTotalC += length;
+				noteTotalW += wordCount;
 			}
 
-			noteTotalC += length;
-			noteTotalW += wordCount;
-		}
+			noteAvgC /= DB?.RecordCount ?? 1.0;
+			noteAvgW /= DB?.RecordCount ?? 1.0;
+		});
 
-		noteAvgC /= DB?.RecordCount ?? 1.0;
-		noteAvgW /= DB?.RecordCount ?? 1.0;
-
-		DBAvgLabel.Content = $"{noteAvgW:N1} words ({noteAvgC:N1} chars.)";
-		DBLongestLabel.Content = $"{noteLongestW:N1} words ({noteLongestC:N0} chars.)";
-		DBTotalLabel.Content = $"{noteTotalW:N1} words ({noteTotalC:N0} chars.)";
+		DBAvgLabel.Content = $"{noteAvgW:N1} words\n({noteAvgC:N1} chars.)";
+		DBLongestLabel.Content = $"{noteLongestW:N0} words\n({noteLongestC:N0} chars.)";
+		DBTotalLabel.Content = $"{noteTotalW:N0} words\n({noteTotalC:N0} chars.)";
 	}
 
 	private void Minute_Selected(object? sender, RoutedEventArgs e)

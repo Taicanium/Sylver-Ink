@@ -17,7 +17,7 @@ public static partial class FileUtils
 {
 	public static string DocumentsFolder { get; } = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Sylver Ink");
 	public static string SettingsFile { get; } = Path.Join(DocumentsFolder, "settings.sis");
-	public static int HighestSIDBFormat { get; } = 10;
+	public static int HighestSIDBFormat { get; } = 12;
 	public static char[] InvalidPathChars { get; } = ['/', '\\', ':', '*', '"', '?', '<', '>', '|'];
 	public static Dictionary<string, string> Subfolders { get; } = new([
 		new("Databases", Path.Join(DocumentsFolder, "Databases"))

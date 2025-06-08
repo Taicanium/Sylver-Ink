@@ -40,10 +40,8 @@ namespace SylverInk.XAML
 			if (sender is not Button button)
 				return;
 
-			string revisionTime = Record.GetCreated();
-
 			RevisionIndex -= 1U;
-			revisionTime = RevisionIndex == 0U ? Record.GetLastChange() : Record.GetRevisionTime(RevisionIndex);
+			string revisionTime = RevisionIndex == 0U ? Record.GetLastChange() : Record.GetRevisionTime(RevisionIndex);
 
 			NoteBox.Document = Record.GetDocument(RevisionIndex);
 			NoteBox.IsReadOnly = RevisionIndex != 0;
@@ -59,10 +57,8 @@ namespace SylverInk.XAML
 			if (sender is not Button button)
 				return;
 
-			string revisionTime = Record.GetLastChange();
-
 			RevisionIndex += 1U;
-			revisionTime = RevisionIndex == Record.GetNumRevisions() ? Record.GetCreated() : Record.GetRevisionTime(RevisionIndex);
+			string revisionTime = RevisionIndex == Record.GetNumRevisions() ? Record.GetCreated() : Record.GetRevisionTime(RevisionIndex);
 
 			NoteBox.Document = Record.GetDocument(RevisionIndex);
 			NoteBox.IsReadOnly = RevisionIndex != 0;

@@ -127,7 +127,7 @@ public partial class Serializer : IDisposable
 			return;
 
 		_lzw.Outgoing.Clear();
-		_lzw.Init(_fileStream, _writing);
+		_lzw.Init(format, _fileStream, _writing);
 	}
 
 	/// <summary>
