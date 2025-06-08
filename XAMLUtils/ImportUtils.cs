@@ -229,7 +229,6 @@ public static class ImportUtils
 			string recordData = string.Empty;
 			window.RunningAverage = 0.0;
 			window.RunningCount = 0;
-			window.ReadFromStream(CommonUtils.Settings.ImportTarget);
 
 			for (int i = 0; i < window.DataLines.Count; i++)
 			{
