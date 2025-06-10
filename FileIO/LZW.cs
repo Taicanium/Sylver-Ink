@@ -11,7 +11,8 @@ public partial class LZW
 	private Stream? FileStream;
 	private readonly List<byte> Incoming = [];
 	private uint LastCode;
-	private readonly int MaxRange = 24;
+	private readonly int MaxRestrictedRange = 25;
+	private readonly int MaxRange = 13;
 	private uint NextCode = 258U;
 	private bool Open;
 	private readonly Dictionary<uint, string> Packets = [];
@@ -79,12 +80,12 @@ public partial class LZW
 			NextCode++;
 			W = entry;
 
-			if (Format >= 11 && NextCode > 4094U)
+			if (Format >= 11 && NextCode > Math.Pow(2, MaxRange) - 2)
 			{
 				WriteCode(256U);
 				InitDictionary();
 				continue;
-			}	
+			}
 
 			UpdateRange(NextCode);
 		}
@@ -140,7 +141,6 @@ public partial class LZW
 	/// <summary>
 	/// Initializes the LZW state engine.
 	/// </summary>
-	/// <param name="fileStream">An open filestream to or from which to read or write LZW-compressed data.</param>
 	/// <param name="writing"><c>true</c> if we are compressing data and outputting it to the stream; <c>false</c> if we are reading and consuming LZW-compressed data.</param>
 	public void Init(int format, Stream? fileStream = null, bool writing = false)
 	{
@@ -220,14 +220,13 @@ public partial class LZW
 			Range = i + 1;
 		}
 
-		if (lastCode >= (uint)Math.Pow(2, MaxRange + 1))
+		if (lastCode >= (uint)Math.Pow(2, MaxRestrictedRange))
 			throw new OverflowException("Serialized database has exceeded the maximum capacity for restricted LZW compression.", new OverflowException());
 	}
 
 	/// <summary>
 	/// Formats an LZW code according to the current range, and writes it to the bit stream.
 	/// </summary>
-	/// <param name="code">The code to be written.</param>
 	private void WriteCode(uint code)
 	{
 		for (int i = 1; i <= Range; i++)
