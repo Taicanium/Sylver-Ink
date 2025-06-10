@@ -29,8 +29,12 @@ public static class DatabaseUtils
 	{
 		static object PanelLabel(TabItem item) => ((Label)((StackPanel)item.Header).Children[0]).Content;
 
-		var template = (DataTemplate)Application.Current.MainWindow.TryFindResource("DatabaseContentTemplate");
-		var control = (TabControl)Application.Current.MainWindow.FindName("DatabasesPanel");
+		if (Application.Current.MainWindow.TryFindResource("DatabaseContentTemplate") is not DataTemplate template)
+			return;
+
+		if (Application.Current.MainWindow.FindName("DatabasesPanel") is not TabControl control)
+			return;
+
 		var tabs = control.Items.Cast<TabItem>();
 
 		if (string.IsNullOrWhiteSpace(db.Name))
@@ -82,10 +86,17 @@ public static class DatabaseUtils
 
 	public static void RemoveDatabase(Database db)
 	{
-		var control = (TabControl)Application.Current.MainWindow.FindName("DatabasesPanel");
+		if (Application.Current.MainWindow.FindName("DatabasesPanel") is not TabControl control)
+			return;
+
+		if (control.SelectedItem is not TabItem item)
+			return;
+
+		if (item.Tag is not Database tabDB)
+			return;
 
 		for (int i = OpenQueries.Count - 1; i > -1; i--)
-			if (OpenQueries[i].ResultDatabase?.Equals((Database)((TabItem)control.SelectedItem).Tag) is true)
+			if (OpenQueries[i].ResultDatabase?.Equals(tabDB) is true)
 				OpenQueries[i].Close();
 
 		for (int i = Databases.Count - 1; i > -1; i--)
@@ -110,14 +121,19 @@ public static class DatabaseUtils
 
 	public static void SwitchDatabase(Database db)
 	{
-		var control = (TabControl)Application.Current.MainWindow.FindName("DatabasesPanel");
+		if (Application.Current.MainWindow.FindName("DatabasesPanel") is not TabControl control)
+			return;
+
 		foreach (TabItem item in control.Items)
 		{
-			if (((Database)item.Tag).Equals(db))
-			{
-				control.SelectedItem = item;
-				CurrentDatabase = (Database)item.Tag;
-			}
+			if (item.Tag is not Database tabDB)
+				continue;
+
+			if (!tabDB.Equals(db))
+				continue;
+
+			control.SelectedItem = item;
+			CurrentDatabase = tabDB;
 		}
 	}
 

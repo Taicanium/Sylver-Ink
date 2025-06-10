@@ -83,7 +83,7 @@ namespace SylverInk.XAML
 						break;
 				}
 			}
-			CurrentDatabase.Transmit(Network.MessageType.RecordUnlock, IntToBytes(Record.Index));
+			CurrentDatabase.Transmit(NetworkUtils.MessageType.RecordUnlock, IntToBytes(Record.Index));
 			PreviousOpenNote = Record;
 			Deconstruct();
 		}

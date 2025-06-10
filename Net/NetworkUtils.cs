@@ -17,7 +17,7 @@ namespace SylverInk.Net;
 /// <summary>
 /// Static helper functions serving common networking routines shared between NetClient and NetServer.
 /// </summary>
-public static class Network
+public static class NetworkUtils
 {
 	public enum IndicatorStatus
 	{
@@ -39,14 +39,14 @@ public static class Network
 	}
 
 	public static List<char> CodeValues { get; } = [.. Enumerable.Range(48, 10).Concat(Enumerable.Range(65, 26)).Concat(Enumerable.Range(97, 26)).Concat([33, 35, 36, 37]).Select(c => (char)c)];
+	public static string LoopbackCode { get; } = "Vm000G";
 	public static int TcpPort { get; } = 5192;
 	public static Dictionary<int, int> ValueCodes { get; } = new(CodeValues.Select(static (c, i) => new KeyValuePair<int, int>(c, i)));
 
 	public static string CodeFromAddress(IPAddress? Address, byte? Flags)
 	{
-		var workingList = Address?.GetAddressBytes() ?? [127, 0, 0, 1];
-		if (workingList.Length != 4)
-			return "Vm000G"; // Loopback
+		if (Address?.GetAddressBytes() is not byte[] workingList)
+			return LoopbackCode;
 
 		return string.Concat<char>([
 			CodeValues[(workingList[0] & 252) >> 2],
@@ -60,8 +60,7 @@ public static class Network
 
 	public static IPAddress CodeToAddress(string? Code, out byte? Flags)
 	{
-		var workingList = Code?.Select(c => ValueCodes[c]).ToList() ?? [0, 0, 0, 0, 0, 0];
-		if (workingList.Count != 6)
+		if (Code?.Select(c => ValueCodes[c]).ToList() is not List<int> workingList)
 		{
 			Flags = 0;
 			return IPAddress.Loopback;

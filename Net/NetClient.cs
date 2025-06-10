@@ -8,7 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using static SylverInk.CommonUtils;
-using static SylverInk.Net.Network;
+using static SylverInk.Net.NetworkUtils;
 using static SylverInk.Notes.DatabaseUtils;
 
 namespace SylverInk.Net;

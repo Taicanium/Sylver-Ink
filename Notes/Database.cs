@@ -65,7 +65,7 @@ public partial class Database : IDisposable
 			if (entry.Length > 0)
 				outBuffer.AddRange(Encoding.UTF8.GetBytes(entry));
 
-			Transmit(Network.MessageType.RecordAdd, [.. outBuffer]);
+			Transmit(NetworkUtils.MessageType.RecordAdd, [.. outBuffer]);
 		}
 
 		DeferUpdateRecentNotes();
@@ -88,7 +88,7 @@ public partial class Database : IDisposable
 		if (newVersion.Length > 0)
 			outBuffer.AddRange(Encoding.UTF8.GetBytes(newVersion));
 
-		Transmit(Network.MessageType.TextInsert, [.. outBuffer]);
+		Transmit(NetworkUtils.MessageType.TextInsert, [.. outBuffer]);
 	}
 
 	public void CreateRevision(NoteRecord record, string newVersion, bool local = true)
@@ -106,7 +106,7 @@ public partial class Database : IDisposable
 		if (newVersion.Length > 0)
 			outBuffer.AddRange(Encoding.UTF8.GetBytes(newVersion));
 
-		Transmit(Network.MessageType.TextInsert, [.. outBuffer]);
+		Transmit(NetworkUtils.MessageType.TextInsert, [.. outBuffer]);
 	}
 
 	public void DeleteRecord(int index, bool local = true)
@@ -114,7 +114,7 @@ public partial class Database : IDisposable
 		Controller.DeleteRecord(index);
 
 		if (local)
-			Transmit(Network.MessageType.RecordRemove, IntToBytes(index));
+			Transmit(NetworkUtils.MessageType.RecordRemove, IntToBytes(index));
 	}
 
 	public void DeleteRecord(NoteRecord record, bool local = true)
@@ -127,7 +127,7 @@ public partial class Database : IDisposable
 			Controller.DeleteRecord(index);
 
 			if (local)
-				Transmit(Network.MessageType.RecordRemove, IntToBytes(index));
+				Transmit(NetworkUtils.MessageType.RecordRemove, IntToBytes(index));
 		}
 	}
 
@@ -267,7 +267,7 @@ public partial class Database : IDisposable
 
 		if (local)
 		{
-			Transmit(Network.MessageType.RecordLock, [.. IntToBytes(index)]);
+			Transmit(NetworkUtils.MessageType.RecordLock, [.. IntToBytes(index)]);
 			return;
 		}
 
@@ -379,7 +379,7 @@ public partial class Database : IDisposable
 			outBuffer.InsertRange(8, Encoding.UTF8.GetBytes(oldText));
 			outBuffer.AddRange(Encoding.UTF8.GetBytes(newText));
 
-			Transmit(Network.MessageType.RecordReplace, [.. outBuffer]);
+			Transmit(NetworkUtils.MessageType.RecordReplace, [.. outBuffer]);
 		}
 
 		return Controller.Replace(oldText, newText);
@@ -445,7 +445,7 @@ public partial class Database : IDisposable
 		Controller.Sort(type);
 	}
 
-	public void Transmit(Network.MessageType type, byte[] data)
+	public void Transmit(NetworkUtils.MessageType type, byte[] data)
 	{
 		if (Client.Connected)
 			Client.Send(type, data);
@@ -461,7 +461,7 @@ public partial class Database : IDisposable
 
 		if (local)
 		{
-			Transmit(Network.MessageType.RecordUnlock, [.. IntToBytes(index)]);
+			Transmit(NetworkUtils.MessageType.RecordUnlock, [.. IntToBytes(index)]);
 			return;
 		}
 

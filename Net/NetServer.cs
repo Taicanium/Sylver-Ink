@@ -11,7 +11,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using static SylverInk.CommonUtils;
-using static SylverInk.Net.Network;
+using static SylverInk.Net.NetworkUtils;
 
 namespace SylverInk.Net;
 
@@ -43,8 +43,10 @@ public partial class NetServer : IDisposable
 
 		ServerTask.DoWork += async (sender, _) =>
 		{
-			var task = (BackgroundWorker?)sender;
-			while (!task?.CancellationPending is true)
+			if (sender is not BackgroundWorker task)
+				return;
+
+			while (!task.CancellationPending)
 			{
 				for (int i = Clients.Count - 1; i > -1; i--)
 				{
@@ -78,8 +80,10 @@ public partial class NetServer : IDisposable
 
 		WatchTask.DoWork += (sender, _) =>
 		{
-			var task = (BackgroundWorker?)sender;
-			while (!task?.CancellationPending is true)
+			if (sender is not BackgroundWorker task)
+				return;
+
+			while (!task.CancellationPending)
 			{
 				if (!DBServer.Pending())
 					continue;
@@ -148,7 +152,7 @@ public partial class NetServer : IDisposable
 
 	private async Task ReadFromStream(TcpClient client, Database DB)
 	{
-		var outBuffer = await Network.ReadFromStream(client, DB);
+		var outBuffer = await NetworkUtils.ReadFromStream(client, DB);
 
 		for (int i = Clients.Count - 1; i > -1; i--)
 		{
@@ -201,12 +205,11 @@ public partial class NetServer : IDisposable
 			return;
 		}
 
-		DBServer = new(IPAddress.Any, TcpPort);
-		DBServer.Server.ReceiveBufferSize = int.MaxValue;
-		DBServer.Server.SendBufferSize = int.MaxValue;
-
 		try
 		{
+			DBServer = new(IPAddress.Any, TcpPort);
+			DBServer.Server.ReceiveBufferSize = int.MaxValue;
+			DBServer.Server.SendBufferSize = int.MaxValue;
 			DBServer.Start(256);
 		}
 		catch
@@ -230,6 +233,6 @@ public partial class NetServer : IDisposable
 			return;
 
 		codePopup.IsOpen = true;
-		codeBox.Text = AddressCode ?? "Vm000G";
+		codeBox.Text = AddressCode ?? LoopbackCode;
 	}
 }

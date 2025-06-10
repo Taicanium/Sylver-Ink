@@ -145,6 +145,7 @@ public static class ImportUtils
 						{
 							tokenCounts.TryAdd(pBrute, tokenCounts[pattern] + 1);
 							frequencies.Remove(string.Empty);
+							tokenCounts.Remove(string.Empty);
 							continue;
 						}
 
@@ -155,7 +156,7 @@ public static class ImportUtils
 				}
 			}
 
-			if (frequencies.Count == 0)
+			if (string.IsNullOrWhiteSpace(frequencies.Keys.ElementAt(0)))
 				continue;
 
 			foreach (string key in frequencies.Keys)

@@ -63,7 +63,7 @@ public partial class SearchResult : Window
 		if (Edited)
 			this.SaveRecord();
 
-		ResultDatabase?.Transmit(Network.MessageType.RecordUnlock, IntToBytes(ResultRecord?.Index ?? 0));
+		ResultDatabase?.Transmit(NetworkUtils.MessageType.RecordUnlock, IntToBytes(ResultRecord?.Index ?? 0));
 
 		foreach (SearchResult result in OpenQueries)
 		{
@@ -85,7 +85,7 @@ public partial class SearchResult : Window
 		else
 		{
 			LastChangedLabel.Content = ResultRecord?.GetLastChange();
-			ResultDatabase?.Transmit(Network.MessageType.RecordUnlock, IntToBytes(ResultRecord?.Index ?? 0));
+			ResultDatabase?.Transmit(NetworkUtils.MessageType.RecordUnlock, IntToBytes(ResultRecord?.Index ?? 0));
 		}
 
 		try
