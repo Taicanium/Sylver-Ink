@@ -146,7 +146,10 @@ public static partial class CommonUtils
 			if (result.ResultDatabase is not Database rDB)
 				continue;
 
-			if (!(rDB.Equals(db) && rDB.Equals(record)))
+			if (result.ResultRecord is not NoteRecord rNote)
+				continue;
+
+			if (!(rDB.Equals(db) && rNote.Equals(record)))
 				continue;
 
 			result.Activate();
