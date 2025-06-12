@@ -130,23 +130,23 @@ public partial class MainWindow : Window, IDisposable
 			if (target is null)
 				continue;
 
-			if (target.HasRecord(iNote))
-			{
-				if (OpenQuery(target.GetRecord(iNote)) is not SearchResult result)
-					continue;
+			if (!target.HasRecord(iNote))
+				continue;
 
-				if (LastActiveNotesHeight.TryGetValue($"{target.Name}:{iNote}", out var openHeight))
-					result.Height = openHeight;
+			if (OpenQuery(target.GetRecord(iNote)) is not SearchResult result)
+				continue;
 
-				if (LastActiveNotesLeft.TryGetValue($"{target.Name}:{iNote}", out var openLeft))
-					result.Left = openLeft;
+			if (LastActiveNotesHeight.TryGetValue($"{target.Name}:{iNote}", out var openHeight))
+				result.Height = openHeight;
 
-				if (LastActiveNotesTop.TryGetValue($"{target.Name}:{iNote}", out var openTop))
-					result.Top = openTop;
+			if (LastActiveNotesLeft.TryGetValue($"{target.Name}:{iNote}", out var openLeft))
+				result.Left = openLeft;
 
-				if (LastActiveNotesWidth.TryGetValue($"{target.Name}:{iNote}", out var openWidth))
-					result.Width = openWidth;
-			}
+			if (LastActiveNotesTop.TryGetValue($"{target.Name}:{iNote}", out var openTop))
+				result.Top = openTop;
+
+			if (LastActiveNotesWidth.TryGetValue($"{target.Name}:{iNote}", out var openWidth))
+				result.Width = openWidth;
 		}
 
 		CanResize = true;
@@ -392,11 +392,11 @@ public partial class MainWindow : Window, IDisposable
 		if (!IsShuttingDown())
 			UpdatesChecked = true;
 
-		if (FirstRun)
-		{
-			DatabaseCount = 1;
-			await Database.Create(Path.Join(Subfolders["Databases"], DefaultDatabase, $"{DefaultDatabase}.sidb"));
-		}
+		if (!FirstRun)
+			return;
+
+		DatabaseCount = 1;
+		await Database.Create(Path.Join(Subfolders["Databases"], DefaultDatabase, $"{DefaultDatabase}.sidb"));
 	}
 
 	private void RegisterHotKeys()

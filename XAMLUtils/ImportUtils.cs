@@ -353,16 +353,16 @@ public static class ImportUtils
 			if (result == MessageBoxResult.Cancel)
 				return;
 
-			if (result == MessageBoxResult.Yes)
-			{
-				CurrentDatabase.MakeBackup(true);
-				CurrentDatabase.Erase();
-			}
-
 			if (!CurrentDatabase.Open(CommonUtils.Settings.ImportTarget))
 			{
 				MessageBox.Show($"Failed to import the selected file.", "Sylver Ink: Error", MessageBoxButton.OK);
 				return;
+			}
+
+			if (result == MessageBoxResult.Yes)
+			{
+				CurrentDatabase.MakeBackup(true);
+				CurrentDatabase.Erase();
 			}
 
 			CurrentDatabase.Initialize(false);

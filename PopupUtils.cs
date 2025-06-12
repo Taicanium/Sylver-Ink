@@ -32,11 +32,6 @@ public static class PopupUtils
 		if (CurrentDatabase is null)
 			return;
 
-		if (!window.RenameDatabase.IsOpen)
-			return;
-
-		window.RenameDatabase.IsOpen = false;
-
 		if (string.IsNullOrWhiteSpace(window.DatabaseNameBox.Text))
 			return;
 
@@ -62,6 +57,8 @@ public static class PopupUtils
 		}
 
 		CurrentDatabase.Rename(window.DatabaseNameBox.Text);
+
+		window.RenameDatabase.IsOpen = false;
 	}
 
 	public static void PopupRenameKeyDown(this MainWindow window, object? sender, KeyEventArgs e)

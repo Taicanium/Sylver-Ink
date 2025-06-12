@@ -52,9 +52,6 @@ public static class TextUtils
 						pointer = pointer.GetNextContextPosition(LogicalDirection.Forward);
 						break;
 				}
-
-				if (pointer is null)
-					continue;
 			}
 
 			return content.Trim();

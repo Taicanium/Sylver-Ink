@@ -101,7 +101,6 @@ public static partial class CommonUtils
 	/// <summary>
 	/// Dispatch a function with no arguments to the main thread for synchronous execution, and return the result of that execution.
 	/// </summary>
-	/// <typeparam name="T">Type of object returned by <paramref name="callback"/></typeparam>
 	/// <param name="callback">The function to be executed on the main thread</param>
 	public static T Concurrent<T>(Func<T> callback) => Application.Current.Dispatcher.Invoke(callback);
 
@@ -144,12 +143,15 @@ public static partial class CommonUtils
 
 		foreach (SearchResult result in OpenQueries)
 		{
-			if (result.ResultDatabase?.Equals(db) is true && result.ResultRecord?.Equals(record) is true)
-			{
-				result.Activate();
-				result.Focus();
-				return result;
-			}
+			if (result.ResultDatabase is not Database rDB)
+				continue;
+
+			if (!(rDB.Equals(db) && rDB.Equals(record)))
+				continue;
+
+			result.Activate();
+			result.Focus();
+			return result;
 		}
 
 		SearchResult resultWindow = new()
@@ -159,13 +161,13 @@ public static partial class CommonUtils
 			ResultText = record.ToXaml()
 		};
 
-		if (show)
-		{
-			resultWindow.Show();
-			OpenQueries.Add(resultWindow);
-			if (!record.Locked)
-				db?.Lock(record.Index, true);
-		}
+		if (!show)
+			return resultWindow;
+
+		resultWindow.Show();
+		OpenQueries.Add(resultWindow);
+		if (!record.Locked)
+			db?.Lock(record.Index, true);
 
 		DeferUpdateRecentNotes();
 

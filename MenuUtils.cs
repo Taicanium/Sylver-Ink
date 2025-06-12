@@ -147,19 +147,21 @@ public static class MenuUtils
 		if (sender is not TabControl control)
 			return;
 
-		if (control.Name.Equals("DatabasesPanel"))
-		{
-			if (control.SelectedItem is not TabItem item)
-				return;
+		if (!control.Name.Equals("DatabasesPanel"))
+			return;
 
-			var newDB = (Database)item.Tag;
-			if (newDB.Equals(CurrentDatabase))
-				return;
+		if (control.SelectedItem is not TabItem item)
+			return;
 
-			CurrentDatabase = newDB;
-			RecentNotesDirty = true;
-			CommonUtils.Settings.SearchResults.Clear();
-		}
+		if (item.Tag is not Database newDB)
+			return;
+
+		if (newDB.Equals(CurrentDatabase))
+			return;
+
+		CurrentDatabase = newDB;
+		RecentNotesDirty = true;
+		CommonUtils.Settings.SearchResults.Clear();
 
 		DeferUpdateRecentNotes();
 	}

@@ -57,11 +57,11 @@ static class UpdateHandler
 				if (!asset.AsObject().TryGetPropertyValue("browser_download_url", out var nValue))
 					continue;
 
-				if (nValue is null)
+				if (nValue?.ToString() is not string nString)
 					continue;
 
-				if (nValue.ToString().EndsWith(".msi"))
-					uriNode = nValue.ToString();
+				if (nString.EndsWith(".msi"))
+					uriNode = nString;
 			}
 
 			if (uriNode is null)

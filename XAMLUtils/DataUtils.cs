@@ -86,7 +86,7 @@ public static class DataUtils
 		{
 			Content = content,
 			Margin = new(0),
-			ToolTip = tooltip,
+			ToolTip = tooltip[..Math.Min(40, tooltip.Length)],
 		};
 	}
 
@@ -144,7 +144,7 @@ public static class DataUtils
 		await Task.Run(() =>
 		{
 			var DpiInfo = Concurrent(() => VisualTreeHelper.GetDpi(Application.Current.MainWindow));
-			var PixelRatio = CommonUtils.Settings.MainFontSize * DpiInfo.PixelsPerInchY * 0.013888888889;
+			var PixelRatio = CommonUtils.Settings.MainFontSize * DpiInfo.PixelsPerInchY / 72.0;
 			var LineHeight = PixelRatio * CommonUtils.Settings.MainTypeFace.FontFamily.LineSpacing;
 			var LineRatio = Math.Max(1.0, (WindowHeight / LineHeight) - 0.5);
 
