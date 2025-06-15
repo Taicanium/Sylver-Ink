@@ -26,7 +26,7 @@ public partial class ContextSettings : INotifyPropertyChanged
 	private string _importTarget = string.Empty;
 	private string _lastActiveDatabase = string.Empty;
 	private readonly List<string> _lastDatabases = [];
-	private int _lineTolerance = 0;
+	private int _lineTolerance;
 	private Brush? _listBackgound = Brushes.White;
 	private Brush? _listForegound = Brushes.Black;
 	private FontFamily? _mainFontFamily = new("Arial");

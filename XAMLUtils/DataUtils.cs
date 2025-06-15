@@ -1,4 +1,5 @@
 ﻿using SylverInk.Notes;
+using SylverInk.XAML;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -169,10 +170,10 @@ public static class DataUtils
 	{
 		foreach (var item in OpenTabs)
 		{
-			if (item.Tag is not NoteRecord tag)
+			if (item.Content is not NoteTab tab)
 				continue;
 
-			item.Header = GetRibbonHeader(tag);
+			item.Header = GetRibbonHeader(tab.Record);
 		}
 	}
 }
