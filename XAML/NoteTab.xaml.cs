@@ -32,7 +32,6 @@ namespace SylverInk.XAML
 
 			Concurrent(() => CurrentDatabase.DeleteRecord(Record));
 			Deconstruct();
-			DeferUpdateRecentNotes();
 		}
 
 		private void ClickNext(object sender, RoutedEventArgs e)
@@ -45,11 +44,12 @@ namespace SylverInk.XAML
 
 			NoteBox.Document = Record.GetDocument(RevisionIndex);
 			NoteBox.IsReadOnly = RevisionIndex != 0;
-			button.IsEnabled = RevisionIndex > 0;
 			PreviousButton.IsEnabled = RevisionIndex < Record.GetNumRevisions();
 			RevisionLabel.Content = (RevisionIndex == 0U ? "Entry last modified: " : $"Revision {Record.GetNumRevisions() - RevisionIndex} from ") + revisionTime;
 			SaveButton.Content = RevisionIndex == 0 ? "Save" : "Restore";
 			SaveButton.IsEnabled = !OriginalText.Equals(FlowDocumentToXaml(NoteBox.Document));
+
+			button.IsEnabled = RevisionIndex > 0;
 		}
 
 		private void ClickPrevious(object sender, RoutedEventArgs e)
@@ -60,13 +60,14 @@ namespace SylverInk.XAML
 			RevisionIndex += 1U;
 			string revisionTime = RevisionIndex == Record.GetNumRevisions() ? Record.GetCreated() : Record.GetRevisionTime(RevisionIndex);
 
+			NextButton.IsEnabled = RevisionIndex > 0;
 			NoteBox.Document = Record.GetDocument(RevisionIndex);
 			NoteBox.IsReadOnly = RevisionIndex != 0;
-			button.IsEnabled = RevisionIndex + 1 <= Record.GetNumRevisions();
 			RevisionLabel.Content = (RevisionIndex == Record.GetNumRevisions() ? "Entry created " : $"Revision {Record.GetNumRevisions() - RevisionIndex} from ") + revisionTime;
-			NextButton.IsEnabled = RevisionIndex > 0;
 			SaveButton.Content = "Restore";
 			SaveButton.IsEnabled = !OriginalText.Equals(FlowDocumentToXaml(NoteBox.Document));
+
+			button.IsEnabled = RevisionIndex + 1 <= Record.GetNumRevisions();
 		}
 
 		private void ClickReturn(object sender, RoutedEventArgs e)
@@ -96,10 +97,10 @@ namespace SylverInk.XAML
 			CurrentDatabase.CreateRevision(Record, FlowDocumentToXaml(NoteBox.Document));
 			DeferUpdateRecentNotes();
 
-			RevisionIndex = 0U;
+			NextButton.IsEnabled = false;
 			NoteBox.IsEnabled = true;
 			PreviousButton.IsEnabled = true;
-			NextButton.IsEnabled = false;
+			RevisionIndex = 0U;
 			RevisionLabel.Content = "Entry last modified: " + Record.GetLastChange();
 			button.IsEnabled = false;
 		}
@@ -110,17 +111,12 @@ namespace SylverInk.XAML
 				return;
 
 			NextButton.IsEnabled = false;
-			SaveButton.IsEnabled = false;
-			PreviousButton.IsEnabled = Record.GetNumRevisions() > 0;
-
-			if (Record.Locked)
-			{
-				NoteBox.IsEnabled = false;
-				RevisionLabel.Content = "Note locked by another user";
-			}
-
-			OriginalText = Record.ToXaml();
 			NoteBox.Document = Record.GetDocument();
+			NoteBox.IsEnabled = !Record.Locked;
+			OriginalText = Record.ToXaml();
+			PreviousButton.IsEnabled = Record.GetNumRevisions() > 0;
+			RevisionLabel.Content = Record.Locked ? "Note locked by another user" : Record.GetNumRevisions() == 0 ? $"Entry created: {Record.GetCreated()}" : $"Entry last modified: {Record.GetLastChange()}";
+			SaveButton.IsEnabled = false;
 
 			FinishedLoading = true;
 		}
