@@ -52,21 +52,21 @@ public static class ImportUtils
 
 		window.AdaptiveCheckBox.IsEnabled = false;
 		window.CloseButton.IsEnabled = false;
-		window.LTPanel.IsEnabled = false;
 		window.DoImport.IsEnabled = false;
+		window.LTPanel.IsEnabled = false;
 
 		window.AdaptiveImport = Adaptive;
-		if (!(Adaptive && await window.MeasureNotesAdaptive()))
-			await window.MeasureNotesManual();
+		if (!(Adaptive && await Task.Run(window.MeasureNotesAdaptive)))
+			await Task.Run(window.MeasureNotesManual);
 
 		window.ReportMeasurement();
 	}
 
 	/// <summary>
-	/// Attempt to detect recurring patterns in the incoming data that can be used to divide the data into notes. These patterns (referred to here as 'predicates') may consist of timestamps, headings, signatures, or other text structures consisting of letters, numbers, and symbols.
+	/// Attempt to detect recurring patterns in the incoming data that can be used to divide the data into notes. These patterns (referred to here as 'predicates') may consist of timestamps, headings, signatures, or other text structures consisting of letters, numbers, and symbols. Predicates must occur at the beginning of lines.
 	/// </summary>
 	/// <returns><c>true</c> if a predicate was successfully detected; <c>false</c> otherwise.</returns>
-	private static async Task<bool> MeasureNotesAdaptive(this Import window) => await Task.Run(() =>
+	private static bool MeasureNotesAdaptive(this Import window)
 	{
 		// Letters, numbers, spaces, and punctuation; respectively.
 		string[] classes = [@"\p{L}+", @"\p{Nd}+", @"[\p{Zs}\t]+", @"[\p{P}\p{S}]+"];
@@ -213,12 +213,12 @@ public static class ImportUtils
 		MessageBox.Show("Failed to autodetect the note format.", "Sylver Ink: Error", MessageBoxButton.OK);
 		window.AdaptivePredicate = string.Empty;
 		return false;
-	});
+	}
 
 	/// <summary>
 	/// Manual note measurement consists of dividing the incoming plaintext data by a strict number of blank lines appearing between entries. If a text file contains no empty lines, the entire file will be placed into one Sylver Ink note.
 	/// </summary>
-	private static async Task MeasureNotesManual(this Import window) => await Task.Run(() =>
+	private static void MeasureNotesManual(this Import window)
 	{
 		try
 		{
@@ -267,7 +267,7 @@ public static class ImportUtils
 		{
 			MessageBox.Show($"Could not open file: {CommonUtils.Settings.ImportTarget}", "Sylver Ink: Error", MessageBoxButton.OK, MessageBoxImage.Error);
 		}
-	});
+	}
 
 	/// <summary>
 	/// Importing plaintext data proceeds similarly to measuring it. In this method, however, the data is saved to newly created <c>NoteRecord</c>s instead of being discarded.
