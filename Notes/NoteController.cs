@@ -2,6 +2,7 @@
 using SylverInk.XAMLUtils;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -39,7 +40,7 @@ public partial class NoteController : IDisposable
 	public bool Loaded { get; set; }
 	public string? Name { get; set; }
 	public int RecordCount => Records.Count;
-	public string? UUID { get; set; } = MakeUUID(UUIDType.Database);
+	public string UUID { get; set; } = MakeUUID(UUIDType.Database);
 	public Dictionary<string, double> WordPercentages { get; } = [];
 
 	private int NextIndex
@@ -150,7 +151,7 @@ public partial class NoteController : IDisposable
 		}
 
 		if (Format >= 7)
-			UUID = _serializer?.ReadString();
+			UUID = _serializer?.ReadString() ?? MakeUUID(UUIDType.Database);
 
 		if (!_serializer?.Headless is true)
 			Name = _serializer?.ReadString();
@@ -176,6 +177,33 @@ public partial class NoteController : IDisposable
 		GC.SuppressFinalize(this);
 	}
 
+	public override bool Equals(object? obj)
+	{
+		if (obj is Database otherDB)
+		{
+			if (!otherDB.Name?.Equals(Name) is true)
+				return false;
+
+			if (!otherDB.UUID.Equals(UUID))
+				return false;
+
+			return true;
+		}
+
+		if (obj is NoteController otherController)
+		{
+			if (!otherController.Name?.Equals(Name) is true)
+				return false;
+
+			if (!otherController.UUID.Equals(UUID))
+				return false;
+
+			return true;
+		}
+
+		return false;
+	}
+
 	public void EraseDatabase()
 	{
 		PropagateIndices();
@@ -197,6 +225,8 @@ public partial class NoteController : IDisposable
 
 		return string.Empty;
 	}
+
+	public override int GetHashCode() => int.Parse(UUID.Replace("-", string.Empty)[^8..], NumberStyles.HexNumber, NumberFormatInfo.InvariantInfo);
 
 	public NoteRecord GetRecord(int RecordIndex) => RecordIndex < Records.Count && RecordIndex > -1 ? Records[RecordIndex] : new();
 
@@ -221,7 +251,7 @@ public partial class NoteController : IDisposable
 	public void InitializeRecords(bool newDatabase = true)
 	{
 		for (int i = (OpenQueries ?? []).Count; i > 0; i--)
-			if (Equals(OpenQueries?[i - 1].ResultDatabase))
+			if (UUID.Equals(OpenQueries?[i - 1].ResultDatabase?.UUID))
 				OpenQueries?[i - 1].Close();
 
 		if (newDatabase)

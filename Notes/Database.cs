@@ -29,7 +29,7 @@ public partial class Database : IDisposable
 	public string? Name { get => Controller.Name; set => Controller.Name = value; }
 	public int RecordCount => Controller.RecordCount;
 	public NetServer Server { get; private set; }
-	public string? UUID { get => Controller.UUID; set => Controller.UUID = value; }
+	public string UUID { get => Controller.UUID; set => Controller.UUID = value; }
 	public Dictionary<string, double> WordPercentages => Controller.WordPercentages;
 
 	public Database()
@@ -139,6 +139,33 @@ public partial class Database : IDisposable
 		GC.SuppressFinalize(this);
 	}
 
+	public override bool Equals(object? obj)
+	{
+		if (obj is Database otherDB)
+		{
+			if (!otherDB.Name?.Equals(Name) is true)
+				return false;
+
+			if (!otherDB.UUID.Equals(UUID))
+				return false;
+
+			return true;
+		}
+
+		if (obj is NoteController otherController)
+		{
+			if (!otherController.Name?.Equals(Name) is true)
+				return false;
+
+			if (!otherController.UUID.Equals(UUID))
+				return false;
+
+			return true;
+		}
+
+		return false;
+	}
+
 	public void Erase()
 	{
 		if (Client.Connected || Server.Serving)
@@ -163,6 +190,8 @@ public partial class Database : IDisposable
 		Created = CreatedObject.ToBinary();
 		return CreatedObject.ToString(DateFormat, CultureInfo.InvariantCulture);
 	}
+
+	public override int GetHashCode() => int.Parse(UUID.Replace("-", string.Empty)[^8..], NumberStyles.HexNumber, NumberFormatInfo.InvariantInfo);
 
 	public object GetHeader()
 	{

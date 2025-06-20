@@ -47,7 +47,7 @@ public partial class NoteTab : UserControl
 		PreviousButton.IsEnabled = RevisionIndex < Record.GetNumRevisions();
 		RevisionLabel.Content = (RevisionIndex == 0U ? "Entry last modified: " : $"Revision {Record.GetNumRevisions() - RevisionIndex} from ") + revisionTime;
 		SaveButton.Content = RevisionIndex == 0 ? "Save" : "Restore";
-		SaveButton.IsEnabled = !OriginalText.Equals(FlowDocumentToXaml(NoteBox.Document));
+		SaveButton.IsEnabled = true;
 
 		button.IsEnabled = RevisionIndex > 0;
 	}
@@ -65,7 +65,7 @@ public partial class NoteTab : UserControl
 		NoteBox.IsReadOnly = RevisionIndex != 0;
 		RevisionLabel.Content = (RevisionIndex == Record.GetNumRevisions() ? "Entry created " : $"Revision {Record.GetNumRevisions() - RevisionIndex} from ") + revisionTime;
 		SaveButton.Content = "Restore";
-		SaveButton.IsEnabled = !OriginalText.Equals(FlowDocumentToXaml(NoteBox.Document));
+		SaveButton.IsEnabled = true;
 
 		button.IsEnabled = RevisionIndex + 1 <= Record.GetNumRevisions();
 	}
@@ -161,9 +161,9 @@ public partial class NoteTab : UserControl
 
 	private void NoteBox_TextChanged(object sender, TextChangedEventArgs e)
 	{
-		if (sender is not RichTextBox box)
+		if (sender is not RichTextBox)
 			return;
 
-		SaveButton.IsEnabled = !OriginalText.Equals(FlowDocumentToXaml(box.Document));
+		SaveButton.IsEnabled = true;
 	}
 }

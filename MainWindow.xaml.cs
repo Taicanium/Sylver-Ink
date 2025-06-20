@@ -82,14 +82,6 @@ public partial class MainWindow : Window, IDisposable
 
 	private void Drag(object? sender, MouseButtonEventArgs e) => DragMove();
 
-	private void ExitComplete(object? sender, RunWorkerCompletedEventArgs e)
-	{
-		DatabaseChanged = false;
-		MainGrid.IsEnabled = true;
-		CommonUtils.Settings.Save();
-		Application.Current.Shutdown();
-	}
-
 	private async void HandleCheckInit()
 	{
 		using var tokenSource = new CancellationTokenSource();
@@ -274,7 +266,7 @@ public partial class MainWindow : Window, IDisposable
 		}
 	}
 
-	private void MainWindow_Closing(object? sender, CancelEventArgs e)
+	private async void MainWindow_Closing(object? sender, CancelEventArgs e)
 	{
 		if (!_ABORT)
 			CommonUtils.Settings.Save();
@@ -297,10 +289,11 @@ public partial class MainWindow : Window, IDisposable
 				foreach (Database db in Databases)
 					Erase(GetLockFile(db.DBFile));
 
-				BackgroundWorker exitTask = new();
-				exitTask.DoWork += (_, _) => SaveDatabases();
-				exitTask.RunWorkerCompleted += ExitComplete;
-				exitTask.RunWorkerAsync();
+				await SaveDatabases();
+
+				DatabaseChanged = false;
+				CommonUtils.Settings.Save();
+				Application.Current.Shutdown();
 				return;
 			case MessageBoxResult.No:
 				foreach (Database db in Databases)

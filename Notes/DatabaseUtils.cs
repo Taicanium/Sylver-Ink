@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using static SylverInk.CommonUtils;
@@ -113,10 +114,10 @@ public static class DatabaseUtils
 		DeferUpdateRecentNotes();
 	}
 
-	public static void SaveDatabases()
+	public static async Task SaveDatabases()
 	{
 		foreach (Database db in Databases)
-			db.Save();
+			await Task.Run(db.Save);
 	}
 
 	public static void SwitchDatabase(Database db)

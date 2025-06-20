@@ -1,4 +1,5 @@
-﻿using System.Windows.Documents;
+﻿using System.Text;
+using System.Windows.Documents;
 using System.Windows.Markup;
 
 namespace SylverInk.XAMLUtils;
@@ -8,58 +9,38 @@ namespace SylverInk.XAMLUtils;
 /// </summary>
 public static class TextUtils
 {
+	public static string FlowDocumentPreview(FlowDocument? document)
+	{
+		if (document is null)
+			return string.Empty;
+
+		if (!document.IsInitialized)
+			return string.Empty;
+
+		StringBuilder content = new();
+		var pointer = document.ContentStart;
+
+		while (pointer is not null && document.ContentStart.GetOffsetToPosition(pointer) < 250)
+			pointer = TranslatePointer(pointer, ref content);
+
+		return content.ToString().Trim();
+	}
+
 	public static string FlowDocumentToPlaintext(FlowDocument? document)
 	{
-		try
-		{
-			if (document is null)
-				return string.Empty;
-
-			if (!document.IsInitialized)
-				return string.Empty;
-
-			var begun = false;
-			var content = string.Empty;
-			var pointer = document.ContentStart;
-
-			while (pointer is not null && pointer.GetPointerContext(LogicalDirection.Forward) != TextPointerContext.None)
-			{
-				switch (pointer.GetPointerContext(LogicalDirection.Forward))
-				{
-					case TextPointerContext.Text:
-						var runText = pointer.GetTextInRun(LogicalDirection.Forward);
-
-						// Xaml escape sequences aren't handled by XamlReader.Parse, which is very frustrating.
-						runText = runText.Replace("{}{", "{");
-
-						content += runText;
-						pointer = pointer.GetPositionAtOffset(pointer.GetTextRunLength(LogicalDirection.Forward));
-						break;
-					case TextPointerContext.ElementStart:
-						if (pointer.GetAdjacentElement(LogicalDirection.Forward) is Paragraph)
-						{
-							if (begun)
-								content += "\r\n\r\n";
-							begun = true;
-						}
-
-						if (pointer.GetAdjacentElement(LogicalDirection.Forward) is LineBreak)
-							content += "\r\n";
-
-						pointer = pointer.GetNextContextPosition(LogicalDirection.Forward);
-						break;
-					default:
-						pointer = pointer.GetNextContextPosition(LogicalDirection.Forward);
-						break;
-				}
-			}
-
-			return content.Trim();
-		}
-		catch
-		{
+		if (document is null)
 			return string.Empty;
-		}
+
+		if (!document.IsInitialized)
+			return string.Empty;
+
+		StringBuilder content = new();
+		var pointer = document.ContentStart;
+
+		while (pointer is not null)
+			pointer = TranslatePointer(pointer, ref content);
+
+		return content.ToString().Trim();
 	}
 
 	public static string FlowDocumentToXaml(FlowDocument document)
@@ -96,6 +77,36 @@ public static class TextUtils
 	}
 
 	public static string PlaintextToXaml(string content) => FlowDocumentToXaml(PlaintextToFlowDocument(new(), content));
+
+	private static TextPointer? TranslatePointer(TextPointer pointer, ref StringBuilder content)
+	{
+		switch (pointer.GetPointerContext(LogicalDirection.Forward))
+		{
+			case TextPointerContext.None:
+				return null;
+			case TextPointerContext.Text:
+				var runText = pointer.GetTextInRun(LogicalDirection.Forward);
+
+				// Xaml escape sequences aren't handled by XamlReader.Parse, which is very frustrating.
+				content.Append(runText.Replace("{}{", "{"));
+
+				return pointer.GetPositionAtOffset(pointer.GetTextRunLength(LogicalDirection.Forward));
+			case TextPointerContext.ElementStart:
+				var element = pointer.GetAdjacentElement(LogicalDirection.Forward);
+
+				if (element is Paragraph && content.Length > 0)
+				{
+					content.AppendLine();
+					content.AppendLine();
+				}
+				else if (element is LineBreak)
+					content.AppendLine();
+
+				return pointer.GetNextContextPosition(LogicalDirection.Forward);
+			default:
+				return pointer.GetNextContextPosition(LogicalDirection.Forward);
+		}
+	}
 
 	public static FlowDocument XamlToFlowDocument(string xaml)
 	{

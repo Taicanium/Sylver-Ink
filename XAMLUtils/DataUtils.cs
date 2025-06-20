@@ -87,7 +87,7 @@ public static class DataUtils
 		{
 			Content = content,
 			Margin = new(0),
-			ToolTip = tooltip[..Math.Min(40, tooltip.Length)],
+			ToolTip = tooltip[..Math.Min(40, tooltip.Length)]
 		};
 	}
 

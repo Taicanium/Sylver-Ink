@@ -133,7 +133,7 @@ public partial class Serializer : IDisposable
 	/// <summary>
 	/// Initialize the serializer's underlying stream for reading.
 	/// </summary>
-	/// <param name="path">The path to a file to encapsulate in the underlying <c>FileStream</c>. May be <c>null</c> if <paramref name="inMemory"/> is not <c>null</c>.</param>
+	/// <param name="path">The path to a file to encapsulate in the underlying <c>FileStream</c>. May be <c>null</c> if and only if <paramref name="inMemory"/> is not <c>null</c>.</param>
 	/// <param name="inMemory">If not <c>null</c>, the engine will be initialized with an underlying <c>MemoryStream</c> with <paramref name="inMemory"/> as its buffer, instead of a <c>FileStream</c>.</param>
 	/// <returns></returns>
 	public bool OpenRead(string? path, List<byte>? inMemory = null)
@@ -159,7 +159,7 @@ public partial class Serializer : IDisposable
 	/// <summary>
 	/// Initialize the serializer's underlying stream for writing.
 	/// </summary>
-	/// <param name="path">The path to a file to encapsulate in the underlying <c>FileStream</c>. May be <c>null</c> if <paramref name="inMemory"/> is <c>true</c>.</param>
+	/// <param name="path">The path to a file to encapsulate in the underlying <c>FileStream</c>. May be <c>null</c> if and only if <paramref name="inMemory"/> is <c>true</c>.</param>
 	/// <param name="inMemory">If <c>true</c>, the engine will be initialized with an underlying <c>MemoryStream</c>, instead of a <c>FileStream</c>.</param>
 	/// <returns></returns>
 	public bool OpenWrite(string? path, bool inMemory = false)

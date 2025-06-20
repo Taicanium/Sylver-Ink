@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
@@ -12,11 +13,11 @@ namespace SylverInk.XAMLUtils;
 
 public static class ImportUtils
 {
-	private static void AppendLine(ref string RecordData, string Line, int LineIndex)
+	private static void AppendLine(ref StringBuilder RecordData, string line, int lineIndex)
 	{
-		if (LineIndex > 0)
-			RecordData += "\r\n";
-		RecordData += Line;
+		if (lineIndex > 0)
+			RecordData.AppendLine();
+		RecordData.Append(line);
 	}
 
 	private static void FinishImport(this Import window)
@@ -185,7 +186,7 @@ public static class ImportUtils
 
 		if (!string.IsNullOrWhiteSpace(window.AdaptivePredicate.Trim()))
 		{
-			string recordData = string.Empty;
+			StringBuilder recordData = new();
 			window.RunningAverage = 0.0;
 			window.RunningCount = 0;
 
@@ -194,13 +195,14 @@ public static class ImportUtils
 				var line = window.DataLines[i].Trim();
 				if (Regex.IsMatch(line, window.AdaptivePredicate))
 				{
-					if (!string.IsNullOrWhiteSpace(recordData.Trim()))
+					if (recordData.Length > 0)
 					{
 						window.RunningAverage += recordData.Length;
 						window.RunningCount++;
 					}
 
-					recordData = line;
+					recordData.Clear();
+					recordData.Append(line);
 				}
 				else
 					AppendLine(ref recordData, line, i);
@@ -227,46 +229,46 @@ public static class ImportUtils
 				CommonUtils.Settings.ImportTarget = string.Empty;
 				return;
 			}
-
-			int blankCount = 0;
-			string recordData = string.Empty;
-			window.RunningAverage = 0.0;
-			window.RunningCount = 0;
-
-			for (int i = 0; i < window.DataLines.Count; i++)
-			{
-				var line = window.DataLines[i];
-				AppendLine(ref recordData, line, i);
-
-				if (line.Trim().Length == 0)
-					blankCount++;
-				else
-					blankCount = 0;
-
-				if (i % 100 == 0)
-					CommonUtils.Settings.ImportData = $"{i * 100.0 / window.DataLines.Count:N2}% scanned...";
-
-				if (string.IsNullOrWhiteSpace(recordData) || blankCount < CommonUtils.Settings.LineTolerance)
-					continue;
-
-				blankCount = 0;
-				window.RunningAverage += recordData.Length;
-				recordData = string.Empty;
-				window.RunningCount++;
-			}
-
-			if (!string.IsNullOrWhiteSpace(recordData))
-			{
-				window.RunningAverage += recordData.Length;
-				window.RunningCount++;
-			}
-
-			window.RunningAverage /= window.RunningCount;
 		}
 		catch
 		{
 			MessageBox.Show($"Could not open file: {CommonUtils.Settings.ImportTarget}", "Sylver Ink: Error", MessageBoxButton.OK, MessageBoxImage.Error);
 		}
+
+		int blankCount = 0;
+		StringBuilder recordData = new();
+		window.RunningAverage = 0.0;
+		window.RunningCount = 0;
+
+		for (int i = 0; i < window.DataLines.Count; i++)
+		{
+			var line = window.DataLines[i];
+			AppendLine(ref recordData, line, i);
+
+			if (line.Trim().Length == 0)
+				blankCount++;
+			else
+				blankCount = 0;
+
+			if (i % 100 == 0)
+				CommonUtils.Settings.ImportData = $"{i * 100.0 / window.DataLines.Count:N2}% scanned...";
+
+			if (recordData.Length == 0 || blankCount < CommonUtils.Settings.LineTolerance)
+				continue;
+
+			blankCount = 0;
+			window.RunningAverage += recordData.Length;
+			recordData.Clear();
+			window.RunningCount++;
+		}
+
+		if (recordData.Length > 0)
+		{
+			window.RunningAverage += recordData.Length;
+			window.RunningCount++;
+		}
+
+		window.RunningAverage /= window.RunningCount;
 	}
 
 	/// <summary>
@@ -280,7 +282,7 @@ public static class ImportUtils
 		int blankCount = 0;
 		DelayVisualUpdates = true;
 		window.Imported = 0;
-		string recordData = string.Empty;
+		StringBuilder recordData = new();
 
 		for (int i = 0; i < window.DataLines.Count; i++)
 		{
@@ -288,11 +290,11 @@ public static class ImportUtils
 
 			if (window.AdaptiveImport)
 			{
-				if (Regex.IsMatch(line, window.AdaptivePredicate) && !string.IsNullOrWhiteSpace(recordData.Trim()))
+				if (Regex.IsMatch(line, window.AdaptivePredicate) && recordData.Length > 0)
 				{
-					CurrentDatabase.CreateRecord(recordData);
+					CurrentDatabase.CreateRecord(recordData.ToString());
 					window.Imported++;
-					recordData = string.Empty;
+					recordData.Clear();
 				}
 				AppendLine(ref recordData, line, i);
 				continue;
@@ -309,18 +311,18 @@ public static class ImportUtils
 			if (blankCount < CommonUtils.Settings.LineTolerance && i < window.DataLines.Count - 1)
 				continue;
 
-			if (string.IsNullOrWhiteSpace(recordData))
+			if (recordData.Length == 0)
 				continue;
 
-			CurrentDatabase.CreateRecord(recordData);
+			CurrentDatabase.CreateRecord(recordData.ToString());
 			window.Imported++;
-			recordData = string.Empty;
+			recordData.Clear();
 			blankCount = 0;
 		}
 
-		if (!string.IsNullOrWhiteSpace(recordData))
+		if (recordData.Length > 0)
 		{
-			CurrentDatabase.CreateRecord(recordData);
+			CurrentDatabase.CreateRecord(recordData.ToString());
 			window.Imported++;
 		}
 

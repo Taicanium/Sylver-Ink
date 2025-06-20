@@ -94,7 +94,7 @@ public partial class SearchResult : Window
 		}
 		catch
 		{
-			PlaintextToFlowDocument(ResultBlock.Document, ResultText);
+			ResultBlock.Document = PlaintextToFlowDocument(ResultBlock.Document, ResultText);
 		}
 
 		Edited = false;

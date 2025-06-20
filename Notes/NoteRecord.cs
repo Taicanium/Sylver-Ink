@@ -58,7 +58,7 @@ public partial class NoteRecord
 
 	public string Preview
 	{
-		get => GetPlaintext().Replace("\r", string.Empty).Replace('\n', ' ').Replace('\t', ' ');
+		get => FlowDocumentPreview(XamlToFlowDocument(Reconstruct())).Replace("\r", string.Empty).Replace('\n', ' ').Replace('\t', ' ');
 	}
 
 	public string ShortChange
