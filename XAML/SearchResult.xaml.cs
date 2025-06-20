@@ -2,6 +2,8 @@
 using SylverInk.Notes;
 using SylverInk.XAMLUtils;
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -16,7 +18,9 @@ namespace SylverInk;
 /// </summary>
 public partial class SearchResult : Window
 {
+	private Task? AutosaveTask;
 	private bool Edited;
+	private bool NeedsAutosave;
 	private int OriginalRevisionCount;
 	private string OriginalText = string.Empty;
 	private DateTime TimeSinceAutosave = DateTime.UtcNow;
@@ -111,15 +115,29 @@ public partial class SearchResult : Window
 			if (record.Equals(ResultRecord) is true)
 				tabPanel.Items.RemoveAt(i);
 		}
+
+		AutosaveTask = Task.Factory.StartNew(() =>
+		{
+			do
+			{
+				if (NeedsAutosave)
+				{
+					if ((DateTime.UtcNow - TimeSinceAutosave).Seconds < 5)
+						continue;
+
+					this.Autosave();
+					NeedsAutosave = false;
+					RecentNotesDirty = true;
+					TimeSinceAutosave = DateTime.UtcNow;
+				}
+			} while (true);
+		}, TaskCreationOptions.LongRunning);
 	}
 
 	private void ResultBlock_TextChanged(object? sender, TextChangedEventArgs e)
 	{
 		Edited = true;
-		if ((DateTime.UtcNow - TimeSinceAutosave).Seconds < 5)
-			return;
-		RecentNotesDirty = true;
-		TimeSinceAutosave = DateTime.UtcNow;
+		NeedsAutosave = true;
 	}
 
 	private void ViewClick(object? sender, RoutedEventArgs e)
