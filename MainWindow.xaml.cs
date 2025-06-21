@@ -91,8 +91,7 @@ public partial class MainWindow : Window, IDisposable
 		{
 			do
 			{
-				InitComplete = DatabaseCount > 0
-					&& Databases.Count == DatabaseCount
+				InitComplete = Databases.Count > 0
 					&& SettingsLoaded
 					&& UpdatesChecked;
 
@@ -388,7 +387,6 @@ public partial class MainWindow : Window, IDisposable
 		if (!FirstRun)
 			return;
 
-		DatabaseCount = 1;
 		await Database.Create(Path.Join(Subfolders["Databases"], DefaultDatabase, $"{DefaultDatabase}.sidb"));
 	}
 

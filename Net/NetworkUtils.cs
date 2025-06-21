@@ -38,7 +38,12 @@ public static class NetworkUtils
 		TextInsert
 	}
 
-	public static List<char> CodeValues { get; } = [.. Enumerable.Range(48, 10).Concat(Enumerable.Range(65, 26)).Concat(Enumerable.Range(97, 26)).Concat([33, 35, 36, 37]).Select(c => (char)c)];
+	public static List<char> CodeValues { get; } = [..
+		Enumerable.Range(48, 10) // [0-9]
+		.Concat(Enumerable.Range(65, 26)) // [A-Z]
+		.Concat(Enumerable.Range(97, 26)) // [a-z]
+		.Concat([33, 35, 36, 37]) // ! # $ %
+		.Select(c => (char)c)];
 	public static string LoopbackCode { get; } = "Vm000G";
 	public static int TcpPort { get; } = 5192;
 	public static Dictionary<int, int> ValueCodes { get; } = new(CodeValues.Select(static (c, i) => new KeyValuePair<int, int>(c, i)));
@@ -198,7 +203,7 @@ public static class NetworkUtils
 		Indicator.Width = 12;
 		Indicator.InvalidateVisual();
 
-		DB.GetHeader();
+		Concurrent(DB.RefreshHeader);
 
 		DeferUpdateRecentNotes();
 	});

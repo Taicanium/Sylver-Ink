@@ -34,10 +34,10 @@ static class UpdateHandler
 			if (JsonSerializer.Deserialize<JsonArray>(await httpClient.GetStringAsync(GitReleasesURI))?[0]?.AsObject() is not JsonObject release)
 				return;
 
-			if (!release.TryGetPropertyValue("tag_name", out var releaseNode) || !release.TryGetPropertyValue("assets", out var assetNode))
+			if (!release.TryGetPropertyValue("tag_name", out var tagNode) || !release.TryGetPropertyValue("assets", out var assetNode))
 				return;
 
-			var releaseString = releaseNode?.ToString() ?? "0.0.0";
+			var releaseString = tagNode?.ToString() ?? "0.0.0";
 			if (releaseString.StartsWith('v'))
 				releaseString = releaseString[1..];
 

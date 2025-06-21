@@ -153,15 +153,16 @@ public partial class ContextSettings : INotifyPropertyChanged
 				case "LastDatabases":
 					FirstRun = false;
 					LastDatabases.AddRange(keyValue[1].Replace("?\\", DocumentsFolder).Split(';').Distinct().Where(File.Exists));
-					DatabaseCount = Math.Max(1, LastDatabases.Count);
 
 					foreach (var file in LastDatabases)
-						await Database.Create(file);
+					{
+						if (!Databases.Any(db => Path.GetFullPath(db.DBFile).Equals(Path.GetFullPath(file))))
+							await Database.Create(file);
+					}
 
-					if (LastDatabases.Count != 0 || Databases.Count != 0)
+					if (Databases.Count != 0)
 						break;
 
-					DatabaseCount = 1;
 					await Database.Create(Path.Join(Subfolders["Databases"], DefaultDatabase, $"{DefaultDatabase}.sidb"));
 					break;
 				case "ListBackground":

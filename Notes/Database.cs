@@ -40,13 +40,22 @@ public partial class Database : IDisposable
 		Server = new(this);
 	}
 
+	public Database(string DBFile)
+	{
+		Client = new(this);
+		Controller = new();
+		this.DBFile = DBFile;
+		Loaded = Controller.Loaded;
+		Server = new(this);
+	}
+
 	public static async Task Create(string dbFile)
 	{
 		try
 		{
-			Database db = new();
-			await Task.Run(() => db.Load(dbFile));
+			Database db = new(dbFile);
 			AddDatabase(db);
+			await Task.Run(db.Load);
 		}
 		catch
 		{
@@ -246,6 +255,16 @@ public partial class Database : IDisposable
 
 	public void Initialize(bool newDatabase = true) => Controller.InitializeRecords(newDatabase);
 
+	public bool Load()
+	{
+		if (string.IsNullOrWhiteSpace(DBFile))
+			return false;
+
+		Load(DBFile);
+		Concurrent(RefreshHeader);
+		return true;
+	}
+
 	public void Load(string dbFile)
 	{
 		var lockFile = GetLockFile(dbFile);
@@ -326,6 +345,13 @@ public partial class Database : IDisposable
 
 	public bool Open(string path, bool writing = false) => Controller.Open(path, writing);
 
+	public void RefreshHeader()
+	{
+		var panel = (TabControl)Application.Current.MainWindow.FindName("DatabasesPanel");
+		var currentTab = (TabItem)panel.SelectedItem;
+		currentTab.Header = GetHeader();
+	}
+
 	public void Rename(string newName)
 	{
 		var overwrite = false;
@@ -340,9 +366,7 @@ public partial class Database : IDisposable
 		var newFile = DBFile;
 		var newPath = Path.GetDirectoryName(newFile);
 
-		var panel = (TabControl)Application.Current.MainWindow.FindName("DatabasesPanel");
-		var currentTab = (TabItem)panel.SelectedItem;
-		currentTab.Header = GetHeader();
+		RefreshHeader();
 
 		if (!File.Exists(oldFile))
 			return;
@@ -359,7 +383,7 @@ public partial class Database : IDisposable
 				{
 					DBFile = oldFile;
 					Name = oldName;
-					currentTab.Header = GetHeader();
+					RefreshHeader();
 					return;
 				}
 				Directory.Delete(newPath, true);
@@ -380,7 +404,7 @@ public partial class Database : IDisposable
 			{
 				DBFile = oldFile;
 				Name = oldName;
-				currentTab.Header = GetHeader();
+				RefreshHeader();
 				return;
 			}
 			overwrite = true;
@@ -461,7 +485,7 @@ public partial class Database : IDisposable
 
 		Controller.SerializeRecords();
 
-		File.SetAttributes(targetFile, FileAttributes.Hidden);
+		File.SetAttributes(targetFile, File.GetAttributes(targetFile) | FileAttributes.Hidden);
 		Changed = true;
 	}
 
