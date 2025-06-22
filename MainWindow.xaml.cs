@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Pipes;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -102,7 +103,10 @@ public partial class MainWindow : Window, IDisposable
 
 		await initTask;
 
-		SwitchDatabase($"~N:{CommonUtils.Settings.LastActiveDatabase}");
+		if (string.IsNullOrEmpty(ShellDB))
+			SwitchDatabase($"~N:{CommonUtils.Settings.LastActiveDatabase}");
+		else
+			SwitchDatabase($"~F:{ShellDB}");
 
 		foreach (var openNote in LastActiveNotes)
 		{
@@ -218,16 +222,19 @@ public partial class MainWindow : Window, IDisposable
 			return;
 
 		var wideBreak = string.Empty;
-		foreach (string dbFile in CommonUtils.Settings.LastDatabases)
+
+		foreach (string dbFile in InitComplete ? Databases.Select(db => db.DBFile) : CommonUtils.Settings.LastDatabases)
 			if (Path.GetFullPath(dbFile).Equals(Path.GetFullPath(filename)))
 				wideBreak = Path.GetFullPath(dbFile);
 
 		if (string.IsNullOrWhiteSpace(wideBreak))
 		{
+			ShellDB = Path.GetFullPath(filename);
 			await Database.Create(filename);
 			return;
 		}
 
+		ShellDB = wideBreak;
 		SwitchDatabase($"~F:{wideBreak}");
 	}
 

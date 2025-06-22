@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -24,6 +25,7 @@ public static class DatabaseUtils
 	public static List<string> DatabaseFiles { get => [.. Databases.Select(db => db.DBFile)]; }
 	public static List<Database> Databases { get; } = [];
 	public static string DefaultDatabase { get; } = "New";
+	public static string ShellDB { get; set; } = string.Empty;
 
 	public static void AddDatabase(Database db)
 	{
@@ -146,7 +148,7 @@ public static class DatabaseUtils
 			var tag = div[0] switch
 			{
 				"~N" => db.Name,
-				"~F" => db.DBFile,
+				"~F" => Path.GetFullPath(db.DBFile),
 				_ => string.Empty
 			};
 
