@@ -216,11 +216,8 @@ public partial class Database : IDisposable
 				if (headerContent?.Length > 12)
 					headerContent = $"{headerContent[..10]}...";
 
-				label.Content = headerContent;
-
-				HeaderPanel.Children.RemoveAt(1);
-				HeaderPanel.Children.Add((Client.Active ? Client.Indicator : Server.Indicator) ?? new System.Windows.Shapes.Ellipse());
 				HeaderPanel.ToolTip = Name;
+				label.Content = headerContent;
 			});
 
 			return HeaderPanel;
@@ -261,7 +258,7 @@ public partial class Database : IDisposable
 			return false;
 
 		Load(DBFile);
-		Concurrent(RefreshHeader);
+		Concurrent(GetHeader);
 		return true;
 	}
 
@@ -345,13 +342,6 @@ public partial class Database : IDisposable
 
 	public bool Open(string path, bool writing = false) => Controller.Open(path, writing);
 
-	public void RefreshHeader()
-	{
-		var panel = (TabControl)Application.Current.MainWindow.FindName("DatabasesPanel");
-		var currentTab = (TabItem)panel.SelectedItem;
-		currentTab.Header = GetHeader();
-	}
-
 	public void Rename(string newName)
 	{
 		var overwrite = false;
@@ -366,7 +356,7 @@ public partial class Database : IDisposable
 		var newFile = DBFile;
 		var newPath = Path.GetDirectoryName(newFile);
 
-		RefreshHeader();
+		GetHeader();
 
 		if (!File.Exists(oldFile))
 			return;
@@ -383,7 +373,7 @@ public partial class Database : IDisposable
 				{
 					DBFile = oldFile;
 					Name = oldName;
-					RefreshHeader();
+					GetHeader();
 					return;
 				}
 				Directory.Delete(newPath, true);
@@ -404,7 +394,7 @@ public partial class Database : IDisposable
 			{
 				DBFile = oldFile;
 				Name = oldName;
-				RefreshHeader();
+				GetHeader();
 				return;
 			}
 			overwrite = true;

@@ -203,7 +203,7 @@ public static class NetworkUtils
 		Indicator.Width = 12;
 		Indicator.InvalidateVisual();
 
-		Concurrent(DB.RefreshHeader);
+		Concurrent(DB.GetHeader);
 
 		DeferUpdateRecentNotes();
 	});
