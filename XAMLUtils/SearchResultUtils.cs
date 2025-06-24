@@ -38,9 +38,9 @@ public static class SearchResultUtils
 
 	public static void Autosave(this SearchResult window)
 	{
-		var lockFile = GetLockFile();
+		var lockFile = GetLockFile(window.ResultDatabase?.DBFile);
 		Erase(lockFile);
-		CurrentDatabase.Save(lockFile);
+		window.ResultDatabase?.Save(lockFile);
 	}
 
 	public static void Drag(this SearchResult window, object? sender, MouseEventArgs e)
@@ -67,8 +67,7 @@ public static class SearchResultUtils
 		if (window.ResultRecord is null)
 			return;
 
-		window.ResultText = FlowDocumentToXaml(window.ResultBlock.Document);
-		window.ResultDatabase?.CreateRevision(window.ResultRecord, window.ResultText);
+		window.ResultDatabase?.CreateRevision(window.ResultRecord, FlowDocumentToXaml(window.ResultBlock.Document));
 		window.LastChangedLabel.Content = window.ResultRecord?.GetLastChange();
 		DeferUpdateRecentNotes();
 	}

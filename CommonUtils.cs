@@ -160,8 +160,7 @@ public static partial class CommonUtils
 		SearchResult resultWindow = new()
 		{
 			ResultDatabase = db,
-			ResultRecord = record,
-			ResultText = record.ToXaml()
+			ResultRecord = record
 		};
 
 		if (!show)

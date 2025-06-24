@@ -18,9 +18,9 @@ namespace SylverInk;
 /// </summary>
 public partial class SearchResult : Window
 {
-	private Task? AutosaveTask;
 	private bool Edited;
 	private bool NeedsAutosave;
+	private int OriginalBlockCount = -1;
 	private int OriginalRevisionCount;
 	private string OriginalText = string.Empty;
 	private DateTime TimeSinceAutosave = DateTime.UtcNow;
@@ -29,7 +29,6 @@ public partial class SearchResult : Window
 	public Point DragMouseCoords { get; private set; } = new(0, 0);
 	public Database? ResultDatabase { get; set; }
 	public NoteRecord? ResultRecord { get; set; }
-	public string ResultText { get; set; } = string.Empty;
 	public double SnapTolerance { get; } = 20.0;
 
 	public SearchResult()
@@ -48,7 +47,6 @@ public partial class SearchResult : Window
 					return;
 				case MessageBoxResult.No:
 					ResultBlock.Document = XamlToFlowDocument(OriginalText);
-					ResultText = OriginalText;
 					Edited = false;
 					for (int i = (ResultRecord?.GetNumRevisions() ?? 1) - 1; i >= OriginalRevisionCount; i--)
 						ResultRecord?.DeleteRevision(i);
@@ -92,52 +90,47 @@ public partial class SearchResult : Window
 			ResultDatabase?.Transmit(NetworkUtils.MessageType.RecordUnlock, IntToBytes(ResultRecord?.Index ?? 0));
 		}
 
-		try
-		{
-			ResultBlock.Document = XamlToFlowDocument(ResultText);
-		}
-		catch
-		{
-			ResultBlock.Document = PlaintextToFlowDocument(ResultBlock.Document, ResultText);
-		}
-
 		Edited = false;
+		ResultBlock.Document = ResultRecord?.GetDocument() ?? new();
+
+		OriginalBlockCount = ResultBlock.Document.Blocks.Count;
 		OriginalRevisionCount = ResultRecord?.GetNumRevisions() ?? 0;
-		OriginalText = ResultText;
+		OriginalText = FlowDocumentToXaml(ResultBlock.Document);
 
 		var tabPanel = GetChildPanel("DatabasesPanel");
 		for (int i = tabPanel.Items.Count - 1; i > 0; i--)
 		{
-			var item = (TabItem)tabPanel.Items[i];
+			if (tabPanel.Items[i] is not TabItem item)
+				continue;
+
 			if (item.Tag is not NoteRecord record)
 				continue;
 
 			if (record.Equals(ResultRecord) is true)
 				tabPanel.Items.RemoveAt(i);
 		}
-
-		AutosaveTask = Task.Factory.StartNew(() =>
-		{
-			do
-			{
-				if (NeedsAutosave)
-				{
-					if ((DateTime.UtcNow - TimeSinceAutosave).Seconds < 5)
-						continue;
-
-					this.Autosave();
-					NeedsAutosave = false;
-					RecentNotesDirty = true;
-					TimeSinceAutosave = DateTime.UtcNow;
-				}
-			} while (true);
-		}, TaskCreationOptions.LongRunning);
 	}
 
 	private void ResultBlock_TextChanged(object? sender, TextChangedEventArgs e)
 	{
-		Edited = true;
+		if (OriginalBlockCount == -1)
+			return;
+
+		Edited = ResultBlock.Document.Blocks.Count != OriginalBlockCount || !OriginalText.Equals(FlowDocumentToXaml(ResultBlock.Document));
+		if (NeedsAutosave)
+			return;
+
 		NeedsAutosave = true;
+		Task.Factory.StartNew(() =>
+		{
+			SpinWait.SpinUntil(() => (DateTime.UtcNow - TimeSinceAutosave).Seconds >= 5);
+
+			this.Autosave();
+			NeedsAutosave = false;
+			RecentNotesDirty = true;
+			TimeSinceAutosave = DateTime.UtcNow;
+			return;
+		}, TaskCreationOptions.LongRunning);
 	}
 
 	private void ViewClick(object? sender, RoutedEventArgs e)
