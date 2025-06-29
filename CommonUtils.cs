@@ -121,7 +121,6 @@ public static partial class CommonUtils
 	{
 		var time = DateTime.UtcNow;
 
-		var binary = time.ToBinary();
 		var micro = time.Microsecond;
 
 		var seed = (int)(time.Ticks & int.MaxValue);
@@ -133,7 +132,9 @@ public static partial class CommonUtils
 
 		mac |= (long)(rnd.Next() & 0xFFFF) << 32;
 
-		var uuid = $"{(binary >> 32) & 0xFFFF_FFFF:X8}-{(binary >> 16) & 0xFFFF:X4}-{binary & 0xFFFF:X4}-{(micro & 0xFF) >> 2:X2}{(byte)type:X2}-{mac & 0xFFFF_FFFF_FFFF:X12}";
+		var uuid = Guid.NewGuid().ToString();
+
+		uuid = uuid[..^17].ToUpper(CultureInfo.InvariantCulture) + $"{(byte)(micro % 256):X2}{(byte)type:X2}-{mac & 0xFFFF_FFFF_FFFF:X12}";
 		return uuid;
 	}
 

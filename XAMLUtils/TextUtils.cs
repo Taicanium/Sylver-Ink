@@ -1,13 +1,17 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Markup;
+using static SylverInk.XAMLUtils.ImageUtils;
 
 namespace SylverInk.XAMLUtils;
 
 /// <summary>
 /// Static functions serving conversion needs across FlowDocument objects, Xaml markup data, and unformatted plaintext.
 /// </summary>
-public static class TextUtils
+public static partial class TextUtils
 {
 	public static string FlowDocumentPreview(FlowDocument? document)
 	{
@@ -47,6 +51,24 @@ public static class TextUtils
 	{
 		var content = XamlWriter.Save(document);
 		content = content.Replace("{}{", "{");
+
+		var pointer = document.ContentStart;
+
+		while (pointer is not null)
+		{
+			if (pointer.GetPointerContext(LogicalDirection.Forward) == TextPointerContext.ElementStart
+				&& pointer.GetAdjacentElement(LogicalDirection.Forward) is BlockUIContainer container
+				&& container.Child is Image img)
+			{
+				var embed = EncodeEmbed(img);
+				var match = ContainerRegex().Match(content);
+
+				content = $"{content[..match.Index]}<Paragraph Tag=\"base64\">{Convert.ToBase64String(embed)}</Paragraph>{content[(match.Index + match.Length)..]}";
+			}
+
+			pointer = pointer.GetNextContextPosition(LogicalDirection.Forward);
+		}
+
 		return content;
 	}
 
@@ -113,10 +135,39 @@ public static class TextUtils
 		if (string.IsNullOrWhiteSpace(xaml))
 			return new();
 
-		xaml = xaml.Replace("{}{", "{");
+		var document = (FlowDocument)XamlReader.Parse(xaml.Replace("{}{", "{"));
+		var pointer = document.ContentStart;
 
-		return (FlowDocument)XamlReader.Parse(xaml);
+		while (pointer is not null)
+		{
+			if (pointer.GetPointerContext(LogicalDirection.Forward) == TextPointerContext.ElementStart
+				&& pointer.GetAdjacentElement(LogicalDirection.Forward) is Paragraph paragraph
+				&& paragraph.Tag is "base64")
+			{
+				while (string.IsNullOrEmpty(pointer.GetTextInRun(LogicalDirection.Forward)))
+					pointer = pointer.GetNextContextPosition(LogicalDirection.Forward);
+
+				var text = pointer.GetTextInRun(LogicalDirection.Forward);
+				var img = DecodeEmbed(text);
+
+				while (pointer.GetPointerContext(LogicalDirection.Forward) != TextPointerContext.ElementStart)
+					pointer = pointer.GetNextContextPosition(LogicalDirection.Backward);
+
+				pointer = pointer.GetNextContextPosition(LogicalDirection.Backward) ?? document.ContentStart;
+
+				BlockUIContainer container = new(img);
+				document.Blocks.InsertBefore(paragraph, container);
+				document.Blocks.Remove(paragraph);
+			}
+
+			pointer = pointer.GetNextContextPosition(LogicalDirection.Forward);
+		}
+
+		return document;
 	}
 
 	public static string XamlToPlaintext(string xaml) => FlowDocumentToPlaintext(XamlToFlowDocument(xaml));
+
+	[GeneratedRegex(@"<BlockUIContainer.*?</BlockUIContainer>")]
+	private static partial Regex ContainerRegex();
 }
