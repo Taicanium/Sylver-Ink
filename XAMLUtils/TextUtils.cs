@@ -147,8 +147,7 @@ public static partial class TextUtils
 				while (string.IsNullOrEmpty(pointer.GetTextInRun(LogicalDirection.Forward)))
 					pointer = pointer.GetNextContextPosition(LogicalDirection.Forward);
 
-				var text = pointer.GetTextInRun(LogicalDirection.Forward);
-				var img = DecodeEmbed(text);
+				var img = DecodeEmbed(pointer.GetTextInRun(LogicalDirection.Forward));
 
 				while (pointer.GetPointerContext(LogicalDirection.Forward) != TextPointerContext.ElementStart)
 					pointer = pointer.GetNextContextPosition(LogicalDirection.Backward);

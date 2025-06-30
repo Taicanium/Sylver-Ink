@@ -16,7 +16,6 @@ namespace SylverInk.XAML;
 public partial class NoteTab : UserControl
 {
 	private bool FinishedLoading { get; set; }
-	private string OriginalText { get; set; } = string.Empty;
 	public required NoteRecord Record { get; set; }
 	private uint RevisionIndex { get; set; }
 
@@ -113,7 +112,6 @@ public partial class NoteTab : UserControl
 		NextButton.IsEnabled = false;
 		NoteBox.Document = Record.GetDocument();
 		NoteBox.IsEnabled = !Record.Locked;
-		OriginalText = Record.ToXaml();
 		PreviousButton.IsEnabled = Record.GetNumRevisions() > 0;
 		RevisionLabel.Content = Record.Locked ? "Note locked by another user" : Record.GetNumRevisions() == 0 ? $"Entry created: {Record.GetCreated()}" : $"Entry last modified: {Record.GetLastChange()}";
 		SaveButton.IsEnabled = false;

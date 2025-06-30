@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using static SylverInk.CommonUtils;
 
 namespace SylverInk;
 
@@ -74,7 +75,7 @@ public partial class Properties : Window
 		{
 			for (int i = 0; i < DB?.RecordCount; i++)
 			{
-				var record = DB?.GetRecord(i).ToString();
+				var record = Concurrent(DB.GetRecord(i).ToString);
 				var length = record?.Length ?? 0;
 				var wordCount = NotWhitespace().Matches(record ?? string.Empty).Count;
 
