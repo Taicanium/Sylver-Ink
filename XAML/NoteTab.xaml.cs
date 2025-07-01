@@ -22,6 +22,7 @@ public partial class NoteTab : UserControl
 	public NoteTab()
 	{
 		InitializeComponent();
+		DataContext = CommonUtils.Settings;
 	}
 
 	private void ClickDelete(object sender, RoutedEventArgs e)
