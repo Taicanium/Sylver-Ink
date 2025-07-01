@@ -7,9 +7,9 @@ namespace SylverInk.FileIO;
 public partial class LZW
 {
 	private readonly List<byte> BitStream = [];
+	private readonly List<byte> ByteStream = [];
 	private readonly Dictionary<string, uint> Codes = [];
 	private Stream? FileStream;
-	private readonly List<byte> Incoming = [];
 	private uint LastCode;
 	private readonly int MaxRestrictedRange = 25;
 	private readonly int MaxRange = 13;
@@ -80,7 +80,7 @@ public partial class LZW
 			NextCode++;
 			W = entry;
 
-			if (Format >= 11 && NextCode > Math.Pow(2, MaxRange) - 2)
+			if (NextCode > Math.Pow(2, MaxRange) - 2 && Format >= 11)
 			{
 				WriteCode(256U);
 				InitDictionary();
@@ -104,13 +104,13 @@ public partial class LZW
 		if (LastCode == 257U)
 			return [];
 
-		while (Incoming.Count == 0 || Incoming.Count < byteCount)
+		while (ByteStream.Count == 0 || ByteStream.Count < byteCount)
 		{
 			LastCode = ReadCode();
 			if (LastCode == 257U)
 				break;
 
-			if (Format >= 11 && LastCode == 256U)
+			if (LastCode == 256U && Format >= 11)
 			{
 				InitDictionary();
 				ReadFirstCode();
@@ -121,16 +121,16 @@ public partial class LZW
 				entry = $"{W}{W[0]}";
 
 			for (int i = 0; i < entry.Length; i++)
-				Incoming.Add((byte)entry[i]);
+				ByteStream.Add((byte)entry[i]);
 
 			Packets.Add(NextCode++, $"{W}{entry[0]}");
 			W = entry;
 			UpdateRange(NextCode + 1);
 		}
 
-		var limit = Math.Min(byteCount, Incoming.Count);
-		var range = Incoming[..limit];
-		Incoming.RemoveRange(0, limit);
+		var limit = Math.Min(byteCount, ByteStream.Count);
+		var range = ByteStream[..limit];
+		ByteStream.RemoveRange(0, limit);
 		return [.. range];
 	}
 
@@ -203,14 +203,14 @@ public partial class LZW
 
 		W = Packets[LastCode];
 		for (int i = 0; i < W.Length; i++)
-			Incoming.Add((byte)W[i]);
+			ByteStream.Add((byte)W[i]);
 	}
 
 	/// <summary>
 	/// Checks for a need to dynamically expand the LZW code range, and expands it if needed.
 	/// </summary>
 	/// <param name="lastCode">The most recent code that was written to the LZW bit stream.</param>
-	/// <exception cref="OverflowException">The current implementation does not reset the LZW dictionary past a certain size. If it reaches that size, LZW compression ceases to be more efficient than plaintext.</exception>
+	/// <exception cref="OverflowException">Past implementations did not reset the LZW dictionary past a certain size. If it reaches that size, LZW compression ceases to be more computationally efficient than plaintext.</exception>
 	private void UpdateRange(uint lastCode)
 	{
 		for (int i = Range; i <= MaxRange; i++)
