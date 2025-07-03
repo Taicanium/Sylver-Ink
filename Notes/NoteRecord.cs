@@ -238,6 +238,8 @@ public partial class NoteRecord
 
 	public string GetLastChange() => GetLastChangeObject().ToLocalTime().ToString(DateFormat, CultureInfo.InvariantCulture);
 
+	public FlowDocument GetDocument() => XamlToFlowDocument(Reconstruct());
+
 	public FlowDocument GetDocument(uint backsteps = 0U) => XamlToFlowDocument(Reconstruct(backsteps));
 
 	public int GetNumRevisions() => Revisions.Count;

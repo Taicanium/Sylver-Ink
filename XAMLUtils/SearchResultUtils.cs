@@ -1,4 +1,6 @@
-﻿using SylverInk.XAML;
+﻿using SylverInk.Net;
+using SylverInk.Notes;
+using SylverInk.XAML;
 using System;
 using System.Windows;
 using System.Windows.Controls;
@@ -41,6 +43,45 @@ public static class SearchResultUtils
 		var lockFile = GetLockFile(window.ResultDatabase?.DBFile);
 		Erase(lockFile);
 		window.ResultDatabase?.Save(lockFile);
+	}
+
+	public static void Construct(this SearchResult window)
+	{
+		if (window.FinishedLoading)
+			return;
+
+		if (window.ResultRecord?.Locked is true)
+		{
+			window.LastChangedLabel.Content = "Locked by another user";
+			window.ResultBlock.IsEnabled = false;
+		}
+		else
+		{
+			window.LastChangedLabel.Content = window.ResultRecord?.GetLastChange();
+			window.ResultDatabase?.Transmit(NetworkUtils.MessageType.RecordUnlock, IntToBytes(window.ResultRecord?.Index ?? 0));
+		}
+
+		window.Edited = false;
+		window.ResultBlock.Document = window.ResultRecord?.GetDocument() ?? new();
+
+		window.OriginalBlockCount = window.ResultBlock.Document.Blocks.Count;
+		window.OriginalRevisionCount = window.ResultRecord?.GetNumRevisions() ?? 0;
+		window.OriginalText = FlowDocumentToXaml(window.ResultBlock.Document);
+
+		var tabPanel = GetChildPanel("DatabasesPanel");
+		for (int i = tabPanel.Items.Count - 1; i > 0; i--)
+		{
+			if (tabPanel.Items[i] is not TabItem item)
+				continue;
+
+			if (item.Tag is not NoteRecord record)
+				continue;
+
+			if (record.Equals(window.ResultRecord) is true)
+				tabPanel.Items.RemoveAt(i);
+		}
+
+		window.FinishedLoading = true;
 	}
 
 	public static void Drag(this SearchResult window, object? sender, MouseEventArgs e)

@@ -18,15 +18,16 @@ namespace SylverInk;
 /// </summary>
 public partial class SearchResult : Window
 {
-	private bool Edited;
 	private bool NeedsAutosave;
-	private int OriginalBlockCount = -1;
-	private int OriginalRevisionCount;
-	private string OriginalText = string.Empty;
 	private DateTime TimeSinceAutosave = DateTime.UtcNow;
 
 	public bool Dragging { get; private set; }
 	public Point DragMouseCoords { get; private set; } = new(0, 0);
+	public bool Edited { get; set; }
+	public bool FinishedLoading { get; set; }
+	public int OriginalBlockCount { get; set; } = -1;
+	public int OriginalRevisionCount { get; set; }
+	public string OriginalText { get; set; } = string.Empty;
 	public Database? ResultDatabase { get; set; }
 	public NoteRecord? ResultRecord { get; set; }
 	public double SnapTolerance { get; } = 20.0;
@@ -46,7 +47,6 @@ public partial class SearchResult : Window
 				case MessageBoxResult.Cancel:
 					return;
 				case MessageBoxResult.No:
-					ResultBlock.Document = XamlToFlowDocument(OriginalText);
 					Edited = false;
 					for (int i = (ResultRecord?.GetNumRevisions() ?? 1) - 1; i >= OriginalRevisionCount; i--)
 						ResultRecord?.DeleteRevision(i);
@@ -79,41 +79,12 @@ public partial class SearchResult : Window
 
 	private void Result_Loaded(object? sender, RoutedEventArgs e)
 	{
-		if (ResultRecord?.Locked is true)
-		{
-			LastChangedLabel.Content = "Locked by another user";
-			ResultBlock.IsEnabled = false;
-		}
-		else
-		{
-			LastChangedLabel.Content = ResultRecord?.GetLastChange();
-			ResultDatabase?.Transmit(NetworkUtils.MessageType.RecordUnlock, IntToBytes(ResultRecord?.Index ?? 0));
-		}
-
-		Edited = false;
-		ResultBlock.Document = ResultRecord?.GetDocument() ?? new();
-
-		OriginalBlockCount = ResultBlock.Document.Blocks.Count;
-		OriginalRevisionCount = ResultRecord?.GetNumRevisions() ?? 0;
-		OriginalText = FlowDocumentToXaml(ResultBlock.Document);
-
-		var tabPanel = GetChildPanel("DatabasesPanel");
-		for (int i = tabPanel.Items.Count - 1; i > 0; i--)
-		{
-			if (tabPanel.Items[i] is not TabItem item)
-				continue;
-
-			if (item.Tag is not NoteRecord record)
-				continue;
-
-			if (record.Equals(ResultRecord) is true)
-				tabPanel.Items.RemoveAt(i);
-		}
+		this.Construct();
 	}
 
 	private void ResultBlock_TextChanged(object? sender, TextChangedEventArgs e)
 	{
-		if (OriginalBlockCount == -1)
+		if (!FinishedLoading)
 			return;
 
 		Edited = ResultBlock.Document.Blocks.Count != OriginalBlockCount || !OriginalText.Equals(FlowDocumentToXaml(ResultBlock.Document));

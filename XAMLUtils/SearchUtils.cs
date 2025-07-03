@@ -2,6 +2,7 @@
 using System;
 using System.Threading.Tasks;
 using System.Windows.Documents;
+using static SylverInk.CommonUtils;
 
 namespace SylverInk.XAMLUtils;
 
@@ -28,7 +29,7 @@ public static class SearchUtils
 
 	private static async Task<bool> SearchRecord(this Search window, NoteRecord record) => await Task.Run(() =>
 	{
-		var document = record.GetDocument();
+		var document = Concurrent(record.GetDocument);
 		TextPointer? pointer = document.ContentStart;
 		while (pointer is not null && pointer.GetPointerContext(LogicalDirection.Forward) != TextPointerContext.None)
 		{

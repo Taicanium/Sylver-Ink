@@ -1,11 +1,14 @@
 ﻿using SylverInk.Net;
 using SylverInk.Notes;
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using static SylverInk.CommonUtils;
 using static SylverInk.Notes.DatabaseUtils;
 using static SylverInk.XAMLUtils.DataUtils;
+using static SylverInk.XAMLUtils.NoteTabUtils;
 using static SylverInk.XAMLUtils.TextUtils;
 
 namespace SylverInk.XAML;
@@ -15,9 +18,13 @@ namespace SylverInk.XAML;
 /// </summary>
 public partial class NoteTab : UserControl
 {
-	private bool FinishedLoading { get; set; }
+	public bool FinishedLoading { get; set; }
+	public bool NeedsAutosave { get; set; }
+	public int OriginalBlockCount { get; set; }
+	public string OriginalText { get; set; } = string.Empty;
 	public required NoteRecord Record { get; set; }
-	private uint RevisionIndex { get; set; }
+	public uint RevisionIndex { get; set; }
+	public DateTime TimeSinceAutosave { get; set; } = DateTime.UtcNow;
 
 	public NoteTab()
 	{
@@ -31,7 +38,7 @@ public partial class NoteTab : UserControl
 			return;
 
 		Concurrent(() => CurrentDatabase.DeleteRecord(Record));
-		Deconstruct();
+		this.Deconstruct();
 	}
 
 	private void ClickNext(object sender, RoutedEventArgs e)
@@ -86,7 +93,7 @@ public partial class NoteTab : UserControl
 		}
 		CurrentDatabase.Transmit(NetworkUtils.MessageType.RecordUnlock, IntToBytes(Record.Index));
 		PreviousOpenNote = Record;
-		Deconstruct();
+		this.Deconstruct();
 	}
 
 	private void ClickSave(object sender, RoutedEventArgs e)
@@ -105,64 +112,33 @@ public partial class NoteTab : UserControl
 		button.IsEnabled = false;
 	}
 
-	private void Construct(object sender, RoutedEventArgs e)
-	{
-		if (FinishedLoading)
-			return;
-
-		NextButton.IsEnabled = false;
-		NoteBox.Document = Record.GetDocument();
-		NoteBox.IsEnabled = !Record.Locked;
-		PreviousButton.IsEnabled = Record.GetNumRevisions() > 0;
-		RevisionLabel.Content = Record.Locked ? "Note locked by another user" : Record.GetNumRevisions() == 0 ? $"Entry created: {Record.GetCreated()}" : $"Entry last modified: {Record.GetLastChange()}";
-		SaveButton.IsEnabled = false;
-
-		FinishedLoading = true;
-	}
-
-	public void Deconstruct()
-	{
-		if (!Record.Locked)
-			GetDatabaseFromRecord(Record)?.Unlock(Record.Index, true);
-
-		var ChildPanel = GetChildPanel("DatabasesPanel");
-
-		for (int i = OpenTabs.Count - 1; i > -1; i--)
-		{
-			var item = OpenTabs[i];
-
-			if (item.Content is not NoteTab tab)
-				continue;
-
-			if (!tab.Record.Equals(Record))
-				continue;
-
-			OpenTabs.RemoveAt(i);
-			tab.Deconstruct();
-		}
-
-		for (int i = ChildPanel.Items.Count - 1; i > 0; i--)
-		{
-			var item = (TabItem)ChildPanel.Items[i];
-
-			if (item.Content is not NoteTab tab)
-				continue;
-
-			if (!tab.Record.Equals(Record))
-				continue;
-
-			if (ChildPanel.SelectedIndex == i)
-				ChildPanel.SelectedIndex = Math.Max(0, Math.Min(i - 1, ChildPanel.Items.Count - 1));
-
-			ChildPanel.Items.RemoveAt(i);
-		}
-	}
-
 	private void NoteBox_TextChanged(object sender, TextChangedEventArgs e)
 	{
+		if (!FinishedLoading)
+			return;
+
 		if (sender is not RichTextBox)
 			return;
 
-		SaveButton.IsEnabled = true;
+		SaveButton.IsEnabled = NoteBox.Document.Blocks.Count != OriginalBlockCount || !FlowDocumentToXaml(NoteBox.Document).Equals(OriginalText);
+		if (NeedsAutosave)
+			return;
+
+		NeedsAutosave = true;
+		Task.Factory.StartNew(() =>
+		{
+			SpinWait.SpinUntil(() => (DateTime.UtcNow - TimeSinceAutosave).Seconds >= 5);
+
+			this.Autosave();
+			NeedsAutosave = false;
+			RecentNotesDirty = true;
+			TimeSinceAutosave = DateTime.UtcNow;
+			return;
+		}, TaskCreationOptions.LongRunning);
+	}
+
+	private void NoteTab_Loaded(object sender, RoutedEventArgs e)
+	{
+		this.Construct();
 	}
 }

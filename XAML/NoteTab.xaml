@@ -6,7 +6,7 @@
 			 xmlns:local="clr-namespace:SylverInk.XAML" xmlns:sylverink="clr-namespace:SylverInk"
 			 mc:Ignorable="d"
 			 d:DataContext="{d:DesignInstance Type=sylverink:ContextSettings}"
-			 Loaded="Construct">
+			 Loaded="NoteTab_Loaded">
 	<UserControl.Resources>
 		<ResourceDictionary>
 			<Style x:Key="ToolbarButton" TargetType="Button">
