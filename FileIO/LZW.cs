@@ -13,6 +13,7 @@ public partial class LZW
 	private uint LastCode;
 	private readonly int MaxRestrictedRange = 25;
 	private readonly int MaxRange = 13;
+	private readonly int MaxWidth = (int)Math.Pow(2, 13) - 2;
 	private uint NextCode = 258U;
 	private bool Open;
 	private readonly Dictionary<uint, string> Packets = [];
@@ -37,10 +38,9 @@ public partial class LZW
 			WriteCode(0U);
 
 			byte[] bits = [.. BitStream];
-			var bitSize = bits.Length;
 			byte b = 0;
 			int j = 1;
-			for (int i = 0; i < bitSize; i++)
+			for (int i = 0; i < bits.Length; i++)
 			{
 				b += (byte)(bits[i] << 8 - j);
 				if (j++ != 8)
@@ -80,7 +80,7 @@ public partial class LZW
 			NextCode++;
 			W = entry;
 
-			if (NextCode > Math.Pow(2, MaxRange) - 2 && Format >= 11)
+			if (NextCode > MaxWidth && Format >= 11)
 			{
 				WriteCode(256U);
 				InitDictionary();
@@ -109,8 +109,7 @@ public partial class LZW
 			LastCode = ReadCode();
 			if (LastCode == 257U)
 				break;
-
-			if (LastCode == 256U && Format >= 11)
+			else if (LastCode == 256U && Format >= 11)
 			{
 				InitDictionary();
 				ReadFirstCode();
@@ -184,11 +183,11 @@ public partial class LZW
 				return 257U;
 
 			byte b = (byte)(n ?? 0);
-			for (int i = 1; i <= 8; i++)
+			for (int i = 0; i++ < 8;)
 				BitStream.Add((byte)(b >> 8 - i & 1));
 		}
 
-		for (int i = 1; i <= Range; i++)
+		for (int i = 0; i++ < Range;)
 			code += (uint)(BitStream[i - 1] << Range - i);
 		BitStream.RemoveRange(0, Range);
 
@@ -229,7 +228,7 @@ public partial class LZW
 	/// </summary>
 	private void WriteCode(uint code)
 	{
-		for (int i = 1; i <= Range; i++)
+		for (int i = 0; i++ < Range;)
 			BitStream.Add((byte)(code >> Range - i & 1));
 	}
 }
