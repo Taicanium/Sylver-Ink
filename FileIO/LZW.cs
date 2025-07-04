@@ -6,7 +6,7 @@ namespace SylverInk.FileIO;
 
 public partial class LZW
 {
-	private readonly List<byte> BitStream = [];
+	private readonly List<bool> BitStream = [];
 	private readonly List<byte> ByteStream = [];
 	private readonly Dictionary<string, uint> Codes = [];
 	private Stream? FileStream;
@@ -24,6 +24,8 @@ public partial class LZW
 	public int Format { get; private set; }
 	public List<byte> Outgoing { get; } = [];
 
+	private static byte BitToByte(bool b) => b ? (byte)1 : (byte)0;
+
 	/// <summary>
 	/// Resets the LZW state engine.
 	/// </summary>
@@ -37,12 +39,12 @@ public partial class LZW
 			WriteCode(257U);
 			WriteCode(0U);
 
-			byte[] bits = [.. BitStream];
+			bool[] bits = [.. BitStream];
 			byte b = 0;
 			int j = 1;
 			for (int i = 0; i < bits.Length; i++)
 			{
-				b += (byte)(bits[i] << 8 - j);
+				b += (byte)(BitToByte(bits[i]) << 8 - j);
 				if (j++ != 8)
 					continue;
 
@@ -184,11 +186,11 @@ public partial class LZW
 
 			byte b = (byte)(n ?? 0);
 			for (int i = 0; i++ < 8;)
-				BitStream.Add((byte)(b >> 8 - i & 1));
+				BitStream.Add((b >> 8 - i & 1) == 1);
 		}
 
 		for (int i = 0; i++ < Range;)
-			code += (uint)(BitStream[i - 1] << Range - i);
+			code += (uint)(BitToByte(BitStream[i - 1]) << Range - i);
 		BitStream.RemoveRange(0, Range);
 
 		return code;
@@ -229,6 +231,6 @@ public partial class LZW
 	private void WriteCode(uint code)
 	{
 		for (int i = 0; i++ < Range;)
-			BitStream.Add((byte)(code >> Range - i & 1));
+			BitStream.Add((code >> Range - i & 1) == 1);
 	}
 }
