@@ -86,7 +86,7 @@ public partial class Settings : Window
 			_ => Brushes.Transparent
 		};
 		CustomColor.Fill = color;
-		CustomColorBox.Text = BytesFromBrush(color, 3);
+		CustomColorBox.Text = BytesFromBrush(color)[2..8];
 	}
 
 	private void Drag(object? sender, MouseButtonEventArgs e) => DragMove();

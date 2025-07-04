@@ -13,7 +13,7 @@ namespace SylverInk.FileIO;
 /// <summary>
 /// Static functions serving specific needs in regards to file access.
 /// </summary>
-public static partial class FileUtils
+public static class FileUtils
 {
 	public static string DocumentsFolder { get; } = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Sylver Ink");
 	public static string SettingsFile { get; } = Path.Join(DocumentsFolder, "settings.sis");

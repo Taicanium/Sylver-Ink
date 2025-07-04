@@ -7,7 +7,7 @@ using System.Windows.Media.Imaging;
 
 namespace SylverInk.XAMLUtils;
 
-public static partial class ImageUtils
+public static class ImageUtils
 {
 	public static Image DecodeEmbed(string data)
 	{

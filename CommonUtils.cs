@@ -84,12 +84,10 @@ public static partial class CommonUtils
 		catch { return Brushes.Transparent; }
 	}
 
-	public static string BytesFromBrush(Brush? brush, int colors = 4)
+	public static string BytesFromBrush(Brush? brush)
 	{
-		var data = brush as SolidColorBrush;
-		if (colors == 4)
-			return $"{data?.Color.A:X2}{data?.Color.R:X2}{data?.Color.G:X2}{data?.Color.B:X2}";
-		return $"{data?.Color.R:X2}{data?.Color.G:X2}{data?.Color.B:X2}";
+		var scb = brush as SolidColorBrush;
+		return $"{scb?.Color.A:X2}{scb?.Color.R:X2}{scb?.Color.G:X2}{scb?.Color.B:X2}";
 	}
 
 	/// <summary>
