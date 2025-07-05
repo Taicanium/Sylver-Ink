@@ -175,6 +175,15 @@ public static partial class CommonUtils
 		return resultWindow;
 	}
 
+	public static int ShortFromBytes(byte[] data) =>
+		(data[0] << 8)
+		+ data[1];
+
+	public static byte[] ShortToBytes(short data) => [
+		(byte)((data >> 8) & 0xFF),
+		(byte)(data & 0xFF)
+	];
+
 	[GeneratedRegex(@"\((\p{Nd}+)\)$")]
 	public static partial Regex IndexDigits();
 }

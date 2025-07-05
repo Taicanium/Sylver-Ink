@@ -13,6 +13,9 @@ namespace SylverInk.XAMLUtils;
 /// </summary>
 public static partial class TextUtils
 {
+	private readonly static string FlowDocumentClosing = "</FlowDocument>";
+	private readonly static string FlowDocumentOpening = @"<FlowDocument xmlns=""http://schemas.microsoft.com/winfx/2006/xaml/presentation"">";
+
 	public static string FlowDocumentPreview(FlowDocument? document)
 	{
 		if (document is null)
@@ -69,7 +72,7 @@ public static partial class TextUtils
 			pointer = pointer.GetNextContextPosition(LogicalDirection.Forward);
 		}
 
-		return content;
+		return FlowDocumentOpeningRegex().Replace(FlowDocumentClosingRegex().Replace(content, string.Empty), string.Empty);
 	}
 
 	public static FlowDocument PlaintextToFlowDocument(FlowDocument document, string content)
@@ -135,7 +138,12 @@ public static partial class TextUtils
 		if (string.IsNullOrWhiteSpace(xaml))
 			return new();
 
-		var document = (FlowDocument)XamlReader.Parse(xaml.Replace("{}{", "{"));
+		var escaped = xaml.Replace("{}{", "{");
+
+		if (!escaped.StartsWith("<FlowDocument"))
+			escaped = $"{FlowDocumentOpening}{escaped}{FlowDocumentClosing}";
+
+		var document = (FlowDocument)XamlReader.Parse(escaped);
 		var pointer = document.ContentStart;
 
 		while (pointer is not null)
@@ -169,4 +177,10 @@ public static partial class TextUtils
 
 	[GeneratedRegex(@"<BlockUIContainer.*?</BlockUIContainer>")]
 	private static partial Regex ContainerRegex();
+
+	[GeneratedRegex(@"</FlowDocument>")]
+	private static partial Regex FlowDocumentClosingRegex();
+
+	[GeneratedRegex(@"<FlowDocument.*?>")]
+	private static partial Regex FlowDocumentOpeningRegex();
 }

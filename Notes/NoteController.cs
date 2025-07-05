@@ -151,10 +151,10 @@ public partial class NoteController : IDisposable
 		}
 
 		if (Format >= 7)
-			UUID = _serializer?.ReadString() ?? MakeUUID(UUIDType.Database);
+			UUID = _serializer?.ReadShortString() ?? MakeUUID(UUIDType.Database);
 
 		if (!_serializer?.Headless is true)
-			Name = _serializer?.ReadString();
+			Name = _serializer?.ReadShortString();
 
 		if (Format >= 9)
 			Structure = _serializer?.ReadByte();
@@ -276,7 +276,7 @@ public partial class NoteController : IDisposable
 	
 	public bool Open(string path, bool writing = false)
 	{
-		_serializer = new();
+		_serializer = new() { DatabaseFormat = (byte)Format };
 
 		if (writing)
 			return _serializer.OpenWrite(path);
@@ -387,7 +387,7 @@ public partial class NoteController : IDisposable
 		DeferUpdateRecentNotes();
 	}
 
-	public List<byte>? SerializeRecords(bool inMemory = false)
+	public byte[]? SerializeRecords(bool inMemory = false)
 	{
 		PropagateIndices();
 
@@ -398,10 +398,10 @@ public partial class NoteController : IDisposable
 		}
 
 		if (_serializer?.DatabaseFormat >= 7)
-			_serializer?.WriteString(UUID);
+			_serializer?.WriteShortString(UUID);
 
 		if (!_serializer?.Headless is true)
-			_serializer?.WriteString(Name);
+			_serializer?.WriteShortString(Name);
 
 		if (_serializer?.DatabaseFormat >= 9)
 			_serializer?.WriteByte(Structure ??= 0);

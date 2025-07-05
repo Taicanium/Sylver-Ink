@@ -93,17 +93,13 @@ public partial class NetServer : IDisposable
 				var stream = client.GetStream();
 				Flags = (byte)stream.ReadByte();
 
-				var data = DB.SerializeRecords(true);
-				int dataLength = data?.Count ?? 0;
+				var data = DB.SerializeRecords(true) ?? [];
+				int dataLength = data.Length;
 
-				data?.Insert(0, (byte)MessageType.DatabaseInit);
-				data?.InsertRange(1, [
-					0, 0, 0, 0,
-					.. IntToBytes(dataLength)
-				]);
+				data = [(byte)MessageType.DatabaseInit, 0, 0, 0, 0, .. IntToBytes(dataLength), .. data];
 
 				if (dataLength > 0)
-					stream.WriteAsync(data?.ToArray()).AsTask().Wait();
+					stream.WriteAsync(data).AsTask().Wait();
 
 				Clients.Add(client);
 			}

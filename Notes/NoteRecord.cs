@@ -158,7 +158,7 @@ public partial class NoteRecord
 	public NoteRecord Deserialize(Serializer? serializer)
 	{
 		if (serializer?.DatabaseFormat >= 5)
-			UUID = serializer?.ReadString();
+			UUID = serializer?.ReadShortString();
 		Created = serializer?.ReadLong() ?? DateTime.UtcNow.ToBinary();
 		Index = serializer?.ReadInt32() ?? -1;
 		Initial = serializer?.ReadString();
@@ -169,7 +169,7 @@ public partial class NoteRecord
 		{
 			NoteRevision _revision = new();
 			if (serializer?.DatabaseFormat >= 7)
-				_revision.Uuid = serializer?.ReadString();
+				_revision.Uuid = serializer?.ReadShortString();
 			_revision.Created = serializer?.ReadLong() ?? DateTime.UtcNow.ToBinary();
 			_revision.StartIndex = serializer?.ReadInt32() ?? 0;
 			_revision.Substring = serializer?.ReadString();
@@ -337,7 +337,7 @@ public partial class NoteRecord
 			TargetPlaintext();
 
 		if (serializer?.DatabaseFormat >= 5)
-			serializer?.WriteString(UUID);
+			serializer?.WriteShortString(UUID);
 		serializer?.WriteLong(Created);
 		serializer?.WriteInt32(Index);
 		serializer?.WriteString(Initial);
@@ -347,7 +347,7 @@ public partial class NoteRecord
 		for (int i = 0; i < Revisions.Count; i++)
 		{
 			if (serializer?.DatabaseFormat >= 7)
-				serializer?.WriteString(Revisions[i].Uuid);
+				serializer?.WriteShortString(Revisions[i].Uuid);
 			serializer?.WriteLong(Revisions[i].Created);
 			serializer?.WriteInt32(Revisions[i].StartIndex);
 			serializer?.WriteString(Revisions[i].Substring);

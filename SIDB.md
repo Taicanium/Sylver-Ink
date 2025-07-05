@@ -96,3 +96,23 @@ SIDB structure is otherwise unchanged in this revision.
 For formats >= 11, Sylver Ink encodes and decodes LZW data using a code-packet dictionary that resets upon reaching a certain size.
 
 SIDB structure is otherwise unchanged in this revision.
+
+- Format 13/14
+
+UUID, name and datetime objects: Length strings reduced from 4 bytes to 2.
+
+```
+Database UUID -- [2 bytes][n bytes: string]
+Database name -- [2 bytes: big-endian unsigned short, length of following string][n bytes: string]
+Record count -- [4 bytes: big-endian unsigned int]
+	Record UUID -- [2 bytes][n bytes: string]
+	Record creation date/time -- [2 bytes][n bytes: string from long]
+	Record index -- [4 bytes][n bytes: string from signed int]
+	Record initial state -- [4 bytes][n bytes: string. Initial text of the record at the time of creation]
+	Record modified date/time -- [2 bytes][n bytes: string from long. Date and time of the last change to record]
+	Revision count -- [4 bytes][n bytes: string from signed int. Number of changes made to record]
+		Revision UUID -- [2 bytes][n bytes: string]
+		Revision creation date/time -- [4 bytes][n bytes: string from long. Date the change was made]
+		Revision start index -- [4 bytes][n bytes: string from signed int. Index of the change to the record string. Dependant on the state of the record after reconstruction from all previous revisions (see NoteRecord.Reconstruct)]
+		Revision substring -- [4 bytes][n bytes: string. The text to insert in the record after removing all text after the revision start index. May be string.Empty]
+```

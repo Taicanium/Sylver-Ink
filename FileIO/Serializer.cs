@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using System.Linq;
 using System.Text;
 using static SylverInk.CommonUtils;
 using static SylverInk.FileIO.FileUtils;
@@ -15,19 +14,18 @@ public partial class Serializer : IDisposable
 	private Stream? _fileStream;
 	private bool _isOpen;
 	private readonly LZW _lzw = new();
-	private List<byte> _outgoing = [];
 	private byte[] _testBuffer = [];
 	private bool _writing;
 
 	/// <summary>
 	/// See SIDB.md for a file format description.
 	/// </summary>
-	public byte DatabaseFormat { get; set; } = (byte)HighestSIDBFormat;
+	public required byte DatabaseFormat { get; set; }
 	public bool Headless { get; private set; }
 	public bool UseLZW { get; private set; }
 
 	/// <summary>
-	/// Clear previous buffers and prepare to perform a compressun test.
+	/// Clear previous buffers and prepare to perform a compression test.
 	/// </summary>
 	public void BeginCompressionTest()
 	{
@@ -48,27 +46,19 @@ public partial class Serializer : IDisposable
 		Close();
 
 		_fileStream = null;
-		_outgoing.Clear();
 		_testBuffer = [];
 	}
 
 	/// <summary>
 	/// Flush the open filestream buffer and dispose it.
 	/// </summary>
-	/// <param name="testing"><c>true</c> if we are performing a compression test.</param>
 	public void Close(bool testing = false)
 	{
 		if (!_isOpen)
 			return;
 
 		_lzw.Close();
-		if (_writing)
-		{
-			if (UseLZW)
-				_outgoing = _lzw.Outgoing;
-			_fileStream?.Write([.. _outgoing], 0, _outgoing.Count);
-			_fileStream?.Flush();
-		}
+		_fileStream?.Flush();
 
 		if (!testing)
 			_fileStream?.Dispose();
@@ -102,32 +92,26 @@ public partial class Serializer : IDisposable
 	/// WARNING: This method consumes the LZW state buffers. Do not call this method until we are ready to close the stream.
 	/// </summary>
 	/// <returns>The outgoing compression buffer</returns>
-	public List<byte> GetOutgoingStream()
+	public byte[] GetOutgoingStream()
 	{
 		if (_writing)
-		{
 			_lzw.Close();
-			_outgoing = _lzw.Outgoing;
-		}
 		var _memoryStream = _fileStream as MemoryStream;
-		return _memoryStream?.ToArray().Concat(_outgoing).ToList() ?? [];
+		return _memoryStream?.ToArray() ?? [];
 	}
 
 	/// <summary>
 	/// Initialize the serializer, and optionally the LZW state engine, according to the features available with this database format.
 	/// </summary>
-	/// <param name="format">The format of the database</param>
-	private void HandleFormat(int format = 0)
+	private void HandleFormat()
 	{
-		format = format < 1 ? DatabaseFormat : format;
-		Headless = format < 3;
-		UseLZW = format % 2 == 0;
+		Headless = DatabaseFormat < 3;
+		UseLZW = DatabaseFormat % 2 == 0;
 
 		if (!UseLZW)
 			return;
 
-		_lzw.Outgoing.Clear();
-		_lzw.Init(format, _fileStream, _writing);
+		_lzw.Init(DatabaseFormat, _fileStream, _writing);
 	}
 
 	/// <summary>
@@ -136,7 +120,7 @@ public partial class Serializer : IDisposable
 	/// <param name="path">The path to a file to encapsulate in the underlying <c>FileStream</c>. May be <c>null</c> if and only if <paramref name="inMemory"/> is not <c>null</c>.</param>
 	/// <param name="inMemory">If not <c>null</c>, the engine will be initialized with an underlying <c>MemoryStream</c> with <paramref name="inMemory"/> as its buffer, instead of a <c>FileStream</c>.</param>
 	/// <returns></returns>
-	public bool OpenRead(string? path, List<byte>? inMemory = null)
+	public bool OpenRead(string? path, in List<byte>? inMemory = null)
 	{
 		Close();
 
@@ -172,7 +156,7 @@ public partial class Serializer : IDisposable
 			_isOpen = true;
 			_writing = true;
 
-			WriteHeader(DatabaseFormat);
+			WriteHeader();
 		}
 		catch
 		{
@@ -251,7 +235,7 @@ public partial class Serializer : IDisposable
 		if (!_isOpen)
 			return null;
 
-		int nextSize = (int)ReadUInt32();
+		int nextSize = DatabaseFormat > 12 ? (int)ReadUInt16() : (int)ReadUInt32();
 		if (nextSize == 0)
 			return null;
 
@@ -262,6 +246,29 @@ public partial class Serializer : IDisposable
 				return item;
 
 			return null;
+		}
+		catch
+		{
+			return null;
+		}
+	}
+
+	public string? ReadShortString()
+	{
+		if (!_isOpen)
+			return null;
+
+		if (DatabaseFormat < 13)
+			return ReadString();
+
+		var nextSize = ReadUInt16();
+		if (nextSize == 0)
+			return null;
+
+		try
+		{
+			_buffer = ReadBytes(nextSize);
+			return Encoding.UTF8.GetString(_buffer);
 		}
 		catch
 		{
@@ -289,33 +296,40 @@ public partial class Serializer : IDisposable
 		}
 	}
 
+	private ushort ReadUInt16() => (ushort)ShortFromBytes(ReadBytes(2));
+
 	private uint ReadUInt32() => (uint)IntFromBytes(ReadBytes(4));
 
 	public void WriteByte(byte data)
 	{
 		if (UseLZW)
+		{
 			_lzw.Compress([data]);
-		_outgoing.AddRange([data]);
+			return;
+		}
+		_fileStream?.WriteByte(data);
 	}
 
-	private void WriteBytes(byte[] data)
+	private void WriteBytes(in byte[] data)
 	{
 		if (UseLZW)
+		{
 			_lzw.Compress(data);
-		_outgoing.AddRange(data);
+			return;
+		}
+		_fileStream?.Write(data);
 	}
 
 	/// <summary>
 	/// Write the database header to the stream.
 	/// </summary>
-	/// <param name="format">The SIDB version number</param>
-	private void WriteHeader(byte format)
+	private void WriteHeader(byte? testFormat = null)
 	{
 		_fileStream?.Write(Encoding.UTF8.GetBytes(
-			$"SYL {(char)format}"
+			$"SYL {(char)(testFormat ?? DatabaseFormat)}"
 		));
 
-		HandleFormat(format);
+		HandleFormat();
 	}
 
 	public void WriteInt32(int value)
@@ -334,7 +348,28 @@ public partial class Serializer : IDisposable
 			return;
 
 		_buffer = Encoding.UTF8.GetBytes(value.ToString(NumberFormatInfo.InvariantInfo));
-		WriteUInt32((uint)_buffer.Length);
+
+		if (DatabaseFormat < 13)
+			WriteUInt32((uint)_buffer.Length);
+		else
+			WriteUInt16((ushort)_buffer.Length);
+
+		WriteBytes(_buffer);
+	}
+
+	public void WriteShortString(string? value)
+	{
+		if (!_isOpen)
+			return;
+
+		if (DatabaseFormat < 13)
+		{
+			WriteString(value);
+			return;
+		}
+
+		_buffer = Encoding.UTF8.GetBytes(value ?? string.Empty);
+		WriteUInt16((ushort)_buffer.Length);
 		WriteBytes(_buffer);
 	}
 
@@ -347,6 +382,8 @@ public partial class Serializer : IDisposable
 		WriteUInt32((uint)_buffer.Length);
 		WriteBytes(_buffer);
 	}
+
+	private void WriteUInt16(ushort data) => WriteBytes(ShortToBytes((short)data));
 
 	private void WriteUInt32(uint data) => WriteBytes(IntToBytes((int)data));
 }

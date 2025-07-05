@@ -479,7 +479,7 @@ public partial class Database : IDisposable
 		Changed = true;
 	}
 
-	public List<byte>? SerializeRecords(bool inMemory = false) => Controller.SerializeRecords(inMemory);
+	public byte[]? SerializeRecords(bool inMemory = false) => Controller.SerializeRecords(inMemory);
 
 	public void Sort(SortType type = SortType.ByIndex)
 	{

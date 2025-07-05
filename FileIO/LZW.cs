@@ -11,7 +11,6 @@ public partial class LZW
 	private readonly Dictionary<string, uint> Codes = [];
 	private Stream? FileStream;
 	private uint LastCode;
-	private readonly int MaxRestrictedRange = 25;
 	private readonly int MaxRestrictedWidth = (int)Math.Pow(2, 25) - 2;
 	private readonly int MaxRange = 13;
 	private readonly int MaxWidth = (int)Math.Pow(2, 13) - 2;
@@ -23,7 +22,6 @@ public partial class LZW
 	private bool Writing;
 
 	public int Format { get; private set; }
-	public List<byte> Outgoing { get; } = [];
 
 	private static byte BitToByte(bool b) => b ? (byte)1 : (byte)0;
 
@@ -39,20 +37,6 @@ public partial class LZW
 
 			WriteCode(257U);
 			WriteCode(0U);
-
-			bool[] bits = [.. BitStream];
-			byte b = 0;
-			int j = 1;
-			for (int i = 0; i < bits.Length; i++)
-			{
-				b += (byte)(BitToByte(bits[i]) << 8 - j);
-				if (j++ != 8)
-					continue;
-
-				j = 1;
-				Outgoing.Add(b);
-				b = 0;
-			}
 		}
 
 		BitStream.Clear();
@@ -231,5 +215,19 @@ public partial class LZW
 	{
 		for (int i = 0; i++ < Range;)
 			BitStream.Add((code >> Range - i & 1) == 1);
+
+		byte b = 0;
+		int j = 1;
+		while (BitStream.Count >= 8)
+		{
+			b += (byte)(BitToByte(BitStream[j - 1]) << 8 - j);
+			if (j++ != 8)
+				continue;
+
+			BitStream.RemoveRange(0, 8);
+			FileStream?.WriteByte(b);
+			b = 0;
+			j = 1;
+		}
 	}
 }
