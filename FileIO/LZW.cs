@@ -12,6 +12,7 @@ public partial class LZW
 	private Stream? FileStream;
 	private uint LastCode;
 	private readonly int MaxRestrictedRange = 25;
+	private readonly int MaxRestrictedWidth = (int)Math.Pow(2, 25) - 2;
 	private readonly int MaxRange = 13;
 	private readonly int MaxWidth = (int)Math.Pow(2, 13) - 2;
 	private uint NextCode = 258U;
@@ -65,8 +66,7 @@ public partial class LZW
 	/// <summary>
 	/// Compresses a range of data.
 	/// </summary>
-	/// <param name="data">An array of uncompressed bytes.</param>
-	public void Compress(byte[] data)
+	public void Compress(in byte[] data)
 	{
 		for (int i = 0; i < data.Length; i++)
 		{
@@ -97,7 +97,6 @@ public partial class LZW
 	/// Consumes LZW-compressed data according to a requested number of uncompressed output bytes.
 	/// </summary>
 	/// <param name="byteCount">The desired number of uncompressed bytes to return.</param>
-	/// <returns>A range of uncompressed byte data.</returns>
 	public byte[] Decompress(int byteCount = 1)
 	{
 		if (string.IsNullOrEmpty(W))
@@ -143,7 +142,7 @@ public partial class LZW
 	/// Initializes the LZW state engine.
 	/// </summary>
 	/// <param name="writing"><c>true</c> if we are compressing data and outputting it to the stream; <c>false</c> if we are reading and consuming LZW-compressed data.</param>
-	public void Init(int format, Stream? fileStream = null, bool writing = false)
+	public void Init(int format, in Stream? fileStream = null, bool writing = false)
 	{
 		FileStream = fileStream ?? FileStream;
 		Format = format;
@@ -221,7 +220,7 @@ public partial class LZW
 			Range = i + 1;
 		}
 
-		if (lastCode >= (uint)Math.Pow(2, MaxRestrictedRange))
+		if (lastCode >= MaxRestrictedWidth)
 			throw new OverflowException("Serialized database has exceeded the maximum capacity for restricted LZW compression.", new OverflowException());
 	}
 
