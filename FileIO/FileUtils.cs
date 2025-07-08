@@ -49,11 +49,18 @@ public static class FileUtils
 	/// <returns><c>true</c> if the file existed and was deleted; else, <c>false</c>.</returns>
 	public static bool Erase(string filename)
 	{
-		if (!File.Exists(filename))
-			return false;
+		try
+		{
+			if (!File.Exists(filename))
+				return false;
 
-		File.Delete(filename);
-		return true;
+			File.Delete(filename);
+			return true;
+		}
+		catch
+		{
+			return false;
+		}
 	}
 
 	public static string GetBackupPath(Database db) => Path.Join(Subfolders["Databases"], db.Name, db.Name);

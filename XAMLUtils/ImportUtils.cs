@@ -86,8 +86,8 @@ public static class ImportUtils
 		double LastPredicateValue = 0.0; // The more frequent a predicate appears in the note data, the higher priority it will be assigned.
 		double LineTotal = 0.0;
 
-		// Predicates may be anywhere from 3 to 35 characters long.
-		for (int length = 3; length <= 35; length++)
+		// Predicates may be any length greater than or equal to three characters.
+		for (int length = 3;; length++)
 		{
 			double total = 0.0;
 

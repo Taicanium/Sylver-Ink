@@ -156,15 +156,14 @@ public static partial class TextUtils
 					pointer = pointer.GetNextContextPosition(LogicalDirection.Forward);
 
 				var img = DecodeEmbed(pointer.GetTextInRun(LogicalDirection.Forward));
+				BlockUIContainer container = new(img);
+				document.Blocks.InsertBefore(paragraph, container);
+				document.Blocks.Remove(paragraph);
 
 				while (pointer.GetPointerContext(LogicalDirection.Forward) != TextPointerContext.ElementStart)
 					pointer = pointer.GetNextContextPosition(LogicalDirection.Backward);
 
 				pointer = pointer.GetNextContextPosition(LogicalDirection.Backward) ?? document.ContentStart;
-
-				BlockUIContainer container = new(img);
-				document.Blocks.InsertBefore(paragraph, container);
-				document.Blocks.Remove(paragraph);
 			}
 
 			pointer = pointer.GetNextContextPosition(LogicalDirection.Forward);

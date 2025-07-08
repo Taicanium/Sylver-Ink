@@ -51,14 +51,18 @@ public partial class Database : IDisposable
 
 	public static async Task Create(string dbFile)
 	{
+		Database? db = null;
 		try
 		{
-			Database db = new(dbFile);
+			db = new(dbFile);
 			AddDatabase(db);
 			await Task.Run(db.Load);
 		}
 		catch
 		{
+			if (db is not null)
+				RemoveDatabase(db);
+
 			MessageBox.Show($"Could not load database: {dbFile}", "Sylver Ink: Error", MessageBoxButton.OK);
 		}
 	}

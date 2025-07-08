@@ -323,7 +323,7 @@ public partial class NoteController : IDisposable
 				}
 			}
 
-			var document = XamlToFlowDocument(recordText);
+			var document = Concurrent(() => XamlToFlowDocument(recordText));
 			TextPointer? pointer = document.ContentStart;
 			while (pointer is not null && pointer.GetPointerContext(LogicalDirection.Forward) != TextPointerContext.None)
 			{
@@ -336,12 +336,15 @@ public partial class NoteController : IDisposable
 				var text = pointer.GetTextInRun(LogicalDirection.Forward);
 				var textLength = pointer.GetTextRunLength(LogicalDirection.Forward);
 				newVersion = text.Replace(oldText, newText, StringComparison.OrdinalIgnoreCase);
-				pointer.DeleteTextInRun(textLength);
-				pointer.InsertTextInRun(newVersion);
+				Concurrent(() =>
+				{
+					pointer.DeleteTextInRun(textLength);
+					pointer.InsertTextInRun(newVersion);
+				});
 				while (pointer.GetPointerContext(LogicalDirection.Forward) == TextPointerContext.Text)
 					pointer = pointer.GetNextContextPosition(LogicalDirection.Forward);
 			}
-			newVersion = FlowDocumentToXaml(document);
+			newVersion = Concurrent(() => FlowDocumentToXaml(document));
 			if (!newVersion.Equals(recordText))
 			{
 				CreateRevision(record.Index, newVersion);
