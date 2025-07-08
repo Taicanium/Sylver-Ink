@@ -97,14 +97,14 @@ public static class DatabaseUtils
 		if (item.Tag is not Database tabDB)
 			return;
 
+		if (control.Items.Count < 2)
+			AddDatabase(new());
+
 		if (tabDB.Equals(db))
 		{
 			control.Items.RemoveAt(control.SelectedIndex);
 			control.SelectedIndex = Math.Max(0, Math.Min(control.Items.Count - 1, control.SelectedIndex));
 		}
-
-		if (control.Items.Count < 2)
-			AddDatabase(new());
 
 		for (int i = OpenQueries.Count - 1; i > -1; i--)
 			if (OpenQueries[i].ResultDatabase?.Equals(db) is true)
