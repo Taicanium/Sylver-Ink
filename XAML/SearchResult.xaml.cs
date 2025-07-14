@@ -2,11 +2,15 @@
 using SylverInk.Notes;
 using SylverInk.XAMLUtils;
 using System;
+using System.ComponentModel;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Interop;
+using System.Windows.Threading;
 using static SylverInk.CommonUtils;
 using static SylverInk.XAMLUtils.DataUtils;
 using static SylverInk.XAMLUtils.TextUtils;
@@ -18,14 +22,26 @@ namespace SylverInk;
 /// </summary>
 public partial class SearchResult : Window, IDisposable
 {
-	private Task? EnterTask;
-	private DateTime EnterTime;
-	private Task? LeaveTask;
-	private DateTime LeaveTime;
+	[DllImport("user32.dll")]
+	static extern bool GetCursorPos(out SearchResultUtils.SimplePoint pPoint);
+
+	[DllImport("user32.dll")]
+	static extern int GetWindowLong(IntPtr hwnd, int index);
+
+	[DllImport("user32.dll")]
+	static extern int SetWindowLong(IntPtr hwnd, int index, int newStyle);
+
+	private readonly BackgroundWorker EnterTask;
+	private const int GWL_EXSTYLE = -20;
+	private IntPtr hWnd;
+	private readonly BackgroundWorker LeaveTask;
+	private bool MouseInside;
+	private readonly DispatcherTimer MouseMonitor;
 	private bool NeedsAutosave;
 	private double StartOpacity;
 	private DateTime TimeSinceAutosave = DateTime.UtcNow;
-	private CancellationTokenSource? TokenSource;
+	private const int WS_EX_LAYERED = 0x00080000;
+	private const int WS_EX_TRANSPARENT = 0x00000020;
 
 	public bool Dragging { get; private set; }
 	public Point DragMouseCoords { get; private set; } = new(0, 0);
@@ -42,6 +58,61 @@ public partial class SearchResult : Window, IDisposable
 	{
 		InitializeComponent();
 		DataContext = CommonUtils.Settings;
+
+		EnterTask = new()
+		{
+			WorkerSupportsCancellation = true
+		};
+
+		LeaveTask = new()
+		{
+			WorkerSupportsCancellation = true
+		};
+
+		EnterTask.DoWork += (sender, _) =>
+		{
+			if (sender is not BackgroundWorker worker)
+				return;
+
+			var EnterTime = DateTime.UtcNow;
+			var Seconds = 0.0;
+			while ((Seconds = DateTime.UtcNow.Subtract(EnterTime).TotalMilliseconds * 0.001) < CommonUtils.Settings.NoteClickthrough)
+			{
+				if (worker.CancellationPending)
+					return;
+
+				var lerpValue = Lerp(StartOpacity, 1.0, Seconds / CommonUtils.Settings.NoteClickthrough);
+				Concurrent(() => Opacity = lerpValue);
+			}
+
+			Concurrent(UnsetWindowExTransparent);
+		};
+
+		LeaveTask.DoWork += (sender, _) =>
+		{
+			if (sender is not BackgroundWorker worker)
+				return;
+
+			Concurrent(SetWindowExTransparent);
+
+			var LeaveTime = DateTime.UtcNow;
+			var Seconds = 0.0;
+			while ((Seconds = DateTime.UtcNow.Subtract(LeaveTime).TotalMilliseconds * 0.001) < CommonUtils.Settings.NoteClickthrough)
+			{
+				if (worker.CancellationPending)
+					return;
+
+				var lerpValue = Lerp(StartOpacity, 1.0 - (CommonUtils.Settings.NoteTransparency * 0.01), Seconds / CommonUtils.Settings.NoteClickthrough);
+				Concurrent(() => Opacity = lerpValue);
+			}
+		};
+
+		MouseMonitor = new()
+		{
+			Interval = new TimeSpan(0, 0, 0, 0, 150)
+		};
+
+		MouseMonitor.Tick += WindowMouseMonitor;
 	}
 
 	private void CloseClick(object? sender, RoutedEventArgs e)
@@ -62,7 +133,15 @@ public partial class SearchResult : Window, IDisposable
 			}
 		}
 
+		if (EnterTask.IsBusy)
+			EnterTask.CancelAsync();
+
+		if (LeaveTask.IsBusy)
+			LeaveTask.CancelAsync();
+
+		MouseMonitor.Stop();
 		PreviousOpenNote = ResultRecord;
+
 		Close();
 	}
 
@@ -70,7 +149,6 @@ public partial class SearchResult : Window, IDisposable
 	{
 		EnterTask?.Dispose();
 		LeaveTask?.Dispose();
-		TokenSource?.Dispose();
 		GC.SuppressFinalize(this);
 	}
 
@@ -89,11 +167,6 @@ public partial class SearchResult : Window, IDisposable
 			OpenQueries.Remove(result);
 			return;
 		}
-	}
-
-	private void Result_Loaded(object? sender, RoutedEventArgs e)
-	{
-		this.Construct();
 	}
 
 	private void ResultBlock_TextChanged(object? sender, TextChangedEventArgs e)
@@ -118,6 +191,18 @@ public partial class SearchResult : Window, IDisposable
 		}, TaskCreationOptions.LongRunning);
 	}
 
+	public bool SetWindowExTransparent()
+	{
+		var extendedStyle = GetWindowLong(hWnd, GWL_EXSTYLE);
+		return SetWindowLong(hWnd, GWL_EXSTYLE, extendedStyle | WS_EX_LAYERED | WS_EX_TRANSPARENT) != 0;
+	}
+
+	public bool UnsetWindowExTransparent()
+	{
+		int extendedStyle = GetWindowLong(hWnd, GWL_EXSTYLE);
+		return SetWindowLong(hWnd, GWL_EXSTYLE, extendedStyle & ~WS_EX_LAYERED & ~WS_EX_TRANSPARENT) != 0;
+	}
+
 	private void ViewClick(object? sender, RoutedEventArgs e)
 	{
 		SearchWindow?.Close();
@@ -129,22 +214,31 @@ public partial class SearchResult : Window, IDisposable
 		CloseButton.IsEnabled = true;
 		Opacity = 1.0;
 		ViewButton.IsEnabled = true;
+
+		UnsetWindowExTransparent();
 	}
 
 	private void WindowDeactivated(object? sender, EventArgs e)
 	{
 		CloseButton.IsEnabled = false;
-		Opacity = 1.0 - (CommonUtils.Settings.NoteTransparency / 100.0);
+		Opacity = 1.0 - (CommonUtils.Settings.NoteTransparency * 0.01);
 		ViewButton.IsEnabled = false;
+
+		SetWindowExTransparent();
+	}
+
+	private void WindowLoaded(object? sender, RoutedEventArgs e)
+	{
+		this.Construct();
+
+		hWnd = new WindowInteropHelper(this).Handle;
+		MouseMonitor.Start();
 	}
 
 	private void WindowMove(object? sender, MouseEventArgs e) => this.Drag(sender, e);
 
 	private void WindowMouseDown(object? sender, MouseButtonEventArgs e)
 	{
-		if (!EnterTask?.IsCompleted is true)
-			TokenSource?.Cancel();
-
 		var n = PointToScreen(e.GetPosition(null));
 		CaptureMouse();
 		DragMouseCoords = new(Left - n.X, Top - n.Y);
@@ -156,27 +250,21 @@ public partial class SearchResult : Window, IDisposable
 		if (IsActive)
 			return;
 
-		if (!LeaveTask?.IsCompleted is true)
-			TokenSource?.Cancel();
+		if (EnterTask.IsBusy)
+			return;
 
-		EnterTime = DateTime.UtcNow;
+		if (CommonUtils.Settings.NoteTransparency == 0.0)
+			return;
+
+		if (LeaveTask.IsBusy)
+			LeaveTask?.CancelAsync();
+
 		StartOpacity = Opacity;
 
-		TokenSource?.Dispose();
-		TokenSource = new();
+		if (StartOpacity == 1.0)
+			return;
 
-		EnterTask = Task.Factory.StartNew((tokenObject) => {
-			if (tokenObject is not CancellationToken token)
-				return;
-
-			var Seconds = DateTime.UtcNow.Subtract(EnterTime).Milliseconds / 1000.0;
-			while (!token.IsCancellationRequested && Seconds < 0.25)
-			{
-				var lerpValue = Lerp(StartOpacity, 1.0, Seconds * 4.0);
-				Concurrent(() => Opacity = lerpValue);
-				Seconds = DateTime.UtcNow.Subtract(EnterTime).Milliseconds / 1000.0;
-			}
-		}, TokenSource.Token);
+		EnterTask.RunWorkerAsync();
 	}
 
 	private void WindowMouseLeave(object sender, MouseEventArgs e)
@@ -184,27 +272,57 @@ public partial class SearchResult : Window, IDisposable
 		if (IsActive)
 			return;
 
-		if (!EnterTask?.IsCompleted is true)
-			TokenSource?.Cancel();
+		if (LeaveTask.IsBusy)
+			return;
 
-		LeaveTime = DateTime.UtcNow;
+		if (CommonUtils.Settings.NoteTransparency == 0.0)
+			return;
+
+		if (EnterTask.IsBusy)
+			EnterTask?.CancelAsync();
+
 		StartOpacity = Opacity;
 
-		TokenSource?.Dispose();
-		TokenSource = new();
+		if (StartOpacity == 1.0 - (CommonUtils.Settings.NoteTransparency * 0.01))
+			return;
 
-		LeaveTask = Task.Factory.StartNew((tokenObject) => {
-			if (tokenObject is not CancellationToken token)
+		LeaveTask.RunWorkerAsync();
+	}
+
+	private void WindowMouseMonitor(object? sender, EventArgs e)
+	{
+		Concurrent(() =>
+		{
+			if (!GetCursorPos(out SearchResultUtils.SimplePoint screenPosition))
 				return;
 
-			var Seconds = DateTime.UtcNow.Subtract(LeaveTime).Milliseconds / 1000.0;
-			while (!token.IsCancellationRequested && Seconds < 0.25)
+			var eventArgs = new MouseEventArgs(Mouse.PrimaryDevice, 0);
+			var position = PointFromScreen(new(screenPosition.X, screenPosition.Y));
+
+			if (position.X > 0.0
+			&& position.Y > 0.0
+			&& position.X <= Width
+			&& position.Y <= Height)
 			{
-				var lerpValue = Lerp(StartOpacity, 1.0 - (CommonUtils.Settings.NoteTransparency / 100.0), Seconds * 4.0);
-				Concurrent(() => Opacity = lerpValue);
-				Seconds = DateTime.UtcNow.Subtract(LeaveTime).Milliseconds / 1000.0;
+				if (MouseInside)
+					return;
+
+				MouseInside = true;
+
+				eventArgs.RoutedEvent = Mouse.MouseEnterEvent;
+				RaiseEvent(eventArgs);
 			}
-		}, TokenSource.Token);
+			else
+			{
+				if (!MouseInside)
+					return;
+
+				MouseInside = false;
+
+				eventArgs.RoutedEvent = Mouse.MouseLeaveEvent;
+				RaiseEvent(eventArgs);
+			}
+		});
 	}
 
 	private void WindowMouseUp(object? sender, MouseButtonEventArgs e)

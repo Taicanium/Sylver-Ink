@@ -115,7 +115,11 @@ public static partial class CommonUtils
 		(byte)(data & 0xFF)
 	];
 
-	public static double Lerp(double x, double y, double a) => (y * a) + ((1.0 - a) * x);
+	public static double Lerp(double x, double y, double a)
+	{
+		a = a > 1.0 ? 1.0 : a < 0.0 ? 0.0 : a;
+		return (y * a) + ((1.0 - a) * x);
+	}
 
 	public static string MakeUUID(UUIDType type = UUIDType.Record)
 	{

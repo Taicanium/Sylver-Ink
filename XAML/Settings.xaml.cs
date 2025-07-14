@@ -283,7 +283,7 @@ public partial class Settings : Window
 	{
 		foreach (SearchResult note in OpenQueries)
 			if (!note.IsActive)
-				note.Opacity = 1.0 - (e.NewValue / 100.0);
+				note.Opacity = 1.0 - (e.NewValue * 0.01);
 
 		e.Handled = true;
 	}

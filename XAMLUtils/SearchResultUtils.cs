@@ -15,6 +15,12 @@ namespace SylverInk.XAMLUtils;
 
 public static class SearchResultUtils
 {
+	public struct SimplePoint(int x, int y)
+	{
+		public int X { get; set; } = x;
+		public int Y { get; set; } = y;
+	}
+
 	public static void AddTabToRibbon(this SearchResult window)
 	{
 		if (window.ResultRecord is null)
