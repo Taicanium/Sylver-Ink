@@ -35,6 +35,7 @@ public partial class ContextSettings : INotifyPropertyChanged
 	private Brush? _menuBackgound = Brushes.Beige;
 	private Brush? _menuForegound = Brushes.DimGray;
 	private double _noteClickthrough = 0.25;
+	private double _noteClickthroughInverse = 4.0;
 	private double _noteTransparency = 100.0;
 	private string _numReplacements = string.Empty;
 	public event PropertyChangedEventHandler? PropertyChanged;
@@ -59,7 +60,8 @@ public partial class ContextSettings : INotifyPropertyChanged
 	public Typeface? MainTypeFace { get => _mainTypeFace; set { _mainTypeFace = value; OnPropertyChanged(); } }
 	public Brush? MenuBackground { get => _menuBackgound; set { _menuBackgound = value; OnPropertyChanged(); } }
 	public Brush? MenuForeground { get => _menuForegound; set { _menuForegound = value; OnPropertyChanged(); } }
-	public double NoteClickthrough { get => _noteClickthrough; set { _noteClickthrough = value; OnPropertyChanged(); } }
+	public double NoteClickthrough { get => _noteClickthrough; set { _noteClickthrough = value; NoteClickthroughInverse = 1.0 / value; OnPropertyChanged(); } }
+	public double NoteClickthroughInverse { get => _noteClickthroughInverse; set { _noteClickthroughInverse = value; OnPropertyChanged(); } }
 	public double NoteTransparency { get => _noteTransparency; set { _noteTransparency = value; OnPropertyChanged(); } }
 	public string NumReplacements { get => _numReplacements; set { _numReplacements = value; OnPropertyChanged(); } }
 	public bool ReadyToReplace { get => _readyToReplace; set { _readyToReplace = value; OnPropertyChanged(); } }
@@ -179,6 +181,11 @@ public partial class ContextSettings : INotifyPropertyChanged
 				case "MenuForeground":
 					MenuForeground = BrushFromBytes(keyValue[1]);
 					break;
+				case "NoteClickthrough":
+					if (!double.TryParse(keyValue[1], out var clickthrough))
+						clickthrough = 0.25;
+					NoteClickthrough = clickthrough;
+					break;
 				case "NoteTransparency":
 					if (!double.TryParse(keyValue[1], out var transparency))
 						transparency = 100.0;
@@ -224,6 +231,7 @@ public partial class ContextSettings : INotifyPropertyChanged
 		$"ListForeground:{BytesFromBrush(ListForeground)}",
 		$"MenuBackground:{BytesFromBrush(MenuBackground)}",
 		$"MenuForeground:{BytesFromBrush(MenuForeground)}",
+		$"NoteClickthrough:{(int)NoteClickthrough}",
 		$"NoteTransparency:{(int)NoteTransparency}",
 		$"RecentNotesSortMode:{(int)RecentEntriesSortMode}",
 		$"RibbonDisplayMode:{(int)RibbonTabContent}",

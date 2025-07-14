@@ -31,10 +31,12 @@ public partial class SearchResult : Window, IDisposable
 	[DllImport("user32.dll")]
 	static extern int SetWindowLong(IntPtr hwnd, int index, int newStyle);
 
-	private readonly BackgroundWorker EnterTask;
+	private readonly DispatcherTimer EnterMonitor;
+	private long EnterTime;
 	private const int GWL_EXSTYLE = -20;
 	private IntPtr hWnd;
-	private readonly BackgroundWorker LeaveTask;
+	private readonly DispatcherTimer LeaveMonitor;
+	private long LeaveTime;
 	private bool MouseInside;
 	private readonly DispatcherTimer MouseMonitor;
 	private bool NeedsAutosave;
@@ -59,52 +61,45 @@ public partial class SearchResult : Window, IDisposable
 		InitializeComponent();
 		DataContext = CommonUtils.Settings;
 
-		EnterTask = new()
+		EnterMonitor = new()
 		{
-			WorkerSupportsCancellation = true
+			Interval = new TimeSpan(0, 0, 0, 0, 20)
 		};
 
-		LeaveTask = new()
+		LeaveMonitor = new()
 		{
-			WorkerSupportsCancellation = true
+			Interval = new TimeSpan(0, 0, 0, 0, 20)
 		};
 
-		EnterTask.DoWork += (sender, _) =>
+		EnterMonitor.Tick += (_, _) =>
 		{
-			if (sender is not BackgroundWorker worker)
-				return;
+			var Seconds = (DateTime.UtcNow.Ticks - EnterTime) * 1E-7;
 
-			var EnterTime = DateTime.UtcNow;
-			var Seconds = 0.0;
-			while ((Seconds = DateTime.UtcNow.Subtract(EnterTime).TotalMilliseconds * 0.001) < CommonUtils.Settings.NoteClickthrough)
+			if (Seconds > CommonUtils.Settings.NoteClickthrough)
 			{
-				if (worker.CancellationPending)
-					return;
-
-				var lerpValue = Lerp(StartOpacity, 1.0, Seconds / CommonUtils.Settings.NoteClickthrough);
-				Concurrent(() => Opacity = lerpValue);
+				Concurrent(UnsetWindowExTransparent);
+				Opacity = 1.0;
+				EnterMonitor.Stop();
+				return;
 			}
 
-			Concurrent(UnsetWindowExTransparent);
+			var lerpValue = Lerp(StartOpacity, 1.0, Seconds * CommonUtils.Settings.NoteClickthroughInverse);
+			Concurrent(() => Opacity = lerpValue);
 		};
 
-		LeaveTask.DoWork += (sender, _) =>
+		LeaveMonitor.Tick += (_, _) =>
 		{
-			if (sender is not BackgroundWorker worker)
-				return;
+			var Seconds = (DateTime.UtcNow.Ticks - LeaveTime) * 1E-7;
 
-			Concurrent(SetWindowExTransparent);
-
-			var LeaveTime = DateTime.UtcNow;
-			var Seconds = 0.0;
-			while ((Seconds = DateTime.UtcNow.Subtract(LeaveTime).TotalMilliseconds * 0.001) < CommonUtils.Settings.NoteClickthrough)
+			if (Seconds > CommonUtils.Settings.NoteClickthrough)
 			{
-				if (worker.CancellationPending)
-					return;
-
-				var lerpValue = Lerp(StartOpacity, 1.0 - (CommonUtils.Settings.NoteTransparency * 0.01), Seconds / CommonUtils.Settings.NoteClickthrough);
-				Concurrent(() => Opacity = lerpValue);
+				Opacity = 1.0 - (CommonUtils.Settings.NoteTransparency * 0.01);
+				LeaveMonitor.Stop();
+				return;
 			}
+
+			var lerpValue = Lerp(StartOpacity, 1.0 - (CommonUtils.Settings.NoteTransparency * 0.01), Seconds * CommonUtils.Settings.NoteClickthroughInverse);
+			Concurrent(() => Opacity = lerpValue);
 		};
 
 		MouseMonitor = new()
@@ -133,12 +128,8 @@ public partial class SearchResult : Window, IDisposable
 			}
 		}
 
-		if (EnterTask.IsBusy)
-			EnterTask.CancelAsync();
-
-		if (LeaveTask.IsBusy)
-			LeaveTask.CancelAsync();
-
+		EnterMonitor.Stop();
+		LeaveMonitor.Stop();
 		MouseMonitor.Stop();
 		PreviousOpenNote = ResultRecord;
 
@@ -147,8 +138,6 @@ public partial class SearchResult : Window, IDisposable
 
 	public void Dispose()
 	{
-		EnterTask?.Dispose();
-		LeaveTask?.Dispose();
 		GC.SuppressFinalize(this);
 	}
 
@@ -250,21 +239,21 @@ public partial class SearchResult : Window, IDisposable
 		if (IsActive)
 			return;
 
-		if (EnterTask.IsBusy)
+		if (EnterMonitor.IsEnabled)
 			return;
 
 		if (CommonUtils.Settings.NoteTransparency == 0.0)
 			return;
 
-		if (LeaveTask.IsBusy)
-			LeaveTask?.CancelAsync();
+		LeaveMonitor.Stop();
 
 		StartOpacity = Opacity;
 
 		if (StartOpacity == 1.0)
 			return;
 
-		EnterTask.RunWorkerAsync();
+		EnterTime = DateTime.UtcNow.Ticks;
+		EnterMonitor.Start();
 	}
 
 	private void WindowMouseLeave(object sender, MouseEventArgs e)
@@ -272,21 +261,22 @@ public partial class SearchResult : Window, IDisposable
 		if (IsActive)
 			return;
 
-		if (LeaveTask.IsBusy)
+		if (LeaveMonitor.IsEnabled)
 			return;
 
 		if (CommonUtils.Settings.NoteTransparency == 0.0)
 			return;
 
-		if (EnterTask.IsBusy)
-			EnterTask?.CancelAsync();
+		EnterMonitor.Stop();
 
 		StartOpacity = Opacity;
 
 		if (StartOpacity == 1.0 - (CommonUtils.Settings.NoteTransparency * 0.01))
 			return;
 
-		LeaveTask.RunWorkerAsync();
+		Concurrent(SetWindowExTransparent);
+		LeaveTime = DateTime.UtcNow.Ticks;
+		LeaveMonitor.Start();
 	}
 
 	private void WindowMouseMonitor(object? sender, EventArgs e)
