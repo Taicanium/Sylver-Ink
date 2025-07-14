@@ -6,10 +6,10 @@
 		xmlns:local="clr-namespace:SylverInk"
 		mc:Ignorable="d"
 		d:DataContext="{d:DesignInstance Type=local:ContextSettings}"
-		Background="{Binding MenuBackground}" Foreground="{Binding MenuForeground}" Height="550" Loaded="Settings_Loaded" MinHeight="525" MinWidth="300" MouseLeftButtonDown="Drag" ShowInTaskbar="False" Title="Sylver Ink: Settings" Topmost="True" Width="325">
+		Background="{Binding MenuBackground}" Foreground="{Binding MenuForeground}" Height="500" Loaded="Settings_Loaded" MinHeight="525" MinWidth="300" MouseLeftButtonDown="Drag" ShowInTaskbar="False" Title="Sylver Ink: Settings" Topmost="True" Width="325">
 	<Grid>
 		<Grid.RowDefinitions>
-			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="*"/>
 			<RowDefinition Height="Auto"/>
 			<RowDefinition Height="*"/>
 			<RowDefinition Height="Auto"/>
@@ -53,29 +53,29 @@
 				<RowDefinition Height="*"/>
 			</Grid.RowDefinitions>
 			<Label FontStyle="Italic" Foreground="{Binding MenuForeground}" HorizontalAlignment="Right" Margin="10,0">
-				<TextBlock TextAlignment="Right">Ribbon tabs<LineBreak/>display...</TextBlock>
+				<TextBlock TextAlignment="Right">Recent notes<LineBreak/>sort by...</TextBlock>
 			</Label>
 			<Label FontStyle="Italic" Foreground="{Binding MenuForeground}" HorizontalAlignment="Right" Margin="10,0" Grid.Row="1">
-				<TextBlock TextAlignment="Right">Recent notes<LineBreak/>sort by...</TextBlock>
+				<TextBlock TextAlignment="Right">Ribbon tabs<LineBreak/>display...</TextBlock>
 			</Label>
 			<Label FontStyle="Italic" Foreground="{Binding MenuForeground}" HorizontalAlignment="Right" Margin="10,0" Grid.Row="2">
 				<TextBlock TextAlignment="Right">Sticky notes<LineBreak/>stay on top</TextBlock>
 			</Label>
 			<Label FontStyle="Italic" Foreground="{Binding MenuForeground}" HorizontalAlignment="Right" Margin="10,0" Grid.Row="3">
-				<TextBlock TextAlignment="Right">Sticky note<LineBreak/>transparency</TextBlock>
+				<TextBlock TextAlignment="Right">Note<LineBreak/>transparency</TextBlock>
 			</Label>
-			<ComboBox Grid.Column="1" Margin="0,10" SelectionChanged="StickyRibbonChanged" Width="150" x:Name="RibbonBox">
+			<ComboBox Grid.Column="1" Margin="0,10" SelectionChanged="StickyRibbonChanged" VerticalAlignment="Center" Width="125" x:Name="RibbonBox">
 				<ComboBoxItem Content="Content preview" Tag="Content"/>
 				<ComboBoxItem Content="Last changed date" Tag="Change"/>
 				<ComboBoxItem Content="Created date" Tag="Creation"/>
 				<ComboBoxItem Content="Index number" Tag="Index"/>
 			</ComboBox>
-			<ComboBox Grid.Column="1" Margin="0,10" Grid.Row="1" SelectionChanged="SortRibbonChanged" Width="150" x:Name="SortBox">
+			<ComboBox Grid.Column="1" Margin="0,10" Grid.Row="1" SelectionChanged="SortRibbonChanged" VerticalAlignment="Center" Width="125" x:Name="SortBox">
 				<ComboBoxItem Content="Created date" Tag="ByCreation"/>
 				<ComboBoxItem Content="Last changed date" Tag="ByChange"/>
 			</ComboBox>
-			<CheckBox Grid.Column="1" IsChecked="{Binding SearchResultsOnTop}" Margin="6,10" Grid.Row="2"/>
-			<Slider x:Name="NoteTransparentSlider" Grid.Column="1" IsSnapToTickEnabled="True" LargeChange="10" Margin="0,5" Maximum="95" Minimum="0" Grid.Row="3" SmallChange="5" TickFrequency="5" TickPlacement="BottomRight" ToolTip="{Binding NoteTransparency}" Value="{Binding NoteTransparency}" ValueChanged="NTS_ValueChanged" Width="150"/>
+			<CheckBox Grid.Column="1" IsChecked="{Binding SearchResultsOnTop}" Margin="20,10" Grid.Row="2"/>
+			<Slider x:Name="NoteTransparentSlider" Grid.Column="1" IsSnapToTickEnabled="True" LargeChange="10" Margin="0,5" Maximum="95" Minimum="0" Grid.Row="3" SmallChange="5" TickFrequency="5" TickPlacement="BottomRight" ToolTip="{Binding NoteTransparency}" Value="{Binding NoteTransparency}" ValueChanged="NTS_ValueChanged" VerticalAlignment="Center" Width="125"/>
 		</Grid>
 		<Separator Grid.ColumnSpan="2" Grid.Row="1"/>
 		<Grid Background="{Binding MenuBackground}" Grid.ColumnSpan="2" Grid.Row="2">
@@ -97,7 +97,7 @@
 			<Label Content="Text Colors" FontStyle="Italic" HorizontalAlignment="Right" Margin="10,0" Grid.Row="3"/>
 			<Label Content="Accent Colors" FontStyle="Italic" HorizontalAlignment="Right" Margin="10,0" Grid.Row="4"/>
 
-			<ComboBox Grid.Column="1" Foreground="Black" HorizontalAlignment="Center" SelectionChanged="MenuFontChanged" VerticalAlignment="Center" Width="150" x:Name="MenuFont"/>
+			<ComboBox Grid.Column="1" Foreground="Black" HorizontalAlignment="Center" SelectionChanged="MenuFontChanged" VerticalAlignment="Center" Width="125" x:Name="MenuFont"/>
 			<StackPanel Grid.Column="1" HorizontalAlignment="Center" Orientation="Horizontal" Grid.Row="1" VerticalAlignment="Center">
 				<Button Click="FontSizeChanged" Content="-" Width="20"/>
 				<TextBox HorizontalContentAlignment="Center" IsReadOnly="True" Text="{Binding MainFontSize}" Width="40"/>

@@ -6,22 +6,20 @@
 		xmlns:local="clr-namespace:SylverInk"
 		mc:Ignorable="d"
 		d:DataContext="{d:DesignInstance Type=local:ContextSettings}"
-		Background="{Binding MenuBackground}" Foreground="{Binding MenuForeground}" Height="275" MinHeight="275" MinWidth="325" MouseLeftButtonDown="Drag" ResizeMode="CanResize" ShowInTaskbar="False" Title="Sylver Ink: Replace" Topmost="True" Width="525">
-	<Grid>
-		<StackPanel HorizontalAlignment="Stretch">
-			<Label Content="Text to replace" FontStyle="Italic" HorizontalAlignment="Right" Margin="0,20,40,0"/>
-			<TextBox Margin="20,0" TextChanged="ReplaceTextChanged" x:Name="OldText"/>
-			<Label Content="New text" FontStyle="Italic" HorizontalAlignment="Right" Margin="0,40,40,0"/>
-			<TextBox Margin="20,0" x:Name="NewText"/>
-			<Grid Margin="0,40,0,0">
-				<Grid.ColumnDefinitions>
-					<ColumnDefinition Width="*"/>
-					<ColumnDefinition Width="*"/>
-				</Grid.ColumnDefinitions>
-				<Button Click="Replace_Click" Content="Replace" IsEnabled="{Binding ReadyToReplace}" x:Name="DoReplace"/>
-				<Button Click="CloseClick" Grid.Column="1" Content="Close"/>
-			</Grid>
-			<Label Content="{Binding NumReplacements}" FontStyle="Italic" Foreground="{Binding AccentForeground}" HorizontalAlignment="Center"/>
-		</StackPanel>
-	</Grid>
+		Background="{Binding MenuBackground}" Foreground="{Binding MenuForeground}" MaxHeight="225" MinHeight="225" MinWidth="325" MouseLeftButtonDown="Drag" ResizeMode="CanResize" ShowInTaskbar="False" Title="Sylver Ink: Replace" Topmost="True" Width="450">
+	<StackPanel HorizontalAlignment="Stretch">
+		<Label Content="Text to replace" FontStyle="Italic" HorizontalAlignment="Right" Margin="0,10,40,0"/>
+		<TextBox Margin="20,0" TextChanged="ReplaceTextChanged" x:Name="OldText"/>
+		<Label Content="New text" FontStyle="Italic" HorizontalAlignment="Right" Margin="0,20,40,0"/>
+		<TextBox Margin="20,0" x:Name="NewText"/>
+		<Grid Margin="0,20,0,0">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="*"/>
+				<ColumnDefinition Width="*"/>
+			</Grid.ColumnDefinitions>
+			<Button Click="Replace_Click" Content="Replace" IsEnabled="{Binding ReadyToReplace}" x:Name="DoReplace"/>
+			<Button Click="CloseClick" Grid.Column="1" Content="Close"/>
+		</Grid>
+		<Label Content="{Binding NumReplacements}" FontStyle="Italic" Foreground="{Binding AccentForeground}" HorizontalAlignment="Center"/>
+	</StackPanel>
 </Window>
