@@ -119,22 +119,8 @@ public static partial class CommonUtils
 
 	public static string MakeUUID(UUIDType type = UUIDType.Record)
 	{
-		var time = DateTime.UtcNow;
-
-		var micro = time.Microsecond;
-
-		var seed = (int)(time.Ticks & int.MaxValue);
-		var rnd = new Random(seed);
-
-		long mac = rnd.Next();
-		for (double i = 4.2; i < 5.0; i += rnd.NextDouble())
-			mac += (long)Math.Floor(mac / (rnd.NextDouble() + i));
-
-		mac |= (long)(rnd.Next() & 0xFFFF) << 32;
-
 		var uuid = Guid.NewGuid().ToString();
-
-		uuid = uuid[..^17].ToUpper(CultureInfo.InvariantCulture) + $"{(byte)(micro % 256):X2}{(byte)type:X2}-{mac & 0xFFFF_FFFF_FFFF:X12}";
+		uuid = $"{uuid[..^17].ToUpper(CultureInfo.InvariantCulture)}{(byte)(DateTime.UtcNow.Microsecond % 256):X2}{(byte)type:X2}{uuid[23..].ToUpper(CultureInfo.InvariantCulture)}";
 		return uuid;
 	}
 
@@ -147,10 +133,13 @@ public static partial class CommonUtils
 			if (result.ResultDatabase is not Database rDB)
 				continue;
 
+			if (!rDB.Equals(db))
+				continue;
+
 			if (result.ResultRecord is not NoteRecord rNote)
 				continue;
 
-			if (!(rDB.Equals(db) && rNote.Equals(record)))
+			if (!rNote.Equals(record))
 				continue;
 
 			result.Activate();
