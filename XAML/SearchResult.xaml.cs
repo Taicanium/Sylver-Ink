@@ -23,6 +23,7 @@ public partial class SearchResult : Window, IDisposable
 	private Task? LeaveTask;
 	private DateTime LeaveTime;
 	private bool NeedsAutosave;
+	private double StartOpacity;
 	private DateTime TimeSinceAutosave = DateTime.UtcNow;
 	private CancellationTokenSource? TokenSource;
 
@@ -159,16 +160,19 @@ public partial class SearchResult : Window, IDisposable
 			TokenSource?.Cancel();
 
 		EnterTime = DateTime.UtcNow;
+		StartOpacity = Opacity;
 
 		TokenSource?.Dispose();
 		TokenSource = new();
-		//TokenSource.Token.Register(() => Opacity = IsMouseOver ? 1.0 : 1.0 - (CommonUtils.Settings.NoteTransparency / 100.0));
 
-		EnterTask = Task.Factory.StartNew(() => {
+		EnterTask = Task.Factory.StartNew((tokenObject) => {
+			if (tokenObject is not CancellationToken token)
+				return;
+
 			var Seconds = DateTime.UtcNow.Subtract(EnterTime).Milliseconds / 1000.0;
-			while (Seconds < 0.25)
+			while (!token.IsCancellationRequested && Seconds < 0.25)
 			{
-				var lerpValue = Lerp(1.0 - (CommonUtils.Settings.NoteTransparency / 100.0), 1.0, Seconds * 4.0);
+				var lerpValue = Lerp(StartOpacity, 1.0, Seconds * 4.0);
 				Concurrent(() => Opacity = lerpValue);
 				Seconds = DateTime.UtcNow.Subtract(EnterTime).Milliseconds / 1000.0;
 			}
@@ -184,16 +188,19 @@ public partial class SearchResult : Window, IDisposable
 			TokenSource?.Cancel();
 
 		LeaveTime = DateTime.UtcNow;
+		StartOpacity = Opacity;
 
 		TokenSource?.Dispose();
 		TokenSource = new();
-		//TokenSource.Token.Register(() => Opacity = IsMouseOver ? 1.0 : 1.0 - (CommonUtils.Settings.NoteTransparency / 100.0));
 
-		LeaveTask = Task.Factory.StartNew(() => {
+		LeaveTask = Task.Factory.StartNew((tokenObject) => {
+			if (tokenObject is not CancellationToken token)
+				return;
+
 			var Seconds = DateTime.UtcNow.Subtract(LeaveTime).Milliseconds / 1000.0;
-			while (Seconds < 0.25)
+			while (!token.IsCancellationRequested && Seconds < 0.25)
 			{
-				var lerpValue = Lerp(1.0, 1.0 - (CommonUtils.Settings.NoteTransparency / 100.0), Seconds * 4.0);
+				var lerpValue = Lerp(StartOpacity, 1.0 - (CommonUtils.Settings.NoteTransparency / 100.0), Seconds * 4.0);
 				Concurrent(() => Opacity = lerpValue);
 				Seconds = DateTime.UtcNow.Subtract(LeaveTime).Milliseconds / 1000.0;
 			}
