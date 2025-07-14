@@ -16,10 +16,15 @@ namespace SylverInk;
 /// <summary>
 /// Interaction logic for SearchResult.xaml
 /// </summary>
-public partial class SearchResult : Window
+public partial class SearchResult : Window, IDisposable
 {
+	private Task? EnterTask;
+	private DateTime EnterTime;
+	private Task? LeaveTask;
+	private DateTime LeaveTime;
 	private bool NeedsAutosave;
 	private DateTime TimeSinceAutosave = DateTime.UtcNow;
+	private CancellationTokenSource? TokenSource;
 
 	public bool Dragging { get; private set; }
 	public Point DragMouseCoords { get; private set; } = new(0, 0);
@@ -58,6 +63,14 @@ public partial class SearchResult : Window
 
 		PreviousOpenNote = ResultRecord;
 		Close();
+	}
+
+	public void Dispose()
+	{
+		EnterTask?.Dispose();
+		LeaveTask?.Dispose();
+		TokenSource?.Dispose();
+		GC.SuppressFinalize(this);
 	}
 
 	private void Result_Closed(object? sender, EventArgs e)
@@ -128,10 +141,63 @@ public partial class SearchResult : Window
 
 	private void WindowMouseDown(object? sender, MouseButtonEventArgs e)
 	{
+		if (!EnterTask?.IsCompleted is true)
+			TokenSource?.Cancel();
+
 		var n = PointToScreen(e.GetPosition(null));
 		CaptureMouse();
 		DragMouseCoords = new(Left - n.X, Top - n.Y);
 		Dragging = true;
+	}
+
+	private void WindowMouseEnter(object sender, MouseEventArgs e)
+	{
+		if (IsActive)
+			return;
+
+		if (!LeaveTask?.IsCompleted is true)
+			TokenSource?.Cancel();
+
+		EnterTime = DateTime.UtcNow;
+
+		TokenSource?.Dispose();
+		TokenSource = new();
+		//TokenSource.Token.Register(() => Opacity = IsMouseOver ? 1.0 : 1.0 - (CommonUtils.Settings.NoteTransparency / 100.0));
+
+		EnterTask = Task.Factory.StartNew(() => {
+			var Seconds = DateTime.UtcNow.Subtract(EnterTime).Milliseconds / 1000.0;
+			while (Seconds < 0.25)
+			{
+				var lerpValue = Lerp(1.0 - (CommonUtils.Settings.NoteTransparency / 100.0), 1.0, Seconds * 4.0);
+				Concurrent(() => Opacity = lerpValue);
+				Seconds = DateTime.UtcNow.Subtract(EnterTime).Milliseconds / 1000.0;
+			}
+		}, TokenSource.Token);
+	}
+
+	private void WindowMouseLeave(object sender, MouseEventArgs e)
+	{
+		if (IsActive)
+			return;
+
+		if (!EnterTask?.IsCompleted is true)
+			TokenSource?.Cancel();
+
+		LeaveTime = DateTime.UtcNow;
+
+		TokenSource?.Dispose();
+		TokenSource = new();
+		//TokenSource.Token.Register(() => Opacity = IsMouseOver ? 1.0 : 1.0 - (CommonUtils.Settings.NoteTransparency / 100.0));
+
+		LeaveTask = Task.Factory.StartNew(() => {
+			var Seconds = DateTime.UtcNow.Subtract(LeaveTime).Milliseconds / 1000.0;
+			while (Seconds < 0.25)
+			{
+				var lerpValue = Lerp(1.0, 1.0 - (CommonUtils.Settings.NoteTransparency / 100.0), Seconds * 4.0);
+				Concurrent(() => Opacity = lerpValue);
+				Seconds = DateTime.UtcNow.Subtract(LeaveTime).Milliseconds / 1000.0;
+			}
+		}, TokenSource.Token);
 	}
 
 	private void WindowMouseUp(object? sender, MouseButtonEventArgs e)

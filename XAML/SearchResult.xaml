@@ -7,7 +7,7 @@
 		mc:Ignorable="d"
 		d:DataContext="{d:DesignInstance Type=local:ContextSettings}"
 		Activated="WindowActivated" AllowsTransparency="True"
-		Background="Transparent" Closed="Result_Closed" Deactivated="WindowDeactivated" Height="225" Loaded="Result_Loaded" MinHeight="125" MinWidth="175" MouseDown="WindowMouseDown" MouseMove="WindowMove" MouseUp="WindowMouseUp" ResizeMode="CanResizeWithGrip" ShowInTaskbar="{Binding SearchResultsInTaskbar}" Title="Sylver Ink: Sticky Note" Topmost="{Binding SearchResultsOnTop}" Width="225" WindowStyle="None">
+		Background="Transparent" Closed="Result_Closed" Deactivated="WindowDeactivated" Height="225" Loaded="Result_Loaded" MinHeight="125" MinWidth="175" MouseDown="WindowMouseDown" MouseEnter="WindowMouseEnter" MouseLeave="WindowMouseLeave" MouseMove="WindowMove" MouseUp="WindowMouseUp" ResizeMode="CanResizeWithGrip" ShowInTaskbar="{Binding SearchResultsInTaskbar}" Title="Sylver Ink: Sticky Note" Topmost="{Binding SearchResultsOnTop}" Width="225" WindowStyle="None">
 	<Border Background="{Binding MenuBackground}" BorderBrush="{Binding AccentBackground}" BorderThickness="1.5" CornerRadius="6">
 		<Grid>
 			<Grid.ColumnDefinitions>

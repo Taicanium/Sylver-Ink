@@ -115,11 +115,11 @@ public static class SearchResultUtils
 
 	private static Point Snap(this SearchResult window, ref Point Coords)
 	{
-		var Snapped = (false, false);
+		var (XSnapped, YSnapped) = (false, false);
 
 		foreach (SearchResult other in OpenQueries)
 		{
-			if (Snapped.Item1 && Snapped.Item2)
+			if (XSnapped && YSnapped)
 				return Coords;
 
 			if (other.ResultRecord == window.ResultRecord)
@@ -150,52 +150,52 @@ public static class SearchResultUtils
 				|| (LT2.Y >= LT1.Y && LT2.Y <= RB1.Y)
 				|| (RB2.Y >= LT1.Y && RB2.Y <= RB1.Y);
 
-			if (dLR < window.SnapTolerance && YTolerance && !Snapped.Item1)
+			if (dLR < window.SnapTolerance && YTolerance && !XSnapped)
 			{
 				Coords.X = RB2.X;
-				Snapped = (true, Snapped.Item2);
+				XSnapped = true;
 			}
 
-			if (dRL < window.SnapTolerance && YTolerance && !Snapped.Item1)
+			if (dRL < window.SnapTolerance && YTolerance && !XSnapped)
 			{
 				Coords.X = LT2.X - window.Width;
-				Snapped = (true, Snapped.Item2);
+				XSnapped = true;
 			}
 
-			if (dTB < window.SnapTolerance && XTolerance && !Snapped.Item2)
+			if (dTB < window.SnapTolerance && XTolerance && !YSnapped)
 			{
 				Coords.Y = RB2.Y;
-				Snapped = (Snapped.Item1, true);
+				YSnapped = true;
 			}
 
-			if (dBT < window.SnapTolerance && XTolerance && !Snapped.Item2)
+			if (dBT < window.SnapTolerance && XTolerance && !YSnapped)
 			{
 				Coords.Y = LT2.Y - window.Height;
-				Snapped = (Snapped.Item1, true);
+				YSnapped = true;
 			}
 
-			if (dLL < window.SnapTolerance && !Snapped.Item1 && Snapped.Item2)
+			if (dLL < window.SnapTolerance && !XSnapped && YSnapped)
 			{
 				Coords.X = LT2.X;
-				Snapped = (true, true);
+				(XSnapped, YSnapped) = (true, true);
 			}
 
-			if (dRR < window.SnapTolerance && !Snapped.Item1 && Snapped.Item2)
+			if (dRR < window.SnapTolerance && !XSnapped && YSnapped)
 			{
 				Coords.X = RB2.X - window.Width;
-				Snapped = (true, true);
+				(XSnapped, YSnapped) = (true, true);
 			}
 
-			if (dTT < window.SnapTolerance && Snapped.Item1 && !Snapped.Item2)
+			if (dTT < window.SnapTolerance && XSnapped && !YSnapped)
 			{
 				Coords.Y = LT2.Y;
-				Snapped = (true, true);
+				(XSnapped, YSnapped) = (true, true);
 			}
 
-			if (dBB < window.SnapTolerance && Snapped.Item1 && !Snapped.Item2)
+			if (dBB < window.SnapTolerance && XSnapped && !YSnapped)
 			{
 				Coords.Y = RB2.Y - window.Height;
-				Snapped = (true, true);
+				(XSnapped, YSnapped) = (true, true);
 			}
 		}
 

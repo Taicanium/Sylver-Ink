@@ -115,6 +115,8 @@ public static partial class CommonUtils
 		(byte)(data & 0xFF)
 	];
 
+	public static double Lerp(double x, double y, double a) => (y * a) + ((1.0 - a) * x);
+
 	public static string MakeUUID(UUIDType type = UUIDType.Record)
 	{
 		var time = DateTime.UtcNow;
