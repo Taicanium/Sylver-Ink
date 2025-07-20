@@ -1,9 +1,7 @@
-﻿using System.Threading.Tasks;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using static SylverInk.Notes.DatabaseUtils;
-using static SylverInk.XAMLUtils.DataUtils;
+using static SylverInk.XAMLUtils.ReplaceUtils;
 
 namespace SylverInk;
 
@@ -12,9 +10,7 @@ namespace SylverInk;
 /// </summary>
 public partial class Replace : Window
 {
-	private (int, int) _counts;
-	private string _newText = string.Empty;
-	private string _oldText = string.Empty;
+	public (int, int) Counts { get; set; }
 
 	public Replace()
 	{
@@ -28,26 +24,9 @@ public partial class Replace : Window
 
 	private void Drag(object? sender, MouseButtonEventArgs e) => DragMove();
 
-	private void FinishReplace()
-	{
-		CommonUtils.Settings.NumReplacements = $"Replaced {_counts.Item1:N0} occurrences in {_counts.Item2:N0} notes.";
-		DeferUpdateRecentNotes();
-
-		DoReplace.Content = "Replace";
-		DoReplace.IsEnabled = true;
-	}
-
-	private async Task PerformReplace()
-	{
-		if (CurrentDatabase is null)
-			return;
-
-		await Task.Run(() => _counts = CurrentDatabase.Replace(_oldText, _newText));
-	}
-
 	private void ReplaceTextChanged(object? sender, TextChangedEventArgs e) => CommonUtils.Settings.ReadyToReplace = !string.IsNullOrWhiteSpace(OldText.Text);
 
-	private async void Replace_Click(object? sender, RoutedEventArgs e)
+	private void Replace_Click(object? sender, RoutedEventArgs e)
 	{
 		if (sender is not Button button)
 			return;
@@ -55,11 +34,9 @@ public partial class Replace : Window
 		button.Content = "Replacing...";
 		button.IsEnabled = false;
 
-		_counts = (0, 0);
-		_newText = NewText.Text;
-		_oldText = OldText.Text;
+		Counts = (0, 0);
 
-		await PerformReplace();
-		FinishReplace();
+		this.PerformReplace();
+		this.FinishReplace();
 	}
 }

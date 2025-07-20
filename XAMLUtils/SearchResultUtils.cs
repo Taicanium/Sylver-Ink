@@ -2,6 +2,7 @@
 using SylverInk.Notes;
 using SylverInk.XAML;
 using System;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -15,6 +16,16 @@ namespace SylverInk.XAMLUtils;
 
 public static class SearchResultUtils
 {
+	[DllImport("user32.dll")]
+	static extern int GetWindowLong(IntPtr hwnd, int index);
+
+	[DllImport("user32.dll")]
+	static extern int SetWindowLong(IntPtr hwnd, int index, int newStyle);
+
+	private const int GWL_EXSTYLE = -20;
+	private const int WS_EX_LAYERED = 0x00080000;
+	private const int WS_EX_TRANSPARENT = 0x00000020;
+
 	public struct SimplePoint(int x, int y)
 	{
 		public int X { get; set; } = x;
@@ -109,6 +120,70 @@ public static class SearchResultUtils
 		window.Top = newCoords.Y;
 	}
 
+	private static void InitEnterMonitor(SearchResult window)
+	{
+		window.EnterMonitor = new()
+		{
+			Interval = new TimeSpan(0, 0, 0, 0, 20)
+		};
+
+		window.EnterMonitor.Tick += (_, _) =>
+		{
+			var Seconds = (DateTime.UtcNow.Ticks - window.EnterTime) * 1E-7;
+
+			if (Seconds > CommonUtils.Settings.NoteClickthrough)
+			{
+				Concurrent(window.UnsetWindowExTransparent);
+				window.Opacity = 1.0;
+				window.EnterMonitor.Stop();
+				return;
+			}
+
+			var tick = Seconds * CommonUtils.Settings.NoteClickthroughInverse;
+			window.Opacity = Lerp(window.StartOpacity, 1.0, tick * tick);
+		};
+	}
+
+	private static void InitLeaveMonitor(SearchResult window)
+	{
+		window.LeaveMonitor = new()
+		{
+			Interval = new TimeSpan(0, 0, 0, 0, 20)
+		};
+
+		window.LeaveMonitor.Tick += (_, _) =>
+		{
+			var Seconds = (DateTime.UtcNow.Ticks - window.LeaveTime) * 1E-7;
+
+			if (Seconds > CommonUtils.Settings.NoteClickthrough)
+			{
+				window.Opacity = 1.0 - (CommonUtils.Settings.NoteTransparency * 0.01);
+				window.LeaveMonitor.Stop();
+				return;
+			}
+
+			var tick = Seconds * CommonUtils.Settings.NoteClickthroughInverse;
+			window.Opacity = Lerp(window.StartOpacity, 1.0 - (CommonUtils.Settings.NoteTransparency * 0.01), tick * tick);
+		};
+	}
+
+	private static void InitMouseMonitor(SearchResult window)
+	{
+		window.MouseMonitor = new()
+		{
+			Interval = new TimeSpan(0, 0, 0, 0, 150)
+		};
+
+		window.MouseMonitor.Tick += window.WindowMouseMonitor;
+	}
+
+	public static void InitMonitors(this SearchResult window)
+	{
+		InitEnterMonitor(window);
+		InitLeaveMonitor(window);
+		InitMouseMonitor(window);
+	}
+
 	public static void SaveRecord(this SearchResult window)
 	{
 		if (window.ResultRecord is null)
@@ -117,6 +192,12 @@ public static class SearchResultUtils
 		window.ResultDatabase?.CreateRevision(window.ResultRecord, FlowDocumentToXaml(window.ResultBlock.Document));
 		window.LastChangedLabel.Content = window.ResultRecord?.GetLastChange();
 		DeferUpdateRecentNotes();
+	}
+
+	public static bool SetWindowExTransparent(this SearchResult window)
+	{
+		var extendedStyle = GetWindowLong(window.HWnd, GWL_EXSTYLE);
+		return SetWindowLong(window.HWnd, GWL_EXSTYLE, extendedStyle | WS_EX_LAYERED | WS_EX_TRANSPARENT) != 0;
 	}
 
 	private static Point Snap(this SearchResult window, ref Point Coords)
@@ -206,5 +287,10 @@ public static class SearchResultUtils
 		}
 
 		return Coords;
+	}
+	public static bool UnsetWindowExTransparent(this SearchResult window)
+	{
+		int extendedStyle = GetWindowLong(window.HWnd, GWL_EXSTYLE);
+		return SetWindowLong(window.HWnd, GWL_EXSTYLE, extendedStyle & ~WS_EX_LAYERED & ~WS_EX_TRANSPARENT) != 0;
 	}
 }

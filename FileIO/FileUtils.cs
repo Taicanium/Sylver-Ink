@@ -45,7 +45,6 @@ public static class FileUtils
 	/// <summary>
 	/// Deletes a file if it exists.
 	/// </summary>
-	/// <param name="filename">The file to be deleted.</param>
 	/// <returns><c>true</c> if the file existed and was deleted; else, <c>false</c>.</returns>
 	public static bool Erase(string filename)
 	{

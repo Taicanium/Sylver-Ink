@@ -2,7 +2,6 @@
 using SylverInk.Notes;
 using SylverInk.XAMLUtils;
 using System;
-using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -25,89 +24,34 @@ public partial class SearchResult : Window, IDisposable
 	[DllImport("user32.dll")]
 	static extern bool GetCursorPos(out SearchResultUtils.SimplePoint pPoint);
 
-	[DllImport("user32.dll")]
-	static extern int GetWindowLong(IntPtr hwnd, int index);
-
-	[DllImport("user32.dll")]
-	static extern int SetWindowLong(IntPtr hwnd, int index, int newStyle);
-
-	private readonly DispatcherTimer EnterMonitor;
-	private long EnterTime;
-	private const int GWL_EXSTYLE = -20;
-	private IntPtr hWnd;
-	private readonly DispatcherTimer LeaveMonitor;
-	private long LeaveTime;
 	private bool MouseInside;
-	private readonly DispatcherTimer MouseMonitor;
 	private bool NeedsAutosave;
-	private double StartOpacity;
 	private DateTime TimeSinceAutosave = DateTime.UtcNow;
-	private const int WS_EX_LAYERED = 0x00080000;
-	private const int WS_EX_TRANSPARENT = 0x00000020;
 
 	public bool Dragging { get; private set; }
 	public Point DragMouseCoords { get; private set; } = new(0, 0);
 	public bool Edited { get; set; }
+	public DispatcherTimer? EnterMonitor { get; set; }
+	public long EnterTime { get; set; }
 	public bool FinishedLoading { get; set; }
+	public IntPtr HWnd { get; set; }
+	public DispatcherTimer? LeaveMonitor { get; set; }
+	public long LeaveTime { get; set; }
+	public DispatcherTimer? MouseMonitor { get; set; }
 	public int OriginalBlockCount { get; set; } = -1;
 	public int OriginalRevisionCount { get; set; }
 	public string OriginalText { get; set; } = string.Empty;
 	public Database? ResultDatabase { get; set; }
 	public NoteRecord? ResultRecord { get; set; }
 	public double SnapTolerance { get; } = 20.0;
+	public double StartOpacity { get; set; }
 
 	public SearchResult()
 	{
 		InitializeComponent();
 		DataContext = CommonUtils.Settings;
 
-		EnterMonitor = new()
-		{
-			Interval = new TimeSpan(0, 0, 0, 0, 20)
-		};
-
-		LeaveMonitor = new()
-		{
-			Interval = new TimeSpan(0, 0, 0, 0, 20)
-		};
-
-		EnterMonitor.Tick += (_, _) =>
-		{
-			var Seconds = (DateTime.UtcNow.Ticks - EnterTime) * 1E-7;
-
-			if (Seconds > CommonUtils.Settings.NoteClickthrough)
-			{
-				Concurrent(UnsetWindowExTransparent);
-				Opacity = 1.0;
-				EnterMonitor.Stop();
-				return;
-			}
-
-			var lerpValue = Lerp(StartOpacity, 1.0, Seconds * CommonUtils.Settings.NoteClickthroughInverse);
-			Concurrent(() => Opacity = lerpValue);
-		};
-
-		LeaveMonitor.Tick += (_, _) =>
-		{
-			var Seconds = (DateTime.UtcNow.Ticks - LeaveTime) * 1E-7;
-
-			if (Seconds > CommonUtils.Settings.NoteClickthrough)
-			{
-				Opacity = 1.0 - (CommonUtils.Settings.NoteTransparency * 0.01);
-				LeaveMonitor.Stop();
-				return;
-			}
-
-			var lerpValue = Lerp(StartOpacity, 1.0 - (CommonUtils.Settings.NoteTransparency * 0.01), Seconds * CommonUtils.Settings.NoteClickthroughInverse);
-			Concurrent(() => Opacity = lerpValue);
-		};
-
-		MouseMonitor = new()
-		{
-			Interval = new TimeSpan(0, 0, 0, 0, 150)
-		};
-
-		MouseMonitor.Tick += WindowMouseMonitor;
+		this.InitMonitors();
 	}
 
 	private void CloseClick(object? sender, RoutedEventArgs e)
@@ -128,9 +72,9 @@ public partial class SearchResult : Window, IDisposable
 			}
 		}
 
-		EnterMonitor.Stop();
-		LeaveMonitor.Stop();
-		MouseMonitor.Stop();
+		EnterMonitor?.Stop();
+		LeaveMonitor?.Stop();
+		MouseMonitor?.Stop();
 		PreviousOpenNote = ResultRecord;
 
 		Close();
@@ -180,18 +124,6 @@ public partial class SearchResult : Window, IDisposable
 		}, TaskCreationOptions.LongRunning);
 	}
 
-	public bool SetWindowExTransparent()
-	{
-		var extendedStyle = GetWindowLong(hWnd, GWL_EXSTYLE);
-		return SetWindowLong(hWnd, GWL_EXSTYLE, extendedStyle | WS_EX_LAYERED | WS_EX_TRANSPARENT) != 0;
-	}
-
-	public bool UnsetWindowExTransparent()
-	{
-		int extendedStyle = GetWindowLong(hWnd, GWL_EXSTYLE);
-		return SetWindowLong(hWnd, GWL_EXSTYLE, extendedStyle & ~WS_EX_LAYERED & ~WS_EX_TRANSPARENT) != 0;
-	}
-
 	private void ViewClick(object? sender, RoutedEventArgs e)
 	{
 		SearchWindow?.Close();
@@ -204,7 +136,7 @@ public partial class SearchResult : Window, IDisposable
 		Opacity = 1.0;
 		ViewButton.IsEnabled = true;
 
-		UnsetWindowExTransparent();
+		this.UnsetWindowExTransparent();
 	}
 
 	private void WindowDeactivated(object? sender, EventArgs e)
@@ -213,15 +145,15 @@ public partial class SearchResult : Window, IDisposable
 		Opacity = 1.0 - (CommonUtils.Settings.NoteTransparency * 0.01);
 		ViewButton.IsEnabled = false;
 
-		SetWindowExTransparent();
+		this.SetWindowExTransparent();
 	}
 
 	private void WindowLoaded(object? sender, RoutedEventArgs e)
 	{
 		this.Construct();
 
-		hWnd = new WindowInteropHelper(this).Handle;
-		MouseMonitor.Start();
+		HWnd = new WindowInteropHelper(this).Handle;
+		MouseMonitor?.Start();
 	}
 
 	private void WindowMove(object? sender, MouseEventArgs e) => this.Drag(sender, e);
@@ -239,13 +171,13 @@ public partial class SearchResult : Window, IDisposable
 		if (IsActive)
 			return;
 
-		if (EnterMonitor.IsEnabled)
+		if (EnterMonitor?.IsEnabled is true)
 			return;
 
 		if (CommonUtils.Settings.NoteTransparency == 0.0)
 			return;
 
-		LeaveMonitor.Stop();
+		LeaveMonitor?.Stop();
 
 		StartOpacity = Opacity;
 
@@ -253,7 +185,7 @@ public partial class SearchResult : Window, IDisposable
 			return;
 
 		EnterTime = DateTime.UtcNow.Ticks;
-		EnterMonitor.Start();
+		EnterMonitor?.Start();
 	}
 
 	private void WindowMouseLeave(object sender, MouseEventArgs e)
@@ -261,25 +193,25 @@ public partial class SearchResult : Window, IDisposable
 		if (IsActive)
 			return;
 
-		if (LeaveMonitor.IsEnabled)
+		if (LeaveMonitor?.IsEnabled is true)
 			return;
 
 		if (CommonUtils.Settings.NoteTransparency == 0.0)
 			return;
 
-		EnterMonitor.Stop();
+		EnterMonitor?.Stop();
 
 		StartOpacity = Opacity;
 
 		if (StartOpacity == 1.0 - (CommonUtils.Settings.NoteTransparency * 0.01))
 			return;
 
-		Concurrent(SetWindowExTransparent);
+		Concurrent(this.SetWindowExTransparent);
 		LeaveTime = DateTime.UtcNow.Ticks;
-		LeaveMonitor.Start();
+		LeaveMonitor?.Start();
 	}
 
-	private void WindowMouseMonitor(object? sender, EventArgs e)
+	public void WindowMouseMonitor(object? sender, EventArgs e)
 	{
 		Concurrent(() =>
 		{
@@ -287,7 +219,16 @@ public partial class SearchResult : Window, IDisposable
 				return;
 
 			var eventArgs = new MouseEventArgs(Mouse.PrimaryDevice, 0);
-			var position = PointFromScreen(new(screenPosition.X, screenPosition.Y));
+			Point position;
+
+			try
+			{
+				position = PointFromScreen(new(screenPosition.X, screenPosition.Y));
+			}
+			catch
+			{
+				return;
+			}
 
 			if (position.X > 0.0
 			&& position.Y > 0.0
@@ -298,9 +239,7 @@ public partial class SearchResult : Window, IDisposable
 					return;
 
 				MouseInside = true;
-
 				eventArgs.RoutedEvent = Mouse.MouseEnterEvent;
-				RaiseEvent(eventArgs);
 			}
 			else
 			{
@@ -308,10 +247,10 @@ public partial class SearchResult : Window, IDisposable
 					return;
 
 				MouseInside = false;
-
 				eventArgs.RoutedEvent = Mouse.MouseLeaveEvent;
-				RaiseEvent(eventArgs);
 			}
+
+			RaiseEvent(eventArgs);
 		});
 	}
 

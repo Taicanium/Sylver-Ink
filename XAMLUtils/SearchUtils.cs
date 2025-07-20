@@ -3,11 +3,33 @@ using System;
 using System.Threading.Tasks;
 using System.Windows.Documents;
 using static SylverInk.CommonUtils;
+using static SylverInk.Notes.DatabaseUtils;
 
 namespace SylverInk.XAMLUtils;
 
 public static class SearchUtils
 {
+	public static async Task PerformSearch(this Search window)
+	{
+		window.DBMatches.Clear();
+
+		foreach (Database db in Databases)
+			await window.SearchDatabase(db);
+
+		window.ResultsList.Sort(new Comparison<NoteRecord>((r1, r2) => r2.MatchTags(window.Query).CompareTo(r1.MatchTags(window.Query))));
+	}
+
+	public static void PostResults(this Search window)
+	{
+		CommonUtils.Settings.SearchResults.Clear();
+
+		for (int i = 0; i < window.ResultsList.Count; i++)
+			CommonUtils.Settings.SearchResults.Add(window.ResultsList[i]);
+
+		window.DoQuery.Content = "Query";
+		window.DoQuery.IsEnabled = true;
+	}
+
 	public static async Task SearchDatabase(this Search window, Database db)
 	{
 		db.UpdateWordPercentages();

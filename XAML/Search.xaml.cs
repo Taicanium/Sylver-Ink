@@ -2,12 +2,10 @@
 using SylverInk.XAMLUtils;
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using static SylverInk.CommonUtils;
-using static SylverInk.Notes.DatabaseUtils;
 
 namespace SylverInk;
 
@@ -35,27 +33,6 @@ public partial class Search : Window
 		CommonUtils.Settings.SearchResults.Clear();
 	}
 
-	private async Task PerformSearch()
-	{
-		DBMatches.Clear();
-
-		foreach (Database db in Databases)
-			await this.SearchDatabase(db);
-
-		ResultsList.Sort(new Comparison<NoteRecord>((r1, r2) => r2.MatchTags(Query).CompareTo(r1.MatchTags(Query))));
-	}
-
-	private void PostResults()
-	{
-		CommonUtils.Settings.SearchResults.Clear();
-
-		for (int i = 0; i < ResultsList.Count; i++)
-			CommonUtils.Settings.SearchResults.Add(ResultsList[i]);
-
-		DoQuery.Content = "Query";
-		DoQuery.IsEnabled = true;
-	}
-
 	private async void QueryClick(object? sender, RoutedEventArgs e)
 	{
 		if (sender is not Button button)
@@ -67,8 +44,8 @@ public partial class Search : Window
 		Query = SearchText.Text ?? string.Empty;
 		ResultsList.Clear();
 
-		await PerformSearch();
-		PostResults();
+		await this.PerformSearch();
+		this.PostResults();
 	}
 
 	private void SublistChanged(object? sender, RoutedEventArgs e)
