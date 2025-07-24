@@ -72,21 +72,20 @@ public partial class SearchResult : Window, IDisposable
 			}
 		}
 
-		EnterMonitor?.Stop();
-		LeaveMonitor?.Stop();
-		MouseMonitor?.Stop();
-		PreviousOpenNote = ResultRecord;
-
 		Close();
 	}
 
 	public void Dispose()
 	{
+		this.StopMonitors();
 		GC.SuppressFinalize(this);
 	}
 
 	private void Result_Closed(object? sender, EventArgs e)
 	{
+		this.StopMonitors();
+		PreviousOpenNote = ResultRecord;
+
 		if (Edited)
 			this.SaveRecord();
 

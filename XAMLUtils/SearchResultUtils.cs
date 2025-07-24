@@ -52,6 +52,7 @@ public static class SearchResultUtils
 		ChildPanel.SelectedIndex = ChildPanel.Items.Add(item);
 		OpenTabs.Add(item);
 
+		window.StopMonitors();
 		window.Close();
 	}
 
@@ -287,6 +288,13 @@ public static class SearchResultUtils
 		}
 
 		return Coords;
+	}
+
+	public static void StopMonitors(this SearchResult window)
+	{
+		window.EnterMonitor?.Stop();
+		window.LeaveMonitor?.Stop();
+		window.MouseMonitor?.Stop();
 	}
 	public static bool UnsetWindowExTransparent(this SearchResult window)
 	{
