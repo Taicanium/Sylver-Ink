@@ -141,7 +141,10 @@ public static partial class TextUtils
 		var escaped = xaml.Replace("{}{", "{");
 
 		if (!escaped.StartsWith("<FlowDocument"))
-			escaped = $"{FlowDocumentOpening}{escaped}{FlowDocumentClosing}";
+			escaped = $"{FlowDocumentOpening}{escaped}";
+
+		if (!escaped.EndsWith(FlowDocumentClosing))
+			escaped = $"{escaped}{FlowDocumentClosing}";
 
 		var document = (FlowDocument)XamlReader.Parse(escaped);
 		var pointer = document.ContentStart;
