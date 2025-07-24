@@ -87,13 +87,14 @@ static class UpdateHandler
 
 		await httpClient.DownloadFileTaskAsync(uriNode, TempUri);
 
-		ProcessStartInfo inf = new()
+		CommonUtils.AbortRun = true;
+
+		Process.Start(new ProcessStartInfo()
 		{
 			FileName = TempUri,
 			UseShellExecute = true,
-		};
+		});
 
-		Process.Start(inf);
 		Application.Current.Shutdown();
 	}
 }

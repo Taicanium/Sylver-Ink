@@ -31,7 +31,6 @@ public partial class MainWindow : Window, IDisposable
 	[DllImport("User32.dll")]
 	private static extern bool UnregisterHotKey(nint hWnd, int id);
 
-	private bool _ABORT;
 	private readonly WindowInteropHelper hWndHelper;
 	private Mutex? mutex;
 	private readonly string MutexName = $"SylverInk/{typeof(MainWindow).GUID}";
@@ -274,10 +273,10 @@ public partial class MainWindow : Window, IDisposable
 
 	private async void MainWindow_Closing(object? sender, CancelEventArgs e)
 	{
-		if (!_ABORT)
+		if (!AbortRun)
 			CommonUtils.Settings.Save();
 
-		if (_ABORT || !DatabaseChanged)
+		if (AbortRun || !DatabaseChanged)
 		{
 			Application.Current.Shutdown();
 			return;
@@ -371,7 +370,7 @@ public partial class MainWindow : Window, IDisposable
 			if (!ShellVerbsPassed) // Otherwise, close the program silently before a head is established.
 				MessageBox.Show("Another instance of Sylver Ink is already running.", "Sylver Ink: Error", MessageBoxButton.OK, MessageBoxImage.Error);
 
-			_ABORT = true;
+			AbortRun = true;
 			Close();
 			return;
 		}

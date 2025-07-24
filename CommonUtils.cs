@@ -42,6 +42,7 @@ public static partial class CommonUtils
 	private static Search? _search;
 	private static Settings? _settings;
 
+	public static bool AbortRun { get; set; }
 	public static string DateFormat { get; } = "yyyy-MM-dd HH:mm:ss";
 	public static bool FirstRun { get; set; } = true;
 	public static Import? ImportWindow { get => _import; set { _import?.Close(); _import = value; _import?.Show(); } }
