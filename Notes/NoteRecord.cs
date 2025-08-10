@@ -190,8 +190,8 @@ public partial class NoteRecord
 
 		var recordObj = (NoteRecord?)obj;
 		return base.Equals(obj) ||
-			(UUID?.Equals(recordObj?.UUID ?? string.Empty) is true) ||
-			(Created.Equals(recordObj?.Created) && Index.Equals(recordObj?.Index) && Initial?.Equals(recordObj?.Initial) is true && LastChange.Equals(recordObj?.LastChange));
+			(Created.Equals(recordObj?.Created) && Index.Equals(recordObj?.Index) && Initial?.Equals(recordObj?.Initial) is true && LastChange.Equals(recordObj?.LastChange)) ||
+			(UUID?.Equals(recordObj?.UUID ?? string.Empty) is true);
 	}
 
 	private int ExtractTags()

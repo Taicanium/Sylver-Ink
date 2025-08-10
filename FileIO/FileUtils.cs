@@ -91,6 +91,7 @@ public static class FileUtils
 				}
 				catch
 				{
+					tmpDB.Dispose();
 					return string.Empty;
 				}
 			}

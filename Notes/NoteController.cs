@@ -455,10 +455,7 @@ public partial class NoteController : IDisposable
 
 			recordCount = _serializer?.ReadInt32() ?? 0;
 			for (int i = 0; i < recordCount; i++)
-			{
-				NoteRecord record = new();
-				record.Deserialize(_serializer);
-			}
+				new NoteRecord().Deserialize(_serializer);
 			_serializer?.ReadString();
 			_structure = _serializer?.ReadByte();
 		}

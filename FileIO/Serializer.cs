@@ -134,6 +134,7 @@ public partial class Serializer : IDisposable
 		}
 		catch
 		{
+			_fileStream?.Dispose();
 			return false;
 		}
 
@@ -160,6 +161,7 @@ public partial class Serializer : IDisposable
 		}
 		catch
 		{
+			_fileStream?.Dispose();
 			return false;
 		}
 

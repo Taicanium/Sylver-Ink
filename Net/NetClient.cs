@@ -62,7 +62,6 @@ public partial class NetClient : IDisposable
 			return;
 
 		Active = true;
-
 		Address = CodeToAddress(code, out Flags);
 
 		if (DBClient.Connected)
