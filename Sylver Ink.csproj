@@ -12,12 +12,12 @@
 	<SourceRevisionId>build$([System.DateTime]::UtcNow.ToString("yyyyMMdd"))</SourceRevisionId>
 	<SupportedOSPlatformVersion>7.0</SupportedOSPlatformVersion>
 	<NeutralLanguage>en-US</NeutralLanguage>
-	<Version>1.4.13</Version>
+	<Version>1.4.14</Version>
 	<UseWindowsForms>False</UseWindowsForms>
 	<Title>Sylver Ink</Title>
 	<Authors>taicanium,norvinsk.hunter,milesfarber</Authors>
 	<PackageIcon>glasses.png</PackageIcon>
-	<ApplicationIcon>glasses.ico</ApplicationIcon>
+	<ApplicationIcon>res\glasses.ico</ApplicationIcon>
 	<PackageReadmeFile>README.md</PackageReadmeFile>
 	<Company>Taica</Company>
 	<PackageProjectUrl>https://github.com/Taicanium/Sylver-Ink</PackageProjectUrl>
@@ -30,6 +30,7 @@
 	<PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
 	<TargetFramework>net8.0-windows10.0.26100.0</TargetFramework>
 	<PlatformTarget>x64</PlatformTarget>
+	<ErrorReport>none</ErrorReport>
   </PropertyGroup>
   
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -49,13 +50,13 @@
   </PropertyGroup>
   
   <ItemGroup>
-	<Content Include="glasses.ico">
+	<Content Include="res\glasses.ico">
 	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	</Content>
   </ItemGroup>
   
   <ItemGroup>
-	<None Update="glasses.png">
+	<None Update="res\glasses.png">
 	  <Pack>True</Pack>
 	  <PackagePath>\</PackagePath>
 	</None>
@@ -73,10 +74,10 @@
 	<None Update="readme.rtf">
 	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	</None>
-	<None Update="sibk.ico">
+	<None Update="res\sibk.ico">
 	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	</None>
-	<None Update="sidb.ico">
+	<None Update="res\sidb.ico">
 	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	</None>
   </ItemGroup>
