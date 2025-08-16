@@ -83,7 +83,7 @@ public static class ImportUtils
 		}
 
 		int LastPredicateSequence = 0; // If the same predicate is detected sufficient times in a row, we will halt searching for a longer one.
-		double LastPredicateValue = 0.0; // The more frequent a predicate appears in the note data, the higher priority it will be assigned.
+		double LastPredicateValue = 0.0; // The more frequently a predicate appears in the note data, the higher priority it will be assigned.
 		double LineTotal = 0.0;
 
 		// Predicates may be any length greater than or equal to three characters.
@@ -163,24 +163,34 @@ public static class ImportUtils
 			foreach (string key in frequencies.Keys)
 				frequencies[key] /= total;
 
-			// Predicates must occur in at least 5% of all lines.
-			var ordered = frequencies.OrderByDescending(pair => pair.Value).First();
-			if (ordered.Value >= 0.05 && ordered.Value >= LastPredicateValue)
+			var orderedEnum = frequencies.OrderByDescending(pair => pair.Value).GetEnumerator();
+			string NewPredicate = window.AdaptivePredicate;
+
+			if (!orderedEnum.MoveNext())
+				break;
+
+			while (orderedEnum.Current.Value >= 0.001) // Predicates must occur in at least 0.1% of all lines.
 			{
-				var NewPredicate = "^" + ordered.Key;
-				if (window.AdaptivePredicate.Equals(NewPredicate))
+				if (orderedEnum.Current.Value >= LastPredicateValue
+					|| (!orderedEnum.Current.Key.StartsWith(classes[0]) && NewPredicate.StartsWith("^" + classes[0]))) // De-prioritize predicates that begin with letters, relative to predicates that do not.
 				{
-					LastPredicateSequence++;
-					continue;
+					NewPredicate = "^" + orderedEnum.Current.Key;
+					if (window.AdaptivePredicate.Equals(NewPredicate))
+						break;
+
+					window.AdaptivePredicate = NewPredicate;
+					LastPredicateSequence = 0;
+					LastPredicateValue = orderedEnum.Current.Value;
 				}
-				window.AdaptivePredicate = NewPredicate;
-				LastPredicateSequence = 0;
-				LastPredicateValue = ordered.Value;
+
+				if (!orderedEnum.MoveNext())
+					break;
 			}
-			else
+
+			if (window.AdaptivePredicate.Equals(NewPredicate))
 				LastPredicateSequence++;
 
-			if (LastPredicateSequence > 5)
+			if (LastPredicateSequence > 6)
 				break;
 		}
 
