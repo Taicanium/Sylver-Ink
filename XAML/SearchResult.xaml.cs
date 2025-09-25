@@ -24,8 +24,8 @@ public partial class SearchResult : Window, IDisposable
 	[DllImport("user32.dll")]
 	static extern bool GetCursorPos(out SearchResultUtils.SimplePoint pPoint);
 
+	private bool Autosaving;
 	private bool MouseInside;
-	private bool NeedsAutosave;
 	private DateTime TimeSinceAutosave = DateTime.UtcNow;
 
 	public bool Dragging { get; private set; }
@@ -107,18 +107,18 @@ public partial class SearchResult : Window, IDisposable
 			return;
 
 		Edited = ResultBlock.Document.Blocks.Count != OriginalBlockCount || !OriginalText.Equals(FlowDocumentToXaml(ResultBlock.Document));
-		if (NeedsAutosave)
+		if (Autosaving)
 			return;
 
-		NeedsAutosave = true;
+		Autosaving = true;
 		Task.Factory.StartNew(() =>
 		{
 			SpinWait.SpinUntil(() => (DateTime.UtcNow - TimeSinceAutosave).Seconds >= 5);
 
-			this.Autosave();
-			NeedsAutosave = false;
+			Concurrent(this.Autosave);
 			RecentNotesDirty = true;
 			TimeSinceAutosave = DateTime.UtcNow;
+			Autosaving = false;
 			return;
 		}, TaskCreationOptions.LongRunning);
 	}

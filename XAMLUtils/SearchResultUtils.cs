@@ -60,7 +60,10 @@ public static class SearchResultUtils
 	{
 		var lockFile = GetLockFile(window.ResultDatabase?.DBFile);
 		Erase(lockFile);
+
+		window.ResultRecord?.CreateRevision(FlowDocumentToXaml(window.ResultBlock.Document));
 		window.ResultDatabase?.Save(lockFile);
+		window.ResultRecord?.DeleteRevision(window.ResultRecord.GetNumRevisions());
 	}
 
 	public static void Construct(this SearchResult window)

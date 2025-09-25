@@ -18,8 +18,8 @@ namespace SylverInk.XAML;
 /// </summary>
 public partial class NoteTab : UserControl
 {
+	public bool Autosaving { get; set; }
 	public bool FinishedLoading { get; set; }
-	public bool NeedsAutosave { get; set; }
 	public int OriginalBlockCount { get; set; }
 	public string OriginalText { get; set; } = string.Empty;
 	public required NoteRecord Record { get; set; }
@@ -101,7 +101,7 @@ public partial class NoteTab : UserControl
 		if (sender is not Button button)
 			return;
 
-		CurrentDatabase.CreateRevision(Record, FlowDocumentToXaml(NoteBox.Document));
+		Record.CreateRevision(FlowDocumentToXaml(NoteBox.Document));
 		DeferUpdateRecentNotes();
 
 		NextButton.IsEnabled = false;
@@ -121,16 +121,16 @@ public partial class NoteTab : UserControl
 			return;
 
 		SaveButton.IsEnabled = NoteBox.Document.Blocks.Count != OriginalBlockCount || !FlowDocumentToXaml(NoteBox.Document).Equals(OriginalText);
-		if (NeedsAutosave)
+		if (Autosaving)
 			return;
 
-		NeedsAutosave = true;
+		Autosaving = true;
 		Task.Factory.StartNew(() =>
 		{
 			SpinWait.SpinUntil(() => (DateTime.UtcNow - TimeSinceAutosave).Seconds >= 5);
 
-			this.Autosave();
-			NeedsAutosave = false;
+			Concurrent(this.Autosave);
+			Autosaving = false;
 			RecentNotesDirty = true;
 			TimeSinceAutosave = DateTime.UtcNow;
 			return;

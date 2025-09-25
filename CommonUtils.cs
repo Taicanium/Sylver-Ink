@@ -1,4 +1,6 @@
 ﻿using SylverInk.Notes;
+using SylverInk.XAML;
+using SylverInk.XAMLUtils;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -152,6 +154,8 @@ public static partial class CommonUtils
 			return result;
 		}
 
+		RemoveRecordTab(record);
+
 		SearchResult resultWindow = new()
 		{
 			ResultDatabase = db,
@@ -169,6 +173,23 @@ public static partial class CommonUtils
 		DeferUpdateRecentNotes();
 
 		return resultWindow;
+	}
+
+	public static void RemoveRecordTab(NoteRecord record)
+	{
+		for (int i = OpenTabs.Count - 1; i > -1; i--)
+		{
+			var item = OpenTabs[i];
+
+			if (item.Content is not NoteTab tab)
+				continue;
+
+			if (!tab.Record.Equals(record))
+				continue;
+
+			OpenTabs.RemoveAt(i);
+			tab.Deconstruct();
+		}
 	}
 
 	public static int ShortFromBytes(byte[] data) =>

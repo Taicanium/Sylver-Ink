@@ -3,6 +3,7 @@ using SylverInk.XAML;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
@@ -108,7 +109,7 @@ public partial class NoteRecord
 		this.UUID = UUID ?? MakeUUID();
 	}
 
-	public void Add(NoteRevision revision)
+	public NoteRevision Add(NoteRevision revision)
 	{
 		if (revision.Created == -1)
 			revision.Created = DateTime.UtcNow.ToBinary();
@@ -126,6 +127,32 @@ public partial class NoteRecord
 
 		RecentNotesDirty = true;
 		DeferUpdateRecentNotes();
+
+		return revision;
+	}
+
+	public NoteRevision CreateRevision(string NewVersion)
+	{
+		string Current = ToXaml();
+		int StartIndex = 0;
+
+		if (NewVersion.Equals(Current))
+			return Revisions.Last();
+
+		for (int i = 0; i < Math.Min(Current.Length, NewVersion.Length); i++)
+		{
+			if (!Current[i].Equals(NewVersion[i]))
+				break;
+			StartIndex = i;
+		}
+
+		return Add(new()
+		{
+			Created = DateTime.UtcNow.ToBinary(),
+			StartIndex = StartIndex,
+			Substring = StartIndex >= NewVersion.Length ? string.Empty : NewVersion[StartIndex..],
+			Uuid = MakeUUID(UUIDType.Revision)
+		});
 	}
 
 	public void Delete()

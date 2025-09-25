@@ -2,6 +2,7 @@
 using SylverInk.XAML;
 using System;
 using System.Windows.Controls;
+using static SylverInk.CommonUtils;
 using static SylverInk.FileIO.FileUtils;
 using static SylverInk.Notes.DatabaseUtils;
 using static SylverInk.XAMLUtils.DataUtils;
@@ -18,7 +19,10 @@ public static class NoteTabUtils
 
 		var lockFile = GetLockFile(db.DBFile);
 		Erase(lockFile);
+
+		tab.Record.CreateRevision(FlowDocumentToXaml(tab.NoteBox.Document));
 		db.Save(lockFile);
+		tab.Record.DeleteRevision(tab.Record.GetNumRevisions());
 	}
 
 	public static void Construct(this NoteTab tab)
@@ -40,24 +44,14 @@ public static class NoteTabUtils
 
 	public static void Deconstruct(this NoteTab tab)
 	{
+		tab.Record.CreateRevision(FlowDocumentToXaml(tab.NoteBox.Document));
+
 		if (!tab.Record.Locked)
 			GetDatabaseFromRecord(tab.Record)?.Unlock(tab.Record.Index, true);
 
 		var ChildPanel = GetChildPanel("DatabasesPanel");
 
-		for (int i = OpenTabs.Count - 1; i > -1; i--)
-		{
-			var item = OpenTabs[i];
-
-			if (item.Content is not NoteTab otherTab)
-				continue;
-
-			if (!otherTab.Record.Equals(tab.Record))
-				continue;
-
-			OpenTabs.RemoveAt(i);
-			tab.Deconstruct();
-		}
+		RemoveRecordTab(tab.Record);
 
 		for (int i = ChildPanel.Items.Count - 1; i > 0; i--)
 		{

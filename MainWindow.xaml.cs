@@ -273,13 +273,25 @@ public partial class MainWindow : Window, IDisposable
 
 	private async void MainWindow_Closing(object? sender, CancelEventArgs e)
 	{
-		if (!AbortRun)
-			CommonUtils.Settings.Save();
-
-		if (AbortRun || !DatabaseChanged)
+		if (AbortRun)
 		{
 			Application.Current.Shutdown();
 			return;
+		}
+
+		CommonUtils.Settings.Save();
+
+		if (!DatabaseChanged)
+		{
+			switch (MessageBox.Show("Are you sure you wish to exit Sylver Ink?", "Sykver Ink: Notification", MessageBoxButton.YesNo, MessageBoxImage.Question))
+			{
+				case MessageBoxResult.No:
+					e.Cancel = true;
+					return;
+				case MessageBoxResult.Yes:
+					Application.Current.Shutdown();
+					return;
+			}
 		}
 
 		switch (MessageBox.Show("Do you want to save your work before exiting?", "Sylver Ink: Notification", MessageBoxButton.YesNoCancel, MessageBoxImage.Question))
@@ -367,9 +379,10 @@ public partial class MainWindow : Window, IDisposable
 
 		if (InstanceRunning())
 		{
-			if (!ShellVerbsPassed) // Otherwise, close the program silently before a head is established.
+			if (!ShellVerbsPassed)
 				MessageBox.Show("Another instance of Sylver Ink is already running.", "Sylver Ink: Error", MessageBoxButton.OK, MessageBoxImage.Error);
 
+			// Otherwise, close the program silently before a head is established.
 			AbortRun = true;
 			Close();
 			return;

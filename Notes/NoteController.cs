@@ -95,32 +95,9 @@ public partial class NoteController : IDisposable
 		return AddRecord(new(NextIndex, PlaintextToXaml(entry)));
 	}
 
-	public void CreateRevision(int index, string NewVersion) => CreateRevision(GetRecord(index), NewVersion);
+	public NoteRevision CreateRevision(int index, string NewVersion) => CreateRevision(GetRecord(index), NewVersion);
 
-	public void CreateRevision(NoteRecord record, string NewVersion)
-	{
-		string Current = record.ToXaml();
-		int StartIndex = 0;
-
-		if (NewVersion.Equals(Current))
-			return;
-
-		for (int i = 0; i < Math.Min(Current.Length, NewVersion.Length); i++)
-		{
-			if (!Current[i].Equals(NewVersion[i]))
-				break;
-			StartIndex = i;
-		}
-
-		Changed = true;
-		record.Add(new()
-		{
-			Created = DateTime.UtcNow.ToBinary(),
-			StartIndex = StartIndex,
-			Substring = StartIndex >= NewVersion.Length ? string.Empty : NewVersion[StartIndex..],
-			Uuid = MakeUUID(UUIDType.Revision)
-		});
-	}
+	public static NoteRevision CreateRevision(NoteRecord record, string NewVersion) => record.CreateRevision(NewVersion);
 
 	public void DeleteRecord(int index)
 	{
