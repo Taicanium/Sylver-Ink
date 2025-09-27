@@ -105,6 +105,23 @@ public static partial class CommonUtils
 	/// <param name="callback">The function to be executed on the main thread</param>
 	public static T Concurrent<T>(Func<T> callback) => Application.Current.Dispatcher.Invoke(callback);
 
+	public static T? FindVisualChildByName<T>(DependencyObject parent, string name) where T : DependencyObject
+	{
+		for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
+		{
+			var child = VisualTreeHelper.GetChild(parent, i);
+			if (child is T typedChild && child.GetValue(FrameworkElement.NameProperty) as string == name)
+				return typedChild;
+			else
+			{
+				var result = FindVisualChildByName<T>(child, name);
+				if (result != null)
+					return result;
+			}
+		}
+		return null;
+	}
+
 	public static int IntFromBytes(byte[] data) =>
 		(data[0] << 24)
 		+ (data[1] << 16)

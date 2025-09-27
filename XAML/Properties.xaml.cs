@@ -2,6 +2,7 @@
 using SylverInk.XAMLUtils;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 
 namespace SylverInk;
@@ -60,6 +61,19 @@ public partial class Properties : Window
 			return;
 
 		this.Revert();
+	}
+
+	// Rewriting the calendar's entre control template just to alter the proportions of the header button would violate my religion.
+	private void ReversionDate_CalendarOpened(object sender, RoutedEventArgs e)
+	{
+		var popup = CommonUtils.FindVisualChildByName<Popup>(ReversionDate, "PART_Popup");
+		var calendar = popup?.Child;
+		var headerButton = CommonUtils.FindVisualChildByName<Button>(calendar, "PART_HeaderButton");
+
+		headerButton.Height = 30;
+		headerButton.Width = 120;
+
+		return;
 	}
 
 	private void SelectedDateChanged(object? sender, SelectionChangedEventArgs e) => RestoreButton.IsEnabled = ReversionDate.SelectedDate is not null;

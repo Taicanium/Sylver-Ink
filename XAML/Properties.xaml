@@ -84,7 +84,7 @@
 			</Label>
 
 			<StackPanel Grid.Column="1" Margin="0,2,0,0" VerticalAlignment="Center">
-				<DatePicker MaxWidth="120" SelectedDateChanged="SelectedDateChanged" x:Name="ReversionDate"/>
+				<DatePicker CalendarOpened="ReversionDate_CalendarOpened" MaxWidth="120" SelectedDateChanged="SelectedDateChanged" x:Name="ReversionDate"/>
 				<Button Click="SelectTime" Content="12:00 AM" FontStyle="Normal" Margin="0,5" Width="70" x:Name="SelectedTime"/>
 				<Button Click="RestoreClick" Content="Restore" IsEnabled="False" Margin="0,10,0,5" x:Name="RestoreButton"/>
 			</StackPanel>
