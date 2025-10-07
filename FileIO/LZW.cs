@@ -125,7 +125,7 @@ public partial class LZW
 	/// <summary>
 	/// Initializes the LZW state engine.
 	/// </summary>
-	/// <param name="writing"><c>true</c> if we are compressing data and outputting it to the stream; <c>false</c> if we are reading and consuming LZW-compressed data.</param>
+	/// <param name="writing"><see langword="true"/> if we are compressing data and outputting it to the stream; <see langword="false"/> if we are reading and consuming LZW-compressed data.</param>
 	public void Init(int format, in Stream? fileStream = null, bool writing = false)
 	{
 		FileStream = fileStream ?? FileStream;

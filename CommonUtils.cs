@@ -105,20 +105,19 @@ public static partial class CommonUtils
 	/// <param name="callback">The function to be executed on the main thread</param>
 	public static T Concurrent<T>(Func<T> callback) => Application.Current.Dispatcher.Invoke(callback);
 
-	public static T? FindVisualChildByName<T>(DependencyObject parent, string name) where T : DependencyObject
+	public static T? FindVisualChildByName<T>(DependencyObject? parent, string name) where T : DependencyObject
 	{
 		for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
 		{
 			var child = VisualTreeHelper.GetChild(parent, i);
+
 			if (child is T typedChild && child.GetValue(FrameworkElement.NameProperty) as string == name)
 				return typedChild;
-			else
-			{
-				var result = FindVisualChildByName<T>(child, name);
-				if (result != null)
-					return result;
-			}
+			
+			if (FindVisualChildByName<T>(child, name) is T result)
+				return result;
 		}
+
 		return null;
 	}
 
@@ -138,7 +137,7 @@ public static partial class CommonUtils
 	public static double Lerp(double x, double y, double a)
 	{
 		a = a > 1.0 ? 1.0 : a < 0.0 ? 0.0 : a;
-		return (y * a) + ((1.0 - a) * x);
+		return (a * y) + ((1.0 - a) * x);
 	}
 
 	public static string MakeUUID(UUIDType type = UUIDType.Record)

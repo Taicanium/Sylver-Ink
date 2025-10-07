@@ -64,11 +64,14 @@ public partial class Properties : Window
 	}
 
 	// Rewriting the calendar's entre control template just to alter the proportions of the header button would violate my religion.
-	private void ReversionDate_CalendarOpened(object sender, RoutedEventArgs e)
+	private void CalendarOpened(object sender, RoutedEventArgs e)
 	{
-		var popup = CommonUtils.FindVisualChildByName<Popup>(ReversionDate, "PART_Popup");
+		var popup = CommonUtils.FindVisualChildByName<Popup>(sender as DependencyObject, "PART_Popup");
 		var calendar = popup?.Child;
 		var headerButton = CommonUtils.FindVisualChildByName<Button>(calendar, "PART_HeaderButton");
+
+		if (headerButton is null)
+			return;
 
 		headerButton.Height = 30;
 		headerButton.Width = 120;

@@ -188,7 +188,7 @@ public partial class ContextSettings : INotifyPropertyChanged
 					break;
 				case "NoteTransparency":
 					if (!double.TryParse(keyValue[1], out var transparency))
-						transparency = 100.0;
+						transparency = 95.0;
 					NoteTransparency = transparency;
 					break;
 				case "RecentNotesSortMode":
@@ -231,8 +231,8 @@ public partial class ContextSettings : INotifyPropertyChanged
 		$"ListForeground:{BytesFromBrush(ListForeground)}",
 		$"MenuBackground:{BytesFromBrush(MenuBackground)}",
 		$"MenuForeground:{BytesFromBrush(MenuForeground)}",
-		$"NoteClickthrough:{(int)NoteClickthrough}",
-		$"NoteTransparency:{(int)NoteTransparency}",
+		$"NoteClickthrough:{(double)NoteClickthrough}",
+		$"NoteTransparency:{(double)NoteTransparency}",
 		$"RecentNotesSortMode:{(int)RecentEntriesSortMode}",
 		$"RibbonDisplayMode:{(int)RibbonTabContent}",
 		$"SearchResultsOnTop:{SearchResultsOnTop}",
