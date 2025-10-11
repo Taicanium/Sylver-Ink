@@ -1,14 +1,13 @@
 ﻿using System;
-using System.Text.RegularExpressions;
-using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Documents;
 using System.Windows.Media;
 
 namespace SylverInk.XAMLUtils;
 
 public static partial class SettingsUtils
 {
-	public static void ColorChanged(string? ColorTag, Brush ColorSelection)
+	public static void ColorChanged(string? ColorTag, Brush ColorSelection, RichTextBox? TextTarget = null)
 	{
 		if (ColorTag is null)
 			return;
@@ -32,6 +31,14 @@ public static partial class SettingsUtils
 				break;
 			case "P3B":
 				CommonUtils.Settings.AccentBackground = ColorSelection;
+				break;
+			case "PT":
+				if (TextTarget is null)
+					break;
+
+				TextTarget.Selection.ApplyPropertyValue(TextElement.ForegroundProperty, ColorSelection);
+				TextTarget.Foreground = ColorSelection;
+
 				break;
 		}
 	}
@@ -62,114 +69,6 @@ public static partial class SettingsUtils
 		return (H << 16) + (S << 8) + V;
 	}
 
-	public static void InitBrushes(this Settings window)
-	{
-		var column = 1;
-		var row = 0;
-
-		foreach (var property in typeof(Brushes)?.GetProperties() ?? [])
-		{
-			if (property.GetMethod?.Invoke(null, null) is not SolidColorBrush brush)
-				continue;
-
-			if (brush.Color.A < 0xFF)
-				continue;
-
-			SolidColorBrush brushCopy = new(brush.Color);
-			brushCopy.SetValue(FrameworkElement.TagProperty, Uppercase().Replace(property.Name, new MatchEvaluator(match => " " + match.Value)).Trim());
-			window.AvailableBrushes.Add(brushCopy);
-		}
-
-		window.AvailableBrushes.Sort(new Comparison<SolidColorBrush>((brush1, brush2) =>
-		{
-			var HSV1 = HSVFromRGB(brush1);
-			var HSV2 = HSVFromRGB(brush2);
-			return HSV1.CompareTo(HSV2);
-		}));
-
-		for (int i = 0; i < window.AvailableBrushes.Count; i++)
-		{
-			var brush = window.AvailableBrushes[i];
-
-			System.Windows.Shapes.Rectangle colorRect = new()
-			{
-				Fill = brush,
-				Margin = new(-1),
-				Stretch = Stretch.UniformToFill,
-				ToolTip = brush.GetValue(FrameworkElement.TagProperty) as string
-			};
-
-			Button option = new()
-			{
-				Content = colorRect,
-				Height = 20,
-				Margin = new(2.5),
-				Width = 20,
-			};
-
-			option.Click += (sender, _) =>
-			{
-				var button = (Button)sender;
-				window.LastColorSelection = ((System.Windows.Shapes.Rectangle)button.Content).Fill;
-				ColorChanged(window.ColorTag, window.LastColorSelection);
-			};
-
-			colorRect.SetValue(ToolTipService.InitialShowDelayProperty, 250);
-
-			window.ColorGrid.Children.Add(option);
-
-			Grid.SetColumn(option, column);
-			Grid.SetRow(option, row);
-
-			column++;
-			if (column >= 10)
-			{
-				column = 0;
-				row++;
-			}
-		}
-	}
-
-	public static void InitColorGrid(this Settings window)
-	{
-		for (int i = 0; i < 10; i++)
-			window.ColorGrid.ColumnDefinitions.Add(new() { Width = new(1.0, GridUnitType.Star) });
-
-		for (int i = 0; i < 15; i++)
-			window.ColorGrid.RowDefinitions.Add(new() { Height = new(1.0, GridUnitType.Star) });
-
-		System.Windows.Shapes.Rectangle rainbowRect = new()
-		{
-			Fill = new LinearGradientBrush([
-				new(Colors.Red, 0.0),
-				new(Colors.Orange, 0.167),
-				new(Colors.Yellow, 0.33),
-				new(Colors.Green, 0.5),
-				new(Colors.Blue, 0.667),
-				new(Colors.Violet, 0.833),
-			], new(0, 0), new(1, 1)),
-			Margin = new(-1),
-			Stretch = Stretch.UniformToFill,
-			ToolTip = "Custom color..."
-		};
-
-		Button customOption = new()
-		{
-			Content = rainbowRect,
-			Height = 20,
-			Margin = new(2.5),
-			Width = 20
-		};
-
-		customOption.Click += (_, _) =>
-		{
-			window.ColorSelection.IsOpen = false;
-			window.CustomColorSelection.IsOpen = true;
-		};
-
-		window.ColorGrid.Children.Add(customOption);
-	}
-
 	public static void InitFonts(this Settings window)
 	{
 		foreach (var font in Fonts.SystemFontFamilies)
@@ -197,7 +96,4 @@ public static partial class SettingsUtils
 		if (window.MenuFont.SelectedItem is null)
 			window.MenuFont.SelectedIndex = window.ArialIndex;
 	}
-
-	[GeneratedRegex(@"\p{Lu}")]
-	private static partial Regex Uppercase();
 }

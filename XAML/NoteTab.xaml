@@ -25,53 +25,101 @@
 			<RowDefinition Height="Auto"/>
 		</Grid.RowDefinitions>
 		<Label FontStyle="Italic" HorizontalAlignment="Right" Margin="0,0,10,0" VerticalAlignment="Bottom" x:Name="RevisionLabel"/>
-		<StackPanel Grid.Row="1" Orientation="Horizontal" x:Name="NoteToolbar">
-			<Button Style="{StaticResource ToolbarButton}" Command="ApplicationCommands.Undo" Content="↶" ToolTip="Undo"/>
-			<Button Style="{StaticResource ToolbarButton}" Command="ApplicationCommands.Redo" Content="↷" ToolTip="Redo"/>
-			<Button IsEnabled="False" Visibility="Hidden" Width="20"/>
-			<Button Style="{StaticResource ToolbarButton}" Command="EditingCommands.ToggleBold" ToolTip="Bold">
-				<TextBlock FontWeight="Bold">B</TextBlock>
-			</Button>
-			<Button Style="{StaticResource ToolbarButton}" Command="EditingCommands.ToggleItalic" ToolTip="Italic">
-				<TextBlock FontStyle="Italic" FontWeight="Bold">I</TextBlock>
-			</Button>
-			<Button Style="{StaticResource ToolbarButton}" Command="EditingCommands.ToggleUnderline" ToolTip="Underline">
-				<TextBlock TextDecorations="Underline" FontWeight="Bold">U</TextBlock>
-			</Button>
-			<Button IsEnabled="False" Visibility="Hidden" Width="20"/>
-			<Button Style="{StaticResource ToolbarButton}" Command="EditingCommands.AlignLeft" ToolTip="Left">
-				<StackPanel>
-					<Line Stroke="{Binding ListForeground}" StrokeThickness="1" X1="0" X2="16" Y1="2" Y2="2"/>
-					<Line Stroke="{Binding ListForeground}" StrokeThickness="1" X1="0" X2="8" Y1="3" Y2="3"/>
-					<Line Stroke="{Binding ListForeground}" StrokeThickness="1" X1="0" X2="12" Y1="3" Y2="3"/>
-					<Line Stroke="{Binding ListForeground}" StrokeThickness="1" X1="0" X2="8" Y1="3" Y2="3"/>
-				</StackPanel>
-			</Button>
-			<Button Style="{StaticResource ToolbarButton}" Command="EditingCommands.AlignCenter" ToolTip="Center">
-				<StackPanel>
-					<Line Stroke="{Binding ListForeground}" StrokeThickness="1" X1="0" X2="16" Y1="2" Y2="2"/>
-					<Line Stroke="{Binding ListForeground}" StrokeThickness="1" X1="4" X2="12" Y1="3" Y2="3"/>
-					<Line Stroke="{Binding ListForeground}" StrokeThickness="1" X1="2" X2="14" Y1="3" Y2="3"/>
-					<Line Stroke="{Binding ListForeground}" StrokeThickness="1" X1="4" X2="12" Y1="3" Y2="3"/>
-				</StackPanel>
-			</Button>
-			<Button Style="{StaticResource ToolbarButton}" Command="EditingCommands.AlignRight" ToolTip="Right">
-				<StackPanel>
-					<Line Stroke="{Binding ListForeground}" StrokeThickness="1" X1="0" X2="16" Y1="2" Y2="2"/>
-					<Line Stroke="{Binding ListForeground}" StrokeThickness="1" X1="8" X2="16" Y1="3" Y2="3"/>
-					<Line Stroke="{Binding ListForeground}" StrokeThickness="1" X1="4" X2="16" Y1="3" Y2="3"/>
-					<Line Stroke="{Binding ListForeground}" StrokeThickness="1" X1="8" X2="16" Y1="3" Y2="3"/>
-				</StackPanel>
-			</Button>
-			<Button Style="{StaticResource ToolbarButton}" Command="EditingCommands.AlignJustify" ToolTip="Justify">
-				<StackPanel>
-					<Line Stroke="{Binding ListForeground}" StrokeThickness="1" X1="0" X2="16" Y1="2" Y2="2"/>
-					<Line Stroke="{Binding ListForeground}" StrokeThickness="1" X1="0" X2="16" Y1="3" Y2="3"/>
-					<Line Stroke="{Binding ListForeground}" StrokeThickness="1" X1="0" X2="16" Y1="3" Y2="3"/>
-					<Line Stroke="{Binding ListForeground}" StrokeThickness="1" X1="0" X2="16" Y1="3" Y2="3"/>
-				</StackPanel>
-			</Button>
-		</StackPanel>
+		<Grid Grid.Row="1" x:Name="NoteToolbar">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="Auto"/>
+				<ColumnDefinition Width="*"/>
+				<ColumnDefinition Width="Auto"/>
+				<ColumnDefinition Width="*"/>
+				<ColumnDefinition Width="Auto"/>
+				<ColumnDefinition Width="*"/>
+				<ColumnDefinition Width="Auto"/>
+				<ColumnDefinition Width="*"/>
+				<ColumnDefinition Width="Auto"/>
+			</Grid.ColumnDefinitions>
+			<Grid>
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="*"/>
+					<ColumnDefinition Width="*"/>
+				</Grid.ColumnDefinitions>
+				<Button Style="{StaticResource ToolbarButton}" Command="ApplicationCommands.Undo" Content="↶" ToolTip="Undo"/>
+				<Button Style="{StaticResource ToolbarButton}" Command="ApplicationCommands.Redo" Content="↷" Grid.Column="1" ToolTip="Redo"/>
+			</Grid>
+			<Grid Grid.Column="2">
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="*"/>
+					<ColumnDefinition Width="*"/>
+					<ColumnDefinition Width="*"/>
+				</Grid.ColumnDefinitions>
+				<Button Style="{StaticResource ToolbarButton}" Command="EditingCommands.ToggleBold" ToolTip="Bold">
+					<TextBlock FontWeight="Bold">B</TextBlock>
+				</Button>
+				<Button Style="{StaticResource ToolbarButton}" Command="EditingCommands.ToggleItalic" Grid.Column="1" ToolTip="Italic">
+					<TextBlock FontStyle="Italic" FontWeight="Bold">I</TextBlock>
+				</Button>
+				<Button Style="{StaticResource ToolbarButton}" Command="EditingCommands.ToggleUnderline" Grid.Column="2" ToolTip="Underline">
+					<TextBlock TextDecorations="Underline" FontWeight="Bold">U</TextBlock>
+				</Button>
+			</Grid>
+			<Grid Grid.Column="4">
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="*"/>
+					<ColumnDefinition Width="*"/>
+					<ColumnDefinition Width="*"/>
+					<ColumnDefinition Width="*"/>
+				</Grid.ColumnDefinitions>
+				<Button Style="{StaticResource ToolbarButton}" Command="EditingCommands.AlignLeft" ToolTip="Left">
+					<StackPanel>
+						<Line Stroke="{Binding ListForeground}" StrokeThickness="1" X1="0" X2="16" Y1="2" Y2="2"/>
+						<Line Stroke="{Binding ListForeground}" StrokeThickness="1" X1="0" X2="8" Y1="3" Y2="3"/>
+						<Line Stroke="{Binding ListForeground}" StrokeThickness="1" X1="0" X2="12" Y1="3" Y2="3"/>
+						<Line Stroke="{Binding ListForeground}" StrokeThickness="1" X1="0" X2="8" Y1="3" Y2="3"/>
+					</StackPanel>
+				</Button>
+				<Button Style="{StaticResource ToolbarButton}" Command="EditingCommands.AlignCenter" Grid.Column="1" ToolTip="Center">
+					<StackPanel>
+						<Line Stroke="{Binding ListForeground}" StrokeThickness="1" X1="0" X2="16" Y1="2" Y2="2"/>
+						<Line Stroke="{Binding ListForeground}" StrokeThickness="1" X1="4" X2="12" Y1="3" Y2="3"/>
+						<Line Stroke="{Binding ListForeground}" StrokeThickness="1" X1="2" X2="14" Y1="3" Y2="3"/>
+						<Line Stroke="{Binding ListForeground}" StrokeThickness="1" X1="4" X2="12" Y1="3" Y2="3"/>
+					</StackPanel>
+				</Button>
+				<Button Style="{StaticResource ToolbarButton}" Command="EditingCommands.AlignRight" Grid.Column="2" ToolTip="Right">
+					<StackPanel>
+						<Line Stroke="{Binding ListForeground}" StrokeThickness="1" X1="0" X2="16" Y1="2" Y2="2"/>
+						<Line Stroke="{Binding ListForeground}" StrokeThickness="1" X1="8" X2="16" Y1="3" Y2="3"/>
+						<Line Stroke="{Binding ListForeground}" StrokeThickness="1" X1="4" X2="16" Y1="3" Y2="3"/>
+						<Line Stroke="{Binding ListForeground}" StrokeThickness="1" X1="8" X2="16" Y1="3" Y2="3"/>
+					</StackPanel>
+				</Button>
+				<Button Style="{StaticResource ToolbarButton}" Command="EditingCommands.AlignJustify" Grid.Column="3" ToolTip="Justify">
+					<StackPanel>
+						<Line Stroke="{Binding ListForeground}" StrokeThickness="1" X1="0" X2="16" Y1="2" Y2="2"/>
+						<Line Stroke="{Binding ListForeground}" StrokeThickness="1" X1="0" X2="16" Y1="3" Y2="3"/>
+						<Line Stroke="{Binding ListForeground}" StrokeThickness="1" X1="0" X2="16" Y1="3" Y2="3"/>
+						<Line Stroke="{Binding ListForeground}" StrokeThickness="1" X1="0" X2="16" Y1="3" Y2="3"/>
+					</StackPanel>
+				</Button>
+			</Grid>
+			<Grid Grid.Column="6">
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="*"/>
+					<ColumnDefinition Width="*"/>
+				</Grid.ColumnDefinitions>
+				<Button Style="{StaticResource ToolbarButton}" Command="EditingCommands.IncreaseFontSize" ToolTip="Increase Font Size">
+					<TextBlock FontWeight="Bold">A↑</TextBlock>
+				</Button>
+				<Button Style="{StaticResource ToolbarButton}" Command="EditingCommands.DecreaseFontSize" Grid.Column="1" ToolTip="Decrease Font Size">
+					<TextBlock FontWeight="Bold">a↓</TextBlock>
+				</Button>
+			</Grid>
+			<Grid Grid.Column="8">
+				<Button Style="{StaticResource ToolbarButton}" Click="SelectColor" ToolTip="Text color..." x:Name="TextColorButton">
+					<Path Fill="Black" Stroke="White" StrokeThickness="0.5" Data="M13.354.646a1.207 1.207 0 0 0-1.708 0L8.5 3.793l-.646-.647a.5.5 0 1 0-.708.708L8.293 5l-7.147 7.146A.5.5 0 0 0 1 12.5v1.793l-.854.853a.5.5 0 1 0 .708.707L1.707 15H3.5a.5.5 0 0 0 .354-.146L11 7.707l1.146 1.147a.5.5 0 0 0 .708-.708l-.647-.646 3.147-3.146a1.207 1.207 0 0 0 0-1.708zM2 12.707l7-7L10.293 7l-7 7H2z"/>
+				</Button>
+			</Grid>
+		</Grid>
+		<local:ColorPicker x:Name="TextColorPicker"/>
 		<RichTextBox AcceptsReturn="True" Grid.Row="2" TextChanged="NoteBox_TextChanged" UndoLimit="10"
 					VerticalScrollBarVisibility="Auto"
 					x:Name="NoteBox"/>

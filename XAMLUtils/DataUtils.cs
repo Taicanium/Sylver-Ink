@@ -22,7 +22,6 @@ public static class DataUtils
 	public static SortType RecentEntriesSortMode { get; set; } = SortType.ByChange;
 	public static DisplayType RibbonTabContent { get; set; } = DisplayType.Change;
 	public static List<TabItem> OpenTabs { get; } = [];
-	public static double PPD { get; set; } = 1.0;
 
 	public static async void DeferUpdateRecentNotes()
 	{

@@ -9,6 +9,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using static SylverInk.CommonUtils;
+using static SylverInk.FileIO.FileUtils;
 using static SylverInk.Notes.DatabaseUtils;
 using static SylverInk.XAMLUtils.DataUtils;
 using static SylverInk.XAMLUtils.TextUtils;
@@ -129,6 +130,19 @@ public partial class NoteRecord
 		DeferUpdateRecentNotes();
 
 		return revision;
+	}
+
+	public void Autosave(FlowDocument document)
+	{
+		if (GetDatabaseFromRecord(this) is not Database db)
+			return;
+
+		var lockFile = GetLockFile(db.DBFile);
+		Erase(lockFile);
+
+		CreateRevision(FlowDocumentToXaml(document));
+		db.Save(lockFile);
+		DeleteRevision(GetNumRevisions());
 	}
 
 	public NoteRevision CreateRevision(string NewVersion)

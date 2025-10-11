@@ -120,6 +120,8 @@ public partial class NoteTab : UserControl
 		if (sender is not RichTextBox)
 			return;
 
+		TextColorButton.Background = TextColorPicker.CustomColorPicker.LastColorSelection ?? CommonUtils.Settings.MenuBackground;
+
 		SaveButton.IsEnabled = NoteBox.Document.Blocks.Count != OriginalBlockCount || !FlowDocumentToXaml(NoteBox.Document).Equals(OriginalText);
 		if (Autosaving)
 			return;
@@ -129,7 +131,7 @@ public partial class NoteTab : UserControl
 		{
 			SpinWait.SpinUntil(() => (DateTime.UtcNow - TimeSinceAutosave).Seconds >= 5);
 
-			Concurrent(this.Autosave);
+			Concurrent(() => Record.Autosave(NoteBox.Document));
 			Autosaving = false;
 			RecentNotesDirty = true;
 			TimeSinceAutosave = DateTime.UtcNow;
@@ -140,5 +142,13 @@ public partial class NoteTab : UserControl
 	private void NoteTab_Loaded(object sender, RoutedEventArgs e)
 	{
 		this.Construct();
+		TextColorButton.Background = CommonUtils.Settings.MenuBackground;
+		TextColorPicker.InitBrushes(NoteBox);
+	}
+
+	private void SelectColor(object? sender, RoutedEventArgs e)
+	{
+		TextColorPicker.CustomColorPicker.ColorTag = "PT";
+		TextColorPicker.ColorSelection.IsOpen = true;
 	}
 }

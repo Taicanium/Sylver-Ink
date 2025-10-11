@@ -1,9 +1,7 @@
-﻿using SylverInk.Notes;
-using SylverInk.XAML;
+﻿using SylverInk.XAML;
 using System;
 using System.Windows.Controls;
 using static SylverInk.CommonUtils;
-using static SylverInk.FileIO.FileUtils;
 using static SylverInk.Notes.DatabaseUtils;
 using static SylverInk.XAMLUtils.DataUtils;
 using static SylverInk.XAMLUtils.TextUtils;
@@ -12,19 +10,6 @@ namespace SylverInk.XAMLUtils;
 
 public static class NoteTabUtils
 {
-	public static void Autosave(this NoteTab tab)
-	{
-		if (GetDatabaseFromRecord(tab.Record) is not Database db)
-			return;
-
-		var lockFile = GetLockFile(db.DBFile);
-		Erase(lockFile);
-
-		tab.Record.CreateRevision(FlowDocumentToXaml(tab.NoteBox.Document));
-		db.Save(lockFile);
-		tab.Record.DeleteRevision(tab.Record.GetNumRevisions());
-	}
-
 	public static void Construct(this NoteTab tab)
 	{
 		if (tab.FinishedLoading)

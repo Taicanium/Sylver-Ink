@@ -105,7 +105,9 @@ public partial class ContextSettings : INotifyPropertyChanged
 					MainFontFamily = new(keyValue[1]);
 					break;
 				case "FontSize":
-					MainFontSize = double.Parse(keyValue[1], CultureInfo.InvariantCulture);
+					if (!double.TryParse(keyValue[1], CultureInfo.InvariantCulture, out var mainFontSize))
+						mainFontSize = 12;
+					MainFontSize = mainFontSize;
 					break;
 				case "LastActiveDatabase":
 					LastActiveDatabase = keyValue[1];
@@ -202,10 +204,14 @@ public partial class ContextSettings : INotifyPropertyChanged
 					RibbonTabContent = (DisplayType)displayMode;
 					break;
 				case "SearchResultsOnTop":
-					SearchResultsOnTop = bool.Parse(keyValue[1]);
+					if (!bool.TryParse(keyValue[1], out var searchResultsOnTop))
+						searchResultsOnTop = false;
+					SearchResultsOnTop = searchResultsOnTop;
 					break;
 				case "SnapSearchResults":
-					SnapSearchResults = bool.Parse(keyValue[1]);
+					if (!bool.TryParse(keyValue[1], out var snapSearchResults))
+						snapSearchResults = false;
+					SnapSearchResults = snapSearchResults;
 					break;
 				default:
 					break;

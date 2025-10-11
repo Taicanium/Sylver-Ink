@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
@@ -17,11 +16,7 @@ namespace SylverInk;
 public partial class Settings : Window
 {
 	public int ArialIndex { get; set; }
-	public List<SolidColorBrush> AvailableBrushes { get; } = [];
 	public List<FontFamily> AvailableFonts { get; } = [];
-	public string? ColorTag { get; set; }
-
-	public Brush? LastColorSelection { get; set; }
 
 	public Settings()
 	{
@@ -34,31 +29,8 @@ public partial class Settings : Window
 	private void ColorPopup(object? sender, RoutedEventArgs e)
 	{
 		var button = (Button?)sender;
-		ColorTag = (string?)button?.Tag;
-		ColorSelection.IsOpen = true;
-	}
-
-	private void CustomColorFinished(object? sender, EventArgs e)
-	{
-		if (LastColorSelection is null)
-			return;
-		ColorChanged(ColorTag, LastColorSelection);
-	}
-
-	private void CustomColorOpened(object? sender, EventArgs e)
-	{
-		Brush? color = ColorTag switch
-		{
-			"P1F" => CommonUtils.Settings.MenuForeground,
-			"P1B" => CommonUtils.Settings.MenuBackground,
-			"P2F" => CommonUtils.Settings.ListForeground,
-			"P2B" => CommonUtils.Settings.ListBackground,
-			"P3F" => CommonUtils.Settings.AccentForeground,
-			"P3B" => CommonUtils.Settings.AccentBackground,
-			_ => Brushes.Transparent
-		};
-		CustomColor.Fill = color;
-		CustomColorBox.Text = BytesFromBrush(color)[2..8];
+		SettingsColorPicker.CustomColorPicker.ColorTag = (string?)button?.Tag;
+		SettingsColorPicker.ColorSelection.IsOpen = true;
 	}
 
 	private void Drag(object? sender, MouseButtonEventArgs e) => DragMove();
@@ -75,18 +47,6 @@ public partial class Settings : Window
 		var item = (ComboBoxItem)MenuFont.SelectedItem;
 		CommonUtils.Settings.MainFontFamily = item.FontFamily;
 		DeferUpdateRecentNotes();
-	}
-
-	private void NewCustomColor(object? sender, TextChangedEventArgs e)
-	{
-		if (sender is not TextBox box)
-			return;
-
-		var text = box.Text.StartsWith('#') ? box.Text[1..] : box.Text;
-		var brush = BrushFromBytes(text);
-
-		CustomColor.Fill = brush ?? Brushes.Transparent;
-		LastColorSelection = brush;
 	}
 
 	private void NTS_ValueChanged(object? sender, RoutedPropertyChangedEventArgs<double> e)
@@ -121,8 +81,7 @@ public partial class Settings : Window
 
 	private void Settings_Loaded(object? sender, RoutedEventArgs e)
 	{
-		this.InitColorGrid();
-		this.InitBrushes();
+		SettingsColorPicker.InitBrushes();
 		this.InitFonts();
 
 		if (RibbonBox.SelectedItem is null)
