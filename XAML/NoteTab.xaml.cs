@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Documents;
 using static SylverInk.CommonUtils;
 using static SylverInk.Notes.DatabaseUtils;
 using static SylverInk.XAMLUtils.DataUtils;
@@ -20,6 +21,7 @@ public partial class NoteTab : UserControl
 {
 	public bool Autosaving { get; set; }
 	public bool FinishedLoading { get; set; }
+	public required TextPointer InitialPointer { get; set; }
 	public int OriginalBlockCount { get; set; }
 	public string OriginalText { get; set; } = string.Empty;
 	public required NoteRecord Record { get; set; }

@@ -119,7 +119,9 @@
 				</Button>
 			</Grid>
 		</Grid>
+		
 		<local:ColorPicker x:Name="TextColorPicker"/>
+
 		<RichTextBox AcceptsReturn="True" Grid.Row="2" TextChanged="NoteBox_TextChanged" UndoLimit="10"
 					VerticalScrollBarVisibility="Auto"
 					x:Name="NoteBox"/>

@@ -44,8 +44,11 @@ public static class SearchResultUtils
 
 		TabItem item = new()
 		{
-			Content = new NoteTab() { Record = window.ResultRecord },
-			Header = GetRibbonHeader(window.ResultRecord)
+			Content = new NoteTab() {
+				InitialPointer = window.ResultBlock.CaretPosition,
+				Record = window.ResultRecord
+			},
+			Header = GetRibbonHeader(window.ResultRecord),
 		};
 
 		var ChildPanel = GetChildPanel("DatabasesPanel");

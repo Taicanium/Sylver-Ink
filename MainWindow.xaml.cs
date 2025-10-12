@@ -35,6 +35,7 @@ public partial class MainWindow : Window, IDisposable
 	private Mutex? mutex;
 	private readonly string MutexName = $"SylverInk/{typeof(MainWindow).GUID}";
 	private const int NewNoteHotKeyID = 5911;
+	private const int NoteSearchHotKeyID = 18160;
 	private const int PreviousNoteHotKeyID = 37193;
 	private bool ShellVerbsPassed;
 	private HwndSource? WindowSource;
@@ -242,11 +243,18 @@ public partial class MainWindow : Window, IDisposable
 		switch (msg)
 		{
 			case 0x0312: // WM_HOTKEY
-				if (wParam.ToInt32() == NewNoteHotKeyID)
-					OnNewNoteHotkey();
-
-				if (wParam.ToInt32() == PreviousNoteHotKeyID)
-					OnPreviousNoteHotkey();
+				switch (wParam.ToInt32())
+				{
+					case NewNoteHotKeyID:
+						OnNewNoteHotkey();
+						break;
+					case NoteSearchHotKeyID:
+						OnNoteSearchHotkey();
+						break;
+					case PreviousNoteHotKeyID:
+						OnPreviousNoteHotkey();
+						break;
+				}
 				break;
 			default:
 				return default;
@@ -364,6 +372,11 @@ public partial class MainWindow : Window, IDisposable
 		OpenQuery(CurrentDatabase.GetRecord(CurrentDatabase.CreateRecord(string.Empty)));
 	}
 
+	private static void OnNoteSearchHotkey()
+	{
+		// TODO
+	}
+
 	private static void OnPreviousNoteHotkey() => OpenQuery(PreviousOpenNote ?? CurrentDatabase.GetRecord(CurrentDatabase.CreateRecord(string.Empty)));
 
 	protected override async void OnSourceInitialized(EventArgs e)
@@ -412,12 +425,14 @@ public partial class MainWindow : Window, IDisposable
 	private void RegisterHotKeys()
 	{
 		RegisterHotKey(hWndHelper.Handle, NewNoteHotKeyID, 2, (uint)KeyInterop.VirtualKeyFromKey(Key.N));
+		//RegisterHotKey(hWndHelper.Handle, NoteSearchHotKeyID, 2, (uint)KeyInterop.VirtualKeyFromKey(Key.F));
 		RegisterHotKey(hWndHelper.Handle, PreviousNoteHotKeyID, 2, (uint)KeyInterop.VirtualKeyFromKey(Key.L));
 	}
 
 	private void UnregisterHotKeys()
 	{
 		UnregisterHotKey(hWndHelper.Handle, NewNoteHotKeyID);
+		//UnregisterHotKey(hWndHelper.Handle, NoteSearchHotKeyID);
 		UnregisterHotKey(hWndHelper.Handle, PreviousNoteHotKeyID);
 	}
 }

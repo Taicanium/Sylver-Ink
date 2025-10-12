@@ -17,7 +17,13 @@ public static class NoteTabUtils
 
 		tab.NextButton.IsEnabled = false;
 		tab.NoteBox.Document = tab.Record.GetDocument();
+
+		var offset = tab.InitialPointer.DocumentStart.GetOffsetToPosition(tab.InitialPointer);
+		tab.NoteBox.CaretPosition = tab.NoteBox.Document.ContentStart.GetPositionAtOffset(offset);
+
 		tab.NoteBox.IsEnabled = !tab.Record.Locked;
+		tab.NoteBox.Focus();
+
 		tab.OriginalBlockCount = tab.NoteBox.Document.Blocks.Count;
 		tab.OriginalText = FlowDocumentToXaml(tab.NoteBox.Document);
 		tab.PreviousButton.IsEnabled = tab.Record.GetNumRevisions() > 0;
