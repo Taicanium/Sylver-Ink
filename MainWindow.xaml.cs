@@ -1,5 +1,6 @@
 ﻿using SylverInk.Net;
 using SylverInk.Notes;
+using SylverInk.XAML;
 using System;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -374,7 +375,14 @@ public partial class MainWindow : Window, IDisposable
 
 	private static void OnNoteSearchHotkey()
 	{
-		// TODO
+		var tabPanel = GetChildPanel("DatabasesPanel");
+		var openTab = (TabItem)tabPanel.SelectedItem;
+
+		if (openTab.Content is not NoteTab noteTab)
+			return;
+
+		noteTab.InternalSearchPopup.IsOpen = true;
+		noteTab.ISPText.Focus();
 	}
 
 	private static void OnPreviousNoteHotkey() => OpenQuery(PreviousOpenNote ?? CurrentDatabase.GetRecord(CurrentDatabase.CreateRecord(string.Empty)));
@@ -425,14 +433,14 @@ public partial class MainWindow : Window, IDisposable
 	private void RegisterHotKeys()
 	{
 		RegisterHotKey(hWndHelper.Handle, NewNoteHotKeyID, 2, (uint)KeyInterop.VirtualKeyFromKey(Key.N));
-		//RegisterHotKey(hWndHelper.Handle, NoteSearchHotKeyID, 2, (uint)KeyInterop.VirtualKeyFromKey(Key.F));
+		RegisterHotKey(hWndHelper.Handle, NoteSearchHotKeyID, 2, (uint)KeyInterop.VirtualKeyFromKey(Key.F));
 		RegisterHotKey(hWndHelper.Handle, PreviousNoteHotKeyID, 2, (uint)KeyInterop.VirtualKeyFromKey(Key.L));
 	}
 
 	private void UnregisterHotKeys()
 	{
 		UnregisterHotKey(hWndHelper.Handle, NewNoteHotKeyID);
-		//UnregisterHotKey(hWndHelper.Handle, NoteSearchHotKeyID);
+		UnregisterHotKey(hWndHelper.Handle, NoteSearchHotKeyID);
 		UnregisterHotKey(hWndHelper.Handle, PreviousNoteHotKeyID);
 	}
 }

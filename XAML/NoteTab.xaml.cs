@@ -1,11 +1,13 @@
 ﻿using SylverInk.Net;
 using SylverInk.Notes;
+using SylverInk.XAMLUtils;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
+using System.Windows.Input;
 using static SylverInk.CommonUtils;
 using static SylverInk.Notes.DatabaseUtils;
 using static SylverInk.XAMLUtils.DataUtils;
@@ -112,6 +114,21 @@ public partial class NoteTab : UserControl
 		RevisionIndex = 0U;
 		RevisionLabel.Content = "Entry last modified: " + Record.GetLastChange();
 		button.IsEnabled = false;
+	}
+
+	private void CloseISP(object sender, RoutedEventArgs e)
+	{
+		InternalSearchPopup.IsOpen = false;
+	}
+
+	private void FindNext(object sender, RoutedEventArgs e)
+	{
+		ScrollToText(NoteBox, ISPText.Text);
+	}
+
+	private void FindPrevious(object sender, RoutedEventArgs e)
+	{
+		ScrollToText(NoteBox, ISPText.Text, LogicalDirection.Backward);
 	}
 
 	private void NoteBox_TextChanged(object sender, TextChangedEventArgs e)

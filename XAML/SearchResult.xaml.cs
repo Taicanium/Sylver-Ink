@@ -124,35 +124,7 @@ public partial class SearchResult : Window, IDisposable
 		}, TaskCreationOptions.LongRunning);
 	}
 
-	public void ScrollToText(string text)
-	{
-		var plaintext = FlowDocumentToPlaintext(ResultBlock.Document).ReplaceLineEndings(string.Empty);
-		int offset = plaintext.IndexOf(text);
-		if (offset == -1)
-			return;
-
-		int index = 0;
-		offset += text.Length;
-		TextPointer pointer = ResultBlock.Document.ContentStart;
-		
-		while (index < offset)
-		{
-			if (pointer is null)
-				return;
-
-			var next = pointer.GetTextInRun(LogicalDirection.Forward);
-			if (index + next.Length > offset)
-			{
-				pointer = pointer.GetPositionAtOffset(offset - index);
-				break;
-			}
-
-			index += next.Length;
-			pointer = pointer.GetNextContextPosition(LogicalDirection.Forward);
-		}
-
-		ResultBlock.CaretPosition = pointer;
-	}
+	public void ScrollToText(string text) => TextUtils.ScrollToText(ResultBlock, text); 
 
 	private void ViewClick(object? sender, RoutedEventArgs e)
 	{

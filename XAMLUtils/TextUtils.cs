@@ -103,6 +103,60 @@ public static partial class TextUtils
 
 	public static string PlaintextToXaml(string content) => FlowDocumentToXaml(PlaintextToFlowDocument(new(), content));
 
+	public static void ScrollToText(RichTextBox box, string text, LogicalDirection direction = LogicalDirection.Forward)
+	{
+		int index = 0;
+		string plaintext = (direction == LogicalDirection.Forward
+			? new TextRange(box.CaretPosition, box.Document.ContentEnd)
+			: new TextRange(box.Document.ContentStart, box.CaretPosition))
+			.Text.ReplaceLineEndings(string.Empty);
+
+		TextPointer pointer = direction == LogicalDirection.Forward
+			? box.CaretPosition
+			: box.Document.ContentStart;
+
+		if (direction == LogicalDirection.Backward && plaintext.EndsWith(text))
+			plaintext = plaintext[..^text.Length];
+
+		int offset = direction == LogicalDirection.Forward
+			? plaintext.IndexOf(text)
+			: plaintext.LastIndexOf(text);
+
+		if (offset == -1)
+			return;
+
+		offset += text.Length;
+
+		while (index < offset)
+		{
+			if (pointer is null)
+				return;
+
+			var next = pointer.GetTextInRun(LogicalDirection.Forward);
+			if (index + next.Length > offset)
+			{
+				pointer = pointer.GetPositionAtOffset(offset - index);
+				break;
+			}
+
+			index += next.Length;
+			pointer = pointer.GetNextContextPosition(LogicalDirection.Forward);
+		}
+
+		box.CaretPosition = pointer;
+
+		pointer = box.CaretPosition;
+		for (int i = 0; i < text.Length; i++)
+		{
+			pointer = pointer.GetNextInsertionPosition(LogicalDirection.Backward);
+			if (pointer is null)
+				return;
+		}
+
+		box.Focus();
+		box.Selection.Select(pointer, box.CaretPosition);
+	}
+
 	private static TextPointer? TranslatePointer(TextPointer pointer, ref StringBuilder content)
 	{
 		switch (pointer.GetPointerContext(LogicalDirection.Forward))
