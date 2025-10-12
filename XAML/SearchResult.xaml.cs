@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Threading;
@@ -115,12 +116,42 @@ public partial class SearchResult : Window, IDisposable
 		{
 			SpinWait.SpinUntil(() => (DateTime.UtcNow - TimeSinceAutosave).Seconds >= 5);
 
-			Concurrent(this.Autosave);
+			Concurrent(() => ResultRecord?.Autosave(ResultBlock.Document));
 			RecentNotesDirty = true;
 			TimeSinceAutosave = DateTime.UtcNow;
 			Autosaving = false;
 			return;
 		}, TaskCreationOptions.LongRunning);
+	}
+
+	public void ScrollToText(string text)
+	{
+		var plaintext = FlowDocumentToPlaintext(ResultBlock.Document).ReplaceLineEndings(string.Empty);
+		int offset = plaintext.IndexOf(text);
+		if (offset == -1)
+			return;
+
+		int index = 0;
+		offset += text.Length;
+		TextPointer pointer = ResultBlock.Document.ContentStart;
+		
+		while (index < offset)
+		{
+			if (pointer is null)
+				return;
+
+			var next = pointer.GetTextInRun(LogicalDirection.Forward);
+			if (index + next.Length > offset)
+			{
+				pointer = pointer.GetPositionAtOffset(offset - index);
+				break;
+			}
+
+			index += next.Length;
+			pointer = pointer.GetNextContextPosition(LogicalDirection.Forward);
+		}
+
+		ResultBlock.CaretPosition = pointer;
 	}
 
 	private void ViewClick(object? sender, RoutedEventArgs e)

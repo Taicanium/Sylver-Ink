@@ -7,7 +7,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using static SylverInk.CommonUtils;
-using static SylverInk.FileIO.FileUtils;
 using static SylverInk.Notes.DatabaseUtils;
 using static SylverInk.XAMLUtils.DataUtils;
 using static SylverInk.XAMLUtils.TextUtils;
@@ -59,16 +58,6 @@ public static class SearchResultUtils
 		window.Close();
 	}
 
-	public static void Autosave(this SearchResult window)
-	{
-		var lockFile = GetLockFile(window.ResultDatabase?.DBFile);
-		Erase(lockFile);
-
-		window.ResultRecord?.CreateRevision(FlowDocumentToXaml(window.ResultBlock.Document));
-		window.ResultDatabase?.Save(lockFile);
-		window.ResultRecord?.DeleteRevision(window.ResultRecord.GetNumRevisions());
-	}
-
 	public static void Construct(this SearchResult window)
 	{
 		if (window.FinishedLoading)
@@ -87,6 +76,7 @@ public static class SearchResultUtils
 
 		window.Edited = false;
 		window.ResultBlock.Document = window.ResultRecord?.GetDocument() ?? new();
+		window.ResultBlock.Focus();
 
 		window.OriginalBlockCount = window.ResultBlock.Document.Blocks.Count;
 		window.OriginalRevisionCount = window.ResultRecord?.GetNumRevisions() ?? 0;

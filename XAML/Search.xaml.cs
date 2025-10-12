@@ -59,6 +59,6 @@ public partial class Search : Window
 		if (box.DataContext is not NoteRecord record)
 			return;
 
-		OpenQuery(record);
+		OpenQuery(record)?.ScrollToText(Query);
 	}
 }
