@@ -115,12 +115,12 @@ public static partial class TextUtils
 			? box.CaretPosition
 			: box.Document.ContentStart;
 
-		if (direction == LogicalDirection.Backward && plaintext.EndsWith(text))
+		if (direction == LogicalDirection.Backward && plaintext.EndsWith(text, StringComparison.InvariantCultureIgnoreCase))
 			plaintext = plaintext[..^text.Length];
 
 		int offset = direction == LogicalDirection.Forward
-			? plaintext.IndexOf(text)
-			: plaintext.LastIndexOf(text);
+			? plaintext.IndexOf(text, StringComparison.InvariantCultureIgnoreCase)
+			: plaintext.LastIndexOf(text, StringComparison.InvariantCultureIgnoreCase);
 
 		if (offset == -1)
 			return;
