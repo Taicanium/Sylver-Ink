@@ -32,11 +32,12 @@ public partial class MainWindow : Window, IDisposable
 	[DllImport("User32.dll")]
 	private static extern bool UnregisterHotKey(nint hWnd, int id);
 
+	private KeyboardListener? hotkeyListener;
 	private readonly WindowInteropHelper hWndHelper;
 	private Mutex? mutex;
+	private readonly CancellationTokenSource mutexTokenSource = new();
 	private readonly string MutexName = $"SylverInk/{typeof(MainWindow).GUID}";
 	private const int NewNoteHotKeyID = 5911;
-	private const int NoteSearchHotKeyID = 18160;
 	private const int PreviousNoteHotKeyID = 37193;
 	private bool ShellVerbsPassed;
 	private HwndSource? WindowSource;
@@ -45,6 +46,7 @@ public partial class MainWindow : Window, IDisposable
 	{
 		InitializeComponent();
 		DataContext = CommonUtils.Settings;
+
 		hWndHelper = new WindowInteropHelper(this);
 		mutex = new Mutex(true, MutexName, out bool mutexCreated);
 
@@ -178,27 +180,41 @@ public partial class MainWindow : Window, IDisposable
 			return;
 		}
 
-		Task.Factory.StartNew(() =>
+		Thread mutexPipeThread = new(() => HandleMutexPipe(mutexTokenSource.Token));
+		mutexPipeThread.Start();
+	}
+
+	private async void HandleMutexPipe(CancellationToken token)
+	{
+		while (mutex != null)
 		{
-			while (mutex != null)
+			using var server = new NamedPipeServerStream(MutexName);
+
+			try
 			{
-				using var server = new NamedPipeServerStream(MutexName);
-				server.WaitForConnection();
-
-				using StreamReader reader = new(server);
-				string[] args = [.. reader.ReadToEnd().Split("\t", StringSplitOptions.RemoveEmptyEntries)];
-				bool activated;
-				var now = DateTime.UtcNow;
-
-				do
-				{
-					activated = Concurrent(Activate);
-					Concurrent(Focus);
-				} while (!activated && !IsFocused && (DateTime.UtcNow - now).Seconds < 2);
-
-				Concurrent(() => HandleShellVerbs(args));
+				await server.WaitForConnectionAsync(token);
 			}
-		}, TaskCreationOptions.LongRunning);
+			catch
+			{
+				return;
+			}
+
+			if (token.IsCancellationRequested)
+				return;
+
+			using StreamReader reader = new(server);
+			string[] args = [.. reader.ReadToEnd().Split("\t", StringSplitOptions.RemoveEmptyEntries)];
+			bool activated;
+			var now = DateTime.UtcNow;
+
+			do
+			{
+				activated = Concurrent(Activate);
+				Concurrent(Focus);
+			} while (!activated && !IsFocused && (DateTime.UtcNow - now).Seconds < 2);
+
+			Concurrent(() => HandleShellVerbs(args));
+		}
 	}
 
 	private static void HandleShellVerbs(string[]? args = null)
@@ -248,9 +264,6 @@ public partial class MainWindow : Window, IDisposable
 				{
 					case NewNoteHotKeyID:
 						OnNewNoteHotkey();
-						break;
-					case NoteSearchHotKeyID:
-						OnNoteSearchHotkey();
 						break;
 					case PreviousNoteHotKeyID:
 						OnPreviousNoteHotkey();
@@ -350,7 +363,21 @@ public partial class MainWindow : Window, IDisposable
 		WindowSource?.RemoveHook(HwndHook);
 		WindowSource = null;
 		UnregisterHotKeys();
+		mutexTokenSource.Cancel();
 		base.OnClosed(e);
+	}
+
+	public void OnHotkey(object sender, RawKeyEventArgs e)
+	{
+		if (e.Ctrl == 0)
+			return;
+
+		switch (e.Key)
+		{
+			case Key.F:
+				Concurrent(OnNoteSearchHotkey);
+				break;
+		}
 	}
 
 	private static void OnNewNoteHotkey()
@@ -432,15 +459,18 @@ public partial class MainWindow : Window, IDisposable
 
 	private void RegisterHotKeys()
 	{
+		hotkeyListener = new();
+		hotkeyListener.KeyDown += new RawKeyEventHandler(OnHotkey);
+
 		RegisterHotKey(hWndHelper.Handle, NewNoteHotKeyID, 2, (uint)KeyInterop.VirtualKeyFromKey(Key.N));
-		RegisterHotKey(hWndHelper.Handle, NoteSearchHotKeyID, 2, (uint)KeyInterop.VirtualKeyFromKey(Key.F));
 		RegisterHotKey(hWndHelper.Handle, PreviousNoteHotKeyID, 2, (uint)KeyInterop.VirtualKeyFromKey(Key.L));
 	}
 
 	private void UnregisterHotKeys()
 	{
 		UnregisterHotKey(hWndHelper.Handle, NewNoteHotKeyID);
-		UnregisterHotKey(hWndHelper.Handle, NoteSearchHotKeyID);
 		UnregisterHotKey(hWndHelper.Handle, PreviousNoteHotKeyID);
+
+		hotkeyListener?.Dispose();
 	}
 }

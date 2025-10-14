@@ -35,7 +35,7 @@ public partial class SearchResult : Window, IDisposable
 	public DispatcherTimer? EnterMonitor { get; set; }
 	public long EnterTime { get; set; }
 	public bool FinishedLoading { get; set; }
-	public IntPtr HWnd { get; set; }
+	public nint HWnd { get; set; }
 	public DispatcherTimer? LeaveMonitor { get; set; }
 	public long LeaveTime { get; set; }
 	public DispatcherTimer? MouseMonitor { get; set; }
