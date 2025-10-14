@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
-using System.Windows.Input;
 using static SylverInk.CommonUtils;
 using static SylverInk.Notes.DatabaseUtils;
 using static SylverInk.XAMLUtils.DataUtils;
@@ -41,8 +40,8 @@ public partial class NoteTab : UserControl
 		if (MessageBox.Show("Are you sure you want to permanently delete this note?", "Sylver Ink: Notification", MessageBoxButton.YesNo, MessageBoxImage.Information) == MessageBoxResult.No)
 			return;
 
-		Concurrent(() => CurrentDatabase.DeleteRecord(Record));
 		this.Deconstruct();
+		Concurrent(() => CurrentDatabase.DeleteRecord(Record));
 	}
 
 	private void ClickNext(object sender, RoutedEventArgs e)

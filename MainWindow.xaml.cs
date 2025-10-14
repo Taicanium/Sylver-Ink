@@ -295,6 +295,9 @@ public partial class MainWindow : Window, IDisposable
 
 	private async void MainWindow_Closing(object? sender, CancelEventArgs e)
 	{
+		if (IsShuttingDown()) // Prevent redundant event-handling.
+			return;
+
 		if (AbortRun)
 		{
 			Application.Current.Shutdown();

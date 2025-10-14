@@ -95,9 +95,9 @@ public partial class NoteController : IDisposable
 		return AddRecord(new(NextIndex, PlaintextToXaml(entry)));
 	}
 
-	public NoteRevision CreateRevision(int index, string NewVersion) => CreateRevision(GetRecord(index), NewVersion);
+	public void CreateRevision(int index, string NewVersion) => CreateRevision(GetRecord(index), NewVersion);
 
-	public static NoteRevision CreateRevision(NoteRecord record, string NewVersion) => record.CreateRevision(NewVersion);
+	public static void CreateRevision(NoteRecord record, string NewVersion) => record.CreateRevision(NewVersion);
 
 	public void DeleteRecord(int index)
 	{

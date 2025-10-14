@@ -86,12 +86,12 @@ public partial class Database : IDisposable
 		return index;
 	}
 
-	public NoteRevision CreateRevision(int index, string newVersion, bool local = true)
+	public void CreateRevision(int index, string newVersion, bool local = true)
 	{
-		var revision = Controller.CreateRevision(index, newVersion);
+		Controller.CreateRevision(index, newVersion);
 
 		if (!local)
-			return revision;
+			return;
 
 		var outBuffer = new List<byte>([
 			.. IntToBytes(index),
@@ -103,10 +103,10 @@ public partial class Database : IDisposable
 
 		Transmit(NetworkUtils.MessageType.TextInsert, [.. outBuffer]);
 
-		return revision;
+		return;
 	}
 
-	public NoteRevision CreateRevision(NoteRecord record, string newVersion, bool local = true) => CreateRevision(record.Index, newVersion, local);
+	public void CreateRevision(NoteRecord record, string newVersion, bool local = true) => CreateRevision(record.Index, newVersion, local);
 
 	public void DeleteRecord(int index, bool local = true)
 	{

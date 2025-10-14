@@ -110,7 +110,7 @@ public partial class NoteRecord
 		this.UUID = UUID ?? MakeUUID();
 	}
 
-	public NoteRevision Add(NoteRevision revision)
+	public void Add(NoteRevision revision)
 	{
 		if (revision.Created == -1)
 			revision.Created = DateTime.UtcNow.ToBinary();
@@ -129,7 +129,7 @@ public partial class NoteRecord
 		RecentNotesDirty = true;
 		DeferUpdateRecentNotes();
 
-		return revision;
+		return;
 	}
 
 	public void Autosave(FlowDocument document)
@@ -145,13 +145,13 @@ public partial class NoteRecord
 		DeleteRevision(GetNumRevisions());
 	}
 
-	public NoteRevision CreateRevision(string NewVersion)
+	public void CreateRevision(string NewVersion)
 	{
 		string Current = ToXaml();
 		int StartIndex = 0;
 
 		if (NewVersion.Equals(Current))
-			return Revisions.Last();
+			return;
 
 		for (int i = 0; i < Math.Min(Current.Length, NewVersion.Length); i++)
 		{
@@ -160,13 +160,15 @@ public partial class NoteRecord
 			StartIndex = i;
 		}
 
-		return Add(new()
+		Add(new()
 		{
 			Created = DateTime.UtcNow.ToBinary(),
 			StartIndex = StartIndex,
 			Substring = StartIndex >= NewVersion.Length ? string.Empty : NewVersion[StartIndex..],
 			Uuid = MakeUUID(UUIDType.Revision)
 		});
+
+		return;
 	}
 
 	public void Delete()
