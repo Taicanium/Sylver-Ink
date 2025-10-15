@@ -22,6 +22,7 @@ public partial class ContextSettings : INotifyPropertyChanged
 {
 	private Brush? _accentBackgound = Brushes.PaleGoldenrod;
 	private Brush? _accentForegound = Brushes.Blue;
+	private bool _firstRun = true;
 	private string _importData = string.Empty;
 	private string _importTarget = string.Empty;
 	private string _lastActiveDatabase = string.Empty;
@@ -48,6 +49,7 @@ public partial class ContextSettings : INotifyPropertyChanged
 
 	public Brush? AccentBackground { get => _accentBackgound; set { _accentBackgound = value; OnPropertyChanged(); } }
 	public Brush? AccentForeground { get => _accentForegound; set { _accentForegound = value; OnPropertyChanged(); } }
+	public bool FirstRun { get => _firstRun; set { _firstRun = value; OnPropertyChanged(); } }
 	public string ImportData { get => _importData; set { _importData = value; OnPropertyChanged(); } }
 	public string ImportTarget { get => _importTarget; set { _importTarget = value; OnPropertyChanged(); } }
 	public string LastActiveDatabase { get => _lastActiveDatabase; set => _lastActiveDatabase = value; }
@@ -100,6 +102,11 @@ public partial class ContextSettings : INotifyPropertyChanged
 					break;
 				case "AccentForeground":
 					AccentForeground = BrushFromBytes(keyValue[1]);
+					break;
+				case "FirstRun":
+					if (!bool.TryParse(keyValue[1], out var firstRun))
+						firstRun = true;
+					FirstRun = firstRun;
 					break;
 				case "FontFamily":
 					MainFontFamily = new(keyValue[1]);
@@ -224,6 +231,7 @@ public partial class ContextSettings : INotifyPropertyChanged
 	public void Save() => File.WriteAllLines(SettingsFile, [
 		$"AccentBackground:{BytesFromBrush(AccentBackground)}",
 		$"AccentForeground:{BytesFromBrush(AccentForeground)}",
+		$"FirstRun:{FirstRun}",
 		$"FontFamily:{MainFontFamily?.Source}",
 		$"FontSize:{MainFontSize}",
 		$"LastActiveDatabase:{CurrentDatabase.Name}",

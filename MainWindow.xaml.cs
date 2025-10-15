@@ -163,25 +163,26 @@ public partial class MainWindow : Window, IDisposable
 	/// </summary>
 	private void HandleMutex(bool mutexCreated)
 	{
-		if (!mutexCreated)
+		if (mutexCreated)
 		{
-			mutex = null;
-			var args = Environment.GetCommandLineArgs();
-
-			var client = new NamedPipeClientStream(MutexName);
-			client.Connect();
-
-			using (StreamWriter writer = new(client))
-				writer.Write(string.Join("\t", args));
-
-			if (args.Length > 1)
-				ShellVerbsPassed = true;
-
+			Thread mutexPipeThread = new(() => HandleMutexPipe(mutexTokenSource.Token));
+			mutexPipeThread.Start();
 			return;
 		}
 
-		Thread mutexPipeThread = new(() => HandleMutexPipe(mutexTokenSource.Token));
-		mutexPipeThread.Start();
+		mutex = null;
+		var args = Environment.GetCommandLineArgs();
+
+		var client = new NamedPipeClientStream(MutexName);
+		client.Connect();
+
+		using (StreamWriter writer = new(client))
+			writer.Write(string.Join("\t", args));
+
+		if (args.Length > 1)
+			ShellVerbsPassed = true;
+
+		return;
 	}
 
 	private async void HandleMutexPipe(CancellationToken token)
@@ -211,7 +212,7 @@ public partial class MainWindow : Window, IDisposable
 			{
 				activated = Concurrent(Activate);
 				Concurrent(Focus);
-			} while (!activated && !IsFocused && (DateTime.UtcNow - now).Seconds < 2);
+			} while (!activated && !IsFocused && (DateTime.UtcNow - now).Seconds < 1);
 
 			Concurrent(() => HandleShellVerbs(args));
 		}

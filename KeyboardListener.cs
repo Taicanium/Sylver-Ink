@@ -7,6 +7,9 @@ using System.Windows.Input;
 
 namespace SylverInk;
 
+/// <summary>
+/// Logic for handling non-global hotkey registration.
+/// </summary>
 public class KeyboardListener : IDisposable
 {
 	[StructLayout(LayoutKind.Sequential)]
@@ -26,49 +29,39 @@ public class KeyboardListener : IDisposable
 
 	[DllImport("user32.dll")]
 	[return: MarshalAs(UnmanagedType.Bool)]
-	private static extern bool PeekMessage(out MSG lpMsg, IntPtr hWnd, uint wMsgFilterMin, uint wMsgFilterMax, uint wRemoveMsg);
+	private static extern bool PeekMessage(out MSG lpMsg, nint hWnd, uint wMsgFilterMin, uint wMsgFilterMax, uint wRemoveMsg);
 
-	private readonly CancellationTokenSource cts = new();
+	private readonly CancellationTokenSource hookTokenSource = new();
 	private static nint hookId = nint.Zero;
 	private readonly Thread? hookThread;
+	public event RawKeyEventHandler? KeyDown;
 
 	[MethodImpl(MethodImplOptions.NoInlining)]
 	private nint HookCallback(int nCode, nint wParam, nint lParam)
 	{
 		try
 		{
-			return HookCallbackInner(nCode, wParam, lParam);
+			if (nCode >= 0 && wParam == InterceptKeys.WM_KEYDOWN)
+			{
+				int vkCode = Marshal.ReadInt32(lParam);
+				KeyDown?.Invoke(this, new RawKeyEventArgs(vkCode));
+			}
 		}
-		catch (Exception)
-		{
-		}
+		catch { }
 
 		return InterceptKeys.CallNextHookEx(hookId, nCode, wParam, lParam);
 	}
-
-	private nint HookCallbackInner(int nCode, nint wParam, nint lParam)
-	{
-		if (nCode >= 0 && wParam == InterceptKeys.WM_KEYDOWN)
-		{
-			int vkCode = Marshal.ReadInt32(lParam);
-			KeyDown?.Invoke(this, new RawKeyEventArgs(vkCode));
-		}
-
-		return InterceptKeys.CallNextHookEx(hookId, nCode, wParam, lParam);
-	}
-
-	public event RawKeyEventHandler? KeyDown;
 
 	public KeyboardListener()
 	{
-		hookThread = new(() => InstallHook(cts.Token));
+		hookThread = new(() => InstallHook(hookTokenSource.Token));
 		hookThread.SetApartmentState(ApartmentState.STA);
 		hookThread.Start();
 	}
 
 	public void Dispose()
 	{
-		cts.Cancel();
+		hookTokenSource.Cancel();
 		InterceptKeys.UnhookWindowsHookEx(hookId);
 		GC.SuppressFinalize(this);
 	}
@@ -82,7 +75,7 @@ public class KeyboardListener : IDisposable
 			PeekMessage(out MSG msg, nint.Zero, 0, 0, 0x1);
 
 			//GetMessage(out msg, nint.Zero, 0, 0);
-			Thread.Sleep(50);
+			Thread.Sleep(75);
 		}
 	}
 }
