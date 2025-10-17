@@ -75,7 +75,7 @@ public class KeyboardListener : IDisposable
 			PeekMessage(out MSG msg, nint.Zero, 0, 0, 0x1);
 
 			//GetMessage(out msg, nint.Zero, 0, 0);
-			Thread.Sleep(75);
+			Thread.Sleep(15);
 		}
 	}
 }

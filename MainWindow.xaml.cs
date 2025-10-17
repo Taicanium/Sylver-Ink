@@ -455,7 +455,7 @@ public partial class MainWindow : Window, IDisposable
 		if (!IsShuttingDown())
 			UpdatesChecked = true;
 
-		if (!FirstRun)
+		if (!CommonUtils.Settings.FirstRun)
 			return;
 
 		await Database.Create(Path.Join(Subfolders["Databases"], DefaultDatabase, $"{DefaultDatabase}.sidb"));
