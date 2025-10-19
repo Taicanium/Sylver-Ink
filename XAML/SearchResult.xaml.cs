@@ -129,6 +129,13 @@ public partial class SearchResult : Window, IDisposable
 	{
 		SearchWindow?.Close();
 		this.AddTabToRibbon();
+
+		Application.Current.MainWindow.WindowState = WindowState.Normal;
+
+		if (!Application.Current.MainWindow.IsActive)
+			Application.Current.MainWindow.Activate();
+
+		Application.Current.MainWindow.Focus();
 	}
 
 	private void WindowActivated(object? sender, EventArgs e)
