@@ -3,7 +3,6 @@ using SylverInk.XAML;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
@@ -60,7 +59,12 @@ public partial class NoteRecord
 
 	public string Preview
 	{
-		get => FlowDocumentPreview(XamlToFlowDocument(Reconstruct())).Replace("\r", string.Empty).Replace('\n', ' ').Replace('\t', ' ');
+		get
+		{
+			var _preview = FlowDocumentPreview(XamlToFlowDocument(Reconstruct())).Replace("\r", string.Empty).Replace('\n', ' ').Replace('\t', ' ');
+
+			return string.IsNullOrEmpty(_preview) ? "(empty note)" : _preview;
+		}
 	}
 
 	public string ShortChange
