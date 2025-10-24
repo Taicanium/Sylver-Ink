@@ -21,7 +21,7 @@ public partial class CustomColorPicker : UserControl
 		InitializeComponent();
 	}
 
-	private void CCBKeyDown(object? sender, KeyEventArgs e)
+	private void CustomColorKeyDown(object? sender, KeyEventArgs e)
 	{
 		if (e.Key is not Key.Enter)
 			return;
@@ -60,9 +60,9 @@ public partial class CustomColorPicker : UserControl
 			return;
 
 		var text = box.Text.StartsWith('#') ? box.Text[1..] : box.Text;
-		var brush = BrushFromBytes(text);
+		var brush = BrushFromBytes(text) ?? Brushes.Transparent;
 
-		CustomColor.Fill = brush ?? Brushes.Transparent;
+		CustomColor.Fill = brush;
 		LastColorSelection = brush;
 	}
 }
