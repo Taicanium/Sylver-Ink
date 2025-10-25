@@ -79,7 +79,7 @@ public partial class ColorPicker : UserControl
 			option.Click += (sender, _) =>
 			{
 				var button = (Button)sender;
-				CustomColorPicker.LastColorSelection = textTarget?.Selection.IsEmpty is false ? ((System.Windows.Shapes.Rectangle)button.Content).Fill : null;
+				CustomColorPicker.LastColorSelection = textTarget?.Selection.IsEmpty is true ? null : ((System.Windows.Shapes.Rectangle)button.Content).Fill;
 				ColorChanged(CustomColorPicker.ColorTag, CustomColorPicker.LastColorSelection, textTarget);
 			};
 
@@ -123,9 +123,9 @@ public partial class ColorPicker : UserControl
 		{
 			Fill = new LinearGradientBrush([
 				new(Colors.White, 0.0),
-				new(Colors.White, 0.45),
+				new(Colors.White, 0.425),
 				new(Colors.Red, 0.5),
-				new(Colors.White, 0.55),
+				new(Colors.White, 0.575),
 				new(Colors.White, 1.0)
 			], new(0, 0), new(1, 1)),
 			Margin = new(-1),
