@@ -72,8 +72,9 @@ static class UpdateHandler
 
 			await DownloadAndInstallUpdate(httpClient, uriNode);
 		}
-		catch
+		catch (Exception ex)
 		{
+			MessageBox.Show($"Unable to update Sylver Ink: {ex.Message}", "Sylver Ink: Error", MessageBoxButton.OK, MessageBoxImage.Error);
 			return;
 		}
 	}
