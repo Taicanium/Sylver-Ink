@@ -13,7 +13,7 @@
 				<EventSetter Event="MouseUp" Handler="MenuSublistChanged" />
 			</Style>
 			<DataTemplate x:Key="DatabaseContentTemplate">
-				<TabControl Background="{Binding MenuBackground}" Foreground="{Binding MenuForeground}" Grid.Row="1" Margin="-3,0" SelectedIndex="0" SelectionChanged="MenuTabChanged" x:Name="NotesPanel">
+				<TabControl Background="{Binding MenuBackground}" BorderBrush="{Binding AccentBackground}" BorderThickness="2" Foreground="{Binding MenuForeground}" Grid.Row="1" Margin="-3,0" SelectedIndex="0" SelectionChanged="MenuTabChanged" x:Name="NotesPanel">
 					<TabItem>
 						<TabItem.Header>
 							<Grid>
@@ -151,7 +151,7 @@
 			</Border>
 		</Popup>
 
-		<Menu Background="{Binding MenuBackground}" x:Name="DatabaseMenu">
+		<Menu x:Name="DatabaseMenu">
 			<MenuItem Header="File" Height="25">
 				<MenuItem Click="MenuCreate" Header="New" Tag="Always"/>
 				<MenuItem Click="MenuOpen" Header="Open..." Tag="Always"/>
@@ -178,7 +178,7 @@
 		</Menu>
 
 		<Label Content="Sylver Ink" FontSize="16" FontStyle="Italic" FontWeight="Light" Grid.Row="1" HorizontalAlignment="Center" Margin="0,15" VerticalAlignment="Top"/>
-		<TabControl Background="{Binding MenuBackground}" Foreground="{Binding MenuForeground}" Grid.Row="2" SelectionChanged="MenuTabChanged" x:Name="DatabasesPanel"/>
+		<TabControl Background="{Binding MenuBackground}" BorderThickness="0" Foreground="{Binding MenuForeground}" Grid.Row="2" SelectionChanged="MenuTabChanged" x:Name="DatabasesPanel"/>
 		<Label Content="{Binding VersionString}" FontSize="9" FontStyle="Italic" FontWeight="Light" HorizontalAlignment="Right" Margin="0,5" Grid.Row="3" VerticalAlignment="Bottom"/>
 	</Grid>
 </Window>

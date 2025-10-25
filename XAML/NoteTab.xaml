@@ -144,7 +144,7 @@
 			</Border>
 		</Popup>
 
-		<RichTextBox AcceptsReturn="True" Grid.Row="2" TextChanged="NoteBox_TextChanged" UndoLimit="10"
+		<RichTextBox AcceptsReturn="True" Grid.Row="2" SelectionChanged="NoteBox_SelectionChanged" TextChanged="NoteBox_TextChanged" UndoLimit="10"
 					VerticalScrollBarVisibility="Auto"
 					x:Name="NoteBox"/>
 		

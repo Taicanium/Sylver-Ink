@@ -6,6 +6,9 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Text.RegularExpressions;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
+using System.Windows.Data;
 using System.Windows.Media;
 using static SylverInk.Notes.DatabaseUtils;
 using static SylverInk.XAMLUtils.DataUtils;
@@ -204,6 +207,54 @@ public static partial class CommonUtils
 
 			OpenTabs.RemoveAt(i);
 			tab.Deconstruct();
+		}
+	}
+
+	/// <summary>
+	/// Recursively iterate through a visual tree to change the style of a Menu object and its items.
+	/// </summary>
+	public static void SetMenuColors(DependencyObject parent)
+	{
+		for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
+			SetMenuColors(VisualTreeHelper.GetChild(parent, i));
+
+		if (parent.GetType() != typeof(MenuItem))
+			return;
+
+		if (VisualTreeHelper.GetChild(parent, 0) is not Border itemBorder)
+			return;
+
+		if (itemBorder.Child is not Grid itemGrid)
+			return;
+
+		foreach (var itemChild in itemGrid.Children)
+		{
+			if (itemChild is not Popup popup)
+				continue;
+
+			if (popup.Child is not Border popupBorder)
+				continue;
+
+			BindingOperations.SetBinding(popupBorder, Control.BackgroundProperty, new Binding("MenuBackground"));
+			BindingOperations.SetBinding(popupBorder, Control.BorderBrushProperty, new Binding("AccentBackground"));
+			BindingOperations.SetBinding(popupBorder, Control.ForegroundProperty, new Binding("MenuForeground"));
+			popupBorder.BorderThickness = new(1);
+
+			if (popupBorder.Child is not ScrollViewer viewer)
+				continue;
+
+			if (viewer.Content is not Grid viewerGrid)
+				continue;
+
+			foreach (var viewerChild in viewerGrid.Children)
+			{
+				if (viewerChild is not System.Windows.Shapes.Rectangle rect)
+					continue;
+
+				BindingOperations.SetBinding(rect, System.Windows.Shapes.Shape.FillProperty, new Binding("MenuBackground"));
+			}
+
+			return;
 		}
 	}
 

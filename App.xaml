@@ -104,12 +104,30 @@
 					</Trigger>
 				</Style.Triggers>
 			</Style>
+			<Style TargetType="{x:Type Menu}">
+				<Setter Property="Background" Value="{Binding MenuBackground}"/>
+				<Setter Property="Foreground" Value="{Binding MenuForeground}"/>
+			</Style>
+			<Style TargetType="{x:Type MenuItem}">
+				<Setter Property="Background" Value="{Binding MenuBackground}"/>
+				<Setter Property="Foreground" Value="{Binding MenuForeground}"/>
+				<Style.Triggers>
+					<Trigger Property="IsMouseOver" Value="True">
+						<Setter Property="Background" Value="{Binding ListBackground}"/>
+						<Setter Property="Foreground" Value="{Binding ListForeground}"/>
+					</Trigger>
+				</Style.Triggers>
+			</Style>
 			<Style TargetType="{x:Type RichTextBox}">
 				<Setter Property="Background" Value="{Binding ListBackground}"/>
 				<Setter Property="BorderBrush" Value="{Binding MenuForeground}"/>
 				<Setter Property="FontFamily" Value="{Binding MainFontFamily}"/>
 				<Setter Property="FontSize" Value="{Binding MainFontSize}"/>
 				<Setter Property="Foreground" Value="{Binding ListForeground}"/>
+			</Style>
+			<Style TargetType="{x:Type Separator}">
+				<Setter Property="BorderBrush" Value="{Binding AccentBackground}"/>
+				<Setter Property="BorderThickness" Value="2"/>
 			</Style>
 			<Style TargetType="{x:Type TabItem}">
 				<Setter Property="FontFamily" Value="{Binding MainFontFamily}"/>

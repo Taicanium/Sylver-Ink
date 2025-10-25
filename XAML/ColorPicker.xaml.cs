@@ -47,7 +47,7 @@ public partial class ColorPicker : UserControl
 
 	private void InitColorGrid(RichTextBox? textTarget = null)
 	{
-		var column = 1;
+		var column = 3;
 		var row = 0;
 
 		for (int i = 0; i < AvailableBrushes.Count; i++)
@@ -73,7 +73,7 @@ public partial class ColorPicker : UserControl
 			option.Click += (sender, _) =>
 			{
 				var button = (Button)sender;
-				CustomColorPicker.LastColorSelection = ((System.Windows.Shapes.Rectangle)button.Content).Fill;
+				CustomColorPicker.LastColorSelection = textTarget?.Selection.IsEmpty is false ? ((System.Windows.Shapes.Rectangle)button.Content).Fill : null;
 				ColorChanged(CustomColorPicker.ColorTag, CustomColorPicker.LastColorSelection, textTarget);
 			};
 
@@ -113,9 +113,31 @@ public partial class ColorPicker : UserControl
 			ToolTip = "Custom color..."
 		};
 
+		System.Windows.Shapes.Rectangle clearRect = new()
+		{
+			Fill = new LinearGradientBrush([
+				new(Colors.White, 0.0),
+				new(Colors.White, 0.45),
+				new(Colors.Red, 0.5),
+				new(Colors.White, 0.55),
+				new(Colors.White, 1.0)
+			], new(0, 0), new(1, 1)),
+			Margin = new(-1),
+			Stretch = Stretch.UniformToFill,
+			ToolTip = "Default color"
+		};
+
 		Button customOption = new()
 		{
 			Content = rainbowRect,
+			Height = 20,
+			Margin = new(2.5),
+			Width = 20
+		};
+
+		Button clearOption = new()
+		{
+			Content = clearRect,
 			Height = 20,
 			Margin = new(2.5),
 			Width = 20
@@ -127,7 +149,16 @@ public partial class ColorPicker : UserControl
 			CustomColorPicker.CustomColorSelection.IsOpen = true;
 		};
 
+		clearOption.Click += (_, _) =>
+		{
+			CustomColorPicker.LastColorSelection = null;
+			ColorChanged(CustomColorPicker.ColorTag, null, textTarget);
+		};
+
 		ColorGrid.Children.Add(customOption);
+		ColorGrid.Children.Add(clearOption);
+
+		Grid.SetColumn(customOption, 1);
 	}
 
 	[GeneratedRegex(@"\p{Lu}")]

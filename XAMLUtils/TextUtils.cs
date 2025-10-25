@@ -192,7 +192,7 @@ public static partial class TextUtils
 		if (string.IsNullOrWhiteSpace(xaml))
 			return new();
 
-		var escaped = xaml.Replace("{}{", "{");
+		var escaped = ImageTagRegex().Replace(xaml.Replace("{}{", "{"), string.Empty);
 
 		if (!escaped.StartsWith("<FlowDocument"))
 			escaped = $"{FlowDocumentOpening}{escaped}";
@@ -239,4 +239,7 @@ public static partial class TextUtils
 
 	[GeneratedRegex(@"<FlowDocument.*?>")]
 	private static partial Regex FlowDocumentOpeningRegex();
+
+	[GeneratedRegex(@"<Image.*?>.*?</Image>")]
+	private static partial Regex ImageTagRegex();
 }

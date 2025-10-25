@@ -450,6 +450,8 @@ public partial class MainWindow : Window, IDisposable
 			if (!Directory.Exists(folder.Value))
 				Directory.CreateDirectory(folder.Value);
 
+		SetMenuColors(this);
+
 		await UpdateHandler.CheckForUpdates();
 
 		if (!IsShuttingDown())

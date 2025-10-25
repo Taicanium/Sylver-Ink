@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
+using System.Windows.Media;
 using static SylverInk.CommonUtils;
 using static SylverInk.Notes.DatabaseUtils;
 using static SylverInk.XAMLUtils.DataUtils;
@@ -27,6 +28,7 @@ public partial class NoteTab : UserControl
 	public string OriginalText { get; set; } = string.Empty;
 	public required NoteRecord Record { get; set; }
 	public uint RevisionIndex { get; set; }
+	private bool RevisionView { get; set; }
 	public DateTime TimeSinceAutosave { get; set; } = DateTime.UtcNow;
 
 	public NoteTab()
@@ -52,6 +54,8 @@ public partial class NoteTab : UserControl
 		RevisionIndex -= 1U;
 		string revisionTime = RevisionIndex == 0U ? Record.GetLastChange() : Record.GetRevisionTime(RevisionIndex);
 
+		RevisionView = true;
+
 		NoteBox.Document = Record.GetDocument(RevisionIndex);
 		NoteBox.IsReadOnly = RevisionIndex != 0;
 		PreviousButton.IsEnabled = RevisionIndex < Record.GetNumRevisions();
@@ -69,6 +73,8 @@ public partial class NoteTab : UserControl
 
 		RevisionIndex += 1U;
 		string revisionTime = RevisionIndex == Record.GetNumRevisions() ? Record.GetCreated() : Record.GetRevisionTime(RevisionIndex);
+
+		RevisionView = true;
 
 		NextButton.IsEnabled = RevisionIndex > 0;
 		NoteBox.Document = Record.GetDocument(RevisionIndex);
@@ -138,7 +144,13 @@ public partial class NoteTab : UserControl
 		if (sender is not RichTextBox)
 			return;
 
-		TextColorButton.Background = TextColorPicker.CustomColorPicker.LastColorSelection ?? CommonUtils.Settings.MenuBackground;
+		if (RevisionView)
+		{
+			RevisionView = false;
+			return;
+		}
+
+		UpdateTextColorButton();
 
 		SaveButton.IsEnabled = NoteBox.Document.Blocks.Count != OriginalBlockCount || !FlowDocumentToXaml(NoteBox.Document).Equals(OriginalText);
 		if (Autosaving)
@@ -160,7 +172,7 @@ public partial class NoteTab : UserControl
 	private void NoteTab_Loaded(object sender, RoutedEventArgs e)
 	{
 		this.Construct();
-		TextColorButton.Background = CommonUtils.Settings.MenuBackground;
+		TextColorButton.Background = CommonUtils.Settings.ListForeground;
 		TextColorPicker.InitBrushes(NoteBox);
 	}
 
@@ -168,5 +180,12 @@ public partial class NoteTab : UserControl
 	{
 		TextColorPicker.CustomColorPicker.ColorTag = "PT";
 		TextColorPicker.ColorSelection.IsOpen = true;
+	}
+
+	private void NoteBox_SelectionChanged(object sender, RoutedEventArgs e) => UpdateTextColorButton();
+
+	private void UpdateTextColorButton()
+	{
+		TextColorButton.Background = NoteBox.Selection.End.Parent.GetValue(TextElement.ForegroundProperty) as Brush ?? CommonUtils.Settings.ListForeground;
 	}
 }

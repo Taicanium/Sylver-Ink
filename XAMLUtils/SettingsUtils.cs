@@ -7,7 +7,7 @@ namespace SylverInk.XAMLUtils;
 
 public static partial class SettingsUtils
 {
-	public static void ColorChanged(string? ColorTag, Brush ColorSelection, RichTextBox? TextTarget = null)
+	public static void ColorChanged(string? ColorTag, Brush? ColorSelection, RichTextBox? TextTarget = null)
 	{
 		if (ColorTag is null)
 			return;
@@ -15,29 +15,75 @@ public static partial class SettingsUtils
 		switch (ColorTag)
 		{
 			case "P1F":
-				CommonUtils.Settings.MenuForeground = ColorSelection;
+				CommonUtils.Settings.MenuForeground = ColorSelection ?? Brushes.Gray;
 				break;
 			case "P1B":
-				CommonUtils.Settings.MenuBackground = ColorSelection;
+				CommonUtils.Settings.MenuBackground = ColorSelection ?? Brushes.Beige;
 				break;
 			case "P2F":
-				CommonUtils.Settings.ListForeground = ColorSelection;
+				CommonUtils.Settings.ListForeground = ColorSelection ?? Brushes.Black;
 				break;
 			case "P2B":
-				CommonUtils.Settings.ListBackground = ColorSelection;
+				CommonUtils.Settings.ListBackground = ColorSelection ?? Brushes.White;
 				break;
 			case "P3F":
-				CommonUtils.Settings.AccentForeground = ColorSelection;
+				CommonUtils.Settings.AccentForeground = ColorSelection ?? Brushes.Blue;
 				break;
 			case "P3B":
-				CommonUtils.Settings.AccentBackground = ColorSelection;
+				CommonUtils.Settings.AccentBackground = ColorSelection ?? Brushes.Khaki;
 				break;
 			case "PT":
 				if (TextTarget is null)
 					break;
 
-				TextTarget.Selection.ApplyPropertyValue(TextElement.ForegroundProperty, ColorSelection);
-				TextTarget.Foreground = ColorSelection;
+				if (TextTarget.Selection.IsEmpty)
+					break;
+
+				if (ColorSelection is not null)
+				{
+					TextTarget.Selection.ApplyPropertyValue(TextElement.ForegroundProperty, ColorSelection);
+					break;
+				}
+
+				// Programmatically clearing a single property on a TextSelection object is convoluted.
+				// We only have the option of clearing all properties and resetting the ones we aren't changing.
+				// Other methods exist, but this is by far the simplest.
+
+				var end = TextTarget.Selection.End;
+				TextPointer next;
+				var pointer = TextTarget.Selection.Start;
+				var start = TextTarget.Selection.Start;
+
+				while (pointer is not null && pointer.GetOffsetToPosition(end) > 0)
+				{
+					var runLength = pointer.GetTextRunLength(LogicalDirection.Forward);
+					next = runLength > 0 ? pointer.GetPositionAtOffset(runLength) : pointer.GetNextContextPosition(LogicalDirection.Forward);
+
+					if (next is null)
+						break;
+
+					TextTarget.Selection.Select(pointer, next);
+					pointer = next;
+
+					if (TextTarget.Selection.IsEmpty)
+						continue;
+
+					var fontFamily = TextTarget.Selection.GetPropertyValue(TextElement.FontFamilyProperty);
+					var fontSize = TextTarget.Selection.GetPropertyValue(TextElement.FontSizeProperty);
+					var fontStretch = TextTarget.Selection.GetPropertyValue(TextElement.FontStretchProperty);
+					var fontStyle = TextTarget.Selection.GetPropertyValue(TextElement.FontStyleProperty);
+					var fontWeight = TextTarget.Selection.GetPropertyValue(TextElement.FontWeightProperty);
+
+					TextTarget.Selection.ClearAllProperties();
+
+					TextTarget.Selection.ApplyPropertyValue(TextElement.FontFamilyProperty, fontFamily);
+					TextTarget.Selection.ApplyPropertyValue(TextElement.FontSizeProperty, fontSize);
+					TextTarget.Selection.ApplyPropertyValue(TextElement.FontStretchProperty, fontStretch);
+					TextTarget.Selection.ApplyPropertyValue(TextElement.FontStyleProperty, fontStyle);
+					TextTarget.Selection.ApplyPropertyValue(TextElement.FontWeightProperty, fontWeight);
+				}
+
+				TextTarget.Selection.Select(start, end);
 
 				break;
 		}
