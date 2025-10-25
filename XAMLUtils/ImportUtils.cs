@@ -64,9 +64,11 @@ public static class ImportUtils
 	}
 
 	/// <summary>
-	/// Attempt to detect recurring patterns in the incoming data that can be used to divide the data into notes. These patterns (referred to here as 'predicates') may consist of timestamps, headings, signatures, or other text structures consisting of letters, numbers, and symbols. Predicates must occur at the beginning of lines.
+	/// Attempt to detect recurring patterns in the incoming data that can be used to divide the data into notes.
+	/// These patterns (referred to here as 'predicates') may consist of timestamps, headings, signatures, or other text structures consisting of letters, numbers, and symbols.
+	/// Predicates must occur at the beginning of lines.
 	/// </summary>
-	/// <returns><c>true</c> if a predicate was successfully detected; <c>false</c> otherwise.</returns>
+	/// <returns><see langword="true"/> if a predicate was successfully detected; <see langword="false"/> otherwise.</returns>
 	private static bool MeasureNotesAdaptive(this Import window)
 	{
 		// Letters, numbers, spaces, and punctuation; respectively.
@@ -194,6 +196,7 @@ public static class ImportUtils
 				break;
 		}
 
+		// Use the predicate to divide the imported file into notes.
 		if (!string.IsNullOrWhiteSpace(window.AdaptivePredicate.Trim()))
 		{
 			StringBuilder recordData = new();
@@ -228,7 +231,8 @@ public static class ImportUtils
 	}
 
 	/// <summary>
-	/// Manual note measurement consists of dividing the incoming plaintext data by a strict number of blank lines appearing between entries. If a text file contains no empty lines, the entire file will be placed into one Sylver Ink note.
+	/// Manual note measurement consists of dividing the incoming plaintext data by a strict number of blank lines appearing between entries.
+	/// If a text file contains no empty lines, the entire file will be placed into one Sylver Ink note.
 	/// </summary>
 	private static void MeasureNotesManual(this Import window)
 	{
@@ -282,7 +286,8 @@ public static class ImportUtils
 	}
 
 	/// <summary>
-	/// Importing plaintext data proceeds similarly to measuring it. In this method, however, the data is saved to newly created <c>NoteRecord</c>s instead of being discarded.
+	/// Importing plaintext data proceeds similarly to measuring it.
+	/// In this method, however, the data is saved to newly created <c>NoteRecord</c>s instead of being discarded.
 	/// </summary>
 	private static async Task PerformImport(this Import window) => await Task.Run(() =>
 	{

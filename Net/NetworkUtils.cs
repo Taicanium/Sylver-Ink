@@ -44,7 +44,7 @@ public static class NetworkUtils
 		.Concat(Enumerable.Range(97, 26)) // [a-z]
 		.Concat([33, 35, 36, 37]) // ! # $ %
 		.Select(c => (char)c)];
-	public static string LoopbackCode { get; } = "Vm000G";
+	public static string LoopbackCode { get; } = "Vm000G"; // 127.0.0.1
 	public static int TcpPort { get; } = 5192;
 	public static Dictionary<int, int> ValueCodes { get; } = new(CodeValues.Select(static (c, i) => new KeyValuePair<int, int>(c, i)));
 

@@ -45,7 +45,7 @@ public static class FileUtils
 	/// <summary>
 	/// Deletes a file if it exists.
 	/// </summary>
-	/// <returns><c>true</c> if the file existed and was deleted; else, <c>false</c>.</returns>
+	/// <returns><see langword="true"/> if the file existed and was deleted; else, <see langword="false"/>.</returns>
 	public static bool Erase(string filename)
 	{
 		try
@@ -64,6 +64,9 @@ public static class FileUtils
 
 	public static string GetBackupPath(Database db) => Path.Join(Subfolders["Databases"], db.Name, db.Name);
 
+	/// <summary>
+	/// Get the default file path for a Sylver Ink database, based on its name and the working directory.
+	/// </summary>
 	public static string GetDatabasePath(Database db)
 	{
 		var index = 0;

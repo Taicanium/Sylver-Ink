@@ -14,7 +14,7 @@ using static SylverInk.XAMLUtils.DataUtils;
 namespace SylverInk.Notes;
 
 /// <summary>
-/// Static functions serving general-purpose access to the roster of databases.
+/// Static functions assisting in general-purpose access to the roster of databases.
 /// </summary>
 public static class DatabaseUtils
 {
