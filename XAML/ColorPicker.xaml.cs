@@ -22,6 +22,8 @@ public partial class ColorPicker : UserControl
 
 	public void InitBrushes(RichTextBox? textTarget = null)
 	{
+		AvailableBrushes.Clear();
+
 		foreach (var property in typeof(Brushes)?.GetProperties() ?? [])
 		{
 			if (property.GetMethod?.Invoke(null, null) is not SolidColorBrush brush)
@@ -49,6 +51,10 @@ public partial class ColorPicker : UserControl
 	{
 		var column = 3;
 		var row = 0;
+
+		ColorGrid.Children.Clear();
+		ColorGrid.ColumnDefinitions.Clear();
+		ColorGrid.RowDefinitions.Clear();
 
 		for (int i = 0; i < AvailableBrushes.Count; i++)
 		{

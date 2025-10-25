@@ -239,9 +239,9 @@ public partial class SearchResult : Window, IDisposable
 			}
 
 			if (position.X > 0.0
-			&& position.Y > 0.0
-			&& position.X <= Width
-			&& position.Y <= Height)
+				&& position.Y > 0.0
+				&& position.X <= Width
+				&& position.Y <= Height)
 			{
 				if (MouseInside)
 					return;

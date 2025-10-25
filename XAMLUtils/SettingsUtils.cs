@@ -117,6 +117,7 @@ public static partial class SettingsUtils
 
 	public static void InitFonts(this Settings window)
 	{
+		window.AvailableFonts.Clear();
 		foreach (var font in Fonts.SystemFontFamilies)
 			window.AvailableFonts.Add(font);
 
