@@ -50,7 +50,7 @@ public partial class LZW
 	/// <summary>
 	/// Compresses a range of data.
 	/// </summary>
-	public void Compress(in byte[] data)
+	public void Compress(byte[] data)
 	{
 		for (int i = 0; i < data.Length; i++)
 		{
@@ -126,7 +126,7 @@ public partial class LZW
 	/// Initializes the LZW state engine.
 	/// </summary>
 	/// <param name="writing"><see langword="true"/> if we are compressing data and outputting it to the stream; <see langword="false"/> if we are reading and consuming LZW-compressed data.</param>
-	public void Init(int format, in Stream? fileStream = null, bool writing = false)
+	public void Init(int format, Stream? fileStream = null, bool writing = false)
 	{
 		FileStream = fileStream ?? FileStream;
 		Format = format;

@@ -101,9 +101,9 @@ public partial class Settings : Window
 		var item = (ComboBoxItem?)box?.SelectedItem;
 
 		EnumConverter cv = new(typeof(SortType));
-		var tag = (SortType?)cv.ConvertFromString((string?)item?.Tag ?? "ByChange") ?? SortType.ByChange;
+		var tag = cv.ConvertFromString((string?)item?.Tag ?? "ByChange") as SortType?;
 
-		RecentEntriesSortMode = tag;
+		RecentEntriesSortMode = tag ?? SortType.ByChange;
 		RecentNotesDirty = true;
 		DeferUpdateRecentNotes();
 	}
@@ -114,7 +114,7 @@ public partial class Settings : Window
 		var item = (ComboBoxItem?)box?.SelectedItem;
 
 		EnumConverter ev = new(typeof(DisplayType));
-		var tag = (DisplayType?)ev.ConvertFromString((string?)item?.Tag ?? "Content");
+		var tag = ev.ConvertFromString((string?)item?.Tag ?? "Content") as DisplayType?;
 		RibbonTabContent = tag ?? DisplayType.Content;
 
 		UpdateRibbonTabs();

@@ -119,7 +119,7 @@ public partial class Serializer : IDisposable
 	/// </summary>
 	/// <param name="path">The path to a file to encapsulate in the underlying <c>FileStream</c>. May be <see langword="null"/> if and only if <paramref name="inMemory"/> is not <see langword="null"/>.</param>
 	/// <param name="inMemory">If not <see langword="null"/>, the engine will be initialized with an underlying <c>MemoryStream</c> with <paramref name="inMemory"/> as its buffer, instead of a <c>FileStream</c>.</param>
-	public bool OpenRead(string? path, in List<byte>? inMemory = null)
+	public bool OpenRead(string? path, List<byte>? inMemory = null)
 	{
 		Close();
 
@@ -311,7 +311,7 @@ public partial class Serializer : IDisposable
 		_fileStream?.WriteByte(data);
 	}
 
-	private void WriteBytes(in byte[] data)
+	private void WriteBytes(byte[] data)
 	{
 		if (UseLZW)
 		{
