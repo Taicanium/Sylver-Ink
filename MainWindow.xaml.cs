@@ -1,4 +1,5 @@
-﻿using SylverInk.Net;
+﻿using SylverInk.Keyboard;
+using SylverInk.Net;
 using SylverInk.Notes;
 using SylverInk.XAML;
 using System;

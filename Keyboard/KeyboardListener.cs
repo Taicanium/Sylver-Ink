@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
-using System.Windows.Input;
 
-namespace SylverInk;
+namespace SylverInk.Keyboard;
 
 /// <summary>
 /// Logic for handling non-global hotkey registration.
@@ -79,45 +77,3 @@ public class KeyboardListener : IDisposable
 		}
 	}
 }
-
-internal static class InterceptKeys
-{
-	[DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-	public static extern nint CallNextHookEx(nint hhk, int nCode, nint wParam, nint lParam);
-
-	[DllImport("user32.dll")]
-	public static extern short GetKeyState(int nVirtKey);
-
-	[DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-	public static extern nint GetModuleHandle(string lpModuleName);
-
-	[DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-	public static extern nint SetWindowsHookEx(int idHook, LowLevelKeyboardProc lpfn, nint hMod, uint dwThreadId);
-
-	[DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-	[return: MarshalAs(UnmanagedType.Bool)]
-	public static extern bool UnhookWindowsHookEx(nint hhk);
-
-	public delegate nint LowLevelKeyboardProc(int nCode, nint wParam, nint lParam);
-	private readonly static int WH_KEYBOARD_LL = 13;
-	public readonly static int WM_KEYDOWN = 0x0100;
-
-	public static nint SetHook(LowLevelKeyboardProc proc)
-	{
-		using Process thisProcess = Process.GetCurrentProcess();
-		using ProcessModule? thisModule = thisProcess.MainModule;
-
-		if (thisModule?.ModuleName is null)
-			return nint.Zero;
-
-		return SetWindowsHookEx(WH_KEYBOARD_LL, proc, GetModuleHandle(thisModule.ModuleName), 0);
-	}
-}
-
-public class RawKeyEventArgs(int VKCode) : EventArgs
-{
-	public int Ctrl { get; private set; } = InterceptKeys.GetKeyState(0x11) & 0x8000;
-	public Key Key { get; private set; } = KeyInterop.KeyFromVirtualKey(VKCode);
-}
-
-public delegate void RawKeyEventHandler(object sender, RawKeyEventArgs args);
