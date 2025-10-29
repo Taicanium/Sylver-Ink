@@ -37,6 +37,5 @@ public partial class Replace : Window
 		Counts = (0, 0);
 
 		this.PerformReplace();
-		this.FinishReplace();
 	}
 }
